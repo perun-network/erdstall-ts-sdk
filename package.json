@@ -1,0 +1,13 @@
+{
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^4.22.0",
+    "@typescript-eslint/parser": "^4.22.0",
+    "eslint": "^7.24.0",
+    "typescript": "^4.2.4"
+  },
+  "scripts": {
+    "build": "npx tsc",
+    "watch": "npx tsc -w",
+    "lint": "npx eslint ./src --ext .ts"
+  }
+}
