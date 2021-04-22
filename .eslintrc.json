@@ -10,7 +10,7 @@
     "extends": "eslint:recommended",
     "rules": {
         "strict": 2,
-        "indent": 1,
+        "indent": ["error", "tab"],
         "linebreak-style": 0,
         "quotes": ["error", "double"],
         "semi": 1,
