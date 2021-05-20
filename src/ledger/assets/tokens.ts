@@ -1,11 +1,14 @@
 // SPDX-License-Identifier: Apache-2.0
+"use strict";
 
 import { BigNumber, utils } from "ethers";
+import { Asset, TypeTags } from "./asset";
 
-export default class IDSet {
+export class Tokens extends Asset {
 	public value: bigint[];
 
 	constructor(v: bigint[]) {
+		super();
 		this.value = v;
 	}
 
@@ -15,11 +18,13 @@ export default class IDSet {
 		});
 	}
 
-	static fromJSON(idset: string[]): IDSet {
+	static fromJSON(idset: string[]): Tokens {
 		const s = new Array<bigint>();
 		for (const id in idset) {
 			s.push(BigInt(idset[id]));
 		}
-		return new IDSet(s);
+		return new Tokens(s);
 	}
+
+	typeTag(): string { return TypeTags.Tokens; }
 }

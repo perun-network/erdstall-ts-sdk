@@ -42,5 +42,8 @@
         "no-redeclare": 1,
         "no-unused-vars": ["warn", { "vars": "all", "args": "none" }],
         "no-sparse-arrays": 1
+    },
+    "globals":{
+        "BigInt":true
     }
 }
