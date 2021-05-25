@@ -17,6 +17,6 @@ export class Account extends ErdstallObject {
 		this.epoch = new BigInteger(epoch);
 	}
 
-	protected objectType(): any { return Account; }
+	public objectType(): any { return Account; }
 	protected objectTypeName(): string { return "AccountResponse"; }
 }

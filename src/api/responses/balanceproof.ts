@@ -40,6 +40,6 @@ import { ErdstallObject } from "../object";
 		this.sig = signature;
 	}
 
-	protected objectType(): any { return BalanceProof; }
+	public objectType(): any { return BalanceProof; }
 	protected objectTypeName(): string { return "BalanceProof"; }
 }

@@ -14,6 +14,6 @@ export class Subscribe extends ErdstallObject {
 		this.who = who;
 	}
 
-	protected objectType(): any { return Subscribe; }
+	public objectType(): any { return Subscribe; }
 	protected objectTypeName(): string { return "Subscribe"; }
 }

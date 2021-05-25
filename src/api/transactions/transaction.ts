@@ -42,7 +42,7 @@ import { utils, Signer } from "ethers";
 	}
 	static fromJSON: (json: any) => Transaction;
 
-	protected objectType(): any { return Transaction; }
+	public objectType(): any { return Transaction; }
 	protected objectTypeName(): string { return "Transaction"; }
 
 	protected abstract txType(): any;

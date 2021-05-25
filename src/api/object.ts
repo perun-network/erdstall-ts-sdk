@@ -8,7 +8,7 @@ import { CustomJSON } from "./util";
 /** Base type for all Erdstall messages. */
 @jsonObject export abstract class ErdstallObject {
 	public static fromJSON: (js: any) => ErdstallObject;
-	protected abstract objectType(): any;
+	public abstract objectType(): any;
 	protected abstract objectTypeName(): string;
 
 	static toJSON(me: ErdstallObject) {

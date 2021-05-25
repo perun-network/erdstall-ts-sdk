@@ -16,6 +16,6 @@ import { jsonObject, jsonMember } from "typedjson";
 		this.account = account;
 	}
 
-	protected objectType(): any { return TxReceipt; }
+	public objectType(): any { return TxReceipt; }
 	protected objectTypeName(): string { return "TxReceipt"; }
 }

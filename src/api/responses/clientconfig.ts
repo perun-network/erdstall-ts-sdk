@@ -18,6 +18,6 @@ export class ClientConfig extends ErdstallObject {
 		this.powDepth = powDepth;
 	}
 
-	protected objectType(): any { return ClientConfig; }
+	public objectType(): any { return ClientConfig; }
 	protected objectTypeName(): string { return "ClientConfig"; }
 }
