@@ -3,6 +3,7 @@
 
 import { BigNumber, utils } from "ethers";
 import { Asset, TypeTags } from "./asset";
+import { BigInteger} from "../../api/util";
 
 /** Amount represents a currency amount in its smallest unit. */
 export class Amount extends Asset {
@@ -22,4 +23,8 @@ export class Amount extends Asset {
 	}
 
 	typeTag(): string { return TypeTags.Amount; }
+
+	asABI(): any {
+		return new BigInteger(this.value).asABI();
+	}
 }

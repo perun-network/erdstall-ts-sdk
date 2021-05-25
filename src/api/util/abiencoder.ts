@@ -56,6 +56,10 @@ export class ABIEncoder {
 		return this;
 	}
 
+	pack_noprefix(): any {
+		return utils.defaultAbiCoder.encode(this.types, this.values);
+	}
+
 	pack(tag: string, contract: Address): any {
 		const enc = new ABIEncoder(tag, contract);
 		return utils.defaultAbiCoder.encode(

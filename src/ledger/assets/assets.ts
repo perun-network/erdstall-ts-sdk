@@ -2,8 +2,9 @@
 "use strict";
 
 import { jsonObject } from "typedjson";
+import { utils } from "ethers";
 import { Asset } from "./asset";
-import { ABIValue, CustomJSON } from "../../api/util";
+import { ABIEncoder, ABIValue, CustomJSON } from "../../api/util";
 
 @jsonObject
 export class Assets implements ABIValue {
@@ -32,7 +33,14 @@ export class Assets implements ABIValue {
 	}
 
 	ABIType(): string { return "(address,bytes)[]"; }
-	asABI(): any { throw new Error("Assets.asABI unimplemented"); }
+	asABI(): any {
+		let valuesArr = [];
+		me.values.forEach((v, k) => {
+			valuesArr.push(
+				[Address.fromJSON(k).toABI(), v.asABI()]);
+		});
+		return valuesArr;
+	}
 }
 
 CustomJSON(Assets);

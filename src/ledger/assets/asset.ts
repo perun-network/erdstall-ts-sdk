@@ -10,4 +10,5 @@ export abstract class Asset {
 	abstract toJSON(): any;
 	static fromJSON: (json: any) => Asset;
 	abstract typeTag(): string;
+	abstract asABI(): any;
 }
