@@ -5,6 +5,7 @@ import { jsonObject } from "typedjson";
 import { utils } from "ethers";
 import { Asset } from "./asset";
 import { ABIEncoder, ABIValue, CustomJSON } from "../../api/util";
+import { Address } from "../address";
 
 @jsonObject
 export class Assets implements ABIValue {
@@ -32,12 +33,13 @@ export class Assets implements ABIValue {
 		return vs;
 	}
 
-	ABIType(): string { return "(address,bytes)[]"; }
+	ABIType(): string {
+		return "(address,bytes)[]";
+	}
 	asABI(): any {
-		let valuesArr = [];
-		me.values.forEach((v, k) => {
-			valuesArr.push(
-				[Address.fromJSON(k).toABI(), v.asABI()]);
+		let valuesArr: [any, any][] = [];
+		this.values.forEach((v, k) => {
+			valuesArr.push([Address.fromJSON(k).asABI(), v.asABI()]);
 		});
 		return valuesArr;
 	}

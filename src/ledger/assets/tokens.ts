@@ -27,11 +27,15 @@ export class Tokens extends Asset {
 		return new Tokens(s);
 	}
 
-	typeTag(): string { return TypeTags.Tokens; }
+	typeTag(): string {
+		return TypeTags.Tokens;
+	}
 
 	asABI(): any {
-		let ids = [];
-		this.value.forEach((v) => { ids.push(new BigInteger(v).asABI()); });
-		return new ABIEncoder("uint256[]", ids).pack_noprefix();
+		let ids: BigNumber[] = [];
+		this.value.forEach((v) => {
+			ids.push(new BigInteger(v).asABI());
+		});
+		return new ABIEncoder(["uint256[]", ids]).pack_noprefix();
 	}
 }
