@@ -14,6 +14,6 @@ export class GetAccount extends ErdstallObject {
 		this.who = who;
 	}
 
-	protected objectType(): any { return GetAccount; }
+	public objectType(): any { return GetAccount; }
 	protected objectTypeName(): string { return "GetAccount"; }
 }
