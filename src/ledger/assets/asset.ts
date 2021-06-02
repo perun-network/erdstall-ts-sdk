@@ -6,10 +6,14 @@ export const TypeTags = {
 	Tokens: "idset",
 };
 
+export const MAX_AMOUNT_VALUE = 2n ** 256n - 1n;
+
 export const ErrUncomparableAssets = new Error("uncomparable assets");
 export const ErrSubtrahendLargerThanMinuend = new Error(
 	"subtrahend larger than minuend",
 );
+export const ErrIncompatibleAssets = new Error("incompatible assets");
+export const ErrValueOutOfBounds = new Error("value is not a uint256");
 
 export abstract class Asset {
 	abstract toJSON(): any;
@@ -65,5 +69,12 @@ export function AssertSubtractable(minuend: Asset, subtrahend: Asset): void {
 		throw ErrUncomparableAssets;
 	} else if (res === "lt") {
 		throw ErrSubtrahendLargerThanMinuend;
+	}
+}
+
+// assertUint256 asserts, that the given value is in range [0, 2^256-1].
+export function AssertUint256(val: bigint): void {
+	if (0 <= val && val >= MAX_AMOUNT_VALUE) {
+		throw ErrValueOutOfBounds;
 	}
 }

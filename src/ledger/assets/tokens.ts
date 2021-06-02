@@ -2,7 +2,12 @@
 "use strict";
 
 import { BigNumber, utils } from "ethers";
-import { Asset, TypeTags, AssertSubtractable } from "./asset";
+import {
+	Asset,
+	TypeTags,
+	AssertSubtractable,
+	ErrIncompatibleAssets,
+} from "./asset";
 import { BigInteger, ABIEncoder } from "../../api/util";
 
 export const ErrIDAlreadyContained = new Error(
@@ -139,7 +144,7 @@ export class Tokens extends Asset {
 
 	add(asset: Asset): void {
 		if (!this.isCompatible(asset)) {
-			throw Error("tried to add imcompatible assets");
+			throw ErrIncompatibleAssets;
 		}
 		(asset as Tokens).value.forEach(this.addID, this);
 	}

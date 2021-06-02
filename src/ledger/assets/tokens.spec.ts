@@ -4,7 +4,7 @@
 import { expect } from "chai";
 import { Tokens } from "./tokens";
 
-describe("tokens", () => {
+describe("Tokens", () => {
 	it("can add tokens", () => {
 		let t1 = new Tokens([123n, 420n]);
 		let t2 = new Tokens([321n]);
@@ -24,8 +24,6 @@ describe("tokens", () => {
 		let t1 = new Tokens([123n, 321n]);
 		let t2 = new Tokens([321n]);
 		t1.sub(t2);
-		console.log(t1);
-		console.log(t2);
 		expect(t1.value, "subbing compatible tokens should work").to.eql([
 			123n,
 		]);
