@@ -22,7 +22,7 @@ import { ABIEncoder, BigInteger } from "../util";
 		this.id = new BigInteger(id);
 	}
 
-	protected txType() { return Mint; }
+	public txType() { return Mint; }
 	protected txTypeName(): string { return "Mint"; }
 	protected encodeABI(e: ABIEncoder): string {
 		e.encode(this.token, ["uint256", this.id]);
