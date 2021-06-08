@@ -6,7 +6,7 @@ import { jsonObject } from "typedjson";
 import { ABIEncoder } from "../util";
 
 @jsonObject export class ExitRequest extends Transaction {
-	protected txType() { return ExitRequest; }
+	public txType() { return ExitRequest; }
 	protected txTypeName(): string { return "ExitRequest"; }
 
 	protected encodeABI(e: ABIEncoder): string {

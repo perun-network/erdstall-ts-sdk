@@ -36,6 +36,7 @@ export class Assets implements ABIValue {
 	ABIType(): string {
 		return "(address,bytes)[]";
 	}
+
 	asABI(): any {
 		let valuesArr: [any, any][] = [];
 		this.values.forEach((v, k) => {
@@ -43,6 +44,88 @@ export class Assets implements ABIValue {
 		});
 		return valuesArr;
 	}
+
+	hasAsset(addr: string): boolean {
+		return this.values.has(addr);
+	}
+
+	addAssets(assets: Assets): void {
+		const it = assets.values.entries();
+		for (let next = it.next(); !next.done; next = it.next()) {
+			const [k, v] = next.value;
+			this.addAsset(k, v);
+		}
+	}
+
+	addAsset(addr: string, asset: Asset): void {
+		if (asset.zero()) {
+			return;
+		}
+
+		if (this.values.has(addr)) {
+			this.values.get(addr)!.add(asset);
+		} else {
+			this.values.set(addr, asset);
+		}
+	}
+
+	cmp(assets: Assets): "lt" | "eq" | "gt" | "uncomparable" {
+		const res = ["lt", "eq", "gt"] as const;
+		let swap = 1;
+		let cmp = 0;
+		let a = this.values;
+		let b = assets.values;
+
+		if (a.size < b.size) {
+			a = b;
+			b = this.values;
+			swap = -1;
+		}
+
+		if (!isProperSubset(b, a)) {
+			return "uncomparable";
+		}
+
+		const it = a.entries();
+		for (let next = it.next(); !next.done; next = it.next()) {
+			const [k, va] = next.value;
+
+			const bHasNotToken = !b.has(k);
+			if (bHasNotToken && cmp === -1) {
+				return "uncomparable";
+			} else if (bHasNotToken) {
+				cmp = 1;
+				continue;
+			}
+
+			const vb = b.get(k)!;
+			const r = va.cmp(vb);
+			if (r === "uncomparable") {
+				return r;
+			} else if (
+				(r === "lt" && cmp === 1) ||
+				(r === "gt" && cmp === -1)
+			) {
+				return "uncomparable";
+			} else if (r !== "eq" && cmp === 0) {
+				cmp = res.indexOf(r) - 1;
+			}
+		}
+		return res[cmp * swap + 1];
+	}
+}
+
+function isProperSubset(
+	presumedSubset: Map<string, Asset>,
+	presumedSuperset: Map<string, Asset>,
+): boolean {
+	const it = presumedSubset.keys();
+	for (let k = it.next(); !k.done; k = it.next()) {
+		if (!presumedSuperset.has(k.value)) {
+			return false;
+		}
+	}
+	return true;
 }
 
 CustomJSON(Assets);

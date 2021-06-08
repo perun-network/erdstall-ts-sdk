@@ -45,7 +45,7 @@ import { utils, Signer } from "ethers";
 	public objectType(): any { return Transaction; }
 	protected objectTypeName(): string { return "Transaction"; }
 
-	protected abstract txType(): any;
+	public abstract txType(): any;
 	protected abstract txTypeName(): string;
 	protected abstract encodeABI(_: ABIEncoder): string;
 }

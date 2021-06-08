@@ -22,7 +22,7 @@ import { ABIEncoder, ABIValue } from "../util";
 		this.values = values;
 	}
 
-	protected txType() { return Transfer; }
+	public txType() { return Transfer; }
 	protected txTypeName(): string { return "Transfer"; }
 	protected encodeABI(e: ABIEncoder): string {
 		e.encode(this.recipient, this.values as ABIValue);
