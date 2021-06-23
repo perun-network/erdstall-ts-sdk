@@ -5,7 +5,8 @@ import { utils } from "ethers";
 import { jsonObject } from "typedjson";
 import { ABIValue, CustomJSON } from "../api/util";
 
-@jsonObject export class Address implements ABIValue {
+@jsonObject
+export class Address implements ABIValue {
 	private value: Uint8Array;
 	constructor(value: Uint8Array) {
 		this.value = value;
@@ -19,10 +20,20 @@ import { ABIValue, CustomJSON } from "../api/util";
 		return utils.hexlify(me.value);
 	}
 
-	toString(): string { return utils.hexlify(this.value); }
+	static fromString(addr: string): Address {
+		return Address.fromJSON(addr);
+	}
 
-	asABI(): any { return this.toString(); }
-	ABIType():string { return "address"; }
+	toString(): string {
+		return utils.hexlify(this.value);
+	}
+
+	asABI(): any {
+		return this.toString();
+	}
+	ABIType(): string {
+		return "address";
+	}
 }
 
 CustomJSON(Address);
