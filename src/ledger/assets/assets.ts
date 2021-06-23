@@ -2,10 +2,11 @@
 "use strict";
 
 import { jsonObject } from "typedjson";
-import { utils } from "ethers";
 import { Asset } from "./asset";
-import { ABIEncoder, ABIValue, CustomJSON } from "../../api/util";
+import { ABIValue, CustomJSON } from "../../api/util";
 import { Address } from "../address";
+
+export const ETHZERO = "0x0000000000000000000000000000000000000000";
 
 @jsonObject
 export class Assets implements ABIValue {
