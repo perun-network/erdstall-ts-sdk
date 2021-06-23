@@ -34,5 +34,9 @@
     "watch": "npx tsc -w",
     "lint": "npx eslint ./src --ext .ts",
     "test": "env TS_NODE_PROJECT=\"tsconfig.test.json\" mocha -r ts-node/register src/**/*.spec.ts"
+    "bindings": "./scripts/genbindings.sh deps/erdstall-contracts",
+  },
+  "dependencies": {
+    "number-generator": "^4.0.5"
   }
 }
