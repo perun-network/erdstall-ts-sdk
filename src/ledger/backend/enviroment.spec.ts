@@ -18,7 +18,7 @@ const erc721holderABI = require("./contracts/abi/ERC721Holder.json");
 const ethholderABI = require("./contracts/abi/ETHHolder.json");
 
 export interface Enviroment {
-	provider: providers.JsonRpcProvider;
+	provider: providers.Web3Provider;
 	perun: string;
 	erdstall: string;
 	ethHolder: string;
@@ -37,7 +37,7 @@ const OP = 0,
 export default async function setup(
 	numOfPrefundedAccounts: number = 1,
 	epochDuration: number = 3,
-	lprovider?: providers.JsonRpcProvider,
+	lprovider?: providers.Web3Provider,
 	lop?: Wallet,
 	pacc?: Wallet,
 ): Promise<Enviroment> {
