@@ -2,6 +2,7 @@
 "use strict";
 
 import { BigNumber, utils } from "ethers";
+
 import { Asset, TypeTags, ErrIncompatibleAssets, AssertUint256 } from "./asset";
 import { BigInteger } from "../../api/util";
 
