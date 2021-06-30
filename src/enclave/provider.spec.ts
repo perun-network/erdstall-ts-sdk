@@ -33,27 +33,14 @@ export class EnclaveMockProvider implements EnclaveProvider {
 
 		switch (call.data.objectType()) {
 			case Subscribe: {
-				return this.onmessage!(
-					new MessageEvent("erdstall", {
-						data: TypedJSON.stringify(new Result(call.id), Result),
-					}),
-				);
+				const msg = newErdstallMessageEvent(new Result(call.id));
+				return this.onmessage!(msg);
 			}
 			case GetAccount: {
-				return this.onmessage!(
-					new MessageEvent("erdstall", {
-						data: TypedJSON.stringify(
-							new Result(
-								call.id,
-								new responses.Account(
-									new Account(0n, new Assets(), new Assets()),
-									0n,
-								),
-							),
-							Result,
-						),
-					}),
-				);
+				const acc = new Account(0n, new Assets(), new Assets());
+				const racc = new responses.Account(acc, 0n);
+				const msg = newErdstallMessageEvent(new Result(call.id, racc));
+				return this.onmessage!(msg);
 			}
 			case Transaction: {
 				return this.respondToTX(call.id, call.data as Transaction);
@@ -67,24 +54,15 @@ export class EnclaveMockProvider implements EnclaveProvider {
 		switch (tx.txType()) {
 			case Transfer: {
 				const txc = tx as Transfer;
-				return this.onmessage!(
-					new MessageEvent("erdstall", {
-						data: TypedJSON.stringify(
-							new Result(
-								id,
-								new TxReceipt(
-									tx,
-									new Account(
-										txc.nonce.valueOf(),
-										txc.values,
-										new Assets(),
-									),
-								),
-							),
-							Result,
-						),
-					}),
+				const acc = new Account(
+					txc.nonce.valueOf(),
+					txc.values,
+					new Assets(),
 				);
+
+				const res = newTxReceiptResult(id, tx, acc);
+				const msg = newErdstallMessageEvent(res);
+				return this.onmessage!(msg);
 			}
 			case Mint: {
 				const txc = tx as Mint;
@@ -93,45 +71,20 @@ export class EnclaveMockProvider implements EnclaveProvider {
 					txc.token.toString(),
 					new Tokens([txc.id.valueOf()]),
 				);
-				return this.onmessage!(
-					new MessageEvent("erdstall", {
-						data: TypedJSON.stringify(
-							new Result(
-								id,
-								new TxReceipt(
-									tx,
-									new Account(
-										txc.nonce.valueOf(),
-										assets,
-										new Assets(),
-									),
-								),
-							),
-							Result,
-						),
-					}),
+				const acc = new Account(
+					txc.nonce.valueOf(),
+					assets,
+					new Assets(),
 				);
+
+				const res = newTxReceiptResult(id, tx, acc);
+				const msg = newErdstallMessageEvent(res);
+				return this.onmessage!(msg);
 			}
 			case ExitRequest: {
-				const txc = tx as ExitRequest;
-				return this.onmessage!(
-					new MessageEvent("erdstall", {
-						data: TypedJSON.stringify(
-							new Result(
-								id,
-								new TxReceipt(
-									tx,
-									new Account(
-										txc.nonce.valueOf(),
-										new Assets(),
-										new Assets(),
-									),
-								),
-							),
-							Result,
-						),
-					}),
-				);
+				const res = newTxReceiptResult(id, tx);
+				const msg = newErdstallMessageEvent(res);
+				return this.onmessage!(msg);
 			}
 			default:
 				throw new Error("transaction not implemented");
@@ -147,4 +100,21 @@ export class EnclaveMockProvider implements EnclaveProvider {
 	}
 
 	public close() {}
+}
+
+function newErdstallMessageEvent(res: Result): MessageEvent {
+	const data = TypedJSON.stringify(res, Result);
+	return new MessageEvent("erdstall", { data: data });
+}
+
+function newTxReceiptResult(
+	id: string,
+	tx: Transaction,
+	acc?: Account,
+): Result {
+	const _acc = acc
+		? acc
+		: new Account(tx.nonce.valueOf(), new Assets(), new Assets());
+	const txr = new TxReceipt(tx, _acc);
+	return new Result(id, txr);
 }
