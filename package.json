@@ -33,6 +33,8 @@
     "ganache-core": "^2.13.2",
     "hardhat": "^2.4.0",
     "hardhat-waffle": "^0.0.1-security",
+    "jsdom": "^16.6.0",
+    "jsdom-global": "^3.0.2",
     "mocha": "^8.3.2",
     "mocha-suppress-logs": "^0.3.1",
     "prettier": "^2.2.1",
@@ -41,14 +43,15 @@
     "ts-node": "^9.1.1",
     "typechain": "^4.0.3",
     "typedjson": "^1.7.0",
-    "typescript": "^4.2.4"
+    "typescript": "^4.2.4",
+    "ws": "^7.4.5"
   },
   "scripts": {
     "build": "npx tsc",
     "watch": "npx tsc -w",
     "lint": "npx eslint ./src --ext .ts",
     "bindings": "./scripts/genbindings.sh deps/erdstall-contracts",
-    "test": "env TS_NODE_PROJECT=\"tsconfig.test.json\" mocha --timeout 15000 -r ts-node/register 'src/**/*.spec.ts'"
+    "test": "env TS_NODE_PROJECT=\"tsconfig.test.json\" mocha --timeout 15000 -r jsdom-global/register -r ts-node/register 'src/**/*.spec.ts'"
   },
   "dependencies": {
     "number-generator": "^4.0.5"
