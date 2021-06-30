@@ -11,7 +11,7 @@ import { BalanceProof } from "./api/responses";
 import { ClientConfig } from "./api/responses";
 import { Transfer, Mint, ExitRequest } from "./api/transactions";
 import { EnclaveConnection } from "./enclave";
-import { LedgerWatcher, LedgerAdapter } from "./ledger";
+import { LedgerConnection, LedgerAdapter } from "./ledger";
 import { Assets } from "./ledger";
 import { Address } from "./ledger";
 import { Uint256 } from "./api/util";
@@ -25,7 +25,7 @@ export default class Client implements Erdstall {
 	readonly address: Address;
 	private nonce: bigint;
 	private enclaveConn: EnclaveConnection;
-	private erdstallConn?: LedgerWatcher;
+	private erdstallConn?: LedgerConnection;
 	private erdstallEventHandlerCache: EventCache<ErdstallEvent>;
 	private erdstallOneShotHandlerCache: OneShotEventCache<ErdstallEvent>;
 	private signer: Signer;

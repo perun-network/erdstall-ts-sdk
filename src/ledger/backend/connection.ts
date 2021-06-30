@@ -20,11 +20,14 @@ export const ErrErdstallContractNotConnected = new Error(
 
 // LedgerConnection describes the connection a client can have to the on-chain
 // part of Erdstall.
-export interface LedgerWatcher extends ErdstallWatcher, Depositor, Withdrawer {
+export interface LedgerConnection
+	extends ErdstallWatcher,
+		Depositor,
+		Withdrawer {
 	erdstall(): Address;
 }
 
-export class LedgerAdapter implements LedgerWatcher {
+export class LedgerAdapter implements LedgerConnection {
 	readonly signer: Signer;
 	readonly contract: Erdstall;
 	readonly tokenCache: TokenTypesCache;
