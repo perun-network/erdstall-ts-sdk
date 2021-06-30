@@ -53,6 +53,7 @@ export class Enclave implements EnclaveConnection {
 		this.provider.onmessage = (ev) => this.onMessage(ev);
 		this.provider.onerror = (ev) => this.onError(ev);
 		this.provider.onopen = (ev) => this.onOpen(ev);
+		this.provider.onclose = (ev) => this.onClose(ev);
 		this.provider.connect();
 	}
 
@@ -215,6 +216,17 @@ export class Enclave implements EnclaveConnection {
 
 	private onOpen(_: Event) {
 		[this.handlers.get("open"), this.oneShotHandlers.get("open")].forEach(
+			(cbs) => {
+				if (cbs)
+					cbs.forEach((f) => {
+						f({} as any);
+					});
+			},
+		);
+	}
+
+	private onClose(_: Event) {
+		[this.handlers.get("close"), this.oneShotHandlers.get("close")].forEach(
 			(cbs) => {
 				if (cbs)
 					cbs.forEach((f) => {
