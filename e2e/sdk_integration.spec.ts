@@ -39,7 +39,7 @@ describe("Erdstall-TS-SDK", () => {
 		// establishes connection to erdstall-contract on ledger and connection to
 		// enclave with the given url. All event handlers were registered and
 		// forwarded were necessary.
-		client.initialise();
+		client.initialize();
 
 		let contractTXs = await client.deposit(new Assets());
 		for (const ctx of contractTXs) {

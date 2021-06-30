@@ -61,7 +61,7 @@ export interface Erdstall
 		Withdrawer,
 		Exiter,
 		Leaver {
-	initialise(): void;
+	initialize(): void;
 }
 
 export function NewClient(

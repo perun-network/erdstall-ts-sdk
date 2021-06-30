@@ -130,7 +130,7 @@ export default class Client implements Erdstall {
 		return this.withdraw(exitProof);
 	}
 
-	initialise(): void {
+	initialize(): void {
 		this.enclaveConn.on("config", (config: ClientConfig) => {
 			const erdstall = Erdstall__factory.connect(
 				config.contract.toString(),

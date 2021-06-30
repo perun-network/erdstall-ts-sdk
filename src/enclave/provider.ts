@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-export const UninitialisedConn = new Error("uninitialised connection");
+export const UninitializedConn = new Error("uninitialized connection");
 
 export interface EnclaveProvider {
 	connect(): void;
@@ -51,7 +51,7 @@ export class EnclaveWSProvider implements EnclaveProvider {
 
 	public send(data: string | ArrayBufferLike | Blob | ArrayBufferView) {
 		if (!this.ws) {
-			throw UninitialisedConn;
+			throw UninitializedConn;
 		}
 
 		this.ws.send(data);
