@@ -4,7 +4,7 @@
 // This file contains the Erdstall implementation, unifying the on-chain and
 // offchain part of Erdstall into a single interface.
 
-import { providers } from "ethers";
+import { Signer } from "ethers";
 import { ethers } from "ethers";
 
 import { TxReceipt } from "./api/responses/txreceipt";
@@ -17,23 +17,17 @@ import EnclaveEvent from "./enclave/event";
 import Client from "./client";
 import { Enclave, EnclaveWSProvider } from "./enclave";
 
-export interface ErdstallWatcher {
-	on: (ev: ErdstallEvent, cb: Function) => void;
-	once: (ev: ErdstallEvent, cb: Function) => void;
-	off: (ev: ErdstallEvent, cb: Function) => void;
+interface watcher<T extends ErdstallEvent | EnclaveEvent> {
+	on: (ev: T, cb: Function) => void;
+	once: (ev: T, cb: Function) => void;
+	off: (ev: T, cb: Function) => void;
 }
 
-export interface EnclaveWatcher {
-	on: (ev: EnclaveEvent, cb: Function) => void;
-	once: (ev: EnclaveEvent, cb: Function) => void;
-	off: (ev: EnclaveEvent, cb: Function) => void;
-}
+export interface ErdstallWatcher extends watcher<ErdstallEvent> {}
 
-export interface Watcher {
-	on: (ev: EnclaveEvent | ErdstallEvent, cb: Function) => void;
-	once: (ev: EnclaveEvent | ErdstallEvent, cb: Function) => void;
-	off: (ev: EnclaveEvent | ErdstallEvent, cb: Function) => void;
-}
+export interface EnclaveWatcher extends watcher<EnclaveEvent> {}
+
+export interface Watcher extends watcher<ErdstallEvent | EnclaveEvent> {}
 
 export interface Transactor {
 	transferTo(assets: Assets, to: Address): Promise<TxReceipt>;
@@ -72,12 +66,12 @@ export interface Erdstall
 
 export function NewClient(
 	address: Address,
-	provider: providers.Web3Provider,
+	signer: Signer,
 	operatorAddress: URL,
 ): Erdstall {
 	return new Client(
 		address,
-		provider,
+		signer,
 		new Enclave(new EnclaveWSProvider(operatorAddress)),
 	);
 }
