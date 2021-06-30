@@ -2,3 +2,4 @@
 "use strict";
 
 export * from "./event_cache";
+export * from "./event_helper";
