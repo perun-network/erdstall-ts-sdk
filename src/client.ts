@@ -22,7 +22,6 @@ import EnclaveEvent from "./enclave/event";
 export const ErrUnitialisedClient = new Error("client unitialised");
 
 export default class Client implements Erdstall {
-	readonly provider: providers.Web3Provider;
 	readonly address: Address;
 	private nonce: bigint;
 	private enclaveConn: EnclaveConnection;
@@ -31,14 +30,9 @@ export default class Client implements Erdstall {
 	private erdstallOneShotHandlerCache: OneShotEventCache<ErdstallEvent>;
 	private signer: Signer;
 
-	constructor(
-		address: Address,
-		provider: providers.Web3Provider,
-		encConn: EnclaveConnection,
-	) {
+	constructor(address: Address, signer: Signer, encConn: EnclaveConnection) {
 		this.address = address;
-		this.provider = provider;
-		this.signer = provider.getSigner();
+		this.signer = signer;
 		this.nonce = 0n;
 		this.enclaveConn = encConn;
 		this.erdstallEventHandlerCache = new EventCache<ErdstallEvent>();
