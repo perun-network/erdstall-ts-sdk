@@ -29,7 +29,7 @@ export interface EnclaveConnection extends EnclaveWatcher {
 	getAccount(acc: Address): Promise<Account>;
 }
 
-export class Enclave implements EnclaveWatcher {
+export class Enclave implements EnclaveConnection {
 	private provider: EnclaveProvider;
 	private handlers: EventCache<EnclaveEvent>;
 	private oneShotHandlers: OneShotEventCache<EnclaveEvent>;

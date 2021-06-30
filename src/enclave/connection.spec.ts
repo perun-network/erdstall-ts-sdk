@@ -4,7 +4,6 @@
 import { expect } from "chai";
 import { Enclave } from "./connection";
 import { EnclaveMockProvider } from "./provider.spec";
-import { ErdstallObject, Result } from "../api";
 
 import * as pkgtest from "../../test";
 
@@ -99,13 +98,13 @@ describe("EnclaveConnection", () => {
 			expect(
 				exitedCalled,
 				"exit callback should not be triggered by normal balanceproofs",
-			).is.false;
+			).to.be.false;
 
 			sendEPtoClient();
 			expect(
 				exitedCalled,
 				"exit callback should be triggered by an exitproof",
-			).is.true;
+			).to.be.true;
 		}
 
 		{
