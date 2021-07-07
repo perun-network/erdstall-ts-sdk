@@ -6,14 +6,39 @@ import { Address } from "../../ledger";
 import { jsonObject, jsonMember } from "typedjson";
 
 @jsonObject
-export class Subscribe extends ErdstallObject {
-	@jsonMember(Address) who: Address;
+export class SubscribeBalanceProofs extends ErdstallObject {
+	@jsonMember(Address) who?: Address;
+	@jsonMember cancel?: boolean;
 
-	constructor(who: Address) {
+	constructor(who?: Address, cancel?: boolean) {
 		super();
 		this.who = who;
+		this.cancel = cancel;
 	}
 
-	public objectType(): any { return Subscribe; }
-	protected objectTypeName(): string { return "Subscribe"; }
+	public objectType(): any {
+		return SubscribeBalanceProofs;
+	}
+	protected objectTypeName(): string {
+		return "SubscribeBalanceProofs";
+	}
+}
+
+@jsonObject
+export class SubscribeTXs extends ErdstallObject {
+	@jsonMember(Address) who?: Address;
+	@jsonMember cancel?: boolean;
+
+	constructor(who?: Address, cancel?: boolean) {
+		super();
+		this.who = who;
+		this.cancel = cancel;
+	}
+
+	public objectType(): any {
+		return SubscribeTXs;
+	}
+	protected objectTypeName(): string {
+		return "SubscribeTXs";
+	}
 }

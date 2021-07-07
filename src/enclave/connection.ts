@@ -5,7 +5,7 @@ import { Address } from "../ledger";
 import { Call, Result } from "../api";
 import { EnclaveWatcher } from "../";
 import { ErdstallObject } from "../api";
-import { Subscribe, GetAccount } from "../api/calls";
+import { SubscribeTXs, SubscribeBalanceProofs, GetAccount } from "../api/calls";
 import { Mint, Transfer, ExitRequest } from "../api/transactions";
 import {
 	ClientConfig,
@@ -58,8 +58,10 @@ export class Enclave implements EnclaveConnection {
 	}
 
 	public async subscribe(who: Address): Promise<void> {
-		const sub = new Subscribe(who);
-		await this.sendCall(sub);
+		const subTXs = new SubscribeTXs(who);
+		const subBPs = new SubscribeBalanceProofs(who);
+		await this.sendCall(subTXs);
+		await this.sendCall(subBPs);
 		return;
 	}
 
