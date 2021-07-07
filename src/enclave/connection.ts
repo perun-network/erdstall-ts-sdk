@@ -195,16 +195,7 @@ export class Enclave implements EnclaveConnection {
 	private onError(ev: Event) {
 		console.error("connection error: ", ev);
 
-		[this.handlers.get("close"), this.oneShotHandlers.get("close")].forEach(
-			(cbs) => {
-				if (!cbs) {
-					return;
-				}
-				cbs.forEach((f) => {
-					f({} as any);
-				});
-			},
-		);
+		this.callEvent("error", {} as any);
 
 		this.provider.close();
 		setTimeout(() => {
@@ -215,24 +206,10 @@ export class Enclave implements EnclaveConnection {
 	}
 
 	private onOpen(_: Event) {
-		[this.handlers.get("open"), this.oneShotHandlers.get("open")].forEach(
-			(cbs) => {
-				if (cbs)
-					cbs.forEach((f) => {
-						f({} as any);
-					});
-			},
-		);
+		this.callEvent("open", {} as any);
 	}
 
 	private onClose(_: Event) {
-		[this.handlers.get("close"), this.oneShotHandlers.get("close")].forEach(
-			(cbs) => {
-				if (cbs)
-					cbs.forEach((f) => {
-						f({} as any);
-					});
-			},
-		);
+		this.callEvent("close", {} as any);
 	}
 }

@@ -34,7 +34,7 @@ export interface Transactor {
 }
 
 export interface Minter {
-	mint: (owner: Address, token: Address, id: Uint256) => Promise<TxReceipt>;
+	mint: (token: Address, id: Uint256) => Promise<TxReceipt>;
 }
 
 export interface Depositor {
