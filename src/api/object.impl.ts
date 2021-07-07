@@ -13,8 +13,10 @@ ErdstallObject.fromJSON = (js: any): ErdstallObject => {
 	switch (js.type) {
 		case "Transaction":
 			return TypedJSON.parse(data, Transaction)!;
-		case "Subscribe":
-			return TypedJSON.parse(data, calls.Subscribe)!;
+		case "SubscribeTXs":
+			return TypedJSON.parse(data, calls.SubscribeTXs)!;
+		case "SubscribeBalanceProofs":
+			return TypedJSON.parse(data, calls.SubscribeBalanceProofs)!;
 		case "GetAccount":
 			return TypedJSON.parse(data, calls.GetAccount)!;
 		case "TxReceipt":

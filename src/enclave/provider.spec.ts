@@ -4,7 +4,7 @@
 import { EnclaveProvider } from "./provider";
 import { TypedJSON } from "typedjson";
 import { Call, Result, ErdstallObject } from "../api";
-import { Subscribe, GetAccount } from "../api/calls";
+import { SubscribeTXs, SubscribeBalanceProofs, GetAccount } from "../api/calls";
 import * as responses from "../api/responses";
 import { Transaction } from "../api/transactions";
 import { TxReceipt } from "../api/responses";
@@ -32,7 +32,11 @@ export class EnclaveMockProvider implements EnclaveProvider {
 		const call = TypedJSON.parse(data, Call)!;
 
 		switch (call.data.objectType()) {
-			case Subscribe: {
+			case SubscribeTXs: {
+				const msg = newErdstallMessageEvent(new Result(call.id));
+				return this.onmessage!(msg);
+			}
+			case SubscribeBalanceProofs: {
 				const msg = newErdstallMessageEvent(new Result(call.id));
 				return this.onmessage!(msg);
 			}

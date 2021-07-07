@@ -15,7 +15,8 @@ import { ClientConfig } from "../responses/clientconfig";
 
 describe("Wiremessages", () => {
 	it("de-/encodes subscriptions", () => {
-		genericJSONTest(testSubscribe, Call);
+		genericJSONTest(testSubscribeTXs, Call);
+		genericJSONTest(testSubscribeBalanceProofs, Call);
 	});
 	it("de-/encodes errors", () => {
 		genericJSONTest(testError, Result);
@@ -65,5 +66,7 @@ const testMint =
 
 const testError = '{"id":"an-id","error":"could not get proof"}';
 
-const testSubscribe =
-	'{"id":"an-id","data":{"type":"Subscribe","data":{"who":"0x92aaff3bba15f99960d54074ed2464c337fee0ab"}}}';
+const testSubscribeTXs =
+	'{"id":"an-id","data":{"type":"SubscribeTXs","data":{"who":"0x92aaff3bba15f99960d54074ed2464c337fee0ab", "cancel": false}}}';
+const testSubscribeBalanceProofs =
+	'{"id":"an-id","data":{"type":"SubscribeBalanceProofs","data":{"who":"0x92aaff3bba15f99960d54074ed2464c337fee0ab", "cancel": false}}}';
