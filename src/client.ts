@@ -84,7 +84,6 @@ export default class Client implements Erdstall {
 	}
 
 	async mint(
-		sender: Address,
 		token: Address,
 		id: Uint256,
 	): Promise<TxReceipt> {
@@ -92,7 +91,7 @@ export default class Client implements Erdstall {
 			return Promise.reject(ErrUnitialisedClient);
 		}
 
-		const minttx = new Mint(sender, this.nonce, token, id);
+		const minttx = new Mint(this.address, this.nonce, token, id);
 		minttx.sign(this.erdstallConn.erdstall(), this.signer);
 		return this.enclaveConn.mint(minttx);
 	}
