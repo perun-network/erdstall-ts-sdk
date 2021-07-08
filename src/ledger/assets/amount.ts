@@ -17,7 +17,7 @@ export class Amount extends Asset {
 	}
 
 	toJSON() {
-		return utils.hexlify(BigNumber.from(this.value));
+		return utils.hexValue(BigNumber.from(this.value));
 	}
 
 	static fromJSON(hexString: string): Amount {
