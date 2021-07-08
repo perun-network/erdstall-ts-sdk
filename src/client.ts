@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { providers, Signer } from "ethers";
+import { Signer } from "ethers";
 import { ethers } from "ethers";
 
 import { Erdstall } from "./erdstall";
@@ -72,6 +72,14 @@ export default class Client implements Erdstall {
 		} else {
 			return this.enclaveConn.off(ev, cb);
 		}
+	}
+
+	async onboard(): Promise<void> {
+		return this.enclaveConn.onboard(this.address);
+	}
+
+	async subscribe(): Promise<void> {
+		return this.enclaveConn.subscribe(this.address);
 	}
 
 	async transferTo(assets: Assets, to: Address): Promise<TxReceipt> {

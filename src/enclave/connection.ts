@@ -5,7 +5,12 @@ import { Address } from "../ledger";
 import { Call, Result } from "../api";
 import { EnclaveWatcher } from "../";
 import { ErdstallObject } from "../api";
-import { SubscribeTXs, SubscribeBalanceProofs, GetAccount } from "../api/calls";
+import {
+	SubscribeTXs,
+	SubscribeBalanceProofs,
+	GetAccount,
+	Onboarding,
+} from "../api/calls";
 import { Mint, Transfer, ExitRequest } from "../api/transactions";
 import {
 	ClientConfig,
@@ -23,6 +28,7 @@ import { EnclaveProvider } from "./provider";
 export interface EnclaveConnection extends EnclaveWatcher {
 	connect(): void;
 	subscribe(who: Address): Promise<void>;
+	onboard(who: Address): Promise<void>;
 	transfer(tx: Transfer): Promise<TxReceipt>;
 	mint(tx: Mint): Promise<TxReceipt>;
 	exit(exitRequest: ExitRequest): Promise<BalanceProof>;
@@ -55,6 +61,12 @@ export class Enclave implements EnclaveConnection {
 		this.provider.onopen = (ev) => this.onOpen(ev);
 		this.provider.onclose = (ev) => this.onClose(ev);
 		this.provider.connect();
+	}
+
+	public async onboard(who: Address): Promise<void> {
+		const onboard = new Onboarding(who);
+		await this.sendCall(onboard);
+		return;
 	}
 
 	public async subscribe(who: Address): Promise<void> {
