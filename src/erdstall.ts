@@ -53,6 +53,11 @@ export interface Leaver extends Exiter, Withdrawer {
 	leave(): Promise<ethers.ContractTransaction[]>;
 }
 
+export interface Subscriber {
+	subscribe(): Promise<void>;
+	onboard(): Promise<void>;
+}
+
 export interface Erdstall
 	extends Watcher,
 		Transactor,
@@ -60,6 +65,7 @@ export interface Erdstall
 		Depositor,
 		Withdrawer,
 		Exiter,
+		Subscriber,
 		Leaver {
 	initialize(): void;
 }
