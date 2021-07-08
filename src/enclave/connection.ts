@@ -16,6 +16,7 @@ import {
 	ClientConfig,
 	TxReceipt,
 	BalanceProof,
+	BalanceProofs,
 	Account,
 } from "../api/responses";
 import { TypedJSON } from "typedjson";
@@ -178,13 +179,16 @@ export class Enclave implements EnclaveConnection {
 				return this.callEvent("config", obj);
 			case TxReceipt:
 				return this.callEvent("receipt", obj);
-			case BalanceProof:
-				const bp = obj as BalanceProof;
-				if (bp.balance.exit) {
-					return this.callEvent("exitproof", obj);
-				} else {
-					return this.callEvent("proof", obj);
+			case BalanceProofs:
+				const bps = obj as BalanceProofs;
+				for (const [_, bp] of bps.map) {
+					if (bp.balance.exit) {
+						this.callEvent("exitproof", bp);
+					} else {
+						this.callEvent("proof", bp);
+					}
 				}
+				break;
 			default:
 				console.error("received unsupported Erdstall event: ", om);
 		}

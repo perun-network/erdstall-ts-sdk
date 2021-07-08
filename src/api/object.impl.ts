@@ -25,8 +25,8 @@ ErdstallObject.fromJSON = (js: any): ErdstallObject => {
 			return TypedJSON.parse(data, responses.ClientConfig)!;
 		case "AccountResponse":
 			return TypedJSON.parse(data, responses.Account)!;
-		case "BalanceProof":
-			return TypedJSON.parse(data, responses.BalanceProof)!;
+		case "BalanceProofs":
+			return TypedJSON.parse(data, responses.BalanceProofs)!;
 		default:
 			throw new Error(`unknown type "${js.type}"`);
 	}

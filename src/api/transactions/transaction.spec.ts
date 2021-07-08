@@ -5,13 +5,9 @@ import "reflect-metadata";
 import { describe, it } from "mocha";
 import "../..";
 import { TypedJSON } from "typedjson";
-import { Call, Result } from "..";
+import { Call, Result, ErdstallObject } from "..";
 import { expect } from "chai";
-import { Balance, BalanceProof } from "../responses/balanceproof";
-import { Assets } from "../../ledger/assets";
-import { Address } from "../../ledger/address";
-import { Signature } from "../signature";
-import { ClientConfig } from "../responses/clientconfig";
+import { BalanceProofs } from "../responses/balanceproof";
 
 describe("Wiremessages", () => {
 	it("de-/encodes subscriptions", () => {
@@ -37,7 +33,7 @@ describe("Wiremessages", () => {
 		genericJSONTest(testClientConfig, Result);
 	});
 	it("de-/encodes balanceproofs", () => {
-		genericJSONTest(testBalanceProofResult, Result);
+		genericJSONTest(testBalanceProofs, ErdstallObject);
 	});
 });
 
@@ -46,8 +42,8 @@ function genericJSONTest(data: string, type: any) {
 	expect(JSON.parse(TypedJSON.stringify(res, type))).eql(JSON.parse(data));
 }
 
-const testBalanceProofResult =
-	'{"data":{"type":"BalanceProof","data":{"balance":{"epoch":"2","account":"0x98301285f9ebaf0f91b6bd623d564218c2363ceb","values":{"0x079557d7549d7D44F4b00b51d2C532674129ed51":{"uint":"0x3635c9adc5dea00000"}},"exit":false},"sig":"0x1df39f511438459ff46b68316eec3191c3b53444615a827fa97840d36d6e420b539488a9eee3d54648ff2fc62fe3d0f89a2fb3dd1df3e975f2c3cbc75bc166291b"}}}';
+const testBalanceProofs =
+	'{"type":"BalanceProofs","data":{"0x923439be515b6a928cb9650d70000a9044e49e85":{"balance":{"epoch":"53","account":"0x923439be515b6a928cb9650d70000a9044e49e85","values":{"0x079557d7549d7D44F4b00b51d2C532674129ed51":{"uint":"0x3cfc82e37e9a7400000"}},"exit":false},"sig":"0xc93a0443d473783cf927dc1ccc17026b613ef3ceda5625c77949a07f2aa3b39253f1cc02b838e74afca27ff77e67493d9e20e1b36faf41dec442169d0d8851be1c"},"0xb5d05705c467bfed944b6769a689c7766cc1f805":{"balance":{"epoch":"53","account":"0xb5d05705c467bfed944b6769a689c7766cc1f805","values":{"0x079557d7549d7D44F4b00b51d2C532674129ed51":{"uint":"0xcff253a09503f9c00000"}},"exit":false},"sig":"0xe2cda7c66ce85bbcc25bafee085421bb38ce496f2052a05d9a78ef1238df41696b37217c4cf6c4dc885b42a6c756cbf08af7334ec5a33615d1465b62973a40c71c"}}}';
 
 const testClientConfig =
 	'{"data":{"type":"ClientConfig","data":{"networkID":"0x23058","contract":"0x75a96a43b52366e05c9b1d5c7ca01aa69f373553","powDepth":23907239}}}';
