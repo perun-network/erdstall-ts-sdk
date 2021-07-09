@@ -24,7 +24,11 @@ export class Tokens extends Asset {
 
 	toJSON() {
 		return this.value.map((val) => {
-			return utils.hexlify(BigNumber.from(val));
+			const arr = utils.arrayify(BigNumber.from(val));
+			const offset = 32 - arr.length;
+			const abi = new Uint8Array(32);
+			abi.set(arr, offset);
+			return utils.hexlify(abi);
 		});
 	}
 
