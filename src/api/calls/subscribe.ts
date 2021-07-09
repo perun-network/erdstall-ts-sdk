@@ -8,7 +8,7 @@ import { jsonObject, jsonMember } from "typedjson";
 @jsonObject
 export class SubscribeBalanceProofs extends ErdstallObject {
 	@jsonMember(Address) who?: Address;
-	@jsonMember cancel?: boolean;
+	@jsonMember(Boolean) cancel?: boolean;
 
 	constructor(who?: Address, cancel?: boolean) {
 		super();
@@ -27,7 +27,7 @@ export class SubscribeBalanceProofs extends ErdstallObject {
 @jsonObject
 export class SubscribeTXs extends ErdstallObject {
 	@jsonMember(Address) who?: Address;
-	@jsonMember cancel?: boolean;
+	@jsonMember(Boolean) cancel?: boolean;
 
 	constructor(who?: Address, cancel?: boolean) {
 		super();
