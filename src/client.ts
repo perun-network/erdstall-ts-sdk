@@ -87,14 +87,11 @@ export default class Client implements Erdstall {
 			return Promise.reject(ErrUnitialisedClient);
 		}
 		const tx = new Transfer(this.address, this.nonce, to, assets);
-		tx.sign(this.erdstallConn.erdstall(), this.signer);
+		await tx.sign(this.erdstallConn.erdstall(), this.signer);
 		return this.enclaveConn.transfer(tx);
 	}
 
-	async mint(
-		token: Address,
-		id: Uint256,
-	): Promise<TxReceipt> {
+	async mint(token: Address, id: Uint256): Promise<TxReceipt> {
 		if (!this.erdstallConn) {
 			return Promise.reject(ErrUnitialisedClient);
 		}
