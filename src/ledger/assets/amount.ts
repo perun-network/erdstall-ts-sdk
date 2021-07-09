@@ -4,7 +4,6 @@
 import { BigNumber, utils } from "ethers";
 
 import { Asset, TypeTags, ErrIncompatibleAssets, AssertUint256 } from "./asset";
-import { BigInteger } from "../../api/util";
 
 /** Amount represents a currency amount in its smallest unit. */
 export class Amount extends Asset {
@@ -29,7 +28,11 @@ export class Amount extends Asset {
 	}
 
 	asABI(): any {
-		return new BigInteger(this.value).asABI();
+		const arr = utils.arrayify(BigNumber.from(this.value));
+		const offset = 32 - arr.length;
+		const abi = new Uint8Array(32);
+		abi.set(arr, offset);
+		return utils.hexlify(abi);
 	}
 
 	zero(): boolean {
