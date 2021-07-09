@@ -28,10 +28,33 @@ export abstract class Transaction extends ErdstallObject {
 		]);
 		const tag = this.encodeABI(encoder);
 		const msg = encoder.pack(tag, contract);
-		const data = utils.keccak256(msg);
-		const sig = await signer.signMessage(utils.arrayify(data));
+		const hmsg = utils.keccak256(msg);
+		const sig = await signer.signMessage(utils.arrayify(hmsg));
 		this.sig = new Signature(utils.arrayify(sig));
 		return this;
+	}
+
+	verify(contract: Address): boolean {
+		if (!this.sig) {
+			return false;
+		}
+
+		const encoder = new ABIEncoder().encode(this.sender, [
+			"uint64",
+			this.nonce,
+		]);
+		const tag = this.encodeABI(encoder);
+		const msg = encoder.pack(tag, contract);
+		const data = utils.keccak256(msg);
+		const rec = utils.verifyMessage(
+			utils.arrayify(data),
+			this.sig!.toString(),
+		);
+
+		console.log("PACKED: ");
+		console.log(msg);
+
+		return rec === this.sender.toString();
 	}
 
 	static toJSON(me: Transaction) {
