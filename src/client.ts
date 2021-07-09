@@ -33,7 +33,7 @@ export default class Client implements Erdstall {
 	constructor(address: Address, signer: Signer, encConn: EnclaveConnection) {
 		this.address = address;
 		this.signer = signer;
-		this.nonce = 0n;
+		this.nonce = 1n;
 		this.enclaveConn = encConn;
 		this.erdstallEventHandlerCache = new EventCache<ErdstallEvent>();
 		this.erdstallOneShotHandlerCache = new OneShotEventCache<ErdstallEvent>();
@@ -74,6 +74,10 @@ export default class Client implements Erdstall {
 		}
 	}
 
+	private nextNonce(): bigint {
+		return this.nonce++;
+	}
+
 	async onboard(): Promise<void> {
 		return this.enclaveConn.onboard(this.address);
 	}
@@ -86,7 +90,7 @@ export default class Client implements Erdstall {
 		if (!this.erdstallConn) {
 			return Promise.reject(ErrUnitialisedClient);
 		}
-		const tx = new Transfer(this.address, this.nonce, to, assets);
+		const tx = new Transfer(this.address, this.nextNonce(), to, assets);
 		await tx.sign(this.erdstallConn.erdstall(), this.signer);
 		return this.enclaveConn.transfer(tx);
 	}
@@ -96,7 +100,7 @@ export default class Client implements Erdstall {
 			return Promise.reject(ErrUnitialisedClient);
 		}
 
-		const minttx = new Mint(this.address, this.nonce, token, id);
+		const minttx = new Mint(this.address, this.nextNonce(), token, id);
 		minttx.sign(this.erdstallConn.erdstall(), this.signer);
 		return this.enclaveConn.mint(minttx);
 	}
@@ -114,7 +118,7 @@ export default class Client implements Erdstall {
 			return Promise.reject(ErrUnitialisedClient);
 		}
 
-		const exittx = new ExitRequest(this.address, this.nonce);
+		const exittx = new ExitRequest(this.address, this.nextNonce());
 		exittx.sign(this.erdstallConn.erdstall(), this.signer);
 		return this.enclaveConn.exit(exittx);
 	}
@@ -135,7 +139,7 @@ export default class Client implements Erdstall {
 	}
 
 	initialize(): void {
-		this.enclaveConn.on("config", (config: ClientConfig) => {
+		this.enclaveConn.once("config", (config: ClientConfig) => {
 			const erdstall = Erdstall__factory.connect(
 				config.contract.toString(),
 				this.signer,
