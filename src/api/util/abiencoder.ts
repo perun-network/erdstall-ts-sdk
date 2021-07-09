@@ -29,30 +29,36 @@ export class ABIEncoder {
 	}
 
 	encode(...fields: EncoderArg[]): this {
-		this.types = this.types.concat(fields.map((f):string => {
-			if(f instanceof Array)
-				return f[0];
-			else if(f instanceof String)
-				return "string";
-			else if(f instanceof Boolean)
-				return "bool";
-			else if((f as ABIValue).ABIType !== undefined)
-				return (f as ABIValue).ABIType();
-			throw new Error(`cannot encode ${typeof f}`);
-		}));
-		this.values = this.values.concat(fields.map((f):any => {
-			if((f as ABIEncodable).asABI !== undefined)
-				return (f as ABIEncodable).asABI();
-			if(f instanceof String
-			|| f instanceof Boolean)
-				return f;
-			if(f instanceof Array)
-				if((f[1] as ABIEncodable).asABI !== undefined)
-					return (f[1] as ABIEncodable).asABI();
-				else
-					return f[1];
-			throw new Error("value not encodable");
-		}));
+		this.types = this.types.concat(
+			fields.map((f): string => {
+				if (f instanceof Array) return f[0];
+				else if (f instanceof String || typeof f === "string")
+					return "string";
+				else if (f instanceof Boolean || typeof f === "boolean")
+					return "bool";
+				else if ((f as ABIValue).ABIType !== undefined)
+					return (f as ABIValue).ABIType();
+				throw new Error(`cannot encode ${typeof f}`);
+			}),
+		);
+		this.values = this.values.concat(
+			fields.map((f): any => {
+				if ((f as ABIEncodable).asABI !== undefined)
+					return (f as ABIEncodable).asABI();
+				if (
+					f instanceof String ||
+					typeof f === "string" ||
+					f instanceof Boolean ||
+					typeof f === "boolean"
+				)
+					return f;
+				if (f instanceof Array)
+					if ((f[1] as ABIEncodable).asABI !== undefined)
+						return (f[1] as ABIEncodable).asABI();
+					else return f[1];
+				throw new Error(`value not encodable ${f}`);
+			}),
+		);
 		return this;
 	}
 
@@ -64,6 +70,7 @@ export class ABIEncoder {
 		const enc = new ABIEncoder(tag, contract);
 		return utils.defaultAbiCoder.encode(
 			enc.types.concat(this.types),
-			enc.values.concat(this.values));
+			enc.values.concat(this.values),
+		);
 	}
 }
