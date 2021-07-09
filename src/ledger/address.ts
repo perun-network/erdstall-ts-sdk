@@ -25,7 +25,7 @@ export class Address implements ABIValue {
 	}
 
 	toString(): string {
-		return utils.hexlify(this.value);
+		return utils.getAddress(utils.hexlify(this.value));
 	}
 
 	asABI(): any {
