@@ -119,7 +119,7 @@ export default class Client implements Erdstall {
 		}
 
 		const exittx = new ExitRequest(this.address, this.nextNonce());
-		exittx.sign(this.erdstallConn.erdstall(), this.signer);
+		await exittx.sign(this.erdstallConn.erdstall(), this.signer);
 		return this.enclaveConn.exit(exittx);
 	}
 
