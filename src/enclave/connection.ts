@@ -28,6 +28,7 @@ import { EnclaveProvider } from "./provider";
 // running Erdstall.
 export interface EnclaveConnection extends EnclaveWatcher {
 	connect(): void;
+	disconnect(): void;
 	subscribe(who: Address): Promise<void>;
 	onboard(who: Address): Promise<void>;
 	transfer(tx: Transfer): Promise<TxReceipt>;
@@ -62,6 +63,10 @@ export class Enclave implements EnclaveConnection {
 		this.provider.onopen = (ev) => this.onOpen(ev);
 		this.provider.onclose = (ev) => this.onClose(ev);
 		this.provider.connect();
+	}
+
+	public disconnect() {
+		this.provider.close();
 	}
 
 	public async onboard(who: Address): Promise<void> {
