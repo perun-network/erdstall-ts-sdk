@@ -74,8 +74,17 @@ export default class Client implements Erdstall {
 		}
 	}
 
-	private nextNonce(): bigint {
+	private async nextNonce(): Promise<bigint> {
+		if (this.nonce === 1n) {
+			await this.updateNonce();
+		}
+
 		return this.nonce++;
+	}
+
+	private async updateNonce(): Promise<void> {
+		const acc = await this.enclaveConn.getAccount(this.address);
+		this.nonce = acc.account.nonce.valueOf() + 1n;
 	}
 
 	async onboard(): Promise<void> {
@@ -90,7 +99,12 @@ export default class Client implements Erdstall {
 		if (!this.erdstallConn) {
 			return Promise.reject(ErrUnitialisedClient);
 		}
-		const tx = new Transfer(this.address, this.nextNonce(), to, assets);
+		const tx = new Transfer(
+			this.address,
+			await this.nextNonce(),
+			to,
+			assets,
+		);
 		await tx.sign(this.erdstallConn.erdstall(), this.signer);
 		return this.enclaveConn.transfer(tx);
 	}
@@ -100,7 +114,12 @@ export default class Client implements Erdstall {
 			return Promise.reject(ErrUnitialisedClient);
 		}
 
-		const minttx = new Mint(this.address, this.nextNonce(), token, id);
+		const minttx = new Mint(
+			this.address,
+			await this.nextNonce(),
+			token,
+			id,
+		);
 		minttx.sign(this.erdstallConn.erdstall(), this.signer);
 		return this.enclaveConn.mint(minttx);
 	}
@@ -118,7 +137,7 @@ export default class Client implements Erdstall {
 			return Promise.reject(ErrUnitialisedClient);
 		}
 
-		const exittx = new ExitRequest(this.address, this.nextNonce());
+		const exittx = new ExitRequest(this.address, await this.nextNonce());
 		await exittx.sign(this.erdstallConn.erdstall(), this.signer);
 		return this.enclaveConn.exit(exittx);
 	}
