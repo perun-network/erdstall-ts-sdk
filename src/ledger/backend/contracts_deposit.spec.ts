@@ -37,7 +37,7 @@ describe("Deposit_Call_Wrapper", () => {
 				Address.fromString(token as string),
 				amount,
 			);
-			for (const call of depCall) {
+			for (const [_, call] of depCall) {
 				const tx = await call({ nonce: nonce++ });
 				const txr = await tx.wait();
 				expect(

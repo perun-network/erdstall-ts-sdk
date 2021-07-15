@@ -15,7 +15,7 @@ import { LedgerConnection, LedgerAdapter } from "./ledger";
 import { Assets } from "./ledger";
 import { Address } from "./ledger";
 import { Uint256 } from "./api/util";
-import { EventCache, OneShotEventCache } from "./utils";
+import { EventCache, OneShotEventCache, Stages } from "./utils";
 import ErdstallEvent, { isLedgerEvent } from "./ledger/event";
 import EnclaveEvent from "./enclave/event";
 
@@ -124,7 +124,7 @@ export default class Client implements Erdstall {
 		return this.enclaveConn.mint(minttx);
 	}
 
-	async deposit(assets: Assets): Promise<ethers.ContractTransaction[]> {
+	async deposit(assets: Assets): Promise<Stages<ethers.ContractTransaction>> {
 		if (!this.erdstallConn) {
 			return Promise.reject(ErrUnitialisedClient);
 		}
@@ -144,7 +144,7 @@ export default class Client implements Erdstall {
 
 	async withdraw(
 		exitProof: BalanceProof,
-	): Promise<ethers.ContractTransaction[]> {
+	): Promise<Stages<ethers.ContractTransaction>> {
 		if (!this.erdstallConn) {
 			return Promise.reject(ErrUnitialisedClient);
 		}
@@ -152,7 +152,7 @@ export default class Client implements Erdstall {
 		return this.erdstallConn.withdraw(exitProof);
 	}
 
-	async leave(): Promise<ethers.ContractTransaction[]> {
+	async leave(): Promise<Stages<ethers.ContractTransaction>> {
 		const exitProof = await this.exit();
 		return this.withdraw(exitProof);
 	}

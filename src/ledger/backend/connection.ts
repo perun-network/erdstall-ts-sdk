@@ -6,6 +6,7 @@ import { ErdstallWatcher, Depositor, Withdrawer } from "../../erdstall";
 import { Erdstall } from "./contracts/Erdstall";
 import { Assets } from "../";
 import { Address } from "../";
+import { Stages } from "../../utils";
 import { BalanceProof } from "../../api/responses";
 import { depositors, DepositCalls } from "./tokenmanager";
 import { TokenTypesCache } from "./tokencache";
@@ -68,18 +69,23 @@ export class LedgerAdapter implements LedgerConnection {
 
 	async withdraw(
 		exitProof: BalanceProof,
-	): Promise<ethers.ContractTransaction[]> {
+	): Promise<Stages<ethers.ContractTransaction>> {
 		return this.call([
-			(
-				_?: ethers.PayableOverrides,
-			): Promise<ethers.ContractTransaction> => {
-				const [balance, sig] = exitProof.toEthProof();
-				return this.contract.withdraw(balance, sig);
-			},
+			[
+				"withdraw",
+				(
+					_?: ethers.PayableOverrides,
+				): Promise<ethers.ContractTransaction> => {
+					const [balance, sig] = exitProof.toEthProof();
+					return this.contract.withdraw(balance, sig);
+				},
+			],
 		]);
 	}
 
-	async deposit(assets: Assets): Promise<ethers.ContractTransaction[]> {
+	async deposit(
+		assets: Assets,
+	): Promise<Stages<Promise<ethers.ContractTransaction>>> {
 		const calls: DepositCalls = [];
 		for (const [tokenAddr, asset] of assets.values) {
 			const ttype = await this.tokenCache.tokenTypeOf(
@@ -104,15 +110,46 @@ export class LedgerAdapter implements LedgerConnection {
 
 	private async call(
 		calls: DepositCalls,
-	): Promise<ethers.ContractTransaction[]> {
+	): Promise<Stages<Promise<ethers.ContractTransaction>>> {
 		let nonce = await this.signer.getTransactionCount();
+		let stages = new Stages<Promise<ethers.ContractTransaction>>();
+		let promises = new Array<[Function, Function]>();
+		let promisesValues = new Array<
+			[(ctx: ethers.ContractTransaction) => void, (obj: any) => void]
+		>();
 
-		const pendingTXs: ethers.ContractTransaction[] = [];
-		for (const call of calls) {
-			pendingTXs.push(await call({ nonce: nonce++ }));
+		for (const [name, ___] of calls) {
+			const promise = new Promise<ethers.ContractTransaction>(
+				(resolve, reject) => {
+					promisesValues.push([resolve, reject]);
+				},
+			);
+			promises.push(stages.add(name, promise));
 		}
 
-		return pendingTXs;
+		// Due to limitations with MetaMask, we have to sequentialize the deposit
+		// calls and put them in stages to keep allowing UX/UI updates for each
+		// step.
+		(async () => {
+			for (const i in calls) {
+				const [_, call] = calls[i];
+				const [resolve, __] = promises[i];
+				const [resolveValue, rejectValue] = promisesValues[i];
+				try {
+					const pctx = call({ nonce: nonce++ });
+					pctx.then(resolveValue, rejectValue);
+
+					const ctx = await pctx;
+					await ctx.wait();
+					resolve(ctx);
+				} catch (e) {
+					for (const [_, reject] of promises.slice(Number(i)))
+						reject(e);
+				}
+			}
+		})();
+
+		return stages;
 	}
 }
 

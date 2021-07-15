@@ -12,6 +12,7 @@ import { BalanceProof } from "./api/responses/balanceproof";
 import { Assets } from "./ledger";
 import { Address } from "./ledger";
 import { Uint256 } from "./api/util";
+import { Stages } from "./utils";
 import ErdstallEvent from "./ledger/event";
 import EnclaveEvent from "./enclave/event";
 import Client from "./client";
@@ -38,11 +39,13 @@ export interface Minter {
 }
 
 export interface Depositor {
-	deposit(assets: Assets): Promise<ethers.ContractTransaction[]>;
+	deposit(assets: Assets): Promise<Stages<ethers.ContractTransaction>>;
 }
 
 export interface Withdrawer {
-	withdraw(exitProof: BalanceProof): Promise<ethers.ContractTransaction[]>;
+	withdraw(
+		exitProof: BalanceProof,
+	): Promise<Stages<ethers.ContractTransaction>>;
 }
 
 export interface Exiter {
@@ -50,7 +53,7 @@ export interface Exiter {
 }
 
 export interface Leaver extends Exiter, Withdrawer {
-	leave(): Promise<ethers.ContractTransaction[]>;
+	leave(): Promise<Stages<ethers.ContractTransaction>>;
 }
 
 export interface Subscriber {
