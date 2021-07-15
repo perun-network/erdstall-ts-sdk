@@ -6,15 +6,17 @@ import { ethers, Signer } from "ethers";
 import { Address } from "../";
 import { Asset } from "../assets";
 import { TokenType } from "../assets";
+import { StageName } from "../../utils";
 import {
 	makeETHDepositCalls,
 	makeERC20DepositCalls,
 	makeERC721DepositCalls,
 } from "./contracts_deposit";
 
-export type DepositCalls = ((
+export type DepositCall = (
 	obj?: ethers.PayableOverrides,
-) => Promise<ethers.ContractTransaction>)[];
+) => Promise<ethers.ContractTransaction>;
+export type DepositCalls = [StageName, DepositCall][];
 
 export type DepositerCallsFactory = (
 	signer: Signer,

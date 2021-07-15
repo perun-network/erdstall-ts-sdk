@@ -31,9 +31,10 @@ describe("ErdstallConnection", () => {
 		const conn = new LedgerAdapter(contract);
 		const depositRegistered = EventHelper.within(10000, conn, "Deposited");
 
-		const txs = await conn.deposit(assets);
-		for (const tx of txs) {
-			const rec = await tx.wait();
+		const stages = await conn.deposit(assets);
+		for (const stage of stages) {
+			const ctx = await stage.wait();
+			const rec = await ctx.wait();
 			expect(rec.status, "depositing should have worked").to.equal(0x1);
 		}
 
