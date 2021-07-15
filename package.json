@@ -1,4 +1,16 @@
 {
+  "name": "erdstall",
+  "version": "0.1.0",
+  "description": "SDK to interact with Erdstall Layer-2 Networks",
+  "main": "build/index.js",
+  "repository": "github:perun-network/erdstall-ts-sdk",
+  "author": "Norbert Dzikowski <norbert@perun.network> (https://polycry.pt/)",
+  "contributors": [
+    "Steffen Rattay <steffen@perun.network>",
+    "Sebastian Stammler <seb@perun.network>"
+  ],
+  "license": "Apache-2.0",
+  "private": true,
   "devDependencies": {
     "@types/chai": "^4.2.16",
     "@types/mocha": "^8.2.2",
