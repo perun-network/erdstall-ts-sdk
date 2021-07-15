@@ -51,9 +51,6 @@ export abstract class Transaction extends ErdstallObject {
 			this.sig!.toString(),
 		);
 
-		console.log("PACKED: ");
-		console.log(msg);
-
 		return rec === this.sender.toString();
 	}
 
