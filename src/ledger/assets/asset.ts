@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
+// TokenType resolves TokenType -> Deposit-Routine.
+export type TokenType = "ETH" | "ERC20" | "ERC721";
+
 export const TypeTags = {
 	Amount: "uint",
 	Tokens: "idset",

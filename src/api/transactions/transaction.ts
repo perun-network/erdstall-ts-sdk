@@ -9,23 +9,23 @@ import { jsonObject, jsonMember, TypedJSON } from "typedjson";
 import { utils, Signer } from "ethers";
 
 /** Transaction is the base class for all transactions. */
-@jsonObject export abstract class Transaction extends ErdstallObject {
+@jsonObject
+export abstract class Transaction extends ErdstallObject {
 	@jsonMember(Address) sender: Address;
 	@jsonMember(BigInteger) nonce: BigInteger;
-	@jsonMember(BigInteger) epoch: BigInteger;
 	@jsonMember(Signature) sig?: Signature;
 
-	constructor(sender: Address, nonce: bigint, epoch: bigint) {
+	constructor(sender: Address, nonce: bigint) {
 		super();
 		this.sender = sender;
 		this.nonce = new BigInteger(nonce);
-		this.epoch = new BigInteger(epoch);
 	}
 
 	async sign(contract: Address, signer: Signer): Promise<this> {
-		const encoder = new ABIEncoder().encode(
-			this.sender, ["uint64", this.nonce], ["uint64", this.epoch]
-		);
+		const encoder = new ABIEncoder().encode(this.sender, [
+			"uint64",
+			this.nonce,
+		]);
 		const tag = this.encodeABI(encoder);
 		const msg = encoder.pack(tag, contract);
 		const data = utils.keccak256(msg);
@@ -42,8 +42,12 @@ import { utils, Signer } from "ethers";
 	}
 	static fromJSON: (json: any) => Transaction;
 
-	public objectType(): any { return Transaction; }
-	protected objectTypeName(): string { return "Transaction"; }
+	public objectType(): any {
+		return Transaction;
+	}
+	protected objectTypeName(): string {
+		return "Transaction";
+	}
 
 	public abstract txType(): any;
 	protected abstract txTypeName(): string;

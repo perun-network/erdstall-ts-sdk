@@ -1,2 +1,5 @@
+deps/
 build/
 node_modules/
+src/ledger/backend/ethereum/abi
+src/ledger/backend/ethereum/contracts
