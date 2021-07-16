@@ -2,7 +2,15 @@
   "name": "erdstall",
   "version": "0.1.0",
   "description": "SDK to interact with Erdstall Layer-2 Networks",
-  "main": "build/index.js",
+  "exports": {
+    ".": "./dist/index.js",
+    "./*": "./dist/*.js"
+  },
+  "typesVersions": {
+    "*": {
+      "*": [ "dist/*", "dist/*/index.d.ts" ]
+    }
+  },
   "repository": "github:perun-network/erdstall-ts-sdk",
   "author": "Norbert Dzikowski <norbert@perun.network> (https://polycry.pt/)",
   "contributors": [

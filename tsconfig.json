@@ -11,8 +11,9 @@
          "DOM"
      ],                                   /* Specify library files to be included in the compilation. */
     "rootDir": "./src",                             /* Specify the root directory of input files. Use to control the output directory structure with --outDir. */
-    "outDir": "./build",                              /* Redirect output structure to the directory. */
-    "sourceMap": true,                              /* Generates corresponding '.map' file. */
+    "outDir": "./dist",                              /* Redirect output structure to the directory. */
+    "sourceMap": true,                             /* Generates corresponding '.map' file. */
+    "declaration": true,                           /* Generate .d.ts declaration file. */
 
     /* Strict Type-Checking Options */
     "strict": true,                                 /* Enable all strict type-checking options. */
@@ -32,7 +33,9 @@
 
     /* Advanced Options */
     "skipLibCheck": true,                           /* Skip type checking of declaration files. */
-    "forceConsistentCasingInFileNames": true        /* Disallow inconsistently-cased references to the same file. */
+    "forceConsistentCasingInFileNames": true,        /* Disallow inconsistently-cased references to the same file. */
+
+    "baseUrl": "src",
   },
   "include": [
       "src/**/*"
