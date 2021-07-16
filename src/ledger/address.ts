@@ -31,8 +31,13 @@ export class Address implements ABIValue {
 	asABI(): any {
 		return this.toString();
 	}
+
 	ABIType(): string {
 		return "address";
+	}
+
+	isZero(): boolean {
+		return this.value.find((v) => v > 0) === undefined;
 	}
 }
 
