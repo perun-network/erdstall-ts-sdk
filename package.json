@@ -1,5 +1,5 @@
 {
-  "name": "erdstall",
+  "name": "@polycrypt/erdstall",
   "version": "0.1.0",
   "description": "SDK to interact with Erdstall Layer-2 Networks",
   "exports": {
