@@ -33,7 +33,7 @@ describe("ErdstallConnection", () => {
 
 		const stages = await conn.deposit(assets);
 		for (const stage of stages) {
-			const ctx = await stage.wait();
+			const ctx = await stage.value;
 			const rec = await ctx.wait();
 			expect(rec.status, "depositing should have worked").to.equal(0x1);
 		}
