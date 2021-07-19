@@ -195,7 +195,7 @@ export class Enclave implements EnclaveConnection {
 				}
 				break;
 			default:
-				console.error("received unsupported Erdstall event: ", om);
+				console.log("Object type: ", obj.objectType());
 		}
 	}
 

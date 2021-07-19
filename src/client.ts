@@ -124,7 +124,9 @@ export default class Client implements Erdstall {
 		return this.enclaveConn.mint(minttx);
 	}
 
-	async deposit(assets: Assets): Promise<Stages<Promise<ethers.ContractTransaction>>> {
+	async deposit(
+		assets: Assets,
+	): Promise<Stages<Promise<ethers.ContractTransaction>>> {
 		if (!this.erdstallConn) {
 			return Promise.reject(ErrUnitialisedClient);
 		}
@@ -159,9 +161,15 @@ export default class Client implements Erdstall {
 
 	initialize(timeout?: number): Promise<void> {
 		return new Promise((resolve, reject) => {
-			const rejectTimeout = setTimeout(reject, timeout ? timeout! : 15000);
+			const rejectTimeout = setTimeout(
+				reject,
+				timeout ? timeout! : 15000,
+			);
 
 			this.enclaveConn.once("error", reject);
+			this.enclaveConn.once("error", () => {
+				this.updateNonce();
+			});
 			this.enclaveConn.once("config", (config: ClientConfig) => {
 				const erdstall = Erdstall__factory.connect(
 					config.contract.toString(),
