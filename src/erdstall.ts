@@ -39,13 +39,13 @@ export interface Minter {
 }
 
 export interface Depositor {
-	deposit(assets: Assets): Promise<Stages<ethers.ContractTransaction>>;
+	deposit(assets: Assets): Promise<Stages<Promise<ethers.ContractTransaction>>>;
 }
 
 export interface Withdrawer {
 	withdraw(
 		exitProof: BalanceProof,
-	): Promise<Stages<ethers.ContractTransaction>>;
+	): Promise<Stages<Promise<ethers.ContractTransaction>>>;
 }
 
 export interface Exiter {
@@ -53,7 +53,7 @@ export interface Exiter {
 }
 
 export interface Leaver extends Exiter, Withdrawer {
-	leave(): Promise<Stages<ethers.ContractTransaction>>;
+	leave(): Promise<Stages<Promise<ethers.ContractTransaction>>>;
 }
 
 export interface Subscriber {
@@ -70,7 +70,8 @@ export interface Erdstall
 		Exiter,
 		Subscriber,
 		Leaver {
-	initialize(): void;
+	readonly address: Address;
+	initialize(): Promise<void>;
 }
 
 export function NewClient(

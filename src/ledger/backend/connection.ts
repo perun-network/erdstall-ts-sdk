@@ -69,7 +69,7 @@ export class LedgerAdapter implements LedgerConnection {
 
 	async withdraw(
 		exitProof: BalanceProof,
-	): Promise<Stages<ethers.ContractTransaction>> {
+	): Promise<Stages<Promise<ethers.ContractTransaction>>> {
 		return this.call([
 			[
 				"withdraw",
