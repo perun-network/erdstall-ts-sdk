@@ -7,7 +7,7 @@ import {
 	Transfer,
 	ExitRequest,
 	Transaction,
-} from "../../src/api/transactions";
+} from "api/transactions";
 import { NewRandomAddress } from "../address";
 import { NewRandomAssets } from "../assets/assets";
 import { NewUint64 } from "../bigint";

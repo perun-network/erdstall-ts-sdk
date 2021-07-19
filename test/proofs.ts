@@ -2,8 +2,8 @@
 "use strict";
 
 import PRNG from "./random";
-import { Signature } from "../src/api";
-import { Balance, BalanceProof } from "../src/api/responses";
+import { Signature } from "api";
+import { Balance, BalanceProof } from "api/responses";
 import { NewUint64 } from "./bigint";
 import { NewRandomAddress, NewRandomUint8Array } from "./address";
 import { NewRandomAssets } from "./assets/assets";

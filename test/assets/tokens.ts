@@ -2,7 +2,7 @@
 "use strict";
 
 import PRNG from "../random";
-import { Tokens } from "../../src/ledger/assets/tokens";
+import { Tokens } from "ledger/assets/tokens";
 import { NewUint256 } from "../bigint";
 
 // NewRandomTokens creates a Tokens type with `size` random unique ids.
