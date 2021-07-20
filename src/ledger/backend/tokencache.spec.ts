@@ -4,11 +4,11 @@
 import { expect } from "chai";
 import { Wallet } from "ethers";
 
-import { Erdstall__factory } from "./contracts";
-import { TokenType, ETHZERO } from "../assets";
-import { TokenTypesCache } from "./tokencache";
+import { Erdstall__factory } from "#erdstall/ledger/backend/contracts";
+import { TokenType, ETHZERO } from "#erdstall/ledger/assets";
+import { TokenTypesCache } from "#erdstall/ledger/backend/tokencache";
 
-import setup, { Enviroment } from "./enviroment.spec";
+import setup, { Enviroment } from "#erdstall/ledger/backend/enviroment.spec";
 
 describe("Tokencache", () => {
 	let testenv: Enviroment;

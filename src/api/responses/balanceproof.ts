@@ -3,11 +3,11 @@
 
 import { ethers } from "ethers";
 import { TypedJSON, jsonObject, jsonMember } from "typedjson";
-import { BigInteger, CustomJSON } from "../util";
-import { Assets } from "../../ledger/assets";
-import { Address } from "../../ledger";
-import { Signature } from "../signature";
-import { ErdstallObject } from "../object";
+import { BigInteger, CustomJSON } from "#erdstall/api/util";
+import { Assets } from "#erdstall/ledger/assets";
+import { Address } from "#erdstall/ledger";
+import { Signature } from "#erdstall/api/signature";
+import { ErdstallObject } from "#erdstall/api/object";
 
 // Balance is the value of funds for the account within epoch.
 @jsonObject

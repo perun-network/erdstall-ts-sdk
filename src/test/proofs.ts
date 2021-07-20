@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import PRNG from "./random";
+import PRNG from "#erdstall/test/random";
 import { Signature } from "#erdstall/api";
 import { Balance, BalanceProof, BalanceProofs } from "#erdstall/api/responses";
-import { NewUint64 } from "./bigint";
-import { NewRandomAddress, NewRandomUint8Array } from "./address";
-import { NewRandomAssets } from "./assets";
+import { NewUint64 } from "#erdstall/test/bigint";
+import { NewRandomAddress, NewRandomUint8Array } from "#erdstall/test/address";
+import { NewRandomAssets } from "#erdstall/test/assets";
 
 export function NewRandomBalance(rng: PRNG, size: number): Balance {
 	return new Balance(

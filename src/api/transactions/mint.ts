@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { Transaction } from "./transaction";
-import { Address } from "../../ledger";
+import { Transaction } from "#erdstall/api/transactions/transaction";
+import { Address } from "#erdstall/ledger";
 import { jsonObject, jsonMember } from "typedjson";
-import { ABIEncoder, BigInteger } from "../util";
+import { ABIEncoder, BigInteger } from "#erdstall/api/util";
 
 @jsonObject
 export class Mint extends Transaction {

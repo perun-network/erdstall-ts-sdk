@@ -3,7 +3,7 @@
 
 import { utils } from "ethers";
 import { jsonObject } from "typedjson";
-import { ABIValue, CustomJSON } from "../api/util";
+import { ABIValue, CustomJSON } from "#erdstall/api/util";
 
 @jsonObject
 export class Address implements ABIValue {

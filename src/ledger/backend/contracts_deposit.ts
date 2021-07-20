@@ -3,16 +3,16 @@
 
 import { ethers, Signer, BigNumber } from "ethers";
 
-import { ETHHolder__factory } from "./contracts/factories/ETHHolder__factory";
-import { IERC20__factory } from "./contracts/factories/IERC20__factory";
-import { IERC721__factory } from "./contracts/factories/IERC721__factory";
-import { ERC20Holder__factory } from "./contracts/factories/ERC20Holder__factory";
-import { ERC721Holder__factory } from "./contracts/factories/ERC721Holder__factory";
-import { Address } from "../";
-import { Asset } from "../assets";
-import { Amount } from "../assets";
-import { Tokens } from "../assets";
-import { DepositCalls } from "./tokenmanager";
+import { ETHHolder__factory } from "#erdstall/ledger/backend/contracts/factories/ETHHolder__factory";
+import { IERC20__factory } from "#erdstall/ledger/backend/contracts/factories/IERC20__factory";
+import { IERC721__factory } from "#erdstall/ledger/backend/contracts/factories/IERC721__factory";
+import { ERC20Holder__factory } from "#erdstall/ledger/backend/contracts/factories/ERC20Holder__factory";
+import { ERC721Holder__factory } from "#erdstall/ledger/backend/contracts/factories/ERC721Holder__factory";
+import { Address } from "#erdstall/ledger";
+import { Asset } from "#erdstall/ledger/assets";
+import { Amount } from "#erdstall/ledger/assets";
+import { Tokens } from "#erdstall/ledger/assets";
+import { DepositCalls } from "#erdstall/ledger/backend/tokenmanager";
 
 export function makeETHDepositCalls(
 	signer: Signer,

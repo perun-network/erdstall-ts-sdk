@@ -3,10 +3,10 @@
 
 import { ethers, Signer } from "ethers";
 
-import { Address } from "../";
-import { Asset } from "../assets";
-import { TokenType } from "../assets";
-import { StageName } from "../../utils";
+import { Address } from "#erdstall/ledger";
+import { Asset } from "#erdstall/ledger/assets";
+import { TokenType } from "#erdstall/ledger/assets";
+import { StageName } from "#erdstall/utils";
 import {
 	makeETHDepositCalls,
 	makeERC20DepositCalls,

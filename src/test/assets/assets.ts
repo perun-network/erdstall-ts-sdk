@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import PRNG from "../random";
+import PRNG from "#erdstall/test/random";
 import { Asset, Assets } from "#erdstall/ledger/assets";
-import { NewRandomTokens } from "./tokens";
-import { NewRandomAmount } from "./amount";
-import { NewRandomAddress } from "../address";
+import { NewRandomTokens } from "#erdstall/test/assets/tokens";
+import { NewRandomAmount } from "#erdstall/test/assets/amount";
+import { NewRandomAddress } from "#erdstall/test/address";
 
 // NewRandomAssets creates an Assets type. The size is limited by `size` and
 // all included `Tokens`, if any, have a maximum size of `size`.

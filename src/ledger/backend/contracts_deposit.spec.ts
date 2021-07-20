@@ -4,15 +4,15 @@
 import { expect } from "chai";
 
 import { Wallet } from "ethers";
-import { ETHZERO, Amount } from "../assets";
+import { ETHZERO, Amount } from "#erdstall/ledger/assets";
 import {
 	makeETHDepositCalls,
 	makeERC20DepositCalls,
 	makeERC721DepositCalls,
 } from "./contracts_deposit";
-import { Address } from "../";
+import { Address } from "#erdstall/ledger";
 
-import setup, { Enviroment } from "./enviroment.spec";
+import setup, { Enviroment } from "#erdstall/ledger/backend/enviroment.spec";
 
 describe("Deposit_Call_Wrapper", () => {
 	let testenv: Enviroment;

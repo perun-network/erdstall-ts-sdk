@@ -2,8 +2,8 @@
 "use strict";
 
 import { jsonObject, jsonMember } from "typedjson";
-import { ErdstallObject } from "../object";
-import { Address } from "../../ledger";
+import { ErdstallObject } from "#erdstall/api/object";
+import { Address } from "#erdstall/ledger";
 
 @jsonObject
 export class GetAccount extends ErdstallObject {
@@ -14,6 +14,10 @@ export class GetAccount extends ErdstallObject {
 		this.who = who;
 	}
 
-	public objectType(): any { return GetAccount; }
-	protected objectTypeName(): string { return "GetAccount"; }
+	public objectType(): any {
+		return GetAccount;
+	}
+	protected objectTypeName(): string {
+		return "GetAccount";
+	}
 }

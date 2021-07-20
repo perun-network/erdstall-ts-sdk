@@ -8,8 +8,8 @@ import { providers } from "ethers";
 import { deployContract } from "ethereum-waffle";
 import { MockProvider } from "ethereum-waffle";
 
-import { Erdstall__factory } from "./contracts";
-import { ETHZERO } from "../assets";
+import { Erdstall__factory } from "#erdstall/ledger/backend/contracts";
+import { ETHZERO } from "#erdstall/ledger/assets";
 
 const peruntokenABI = require("./contracts/abi/PerunToken.json");
 const erdstallABI = require("./contracts/abi/Erdstall.json");

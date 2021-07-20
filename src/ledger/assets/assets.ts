@@ -2,9 +2,9 @@
 "use strict";
 
 import { jsonObject } from "typedjson";
-import { Asset } from "./asset";
-import { ABIValue, CustomJSON } from "../../api/util";
-import { Address } from "../address";
+import { Asset } from "#erdstall/ledger/assets/asset";
+import { ABIValue, CustomJSON } from "#erdstall/api/util";
+import { Address } from "#erdstall/ledger/address";
 
 export const ETHZERO = "0x0000000000000000000000000000000000000000";
 

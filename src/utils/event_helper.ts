@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { EnclaveWatcher, ErdstallWatcher } from "../";
-import EnclaveEvent, { isEnclaveEvent } from "../enclave/event";
-import ErdstallEvent from "../ledger/event";
+import { EnclaveWatcher, ErdstallWatcher } from "#erdstall";
+import EnclaveEvent, { isEnclaveEvent } from "#erdstall/enclave/event";
+import ErdstallEvent from "#erdstall/ledger/event";
 
 export const EventHelper = {
 	within(

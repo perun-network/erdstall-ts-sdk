@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { Address } from "../ledger";
-import { Call, Result } from "../api";
-import { EnclaveWatcher } from "../";
-import { ErdstallObject } from "../api";
+import { Address } from "#erdstall/ledger";
+import { Call, Result } from "#erdstall/api";
+import { EnclaveWatcher } from "#erdstall";
+import { ErdstallObject } from "#erdstall/api";
 import {
 	SubscribeTXs,
 	SubscribeBalanceProofs,

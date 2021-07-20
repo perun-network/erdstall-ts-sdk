@@ -4,8 +4,8 @@
 import "reflect-metadata";
 import { expect } from "chai";
 import { MockProvider } from "ethereum-waffle";
-import { Address } from "../ledger";
-import * as test from "../../test";
+import { Address } from "#erdstall/ledger";
+import * as test from "#erdstall/test";
 
 const gProvider = new MockProvider();
 const wallets = gProvider.getWallets();

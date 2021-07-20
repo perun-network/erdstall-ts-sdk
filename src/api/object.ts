@@ -2,11 +2,11 @@
 "use strict";
 
 import { jsonObject, TypedJSON } from "typedjson";
-import { CustomJSON } from "./util";
-
+import { CustomJSON } from "#erdstall/api/util";
 
 /** Base type for all Erdstall messages. */
-@jsonObject export abstract class ErdstallObject {
+@jsonObject
+export abstract class ErdstallObject {
 	public static fromJSON: (js: any) => ErdstallObject;
 	public abstract objectType(): any;
 	protected abstract objectTypeName(): string;

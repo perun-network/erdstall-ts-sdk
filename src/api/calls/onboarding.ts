@@ -2,8 +2,8 @@
 "use strict";
 
 import { jsonObject, jsonMember } from "typedjson";
-import { ErdstallObject } from "../object";
-import { Address } from "../../ledger";
+import { ErdstallObject } from "#erdstall/api/object";
+import { Address } from "#erdstall/ledger";
 
 @jsonObject
 export class Onboarding extends ErdstallObject {

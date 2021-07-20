@@ -7,8 +7,8 @@ import {
 	TypeTags,
 	AssertSubtractable,
 	ErrIncompatibleAssets,
-} from "./asset";
-import { BigInteger, ABIEncoder } from "../../api/util";
+} from "#erdstall/ledger/assets/asset";
+import { BigInteger, ABIEncoder } from "#erdstall/api/util";
 
 export const ErrIDAlreadyContained = new Error(
 	"given ID already contained in tokens",

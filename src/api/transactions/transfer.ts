@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { Transaction } from "./transaction";
-import { assets, Address } from "../../ledger";
+import { Transaction } from "#erdstall/api/transactions/transaction";
+import { assets, Address } from "#erdstall/ledger";
 import { jsonObject, jsonMember } from "typedjson";
-import { ABIEncoder, ABIValue } from "../util";
+import { ABIEncoder, ABIValue } from "#erdstall/api/util";
 
 @jsonObject
 export class Transfer extends Transaction {

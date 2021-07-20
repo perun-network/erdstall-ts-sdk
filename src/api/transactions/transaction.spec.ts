@@ -3,11 +3,10 @@
 
 import "reflect-metadata";
 import { describe, it } from "mocha";
-import "../..";
 import { TypedJSON } from "typedjson";
-import { Call, Result, ErdstallObject } from "..";
+import { Call, Result, ErdstallObject } from "#erdstall/api";
 import { expect } from "chai";
-import { BalanceProofs } from "../responses/balanceproof";
+import { BalanceProofs } from "#erdstall/api/responses/balanceproof";
 
 describe("Wiremessages", () => {
 	it("de-/encodes subscriptions", () => {

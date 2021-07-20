@@ -34,7 +34,8 @@
 
     "baseUrl": "./src",
     "paths": {
-      "#erdstall/*": ["*"]
+      "#erdstall/*": ["*"],
+      "#erdstall": [""]
     }
   },
   "include": [

@@ -4,20 +4,20 @@
 import { Signer } from "ethers";
 import { ethers } from "ethers";
 
-import { Erdstall } from "./erdstall";
-import { Erdstall__factory } from "./ledger/backend/contracts";
-import { TxReceipt } from "./api/responses";
-import { BalanceProof } from "./api/responses";
-import { ClientConfig } from "./api/responses";
-import { Transfer, Mint, ExitRequest } from "./api/transactions";
-import { EnclaveConnection } from "./enclave";
-import { LedgerConnection, LedgerAdapter } from "./ledger";
-import { Assets } from "./ledger";
-import { Address } from "./ledger";
-import { Uint256 } from "./api/util";
-import { EventCache, OneShotEventCache, Stages } from "./utils";
-import ErdstallEvent, { isLedgerEvent } from "./ledger/event";
-import EnclaveEvent from "./enclave/event";
+import { Erdstall } from "erdstall";
+import { Erdstall__factory } from "#erdstall/ledger/backend/contracts";
+import { TxReceipt } from "#erdstall/api/responses";
+import { BalanceProof } from "#erdstall/api/responses";
+import { ClientConfig } from "#erdstall/api/responses";
+import { Transfer, Mint, ExitRequest } from "#erdstall/api/transactions";
+import { EnclaveConnection } from "#erdstall/enclave";
+import { LedgerConnection, LedgerAdapter } from "#erdstall/ledger";
+import { Assets } from "#erdstall/ledger";
+import { Address } from "#erdstall/ledger";
+import { Uint256 } from "#erdstall/api/util";
+import { EventCache, OneShotEventCache, Stages } from "#erdstall/utils";
+import ErdstallEvent, { isLedgerEvent } from "#erdstall/ledger/event";
+import EnclaveEvent from "#erdstall/enclave/event";
 
 export const ErrUnitialisedClient = new Error("client unitialised");
 

@@ -7,16 +7,16 @@
 import { Signer } from "ethers";
 import { ethers } from "ethers";
 
-import { TxReceipt } from "./api/responses/txreceipt";
-import { BalanceProof } from "./api/responses/balanceproof";
-import { Assets } from "./ledger";
-import { Address } from "./ledger";
-import { Uint256 } from "./api/util";
-import { Stages } from "./utils";
-import ErdstallEvent from "./ledger/event";
-import EnclaveEvent from "./enclave/event";
-import Client from "./client";
-import { Enclave, EnclaveWSProvider } from "./enclave";
+import { TxReceipt } from "#erdstall/api/responses/txreceipt";
+import { BalanceProof } from "#erdstall/api/responses/balanceproof";
+import { Assets } from "#erdstall/ledger";
+import { Address } from "#erdstall/ledger";
+import { Uint256 } from "#erdstall/api/util";
+import { Stages } from "#erdstall/utils";
+import ErdstallEvent from "#erdstall/ledger/event";
+import EnclaveEvent from "#erdstall/enclave/event";
+import Client from "#erdstall/client";
+import { Enclave, EnclaveWSProvider } from "#erdstall/enclave";
 
 interface watcher<T extends ErdstallEvent | EnclaveEvent> {
 	on: (ev: T, cb: Function) => void;
@@ -39,7 +39,9 @@ export interface Minter {
 }
 
 export interface Depositor {
-	deposit(assets: Assets): Promise<Stages<Promise<ethers.ContractTransaction>>>;
+	deposit(
+		assets: Assets,
+	): Promise<Stages<Promise<ethers.ContractTransaction>>>;
 }
 
 export interface Withdrawer {

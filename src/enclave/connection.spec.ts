@@ -2,8 +2,8 @@
 "use strict";
 
 import { expect } from "chai";
-import { Enclave } from "./connection";
-import { EnclaveMockProvider } from "./provider.spec";
+import { Enclave } from "#erdstall/enclave/connection";
+import { EnclaveMockProvider } from "#erdstall/enclave/provider.spec";
 
 import * as pkgtest from "../../test";
 

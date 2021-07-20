@@ -2,7 +2,7 @@
 "use strict";
 
 import { utils } from "ethers";
-import { Address } from "../../ledger";
+import { Address } from "#erdstall/ledger";
 
 export interface ABIEncodable {
 	asABI(): any;
