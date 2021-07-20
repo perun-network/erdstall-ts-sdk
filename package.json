@@ -4,7 +4,10 @@
   "description": "SDK to interact with Erdstall Layer-2 Networks",
   "exports": {
     ".": "./dist/index.js",
-    "./*": "./dist/*.js"
+    "./*": "./dist/*/index.js"
+  },
+  "imports": {
+    "#erdstall/*": "./dist/*/index.js"
   },
   "typesVersions": {
     "*": {

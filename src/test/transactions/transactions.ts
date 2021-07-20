@@ -7,9 +7,9 @@ import {
 	Transfer,
 	ExitRequest,
 	Transaction,
-} from "api/transactions";
+} from "#erdstall/api/transactions";
 import { NewRandomAddress } from "../address";
-import { NewRandomAssets } from "../assets/assets";
+import { NewRandomAssets } from "../assets";
 import { NewUint64 } from "../bigint";
 
 export function NewRandomMint(rng: PRNG): Mint {

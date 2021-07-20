@@ -9,7 +9,7 @@ import { IERC721__factory } from "./contracts/factories/IERC721__factory";
 import { ERC20Holder__factory } from "./contracts/factories/ERC20Holder__factory";
 import { ERC721Holder__factory } from "./contracts/factories/ERC721Holder__factory";
 import { Address } from "../";
-import { Asset } from "../assets/asset";
+import { Asset } from "../assets";
 import { Amount } from "../assets";
 import { Tokens } from "../assets";
 import { DepositCalls } from "./tokenmanager";

@@ -2,11 +2,11 @@
 "use strict";
 
 import PRNG from "./random";
-import { Signature } from "api";
-import { Balance, BalanceProof } from "api/responses";
+import { Signature } from "#erdstall/api";
+import { Balance, BalanceProof } from "#erdstall/api/responses";
 import { NewUint64 } from "./bigint";
 import { NewRandomAddress, NewRandomUint8Array } from "./address";
-import { NewRandomAssets } from "./assets/assets";
+import { NewRandomAssets } from "./assets";
 
 export function NewRandomBalance(rng: PRNG, size: number): Balance {
 	return new Balance(

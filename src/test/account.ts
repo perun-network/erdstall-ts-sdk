@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { Account } from "ledger";
+import { Account } from "#erdstall/ledger";
 import PRNG from "./random";
 import { NewUint64 } from "./bigint";
 import { NewRandomAssets } from "./assets";
