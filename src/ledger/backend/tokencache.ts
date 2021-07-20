@@ -2,7 +2,7 @@
 "use strict";
 
 import { Signer } from "ethers";
-import { TokenType } from "../assets";
+import { TokenType, ETHZERO } from "../assets";
 import { Erdstall } from "./contracts/Erdstall";
 import { ERC20__factory, ERC721__factory } from "./contracts";
 
@@ -31,6 +31,7 @@ export class TokenTypesCache {
 
 	constructor() {
 		this.typeCache = new Map<string, TokenType>();
+		this.typeCache.set(ETHZERO, "ETH"); 
 		this.holderCache = new Map<TokenType, string>();
 	}
 
@@ -183,18 +184,18 @@ export class TokenTypesCache {
 		token: string,
 	): Responder {
 		switch (ttype) {
-			case "ERC20":
-				return ERC20__factory.connect(token, signer);
-			case "ERC721":
-				return ERC721__factory.connect(token, signer);
-			case "ETH":
-				return {
-					symbol: async function (): Promise<string> {
-						return "ETH";
-					},
-				};
-			default:
-				throw Error("not implemented");
+		case "ERC20":
+			return ERC20__factory.connect(token, signer);
+		case "ERC721":
+			return ERC721__factory.connect(token, signer);
+		case "ETH":
+			return {
+				symbol: async function (): Promise<string> {
+					return "ETH";
+				},
+			};
+		default:
+			throw Error("not implemented");
 		}
 	}
 }
