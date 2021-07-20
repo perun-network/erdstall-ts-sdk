@@ -2,8 +2,7 @@
 "use strict";
 
 import PRNG from "../random";
-import { Asset } from "../../src/ledger/assets/asset";
-import { Assets } from "../../src/ledger/assets/assets";
+import { Asset, Assets } from "#erdstall/ledger/assets";
 import { NewRandomTokens } from "./tokens";
 import { NewRandomAmount } from "./amount";
 import { NewRandomAddress } from "../address";

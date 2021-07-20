@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { Address } from "../src/ledger/address";
+import { Address } from "#erdstall/ledger";
 import PRNG from "./random";
 
 export function NewRandomAddress(rng: PRNG): Address {

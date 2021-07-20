@@ -2,7 +2,7 @@
 "use strict";
 
 import PRNG from "../random";
-import { Amount } from "../../src/ledger/assets/amount";
+import { Amount } from "#erdstall/ledger/assets";
 import { NewUint256 } from "../bigint";
 
 export function NewRandomAmount(rng: PRNG) {

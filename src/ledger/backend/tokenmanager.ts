@@ -4,7 +4,7 @@
 import { ethers, Signer } from "ethers";
 
 import { Address } from "../";
-import { Asset } from "../assets/asset";
+import { Asset } from "../assets";
 import { TokenType } from "../assets";
 import {
 	makeETHDepositCalls,
