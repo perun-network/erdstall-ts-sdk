@@ -94,7 +94,7 @@ export class Enclave implements EnclaveConnection {
 	public async exit(exitRequest: ExitRequest): Promise<BalanceProof> {
 		const p = new Promise<BalanceProof>((resolve, reject) => {
 			this.once("exitproof", resolve);
-			this.sendCall(exitRequest).catch(reject);
+			this.sendCall(exitRequest).catch(err => reject(new Error(err)));
 		});
 
 		return p;
@@ -166,7 +166,7 @@ export class Enclave implements EnclaveConnection {
 			const [resolve, reject] = this.calls.get(msg.id)!;
 			this.calls.delete(msg.id);
 			if (msg.error) {
-				reject(msg.error);
+				reject(new Error(msg.error));
 				return this.callEvent("error", msg.error);
 			} else {
 				return resolve(msg.data);
@@ -180,22 +180,24 @@ export class Enclave implements EnclaveConnection {
 		}
 
 		switch (obj.objectType()) {
-			case ClientConfig:
-				return this.callEvent("config", obj);
-			case TxReceipt:
-				return this.callEvent("receipt", obj);
-			case BalanceProofs:
-				const bps = obj as BalanceProofs;
-				for (const [_, bp] of bps.map) {
-					if (bp.balance.exit) {
-						this.callEvent("exitproof", bp);
-					} else {
-						this.callEvent("proof", bp);
-					}
+		case ClientConfig:
+			return this.callEvent("config", obj);
+		case TxReceipt:
+			return this.callEvent("receipt", obj);
+		case BalanceProofs:
+		{
+			const bps = obj as BalanceProofs;
+			for (const [_, bp] of bps.map) {
+				if (bp.balance.exit) {
+					this.callEvent("exitproof", bp);
+				} else {
+					this.callEvent("proof", bp);
 				}
-				break;
-			default:
-				console.log("Object type: ", obj.objectType());
+			}
+			break;
+		}
+		default:
+			console.log("Object type: ", obj.objectType());
 		}
 	}
 
@@ -218,7 +220,7 @@ export class Enclave implements EnclaveConnection {
 	private onError(ev: Event) {
 		console.error("connection error: ", ev);
 
-		this.callEvent("error", {} as any);
+		this.callEvent("error", new Error("connection error"));
 
 		this.provider.close();
 		setTimeout(() => {
