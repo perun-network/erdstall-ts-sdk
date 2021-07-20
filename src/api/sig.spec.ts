@@ -20,4 +20,13 @@ describe("Signatures", () => {
 
 		expect(tx.verify(contract)).to.be.true;
 	});
+
+	it("works for mints", async () => {
+		const rng = test.NewPrng();
+		const contract = test.NewRandomAddress(rng);
+		const tx = test.NewRandomMint(rng);
+		tx.sender = Address.fromString(wallets[0].address);
+		await tx.sign(contract, wallets[0]);
+		expect(tx.verify(contract)).to.be.true;
+	});
 });
