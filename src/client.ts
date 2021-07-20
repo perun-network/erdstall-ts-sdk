@@ -120,7 +120,7 @@ export default class Client implements Erdstall {
 			token,
 			id,
 		);
-		minttx.sign(this.erdstallConn.erdstall(), this.signer);
+		await minttx.sign(this.erdstallConn.erdstall(), this.signer);
 		return this.enclaveConn.mint(minttx);
 	}
 
@@ -151,12 +151,13 @@ export default class Client implements Erdstall {
 			return Promise.reject(ErrUnitialisedClient);
 		}
 
-		return this.erdstallConn.withdraw(exitProof);
+		return await this.erdstallConn.withdraw(exitProof);
 	}
 
 	async leave(): Promise<Stages<Promise<ethers.ContractTransaction>>> {
 		const exitProof = await this.exit();
-		return this.withdraw(exitProof);
+		await new Promise(accept => this.once("proof", accept));
+		return await this.withdraw(exitProof);
 	}
 
 	initialize(timeout?: number): Promise<void> {
