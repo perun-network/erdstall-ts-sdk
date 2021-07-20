@@ -87,6 +87,10 @@ export class LedgerAdapter implements LedgerConnection {
 		assets: Assets,
 	): Promise<Stages<Promise<ethers.ContractTransaction>>> {
 		const calls: DepositCalls = [];
+
+		if(!assets.values.size)
+			throw new Error("attempting to depost nothing");
+
 		for (const [tokenAddr, asset] of assets.values) {
 			const ttype = await this.tokenCache.tokenTypeOf(
 				this.contract,
@@ -117,6 +121,9 @@ export class LedgerAdapter implements LedgerConnection {
 		let promisesValues = new Array<
 			[(ctx: ethers.ContractTransaction) => void, (obj: any) => void]
 		>();
+
+		if(calls.length == 0)
+			throw new Error("0 calls");
 
 		for (const [name, ___] of calls) {
 			const promise = new Promise<ethers.ContractTransaction>(
