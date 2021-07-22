@@ -6,10 +6,8 @@ import { ethers } from "ethers";
 
 import { Erdstall } from "./erdstall";
 import { Erdstall__factory } from "./ledger/backend/contracts";
-import { TxReceipt } from "./api/responses";
-import { BalanceProof } from "./api/responses";
-import { ClientConfig } from "./api/responses";
-import { Transfer, Mint, ExitRequest } from "./api/transactions";
+import { TxReceipt, BalanceProof, ClientConfig } from "./api/responses";
+import { Transfer, Mint, ExitRequest, TradeOffer, Trade } from "./api/transactions";
 import { EnclaveConnection } from "./enclave";
 import { LedgerConnection, LedgerAdapter } from "./ledger";
 import { Assets } from "./ledger";
@@ -158,6 +156,17 @@ export default class Client implements Erdstall {
 		const exitProof = await this.exit();
 		await new Promise(accept => this.once("phaseshift", accept));
 		return await this.withdraw(exitProof);
+	}
+
+	async createOffer(offer: Assets, expect: Assets): Promise<TradeOffer> {
+		const o = new TradeOffer(this.address, offer, expect);
+		return await o.sign(this.erdstallConn.erdstall(), this.signer);
+	}
+
+	async acceptTrade(offer: TradeOffer): Promise<TxReceipt> {
+		const tx = new Trade(this.address, await this.nextNonce(), offer);
+		await tx.sign(this.erdstallConn.erdstall(), this.signer);
+		return this.enclaveConn.trade(tx);
 	}
 
 	initialize(timeout?: number): Promise<void> {

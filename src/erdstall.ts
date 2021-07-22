@@ -9,6 +9,7 @@ import { ethers } from "ethers";
 
 import { TxReceipt } from "./api/responses/txreceipt";
 import { BalanceProof } from "./api/responses/balanceproof";
+import { TradeOffer } from "./api/transactions";
 import { Assets } from "./ledger";
 import { Address } from "./ledger";
 import { Uint256 } from "./api/util";
@@ -38,6 +39,11 @@ export interface Minter {
 	mint: (token: Address, id: Uint256) => Promise<TxReceipt>;
 }
 
+export interface Trader {
+	createOffer(offer: Assets, expect: Assets): Promise<TradeOffer>;
+	acceptTrade(offer: TradeOffer): Promise<TxReceipt>;
+}
+
 export interface Depositor {
 	deposit(assets: Assets): Promise<Stages<Promise<ethers.ContractTransaction>>>;
 }
@@ -65,6 +71,7 @@ export interface Erdstall
 	extends Watcher,
 		Transactor,
 		Minter,
+		Trader,
 		Depositor,
 		Withdrawer,
 		Exiter,

@@ -11,7 +11,7 @@ import {
 	GetAccount,
 	Onboarding,
 } from "../api/calls";
-import { Mint, Transfer, ExitRequest } from "../api/transactions";
+import { Mint, Transfer, ExitRequest, Trade } from "../api/transactions";
 import {
 	ClientConfig,
 	TxReceipt,
@@ -33,6 +33,7 @@ export interface EnclaveConnection extends EnclaveWatcher {
 	onboard(who: Address): Promise<void>;
 	transfer(tx: Transfer): Promise<TxReceipt>;
 	mint(tx: Mint): Promise<TxReceipt>;
+	trade(tx: Trade): Promise<TxReceipt>;
 	exit(exitRequest: ExitRequest): Promise<BalanceProof>;
 	getAccount(acc: Address): Promise<Account>;
 }
@@ -88,6 +89,10 @@ export class Enclave implements EnclaveConnection {
 	}
 
 	public async mint(tx: Mint): Promise<TxReceipt> {
+		return this.sendCall(tx) as Promise<TxReceipt>;
+	}
+
+	public async trade(tx: Trade): Promise<TxReceipt> {
 		return this.sendCall(tx) as Promise<TxReceipt>;
 	}
 
