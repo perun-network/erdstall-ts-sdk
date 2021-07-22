@@ -3,7 +3,7 @@
 
 import PRNG from "#erdstall/test/random";
 import { Tokens } from "#erdstall/ledger/assets";
-import { NewUint256 } from "#erdstall/test/bigint";
+import { NewUint256 } from "#erdstall/test";
 
 // NewRandomTokens creates a Tokens type with `size` random unique ids.
 export function NewRandomTokens(rng: PRNG, size: number): Tokens {
