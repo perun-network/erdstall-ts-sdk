@@ -48,16 +48,19 @@ describe("Erdstall-TS-SDK", () => {
 	let alice: Erdstall | null = null;
 	let bob: Erdstall | null = null;
 	let charlie: Erdstall | null = null;
+	let dagobert: Erdstall | null = null;
+	let charlieNft: bigint | null = null;
 
 	it("create clients", async() => {
 		alice = makeClient(0);
 		bob = makeClient(1);
 		charlie = makeClient(2);
+		dagobert = makeClient(3);
 		
 		// establishes connection to erdstall-contract on ledger and connection
 		// to enclave with the given url. All event handlers were registered and
 		// forwarded were necessary.
-		await Promise.all([alice.initialize(), bob.initialize(), charlie.initialize()]);
+		await Promise.all([alice, bob, charlie, dagobert].map(x => x.initialize()));
 	});
 	it("subscribe clients", async() => await Promise.all([
 		alice!.subscribe(),
@@ -109,6 +112,18 @@ describe("Erdstall-TS-SDK", () => {
 	});
 
 	it("lets users mint tokens", async() => {
-		await charlie!.mint(charlie!.address, 89430923n);
+		charlieNft = 89430923n;
+		await charlie!.mint(charlie!.address, charlieNft!);
+	});
+
+	it("lets users trade", async () => {
+		// Charlie trades his NFT for Dagobert's ETH.
+		const offer = new Assets();
+		offer.addAsset(charlie!.address, new assets.Tokens([charlieNft!]));
+		const expect = new Assets();
+		expect.addAsset(assets.ETHZERO, new assets.Amount(1000n));
+
+		const tradeOffer = await charlie!.createOffer(offer, expect);
+		await dagobert!.acceptTrade(tradeOffer);
 	});
 });
