@@ -8,7 +8,7 @@ import {
 	AssertSubtractable,
 	ErrIncompatibleAssets,
 } from "./asset";
-import { BigInteger, ABIEncoder } from "../../api/util";
+import { BigInteger, ABIEncoder } from "#erdstall/api/util";
 
 export const ErrIDAlreadyContained = new Error(
 	"given ID already contained in tokens",
@@ -24,7 +24,11 @@ export class Tokens extends Asset {
 
 	toJSON() {
 		return this.value.map((val) => {
-			return utils.hexlify(BigNumber.from(val));
+			const arr = utils.arrayify(BigNumber.from(val));
+			const offset = 32 - arr.length;
+			const abi = new Uint8Array(32);
+			abi.set(arr, offset);
+			return utils.hexlify(abi);
 		});
 	}
 

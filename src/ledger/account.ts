@@ -3,9 +3,10 @@
 
 import * as assets from "./assets";
 import { jsonObject, jsonMember } from "typedjson";
-import { BigInteger } from "../api/util";
+import { BigInteger } from "#erdstall/api/util";
 
-@jsonObject export class Account {
+@jsonObject
+export class Account {
 	@jsonMember(BigInteger) nonce: BigInteger;
 	@jsonMember(assets.Assets) values: assets.Assets;
 	@jsonMember(assets.Assets) locked: assets.Assets;

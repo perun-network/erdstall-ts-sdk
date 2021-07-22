@@ -5,7 +5,7 @@ import { Option, none, some } from "fp-ts/lib/Option";
 import { jsonObject } from "typedjson";
 import { BigNumber } from "ethers";
 
-import { MAX_AMOUNT_VALUE } from "../../ledger/assets";
+import { MAX_AMOUNT_VALUE } from "#erdstall/ledger/assets";
 import { ABIEncodable } from "./abiencoder";
 import { CustomJSON } from "./customjson";
 

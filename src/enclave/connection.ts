@@ -1,28 +1,36 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { Address } from "../ledger";
-import { Call, Result } from "../api";
-import { EnclaveWatcher } from "../";
-import { ErdstallObject } from "../api";
-import { Subscribe, GetAccount } from "../api/calls";
-import { Mint, Transfer, ExitRequest } from "../api/transactions";
+import { Address } from "#erdstall/ledger";
+import { Call, Result } from "#erdstall/api";
+import { EnclaveWatcher } from "#erdstall";
+import { ErdstallObject } from "#erdstall/api";
+import {
+	SubscribeTXs,
+	SubscribeBalanceProofs,
+	GetAccount,
+	Onboarding,
+} from "#erdstall/api/calls";
+import { Mint, Transfer, ExitRequest } from "#erdstall/api/transactions";
 import {
 	ClientConfig,
 	TxReceipt,
 	BalanceProof,
+	BalanceProofs,
 	Account,
-} from "../api/responses";
+} from "#erdstall/api/responses";
 import { TypedJSON } from "typedjson";
-import EnclaveEvent from "./event";
-import { EventCache, OneShotEventCache } from "../utils";
+import { EventCache, OneShotEventCache } from "#erdstall/utils";
+import { EnclaveEvent } from "./event";
 import { EnclaveProvider } from "./provider";
 
 // EnclaveConnection describes the connection a client has to an Enclave
 // running Erdstall.
 export interface EnclaveConnection extends EnclaveWatcher {
 	connect(): void;
+	disconnect(): void;
 	subscribe(who: Address): Promise<void>;
+	onboard(who: Address): Promise<void>;
 	transfer(tx: Transfer): Promise<TxReceipt>;
 	mint(tx: Mint): Promise<TxReceipt>;
 	exit(exitRequest: ExitRequest): Promise<BalanceProof>;
@@ -57,9 +65,21 @@ export class Enclave implements EnclaveConnection {
 		this.provider.connect();
 	}
 
+	public disconnect() {
+		this.provider.close();
+	}
+
+	public async onboard(who: Address): Promise<void> {
+		const onboard = new Onboarding(who);
+		await this.sendCall(onboard);
+		return;
+	}
+
 	public async subscribe(who: Address): Promise<void> {
-		const sub = new Subscribe(who);
-		await this.sendCall(sub);
+		const subTXs = new SubscribeTXs(who);
+		const subBPs = new SubscribeBalanceProofs(who);
+		await this.sendCall(subTXs);
+		await this.sendCall(subBPs);
 		return;
 	}
 
@@ -164,15 +184,18 @@ export class Enclave implements EnclaveConnection {
 				return this.callEvent("config", obj);
 			case TxReceipt:
 				return this.callEvent("receipt", obj);
-			case BalanceProof:
-				const bp = obj as BalanceProof;
-				if (bp.balance.exit) {
-					return this.callEvent("exitproof", obj);
-				} else {
-					return this.callEvent("proof", obj);
+			case BalanceProofs:
+				const bps = obj as BalanceProofs;
+				for (const [_, bp] of bps.map) {
+					if (bp.balance.exit) {
+						this.callEvent("exitproof", bp);
+					} else {
+						this.callEvent("proof", bp);
+					}
 				}
+				break;
 			default:
-				console.error("received unsupported Erdstall event: ", om);
+				console.log("Object type: ", obj.objectType());
 		}
 	}
 
@@ -195,16 +218,7 @@ export class Enclave implements EnclaveConnection {
 	private onError(ev: Event) {
 		console.error("connection error: ", ev);
 
-		[this.handlers.get("close"), this.oneShotHandlers.get("close")].forEach(
-			(cbs) => {
-				if (!cbs) {
-					return;
-				}
-				cbs.forEach((f) => {
-					f({} as any);
-				});
-			},
-		);
+		this.callEvent("error", {} as any);
 
 		this.provider.close();
 		setTimeout(() => {
@@ -215,24 +229,10 @@ export class Enclave implements EnclaveConnection {
 	}
 
 	private onOpen(_: Event) {
-		[this.handlers.get("open"), this.oneShotHandlers.get("open")].forEach(
-			(cbs) => {
-				if (cbs)
-					cbs.forEach((f) => {
-						f({} as any);
-					});
-			},
-		);
+		this.callEvent("open", {} as any);
 	}
 
 	private onClose(_: Event) {
-		[this.handlers.get("close"), this.oneShotHandlers.get("close")].forEach(
-			(cbs) => {
-				if (cbs)
-					cbs.forEach((f) => {
-						f({} as any);
-					});
-			},
-		);
+		this.callEvent("close", {} as any);
 	}
 }

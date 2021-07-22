@@ -4,13 +4,13 @@
 import { expect } from "chai";
 
 import { Wallet } from "ethers";
-import { ETHZERO, Amount } from "../assets";
+import { ETHZERO, Amount } from "#erdstall/ledger/assets";
+import { Address } from "#erdstall/ledger";
 import {
 	makeETHDepositCalls,
 	makeERC20DepositCalls,
 	makeERC721DepositCalls,
 } from "./contracts_deposit";
-import { Address } from "../";
 
 import setup, { Enviroment } from "./enviroment.spec";
 
@@ -37,7 +37,7 @@ describe("Deposit_Call_Wrapper", () => {
 				Address.fromString(token as string),
 				amount,
 			);
-			for (const call of depCall) {
+			for (const [_, call] of depCall) {
 				const tx = await call({ nonce: nonce++ });
 				const txr = await tx.wait();
 				expect(

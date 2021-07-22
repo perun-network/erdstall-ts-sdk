@@ -34,13 +34,11 @@
 
     "baseUrl": "./src",
     "paths": {
-      "#erdstall/*": ["*"]
+      "#erdstall/*": ["*"],
+      "#erdstall": [""]
     }
   },
   "include": [
       "src/**/*"
-  ],
-  "exclude": [
-      "src/**/*.spec.ts"
   ]
 }

@@ -2,9 +2,8 @@
 "use strict";
 
 import { Signer } from "ethers";
-import { TokenType } from "../assets";
-import { Erdstall } from "./contracts/Erdstall";
-import { ERC20__factory, ERC721__factory } from "./contracts";
+import { TokenType } from "#erdstall/ledger/assets";
+import { Erdstall, ERC20__factory, ERC721__factory } from "./contracts";
 
 interface TokenRegisteredEvent {
 	token: string;

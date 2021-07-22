@@ -5,7 +5,7 @@ import { expect } from "chai";
 import { Wallet } from "ethers";
 
 import { Erdstall__factory } from "./contracts";
-import { TokenType, ETHZERO } from "../assets";
+import { TokenType, ETHZERO } from "#erdstall/ledger/assets";
 import { TokenTypesCache } from "./tokencache";
 
 import setup, { Enviroment } from "./enviroment.spec";

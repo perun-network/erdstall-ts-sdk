@@ -37,8 +37,6 @@
     "eslint-config-prettier": "^8.2.0",
     "eslint-plugin-prettier": "^3.4.0",
     "ethereum-waffle": "^3.4.0",
-    "ethers": "^5.3.1",
-    "ethers-utils": "^2.1.11",
     "fp-ts": "^1.19.3",
     "ganache-cli": "^6.12.2",
     "ganache-core": "^2.13.2",
@@ -48,24 +46,26 @@
     "jsdom-global": "^3.0.2",
     "mocha": "^8.3.2",
     "mocha-suppress-logs": "^0.3.1",
+    "number-generator": "^4.0.5",
     "prettier": "^2.2.1",
-    "reflect-metadata": "^0.1.13",
     "truffle": "^5.3.7",
     "ts-node": "^9.1.1",
     "tsconfig-paths": "^3.10.1",
     "typechain": "^4.0.3",
-    "typedjson": "^1.7.0",
     "typescript": "^4.2.4",
     "ws": "^7.4.5"
   },
   "scripts": {
-    "build": "npx tsc",
+    "build": "npx tsc -p tsconfig.build.json",
     "watch": "npx tsc -w",
     "lint": "npx eslint ./src --ext .ts",
     "bindings": "./scripts/genbindings.sh deps/erdstall-contracts",
     "test": "env TS_NODE_PROJECT=\"tsconfig.test.json\" mocha --timeout 15000 -r jsdom-global/register -r ts-node/register -r tsconfig-paths/register 'src/**/*.spec.ts'"
   },
   "dependencies": {
-    "number-generator": "^4.0.5"
+    "ethers": "^5.4.1",
+    "ethers-utils": "^2.1.11",
+    "reflect-metadata": "^0.1.13",
+    "typedjson": "^1.7.0"
   }
 }

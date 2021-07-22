@@ -3,8 +3,8 @@
 
 import { jsonObject } from "typedjson";
 import { Asset } from "./asset";
-import { ABIValue, CustomJSON } from "../../api/util";
-import { Address } from "../address";
+import { ABIValue, CustomJSON } from "#erdstall/api/util";
+import { Address } from "#erdstall/ledger";
 
 export const ETHZERO = "0x0000000000000000000000000000000000000000";
 
@@ -43,7 +43,29 @@ export class Assets implements ABIValue {
 		this.values.forEach((v, k) => {
 			valuesArr.push([Address.fromJSON(k).asABI(), v.asABI()]);
 		});
-		return valuesArr;
+
+		const orderedAssets = this.orderedAssets();
+		return orderedAssets.map(([addr, asset]: [string, Asset]): [
+			any,
+			any,
+		] => {
+			return [Address.fromJSON(addr).asABI(), asset.asABI()];
+		});
+	}
+
+	private orderedAssets(): [string, Asset][] {
+		let assets: [string, Asset][] = [];
+		for (const entry of this.values.entries()) {
+			assets.push(entry);
+		}
+		return assets.sort(
+			(
+				[addr1, _]: [string, Asset],
+				[addr2, __]: [string, Asset],
+			): number => {
+				return addr1.localeCompare(addr2);
+			},
+		);
 	}
 
 	hasAsset(addr: string): boolean {

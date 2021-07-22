@@ -7,15 +7,13 @@
 import { Signer } from "ethers";
 import { ethers } from "ethers";
 
-import { TxReceipt } from "./api/responses/txreceipt";
-import { BalanceProof } from "./api/responses/balanceproof";
-import { Assets } from "./ledger";
-import { Address } from "./ledger";
-import { Uint256 } from "./api/util";
-import ErdstallEvent from "./ledger/event";
-import EnclaveEvent from "./enclave/event";
-import Client from "./client";
-import { Enclave, EnclaveWSProvider } from "./enclave";
+import { TxReceipt } from "#erdstall/api/responses";
+import { BalanceProof } from "#erdstall/api/responses";
+import { Assets, Address, ErdstallEvent } from "#erdstall/ledger";
+import { Uint256 } from "#erdstall/api/util";
+import { Stages } from "#erdstall/utils";
+import Client from "#erdstall/client";
+import { Enclave, EnclaveWSProvider, EnclaveEvent } from "#erdstall/enclave";
 
 interface watcher<T extends ErdstallEvent | EnclaveEvent> {
 	on: (ev: T, cb: Function) => void;
@@ -34,15 +32,19 @@ export interface Transactor {
 }
 
 export interface Minter {
-	mint: (owner: Address, token: Address, id: Uint256) => Promise<TxReceipt>;
+	mint: (token: Address, id: Uint256) => Promise<TxReceipt>;
 }
 
 export interface Depositor {
-	deposit(assets: Assets): Promise<ethers.ContractTransaction[]>;
+	deposit(
+		assets: Assets,
+	): Promise<Stages<Promise<ethers.ContractTransaction>>>;
 }
 
 export interface Withdrawer {
-	withdraw(exitProof: BalanceProof): Promise<ethers.ContractTransaction[]>;
+	withdraw(
+		exitProof: BalanceProof,
+	): Promise<Stages<Promise<ethers.ContractTransaction>>>;
 }
 
 export interface Exiter {
@@ -50,7 +52,12 @@ export interface Exiter {
 }
 
 export interface Leaver extends Exiter, Withdrawer {
-	leave(): Promise<ethers.ContractTransaction[]>;
+	leave(): Promise<Stages<Promise<ethers.ContractTransaction>>>;
+}
+
+export interface Subscriber {
+	subscribe(): Promise<void>;
+	onboard(): Promise<void>;
 }
 
 export interface Erdstall
@@ -60,8 +67,10 @@ export interface Erdstall
 		Depositor,
 		Withdrawer,
 		Exiter,
+		Subscriber,
 		Leaver {
-	initialize(): void;
+	readonly address: Address;
+	initialize(): Promise<void>;
 }
 
 export function NewClient(

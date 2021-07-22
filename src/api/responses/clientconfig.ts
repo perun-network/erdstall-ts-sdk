@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { ErdstallObject } from "../object";
+import { ErdstallObject, registerErdstallType } from "#erdstall/api";
 import { jsonObject, jsonMember } from "typedjson";
-import { Address } from "../../ledger";
+import { Address } from "#erdstall/ledger";
+
+const clientConfigTypeName = "ClientConfig";
 
 @jsonObject
 export class ClientConfig extends ErdstallObject {
@@ -18,6 +20,12 @@ export class ClientConfig extends ErdstallObject {
 		this.powDepth = powDepth;
 	}
 
-	public objectType(): any { return ClientConfig; }
-	protected objectTypeName(): string { return "ClientConfig"; }
+	public objectType(): any {
+		return ClientConfig;
+	}
+	protected objectTypeName(): string {
+		return clientConfigTypeName;
+	}
 }
+
+registerErdstallType(clientConfigTypeName, ClientConfig);

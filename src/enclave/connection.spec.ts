@@ -5,7 +5,7 @@ import { expect } from "chai";
 import { Enclave } from "./connection";
 import { EnclaveMockProvider } from "./provider.spec";
 
-import * as pkgtest from "../../test";
+import * as pkgtest from "#erdstall/test";
 
 describe("EnclaveConnection", () => {
 	const rng = pkgtest.NewPrng();
@@ -34,10 +34,12 @@ describe("EnclaveConnection", () => {
 		const conn = new Enclave(provider);
 		const sendBPtoClient = () =>
 			provider.sendToClient(
-				pkgtest.NewRandomBalanceProof(rng, assetsSize),
+				pkgtest.NewRandomBalanceProofs(rng, assetsSize, 1),
 			);
 		const sendEPtoClient = () =>
-			provider.sendToClient(pkgtest.NewRandomExitProof(rng, assetsSize));
+			provider.sendToClient(
+				pkgtest.NewRandomExitProofs(rng, assetsSize, 1),
+			);
 
 		conn.connect();
 

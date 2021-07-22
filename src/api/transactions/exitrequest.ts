@@ -1,15 +1,24 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { Transaction } from "./transaction";
 import { jsonObject } from "typedjson";
-import { ABIEncoder } from "../util";
+import { ABIEncoder } from "#erdstall/api/util";
+import { Transaction, registerTransactionType } from "./transaction";
 
-@jsonObject export class ExitRequest extends Transaction {
-	public txType() { return ExitRequest; }
-	protected txTypeName(): string { return "ExitRequest"; }
+const exitTypeName = "ExitRequest";
 
-	protected encodeABI(e: ABIEncoder): string {
+@jsonObject
+export class ExitRequest extends Transaction {
+	public txType() {
+		return ExitRequest;
+	}
+	protected txTypeName(): string {
+		return exitTypeName;
+	}
+
+	protected encodeABI(_e: ABIEncoder): string {
 		return "ErdstallExitRequest";
 	}
 }
+
+registerTransactionType(exitTypeName, ExitRequest);

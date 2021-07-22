@@ -1,23 +1,21 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { providers, Signer } from "ethers";
+import { Signer } from "ethers";
 import { ethers } from "ethers";
 
-import { Erdstall } from "./erdstall";
-import { Erdstall__factory } from "./ledger/backend/contracts";
-import { TxReceipt } from "./api/responses";
-import { BalanceProof } from "./api/responses";
-import { ClientConfig } from "./api/responses";
-import { Transfer, Mint, ExitRequest } from "./api/transactions";
-import { EnclaveConnection } from "./enclave";
-import { LedgerConnection, LedgerAdapter } from "./ledger";
-import { Assets } from "./ledger";
-import { Address } from "./ledger";
-import { Uint256 } from "./api/util";
-import { EventCache, OneShotEventCache } from "./utils";
-import ErdstallEvent, { isLedgerEvent } from "./ledger/event";
-import EnclaveEvent from "./enclave/event";
+import { Erdstall } from "erdstall";
+import { Erdstall__factory } from "#erdstall/ledger/backend/contracts";
+import { TxReceipt } from "#erdstall/api/responses";
+import { BalanceProof } from "#erdstall/api/responses";
+import { ClientConfig } from "#erdstall/api/responses";
+import { Transfer, Mint, ExitRequest } from "#erdstall/api/transactions";
+import { EnclaveConnection, EnclaveEvent } from "#erdstall/enclave";
+import { LedgerConnection, LedgerAdapter } from "#erdstall/ledger";
+import { Assets, ErdstallEvent, isLedgerEvent } from "#erdstall/ledger";
+import { Address } from "#erdstall/ledger";
+import { Uint256 } from "#erdstall/api/util";
+import { EventCache, OneShotEventCache, Stages } from "#erdstall/utils";
 
 export const ErrUnitialisedClient = new Error("client unitialised");
 
@@ -33,7 +31,7 @@ export default class Client implements Erdstall {
 	constructor(address: Address, signer: Signer, encConn: EnclaveConnection) {
 		this.address = address;
 		this.signer = signer;
-		this.nonce = 0n;
+		this.nonce = 1n;
 		this.enclaveConn = encConn;
 		this.erdstallEventHandlerCache = new EventCache<ErdstallEvent>();
 		this.erdstallOneShotHandlerCache = new OneShotEventCache<ErdstallEvent>();
@@ -74,30 +72,59 @@ export default class Client implements Erdstall {
 		}
 	}
 
+	private async nextNonce(): Promise<bigint> {
+		if (this.nonce === 1n) {
+			await this.updateNonce();
+		}
+
+		return this.nonce++;
+	}
+
+	private async updateNonce(): Promise<void> {
+		const acc = await this.enclaveConn.getAccount(this.address);
+		this.nonce = acc.account.nonce.valueOf() + 1n;
+	}
+
+	async onboard(): Promise<void> {
+		return this.enclaveConn.onboard(this.address);
+	}
+
+	async subscribe(): Promise<void> {
+		return this.enclaveConn.subscribe(this.address);
+	}
+
 	async transferTo(assets: Assets, to: Address): Promise<TxReceipt> {
 		if (!this.erdstallConn) {
 			return Promise.reject(ErrUnitialisedClient);
 		}
-		const tx = new Transfer(this.address, this.nonce, to, assets);
-		tx.sign(this.erdstallConn.erdstall(), this.signer);
+		const tx = new Transfer(
+			this.address,
+			await this.nextNonce(),
+			to,
+			assets,
+		);
+		await tx.sign(this.erdstallConn.erdstall(), this.signer);
 		return this.enclaveConn.transfer(tx);
 	}
 
-	async mint(
-		sender: Address,
-		token: Address,
-		id: Uint256,
-	): Promise<TxReceipt> {
+	async mint(token: Address, id: Uint256): Promise<TxReceipt> {
 		if (!this.erdstallConn) {
 			return Promise.reject(ErrUnitialisedClient);
 		}
 
-		const minttx = new Mint(sender, this.nonce, token, id);
+		const minttx = new Mint(
+			this.address,
+			await this.nextNonce(),
+			token,
+			id,
+		);
 		minttx.sign(this.erdstallConn.erdstall(), this.signer);
 		return this.enclaveConn.mint(minttx);
 	}
 
-	async deposit(assets: Assets): Promise<ethers.ContractTransaction[]> {
+	async deposit(
+		assets: Assets,
+	): Promise<Stages<Promise<ethers.ContractTransaction>>> {
 		if (!this.erdstallConn) {
 			return Promise.reject(ErrUnitialisedClient);
 		}
@@ -110,14 +137,14 @@ export default class Client implements Erdstall {
 			return Promise.reject(ErrUnitialisedClient);
 		}
 
-		const exittx = new ExitRequest(this.address, this.nonce);
-		exittx.sign(this.erdstallConn.erdstall(), this.signer);
+		const exittx = new ExitRequest(this.address, await this.nextNonce());
+		await exittx.sign(this.erdstallConn.erdstall(), this.signer);
 		return this.enclaveConn.exit(exittx);
 	}
 
 	async withdraw(
 		exitProof: BalanceProof,
-	): Promise<ethers.ContractTransaction[]> {
+	): Promise<Stages<Promise<ethers.ContractTransaction>>> {
 		if (!this.erdstallConn) {
 			return Promise.reject(ErrUnitialisedClient);
 		}
@@ -125,32 +152,47 @@ export default class Client implements Erdstall {
 		return this.erdstallConn.withdraw(exitProof);
 	}
 
-	async leave(): Promise<ethers.ContractTransaction[]> {
+	async leave(): Promise<Stages<Promise<ethers.ContractTransaction>>> {
 		const exitProof = await this.exit();
 		return this.withdraw(exitProof);
 	}
 
-	initialize(): void {
-		this.enclaveConn.on("config", (config: ClientConfig) => {
-			const erdstall = Erdstall__factory.connect(
-				config.contract.toString(),
-				this.signer,
+	initialize(timeout?: number): Promise<void> {
+		return new Promise((resolve, reject) => {
+			const rejectTimeout = setTimeout(
+				reject,
+				timeout ? timeout! : 15000,
 			);
-			this.erdstallConn = new LedgerAdapter(erdstall);
 
-			for (const [ev, cbs] of this.erdstallEventHandlerCache) {
-				cbs.forEach((cb) => {
-					this.erdstallConn!.on(ev, cb);
-				});
-			}
+			this.enclaveConn.once("error", reject);
+			this.enclaveConn.once("error", () => {
+				this.updateNonce();
+			});
+			this.enclaveConn.once("config", (config: ClientConfig) => {
+				const erdstall = Erdstall__factory.connect(
+					config.contract.toString(),
+					this.signer,
+				);
+				this.erdstallConn = new LedgerAdapter(erdstall);
 
-			for (const [ev, cbs] of this.erdstallOneShotHandlerCache) {
-				cbs.forEach((cb) => {
-					this.erdstallConn!.on(ev, cb);
-				});
-			}
-			this.erdstallOneShotHandlerCache.clear();
+				for (const [ev, cbs] of this.erdstallEventHandlerCache) {
+					cbs.forEach((cb) => {
+						this.erdstallConn!.on(ev, cb);
+					});
+				}
+
+				for (const [ev, cbs] of this.erdstallOneShotHandlerCache) {
+					cbs.forEach((cb) => {
+						this.erdstallConn!.on(ev, cb);
+					});
+				}
+				this.erdstallOneShotHandlerCache.clear();
+
+				clearTimeout(rejectTimeout);
+				this.enclaveConn.off("error", reject);
+				resolve();
+			});
+			this.enclaveConn.connect();
 		});
-		this.enclaveConn.connect();
 	}
 }

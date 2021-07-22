@@ -1,16 +1,14 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import PRNG from "../random";
+import PRNG from "#erdstall/test/random";
+import { NewRandomAddress, NewRandomAssets, NewUint64 } from "#erdstall/test";
 import {
 	Mint,
 	Transfer,
 	ExitRequest,
 	Transaction,
 } from "#erdstall/api/transactions";
-import { NewRandomAddress } from "../address";
-import { NewRandomAssets } from "../assets";
-import { NewUint64 } from "../bigint";
 
 export function NewRandomMint(rng: PRNG): Mint {
 	return new Mint(

@@ -4,7 +4,8 @@
 import { ErdstallObject } from "./object";
 import { jsonObject, jsonMember } from "typedjson";
 
-@jsonObject export class Call {
+@jsonObject
+export class Call {
 	@jsonMember(String) id: string;
 	@jsonMember(ErdstallObject) data: ErdstallObject;
 

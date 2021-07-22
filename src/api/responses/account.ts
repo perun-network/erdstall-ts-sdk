@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { ErdstallObject } from "../object";
+import { ErdstallObject, registerErdstallType } from "#erdstall/api";
 import { jsonObject, jsonMember } from "typedjson";
-import { ledger } from "../..";
-import { BigInteger } from "../util";
+import * as ledger from "#erdstall/ledger";
+import { BigInteger } from "#erdstall/api/util";
+
+const accountTypeName = "AccountResponse";
 
 @jsonObject
 export class Account extends ErdstallObject {
@@ -17,6 +19,12 @@ export class Account extends ErdstallObject {
 		this.epoch = new BigInteger(epoch);
 	}
 
-	public objectType(): any { return Account; }
-	protected objectTypeName(): string { return "AccountResponse"; }
+	public objectType(): any {
+		return Account;
+	}
+	protected objectTypeName(): string {
+		return accountTypeName;
+	}
 }
+
+registerErdstallType(accountTypeName, Account);

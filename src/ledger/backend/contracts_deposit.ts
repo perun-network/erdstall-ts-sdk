@@ -8,10 +8,10 @@ import { IERC20__factory } from "./contracts/factories/IERC20__factory";
 import { IERC721__factory } from "./contracts/factories/IERC721__factory";
 import { ERC20Holder__factory } from "./contracts/factories/ERC20Holder__factory";
 import { ERC721Holder__factory } from "./contracts/factories/ERC721Holder__factory";
-import { Address } from "../";
-import { Asset } from "../assets";
-import { Amount } from "../assets";
-import { Tokens } from "../assets";
+import { Address } from "#erdstall/ledger";
+import { Asset } from "#erdstall/ledger/assets";
+import { Amount } from "#erdstall/ledger/assets";
+import { Tokens } from "#erdstall/ledger/assets";
 import { DepositCalls } from "./tokenmanager";
 
 export function makeETHDepositCalls(
@@ -27,15 +27,18 @@ export function makeETHDepositCalls(
 	const holder = ETHHolder__factory.connect(holderAddr.toString(), signer);
 
 	return [
-		(
-			obj?: ethers.PayableOverrides,
-		): Promise<ethers.ContractTransaction> => {
-			const combinedOverride = {
-				...{ value: BigNumber.from(amount.value) },
-				...obj,
-			};
-			return holder.deposit(combinedOverride);
-		},
+		[
+			"deposit",
+			(
+				obj?: ethers.PayableOverrides,
+			): Promise<ethers.ContractTransaction> => {
+				const combinedOverride = {
+					...{ value: BigNumber.from(amount.value) },
+					...obj,
+				};
+				return holder.deposit(combinedOverride);
+			},
+		],
 	];
 }
 
@@ -53,25 +56,30 @@ export function makeERC20DepositCalls(
 	const holder = ERC20Holder__factory.connect(holderAddr.toString(), signer);
 
 	return [
-		(
-			obj?: ethers.PayableOverrides,
-		): Promise<ethers.ContractTransaction> => {
-			return token.approve(
-				holderAddr.toString(),
-				BigNumber.from(amount.value),
-				obj,
-			);
-		},
-
-		(
-			obj?: ethers.PayableOverrides,
-		): Promise<ethers.ContractTransaction> => {
-			return holder.deposit(
-				tokenAddr.toString(),
-				BigNumber.from(amount.value),
-				obj,
-			);
-		},
+		[
+			"approve",
+			(
+				obj?: ethers.PayableOverrides,
+			): Promise<ethers.ContractTransaction> => {
+				return token.approve(
+					holderAddr.toString(),
+					BigNumber.from(amount.value),
+					obj,
+				);
+			},
+		],
+		[
+			"deposit",
+			(
+				obj?: ethers.PayableOverrides,
+			): Promise<ethers.ContractTransaction> => {
+				return holder.deposit(
+					tokenAddr.toString(),
+					BigNumber.from(amount.value),
+					obj,
+				);
+			},
+		],
 	];
 }
 
@@ -91,7 +99,8 @@ export function makeERC721DepositCalls(
 	const calls: DepositCalls = [];
 
 	for (const id of amount.value) {
-		calls.push(
+		calls.push([
+			"approve",
 			(
 				obj?: ethers.PayableOverrides,
 			): Promise<ethers.ContractTransaction> => {
@@ -101,10 +110,11 @@ export function makeERC721DepositCalls(
 					obj,
 				);
 			},
-		);
+		]);
 	}
 
-	calls.push(
+	calls.push([
+		"deposit",
 		(
 			obj?: ethers.PayableOverrides,
 		): Promise<ethers.ContractTransaction> => {
@@ -114,7 +124,7 @@ export function makeERC721DepositCalls(
 				obj,
 			);
 		},
-	);
+	]);
 
 	return calls;
 }

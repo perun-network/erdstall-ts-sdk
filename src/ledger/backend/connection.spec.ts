@@ -3,11 +3,11 @@
 
 import { expect } from "chai";
 
+import { ETHZERO, Assets, Amount } from "#erdstall/ledger/assets";
+import { EventHelper } from "#erdstall/utils";
+
 import { Erdstall__factory } from "./contracts";
 import { LedgerAdapter } from "./connection";
-import { ETHZERO, Assets, Amount } from "../assets";
-import { EventHelper } from "../../utils";
-
 import setup, { Enviroment } from "./enviroment.spec";
 
 describe("ErdstallConnection", () => {
@@ -31,9 +31,10 @@ describe("ErdstallConnection", () => {
 		const conn = new LedgerAdapter(contract);
 		const depositRegistered = EventHelper.within(10000, conn, "Deposited");
 
-		const txs = await conn.deposit(assets);
-		for (const tx of txs) {
-			const rec = await tx.wait();
+		const stages = await conn.deposit(assets);
+		for (const stage of stages) {
+			const ctx = await stage.value;
+			const rec = await ctx.wait();
 			expect(rec.status, "depositing should have worked").to.equal(0x1);
 		}
 

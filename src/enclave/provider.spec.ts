@@ -3,15 +3,19 @@
 
 import { EnclaveProvider } from "./provider";
 import { TypedJSON } from "typedjson";
-import { Call, Result, ErdstallObject } from "../api";
-import { Subscribe, GetAccount } from "../api/calls";
-import * as responses from "../api/responses";
-import { Transaction } from "../api/transactions";
-import { TxReceipt } from "../api/responses";
-import { Mint, Transfer, ExitRequest } from "../api/transactions";
-import { Account } from "../ledger/account";
-import { Tokens } from "../ledger/assets";
-import { Assets } from "../ledger/assets";
+import { Call, Result, ErdstallObject } from "#erdstall/api";
+import {
+	SubscribeTXs,
+	SubscribeBalanceProofs,
+	GetAccount,
+} from "#erdstall/api/calls";
+import * as responses from "#erdstall/api/responses";
+import { Transaction } from "#erdstall/api/transactions";
+import { TxReceipt } from "#erdstall/api/responses";
+import { Mint, Transfer, ExitRequest } from "#erdstall/api/transactions";
+import { Account } from "#erdstall/ledger";
+import { Tokens } from "#erdstall/ledger/assets";
+import { Assets } from "#erdstall/ledger/assets";
 
 export class EnclaveMockProvider implements EnclaveProvider {
 	public onopen: ((ev: Event) => any) | null;
@@ -32,7 +36,11 @@ export class EnclaveMockProvider implements EnclaveProvider {
 		const call = TypedJSON.parse(data, Call)!;
 
 		switch (call.data.objectType()) {
-			case Subscribe: {
+			case SubscribeTXs: {
+				const msg = newErdstallMessageEvent(new Result(call.id));
+				return this.onmessage!(msg);
+			}
+			case SubscribeBalanceProofs: {
 				const msg = newErdstallMessageEvent(new Result(call.id));
 				return this.onmessage!(msg);
 			}
