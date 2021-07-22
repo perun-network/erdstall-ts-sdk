@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { ErdstallObject } from "#erdstall/api/object";
+import { ErdstallObject, registerErdstallType } from "#erdstall/api";
 import { jsonObject, jsonMember } from "typedjson";
 import * as ledger from "#erdstall/ledger";
 import { BigInteger } from "#erdstall/api/util";
+
+const accountTypeName = "AccountResponse";
 
 @jsonObject
 export class Account extends ErdstallObject {
@@ -21,6 +23,8 @@ export class Account extends ErdstallObject {
 		return Account;
 	}
 	protected objectTypeName(): string {
-		return "AccountResponse";
+		return accountTypeName;
 	}
 }
+
+registerErdstallType(accountTypeName, Account);

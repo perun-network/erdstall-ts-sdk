@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { Transaction } from "./transaction";
+import { Transaction, registerTransactionType } from "./transaction";
 import { assets, Address } from "#erdstall/ledger";
 import { jsonObject, jsonMember } from "typedjson";
 import { ABIEncoder, ABIValue } from "#erdstall/api/util";
+
+const transferTypeName = "Transfer";
 
 @jsonObject
 export class Transfer extends Transaction {
@@ -26,10 +28,12 @@ export class Transfer extends Transaction {
 		return Transfer;
 	}
 	protected txTypeName(): string {
-		return "Transfer";
+		return transferTypeName;
 	}
 	protected encodeABI(e: ABIEncoder): string {
 		e.encode(this.recipient, this.values as ABIValue);
 		return "ErdstallTransaction";
 	}
 }
+
+registerTransactionType(transferTypeName, Transfer);

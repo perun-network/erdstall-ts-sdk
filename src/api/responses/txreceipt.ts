@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { ErdstallObject } from "#erdstall/api/object";
+import { ErdstallObject, registerErdstallType } from "#erdstall/api";
 import { Account } from "#erdstall/ledger";
 import { Transaction } from "#erdstall/api/transactions";
 import { jsonObject, jsonMember } from "typedjson";
+
+const txReceiptTypeName = "TxReceipt";
 
 @jsonObject
 export class TxReceipt extends ErdstallObject {
@@ -21,6 +23,8 @@ export class TxReceipt extends ErdstallObject {
 		return TxReceipt;
 	}
 	protected objectTypeName(): string {
-		return "TxReceipt";
+		return txReceiptTypeName;
 	}
 }
+
+registerErdstallType(txReceiptTypeName, TxReceipt);

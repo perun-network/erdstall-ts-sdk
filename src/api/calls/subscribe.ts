@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { ErdstallObject } from "#erdstall/api/object";
+import { ErdstallObject, registerErdstallType } from "#erdstall/api";
 import { Address } from "#erdstall/ledger";
 import { jsonObject, jsonMember } from "typedjson";
+
+const subBPsTypeName = "SubscribeBalanceProofs";
+const subTXsTypeName = "SubscribeTXs";
 
 @jsonObject
 export class SubscribeBalanceProofs extends ErdstallObject {
@@ -20,7 +23,7 @@ export class SubscribeBalanceProofs extends ErdstallObject {
 		return SubscribeBalanceProofs;
 	}
 	protected objectTypeName(): string {
-		return "SubscribeBalanceProofs";
+		return subBPsTypeName;
 	}
 }
 
@@ -39,6 +42,9 @@ export class SubscribeTXs extends ErdstallObject {
 		return SubscribeTXs;
 	}
 	protected objectTypeName(): string {
-		return "SubscribeTXs";
+		return subTXsTypeName;
 	}
 }
+
+registerErdstallType(subBPsTypeName, SubscribeBalanceProofs);
+registerErdstallType(subTXsTypeName, SubscribeTXs);

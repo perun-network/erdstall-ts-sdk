@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { Transaction } from "./transaction";
+import { Transaction, registerTransactionType } from "./transaction";
 import { Address } from "#erdstall/ledger";
 import { jsonObject, jsonMember } from "typedjson";
 import { ABIEncoder, BigInteger } from "#erdstall/api/util";
+
+const mintTypeName = "Mint";
 
 @jsonObject
 export class Mint extends Transaction {
@@ -26,10 +28,12 @@ export class Mint extends Transaction {
 		return Mint;
 	}
 	protected txTypeName(): string {
-		return "Mint";
+		return mintTypeName;
 	}
 	protected encodeABI(e: ABIEncoder): string {
 		e.encode(this.token, ["uint256", this.id]);
 		return "ErdstallMintTX";
 	}
 }
+
+registerTransactionType(mintTypeName, Mint);

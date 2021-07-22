@@ -3,7 +3,9 @@
 
 import { jsonObject } from "typedjson";
 import { ABIEncoder } from "#erdstall/api/util";
-import { Transaction } from "./transaction";
+import { Transaction, registerTransactionType } from "./transaction";
+
+const exitTypeName = "ExitRequest";
 
 @jsonObject
 export class ExitRequest extends Transaction {
@@ -11,10 +13,12 @@ export class ExitRequest extends Transaction {
 		return ExitRequest;
 	}
 	protected txTypeName(): string {
-		return "ExitRequest";
+		return exitTypeName;
 	}
 
-	protected encodeABI(e: ABIEncoder): string {
+	protected encodeABI(_e: ABIEncoder): string {
 		return "ErdstallExitRequest";
 	}
 }
+
+registerTransactionType(exitTypeName, ExitRequest);

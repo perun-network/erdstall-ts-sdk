@@ -2,7 +2,7 @@
 "use strict";
 
 import { jsonObject, jsonMember } from "typedjson";
-import { ErdstallObject } from "#erdstall/api/object";
+import { ErdstallObject } from "#erdstall/api";
 import { Address } from "#erdstall/ledger";
 
 @jsonObject

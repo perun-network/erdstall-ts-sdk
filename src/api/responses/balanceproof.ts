@@ -6,8 +6,10 @@ import { TypedJSON, jsonObject, jsonMember } from "typedjson";
 import { BigInteger, CustomJSON } from "#erdstall/api/util";
 import { Assets } from "#erdstall/ledger/assets";
 import { Address } from "#erdstall/ledger";
-import { Signature } from "#erdstall/api/signature";
-import { ErdstallObject } from "#erdstall/api/object";
+import { Signature } from "#erdstall/api";
+import { ErdstallObject, registerErdstallType } from "#erdstall/api";
+
+const balanceProofsTypeName = "BalanceProofs";
 
 // Balance is the value of funds for the account within epoch.
 @jsonObject
@@ -101,8 +103,9 @@ export class BalanceProofs extends ErdstallObject {
 		return BalanceProofs;
 	}
 	protected objectTypeName() {
-		return "BalanceProofs";
+		return balanceProofsTypeName;
 	}
 }
 
+registerErdstallType(balanceProofsTypeName, BalanceProofs);
 CustomJSON(BalanceProofs);

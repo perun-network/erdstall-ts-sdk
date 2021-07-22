@@ -2,8 +2,10 @@
 "use strict";
 
 import { jsonObject, jsonMember } from "typedjson";
-import { ErdstallObject } from "#erdstall/api/object";
+import { ErdstallObject, registerErdstallType } from "#erdstall/api";
 import { Address } from "#erdstall/ledger";
+
+const getAccountTypeName = "GetAccount";
 
 @jsonObject
 export class GetAccount extends ErdstallObject {
@@ -18,6 +20,8 @@ export class GetAccount extends ErdstallObject {
 		return GetAccount;
 	}
 	protected objectTypeName(): string {
-		return "GetAccount";
+		return getAccountTypeName;
 	}
 }
+
+registerErdstallType(getAccountTypeName, GetAccount);
