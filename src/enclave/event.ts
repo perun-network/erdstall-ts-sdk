@@ -11,10 +11,8 @@ const event = [
 	"error",
 ] as const;
 
-type EnclaveEvent = typeof event[number];
+export type EnclaveEvent = typeof event[number];
 
 export function isEnclaveEvent(v: any): v is EnclaveEvent {
 	return event.includes(v);
 }
-
-export default EnclaveEvent;

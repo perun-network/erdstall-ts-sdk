@@ -2,7 +2,7 @@
 "use strict";
 
 import PRNG from "#erdstall/test/random";
-import { NewRandomAddress } from "#erdstall/test/address";
+import { NewRandomAddress } from "#erdstall/test";
 import { Asset, Assets } from "#erdstall/ledger/assets";
 import { NewRandomTokens } from "./tokens";
 import { NewRandomAmount } from "./amount";

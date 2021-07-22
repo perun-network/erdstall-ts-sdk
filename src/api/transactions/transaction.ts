@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { ErdstallObject } from "#erdstall/api/object";
-import { Signature } from "#erdstall/api/signature";
+import { ErdstallObject } from "#erdstall/api";
+import { Signature } from "#erdstall/api";
 import { Address } from "#erdstall/ledger";
 import { BigInteger, CustomJSON, ABIEncoder } from "#erdstall/api/util";
 import { jsonObject, jsonMember, TypedJSON } from "typedjson";

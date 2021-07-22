@@ -9,14 +9,11 @@ import { ethers } from "ethers";
 
 import { TxReceipt } from "#erdstall/api/responses/txreceipt";
 import { BalanceProof } from "#erdstall/api/responses/balanceproof";
-import { Assets } from "#erdstall/ledger";
-import { Address } from "#erdstall/ledger";
+import { Assets, Address, ErdstallEvent } from "#erdstall/ledger";
 import { Uint256 } from "#erdstall/api/util";
 import { Stages } from "#erdstall/utils";
-import ErdstallEvent from "#erdstall/ledger/event";
-import EnclaveEvent from "#erdstall/enclave/event";
 import Client from "#erdstall/client";
-import { Enclave, EnclaveWSProvider } from "#erdstall/enclave";
+import { Enclave, EnclaveWSProvider, EnclaveEvent } from "#erdstall/enclave";
 
 interface watcher<T extends ErdstallEvent | EnclaveEvent> {
 	on: (ev: T, cb: Function) => void;

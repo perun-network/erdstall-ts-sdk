@@ -10,14 +10,12 @@ import { TxReceipt } from "#erdstall/api/responses";
 import { BalanceProof } from "#erdstall/api/responses";
 import { ClientConfig } from "#erdstall/api/responses";
 import { Transfer, Mint, ExitRequest } from "#erdstall/api/transactions";
-import { EnclaveConnection } from "#erdstall/enclave";
+import { EnclaveConnection, EnclaveEvent } from "#erdstall/enclave";
 import { LedgerConnection, LedgerAdapter } from "#erdstall/ledger";
-import { Assets } from "#erdstall/ledger";
+import { Assets, ErdstallEvent, isLedgerEvent } from "#erdstall/ledger";
 import { Address } from "#erdstall/ledger";
 import { Uint256 } from "#erdstall/api/util";
 import { EventCache, OneShotEventCache, Stages } from "#erdstall/utils";
-import ErdstallEvent, { isLedgerEvent } from "#erdstall/ledger/event";
-import EnclaveEvent from "#erdstall/enclave/event";
 
 export const ErrUnitialisedClient = new Error("client unitialised");
 

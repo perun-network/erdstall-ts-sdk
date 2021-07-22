@@ -4,3 +4,4 @@
 export * from "./connection";
 export * as event from "./event";
 export * from "./provider";
+export * from "./event";

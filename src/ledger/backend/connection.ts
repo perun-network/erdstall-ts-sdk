@@ -4,10 +4,9 @@
 import { ethers, Signer } from "ethers";
 import { ErdstallWatcher, Depositor, Withdrawer } from "#erdstall";
 import { Assets } from "#erdstall/ledger/assets";
-import { Address } from "#erdstall/ledger";
+import { Address, ErdstallEvent } from "#erdstall/ledger";
 import { Stages } from "#erdstall/utils";
 import { BalanceProof } from "#erdstall/api/responses";
-import ErdstallEvent from "#erdstall/ledger/event";
 import { Erdstall } from "./contracts/Erdstall";
 import { depositors, DepositCalls } from "./tokenmanager";
 import { TokenTypesCache } from "./tokencache";

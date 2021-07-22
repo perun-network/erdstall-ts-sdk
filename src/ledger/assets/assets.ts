@@ -4,7 +4,7 @@
 import { jsonObject } from "typedjson";
 import { Asset } from "./asset";
 import { ABIValue, CustomJSON } from "#erdstall/api/util";
-import { Address } from "#erdstall/ledger/address";
+import { Address } from "#erdstall/ledger";
 
 export const ETHZERO = "0x0000000000000000000000000000000000000000";
 

@@ -21,7 +21,7 @@ import {
 } from "#erdstall/api/responses";
 import { TypedJSON } from "typedjson";
 import { EventCache, OneShotEventCache } from "#erdstall/utils";
-import EnclaveEvent from "./event";
+import { EnclaveEvent } from "./event";
 import { EnclaveProvider } from "./provider";
 
 // EnclaveConnection describes the connection a client has to an Enclave
