@@ -2,15 +2,13 @@
 "use strict";
 
 import PRNG from "#erdstall/test/random";
+import { NewRandomAddress, NewRandomAssets, NewUint64 } from "#erdstall/test";
 import {
 	Mint,
 	Transfer,
 	ExitRequest,
 	Transaction,
 } from "#erdstall/api/transactions";
-import { NewRandomAddress } from "#erdstall/test/address";
-import { NewRandomAssets } from "#erdstall/test/assets";
-import { NewUint64 } from "#erdstall/test/bigint";
 
 export function NewRandomMint(rng: PRNG): Mint {
 	return new Mint(

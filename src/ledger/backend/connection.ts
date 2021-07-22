@@ -2,18 +2,15 @@
 "use strict";
 
 import { ethers, Signer } from "ethers";
-import { ErdstallWatcher, Depositor, Withdrawer } from "#erdstall/erdstall";
-import { Erdstall } from "#erdstall/ledger/backend/contracts/Erdstall";
+import { ErdstallWatcher, Depositor, Withdrawer } from "#erdstall";
 import { Assets } from "#erdstall/ledger/assets";
 import { Address } from "#erdstall/ledger";
 import { Stages } from "#erdstall/utils";
 import { BalanceProof } from "#erdstall/api/responses";
-import {
-	depositors,
-	DepositCalls,
-} from "#erdstall/ledger/backend/tokenmanager";
-import { TokenTypesCache } from "#erdstall/ledger/backend/tokencache";
 import ErdstallEvent from "#erdstall/ledger/event";
+import { Erdstall } from "./contracts/Erdstall";
+import { depositors, DepositCalls } from "./tokenmanager";
+import { TokenTypesCache } from "./tokencache";
 
 export const ErrUnsupportedLedgerEvent = new Error(
 	"unsupported ledger event encountered",

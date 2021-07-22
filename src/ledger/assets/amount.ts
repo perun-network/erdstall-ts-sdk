@@ -3,12 +3,7 @@
 
 import { BigNumber, utils } from "ethers";
 
-import {
-	Asset,
-	TypeTags,
-	ErrIncompatibleAssets,
-	AssertUint256,
-} from "#erdstall/ledger/assets";
+import { Asset, TypeTags, ErrIncompatibleAssets, AssertUint256 } from "./asset";
 
 /** Amount represents a currency amount in its smallest unit. */
 export class Amount extends Asset {

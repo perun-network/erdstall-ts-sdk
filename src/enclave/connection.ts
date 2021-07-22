@@ -10,18 +10,18 @@ import {
 	SubscribeBalanceProofs,
 	GetAccount,
 	Onboarding,
-} from "../api/calls";
-import { Mint, Transfer, ExitRequest } from "../api/transactions";
+} from "#erdstall/api/calls";
+import { Mint, Transfer, ExitRequest } from "#erdstall/api/transactions";
 import {
 	ClientConfig,
 	TxReceipt,
 	BalanceProof,
 	BalanceProofs,
 	Account,
-} from "../api/responses";
+} from "#erdstall/api/responses";
 import { TypedJSON } from "typedjson";
+import { EventCache, OneShotEventCache } from "#erdstall/utils";
 import EnclaveEvent from "./event";
-import { EventCache, OneShotEventCache } from "../utils";
 import { EnclaveProvider } from "./provider";
 
 // EnclaveConnection describes the connection a client has to an Enclave

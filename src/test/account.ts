@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
+import PRNG from "./random";
 import { Account } from "#erdstall/ledger";
-import PRNG from "#erdstall/test/random";
-import { NewUint64 } from "#erdstall/test/bigint";
-import { NewRandomAssets } from "#erdstall/test/assets";
+import { NewUint64 } from "./bigint";
+import { NewRandomAssets } from "./assets";
 
 export function NewRandomAccount(rng: PRNG, size: number): Account {
 	return new Account(

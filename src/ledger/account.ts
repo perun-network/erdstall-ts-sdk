@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import * as assets from "#erdstall/ledger/assets";
+import * as assets from "./assets";
 import { jsonObject, jsonMember } from "typedjson";
 import { BigInteger } from "#erdstall/api/util";
 

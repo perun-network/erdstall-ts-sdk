@@ -3,11 +3,7 @@
 
 import { Signer } from "ethers";
 import { TokenType } from "#erdstall/ledger/assets";
-import { Erdstall } from "#erdstall/ledger/backend/contracts/Erdstall";
-import {
-	ERC20__factory,
-	ERC721__factory,
-} from "#erdstall/ledger/backend/contracts";
+import { Erdstall, ERC20__factory, ERC721__factory } from "./contracts";
 
 interface TokenRegisteredEvent {
 	token: string;

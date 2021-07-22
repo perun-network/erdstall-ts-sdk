@@ -2,8 +2,8 @@
 "use strict";
 
 import { expect } from "chai";
-import { Amount } from "#erdstall/ledger/assets/amount";
-import { Tokens } from "#erdstall/ledger/assets/tokens";
+import { Amount } from "./amount";
+import { Tokens } from "./tokens";
 
 describe("Amount", () => {
 	it("can add amounts", () => {

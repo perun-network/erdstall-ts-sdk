@@ -2,10 +2,10 @@
 "use strict";
 
 import { TypedJSON } from "typedjson";
-import { Transaction } from "#erdstall/api/transactions";
-import { ErdstallObject } from "#erdstall/api/object";
-import * as calls from "#erdstall/api/calls";
-import * as responses from "#erdstall/api/responses";
+import { Transaction } from "./transactions";
+import { ErdstallObject } from "./object";
+import * as calls from "./calls";
+import * as responses from "./responses";
 
 ErdstallObject.fromJSON = (js: any): ErdstallObject => {
 	let data = JSON.stringify(js.data);

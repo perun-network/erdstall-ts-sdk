@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { Transaction } from "#erdstall/api/transactions/transaction";
-import { Transfer } from "#erdstall/api/transactions/transfer";
-import { ExitRequest } from "#erdstall/api/transactions/exitrequest";
-import { Mint } from "#erdstall/api/transactions/mint";
+import { Transaction } from "./transaction";
+import { Transfer } from "./transfer";
+import { ExitRequest } from "./exitrequest";
+import { Mint } from "./mint";
 import { TypedJSON } from "typedjson";
 
 Transaction.fromJSON = (js: any): Transaction => {

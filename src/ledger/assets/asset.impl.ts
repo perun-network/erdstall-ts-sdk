@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { Asset, TypeTags } from "#erdstall/ledger/assets/asset";
-import { Amount } from "#erdstall/ledger/assets/amount";
-import { Tokens } from "#erdstall/ledger/assets/tokens";
+import { Asset, TypeTags } from "./asset";
+import { Amount } from "./amount";
+import { Tokens } from "./tokens";
 
 Asset.fromJSON = function (json: any): Asset {
 	for (const key in json)

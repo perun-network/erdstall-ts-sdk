@@ -3,12 +3,12 @@
 
 import { expect } from "chai";
 
-import { Erdstall__factory } from "#erdstall/ledger/backend/contracts";
-import { LedgerAdapter } from "#erdstall/ledger/backend/connection";
 import { ETHZERO, Assets, Amount } from "#erdstall/ledger/assets";
 import { EventHelper } from "#erdstall/utils";
 
-import setup, { Enviroment } from "#erdstall/ledger/backend/enviroment.spec";
+import { Erdstall__factory } from "./contracts";
+import { LedgerAdapter } from "./connection";
+import setup, { Enviroment } from "./enviroment.spec";
 
 describe("ErdstallConnection", () => {
 	let testenv: Enviroment;

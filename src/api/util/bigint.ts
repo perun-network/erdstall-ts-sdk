@@ -6,8 +6,8 @@ import { jsonObject } from "typedjson";
 import { BigNumber } from "ethers";
 
 import { MAX_AMOUNT_VALUE } from "#erdstall/ledger/assets";
-import { ABIEncodable } from "#erdstall/api/util/abiencoder";
-import { CustomJSON } from "#erdstall/api/util/customjson";
+import { ABIEncodable } from "./abiencoder";
+import { CustomJSON } from "./customjson";
 
 @jsonObject
 export class BigInteger implements ABIEncodable {

@@ -2,10 +2,10 @@
 "use strict";
 
 import PRNG from "#erdstall/test/random";
-import { Asset, Assets } from "#erdstall/ledger/assets";
-import { NewRandomTokens } from "#erdstall/test/assets/tokens";
-import { NewRandomAmount } from "#erdstall/test/assets/amount";
 import { NewRandomAddress } from "#erdstall/test/address";
+import { Asset, Assets } from "#erdstall/ledger/assets";
+import { NewRandomTokens } from "./tokens";
+import { NewRandomAmount } from "./amount";
 
 // NewRandomAssets creates an Assets type. The size is limited by `size` and
 // all included `Tokens`, if any, have a maximum size of `size`.

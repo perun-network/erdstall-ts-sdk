@@ -3,7 +3,7 @@
 
 import { utils } from "ethers";
 import { jsonObject } from "typedjson";
-import { ABIValue, CustomJSON } from "#erdstall/api/util";
+import { ABIValue, CustomJSON } from "./util";
 
 @jsonObject
 export class Signature implements ABIValue {

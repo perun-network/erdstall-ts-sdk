@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import PRNG from "#erdstall/test/random";
+import PRNG from "./random";
 
 // NewBigInt generates a random `BigInt` in range 0 <= `CEIL`.
 export function NewBigInt(rng: PRNG, CEIL: bigint): bigint {

@@ -7,7 +7,7 @@ import {
 	TypeTags,
 	AssertSubtractable,
 	ErrIncompatibleAssets,
-} from "#erdstall/ledger/assets/asset";
+} from "./asset";
 import { BigInteger, ABIEncoder } from "#erdstall/api/util";
 
 export const ErrIDAlreadyContained = new Error(

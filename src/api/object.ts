@@ -2,7 +2,7 @@
 "use strict";
 
 import { jsonObject, TypedJSON } from "typedjson";
-import { CustomJSON } from "#erdstall/api/util";
+import { CustomJSON } from "./util";
 
 /** Base type for all Erdstall messages. */
 @jsonObject

@@ -2,7 +2,7 @@
 "use strict";
 
 import { jsonObject } from "typedjson";
-import { Asset } from "#erdstall/ledger/assets/asset";
+import { Asset } from "./asset";
 import { ABIValue, CustomJSON } from "#erdstall/api/util";
 import { Address } from "#erdstall/ledger/address";
 
