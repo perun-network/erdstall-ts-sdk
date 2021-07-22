@@ -13,7 +13,7 @@ import * as responses from "#erdstall/api/responses";
 import { Transaction } from "#erdstall/api/transactions";
 import { TxReceipt } from "#erdstall/api/responses";
 import { Mint, Transfer, ExitRequest } from "#erdstall/api/transactions";
-import { Account } from "#erdstall/ledger/account";
+import { Account } from "#erdstall/ledger";
 import { Tokens } from "#erdstall/ledger/assets";
 import { Assets } from "#erdstall/ledger/assets";
 

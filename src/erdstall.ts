@@ -7,8 +7,8 @@
 import { Signer } from "ethers";
 import { ethers } from "ethers";
 
-import { TxReceipt } from "#erdstall/api/responses/txreceipt";
-import { BalanceProof } from "#erdstall/api/responses/balanceproof";
+import { TxReceipt } from "#erdstall/api/responses";
+import { BalanceProof } from "#erdstall/api/responses";
 import { Assets, Address, ErdstallEvent } from "#erdstall/ledger";
 import { Uint256 } from "#erdstall/api/util";
 import { Stages } from "#erdstall/utils";
