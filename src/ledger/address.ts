@@ -37,7 +37,7 @@ export class Address implements ABIValue {
 	}
 
 	isZero(): boolean {
-		return this.value.find((v) => v > 0) === undefined;
+		return this.value.every((x) => x === 0);
 	}
 }
 
