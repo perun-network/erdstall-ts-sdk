@@ -33,6 +33,10 @@ export class BigInteger implements ABIEncodable {
 	asABI(): any {
 		return BigNumber.from(this.value);
 	}
+
+	equals(other: BigInteger): boolean {
+		return this.value === other.value;
+	}
 }
 
 CustomJSON(BigInteger);
