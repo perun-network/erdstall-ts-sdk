@@ -186,6 +186,7 @@ export class Enclave implements EnclaveConnection {
 			return this.callEvent("receipt", obj);
 		case BalanceProofs:
 		{
+			this.callEvent("phaseshift", {} as any);
 			const bps = obj as BalanceProofs;
 			for (const [_, bp] of bps.map) {
 				if (bp.balance.exit) {

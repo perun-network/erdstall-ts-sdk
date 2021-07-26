@@ -156,7 +156,7 @@ export default class Client implements Erdstall {
 
 	async leave(): Promise<Stages<Promise<ethers.ContractTransaction>>> {
 		const exitProof = await this.exit();
-		await new Promise(accept => this.once("proof", accept));
+		await new Promise(accept => this.once("phaseshift", accept));
 		return await this.withdraw(exitProof);
 	}
 
