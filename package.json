@@ -15,7 +15,8 @@
     "./ledger/assets": "./ledger/assets/index.js",
     "./test": "./test/index.js",
     "./test/assets": "./test/assets/index.js",
-    "./utils": "./utils/index.js"
+    "./utils": "./utils/index.js",
+    "./export/typedjson": "./export/typedjson.js"
   },
   "imports": {
     "#erdstall/*": "./*/index.js"
