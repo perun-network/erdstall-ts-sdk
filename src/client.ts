@@ -86,11 +86,11 @@ export default class Client implements Erdstall {
 	}
 
 	async onboard(): Promise<void> {
-		return this.enclaveConn.onboard(this.address);
+		return await this.enclaveConn.onboard(this.address);
 	}
 
 	async subscribe(): Promise<void> {
-		return this.enclaveConn.subscribe(this.address);
+		return await this.enclaveConn.subscribe(this.address);
 	}
 
 	async transferTo(assets: Assets, to: Address): Promise<TxReceipt> {
@@ -104,7 +104,7 @@ export default class Client implements Erdstall {
 			assets,
 		);
 		await tx.sign(this.erdstallConn.erdstall(), this.signer);
-		return this.enclaveConn.transfer(tx);
+		return await this.enclaveConn.transfer(tx);
 	}
 
 	async mint(token: Address, id: Uint256): Promise<TxReceipt> {
@@ -119,7 +119,7 @@ export default class Client implements Erdstall {
 			id,
 		);
 		await minttx.sign(this.erdstallConn.erdstall(), this.signer);
-		return this.enclaveConn.mint(minttx);
+		return await this.enclaveConn.mint(minttx);
 	}
 
 	async deposit(
@@ -129,7 +129,7 @@ export default class Client implements Erdstall {
 			return Promise.reject(ErrUnitialisedClient);
 		}
 
-		return this.erdstallConn.deposit(assets);
+		return await this.erdstallConn.deposit(assets);
 	}
 
 	async exit(): Promise<BalanceProof> {
@@ -139,7 +139,7 @@ export default class Client implements Erdstall {
 
 		const exittx = new ExitRequest(this.address, await this.nextNonce());
 		await exittx.sign(this.erdstallConn.erdstall(), this.signer);
-		return this.enclaveConn.exit(exittx);
+		return await this.enclaveConn.exit(exittx);
 	}
 
 	async withdraw(
@@ -160,13 +160,13 @@ export default class Client implements Erdstall {
 
 	async createOffer(offer: Assets, expect: Assets): Promise<TradeOffer> {
 		const o = new TradeOffer(this.address, offer, expect);
-		return await o.sign(this.erdstallConn.erdstall(), this.signer);
+		return await o.sign(this.erdstallConn!.erdstall(), this.signer);
 	}
 
 	async acceptTrade(offer: TradeOffer): Promise<TxReceipt> {
 		const tx = new Trade(this.address, await this.nextNonce(), offer);
-		await tx.sign(this.erdstallConn.erdstall(), this.signer);
-		return this.enclaveConn.trade(tx);
+		await tx.sign(this.erdstallConn!.erdstall(), this.signer);
+		return await this.enclaveConn.trade(tx);
 	}
 
 	initialize(timeout?: number): Promise<void> {
