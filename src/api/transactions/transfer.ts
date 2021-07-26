@@ -28,7 +28,7 @@ export class Transfer extends Transaction {
 	protected txTypeName(): string {
 		return "Transfer";
 	}
-	protected encodeABI(e: ABIEncoder): string {
+	protected encodeABI(e: ABIEncoder, _: Address): string {
 		e.encode(this.recipient, this.values as ABIValue);
 		return "ErdstallTransaction";
 	}

@@ -4,7 +4,7 @@
 import { ErdstallObject } from "../object";
 import { Signature } from "../signature";
 import { Address } from "../../ledger";
-import { BigInteger, CustomJSON, ABIEncoder } from "../util";
+import { BigInteger, CustomJSON, ABIEncoder, ABIPacked } from "../util";
 import { jsonObject, jsonMember, TypedJSON } from "typedjson";
 import { utils, Signer } from "ethers";
 
@@ -22,14 +22,7 @@ export abstract class Transaction extends ErdstallObject {
 	}
 
 	async sign(contract: Address, signer: Signer): Promise<this> {
-		const encoder = new ABIEncoder().encode(this.sender, [
-			"uint64",
-			this.nonce,
-		]);
-		const tag = this.encodeABI(encoder);
-		const msg = encoder.pack(tag, contract);
-		const hmsg = utils.keccak256(msg);
-		const sig = await signer.signMessage(utils.arrayify(hmsg));
+		const sig = await signer.signMessage(this.asABITagged(contract).keccak256());
 		this.sig = new Signature(utils.arrayify(sig));
 		return this;
 	}
@@ -38,20 +31,17 @@ export abstract class Transaction extends ErdstallObject {
 		if (!this.sig) {
 			return false;
 		}
-
-		const encoder = new ABIEncoder().encode(this.sender, [
-			"uint64",
-			this.nonce,
-		]);
-		const tag = this.encodeABI(encoder);
-		const msg = encoder.pack(tag, contract);
-		const data = utils.keccak256(msg);
 		const rec = utils.verifyMessage(
-			utils.arrayify(data),
+			this.asABITagged(contract).keccak256(),
 			this.sig!.toString(),
 		);
 
 		return rec === this.sender.toString();
+	}
+
+	asABITagged(contract: Address): ABIPacked {
+		const enc = new ABIEncoder(this.sender, ["uint64", this.nonce]);
+		return enc.pack(this.encodeABI(enc, contract), contract);
 	}
 
 	static toJSON(me: Transaction) {
@@ -71,7 +61,7 @@ export abstract class Transaction extends ErdstallObject {
 
 	public abstract txType(): any;
 	protected abstract txTypeName(): string;
-	protected abstract encodeABI(_: ABIEncoder): string;
+	protected abstract encodeABI(_: ABIEncoder, contract: Address): string;
 }
 
 CustomJSON(Transaction);
