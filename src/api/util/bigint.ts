@@ -33,7 +33,7 @@ export class BigInteger implements ABIEncodable {
 	static fromJSON(val: any): BigInteger {
 		return new BigInteger(BigInt(val));
 	}
-	static toJSON(me: bigint): string {
+	static toJSON(me: BigInteger): string {
 		return me.toString();
 	}
 
