@@ -8,8 +8,8 @@ import { Assets } from "#erdstall/ledger/assets";
 @jsonObject
 export class Account {
 	@jsonMember(BigInteger) nonce: BigInteger;
-	@jsonMember(Assets) values: Assets;
-	@jsonMember(Assets) locked: Assets;
+	@jsonMember(() => Assets) values: Assets;
+	@jsonMember(() => Assets) locked: Assets;
 
 	constructor(nonce: bigint, values: Assets, locked: Assets) {
 		this.nonce = new BigInteger(nonce);
