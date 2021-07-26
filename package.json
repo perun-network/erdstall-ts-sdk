@@ -56,7 +56,8 @@
     "watch": "npx tsc -w",
     "lint": "npx eslint ./src --ext .ts",
     "bindings": "./scripts/genbindings.sh deps/erdstall-contracts",
-    "test": "env TS_NODE_PROJECT=\"tsconfig.test.json\" mocha --timeout 15000 -r jsdom-global/register -r ts-node/register 'src/**/*.spec.ts'"
+    "test": "env TS_NODE_PROJECT=\"tsconfig.test.json\" mocha --timeout 60000 -r jsdom-global/register -r ts-node/register 'src/**/*.spec.ts'",
+    "integration-test": "env TS_NODE_PROJECT=\"tsconfig.test.json\" mocha --timeout 60000 -r jsdom-global/register -r ts-node/register 'e2e/**/*.spec.ts'"
   },
   "dependencies": {
     "ethers": "^5.4.1",

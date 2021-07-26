@@ -1,6 +1,6 @@
 all: ts
 
-.PHONY: test
+.PHONY: test integration
 
 ts:
 	@npm install -s
@@ -13,3 +13,7 @@ bindings:
 test:
 	@echo "Compiling and executing tests."
 	@npm run test
+
+integration:
+	@echo "Compiling and running integration test."
+	@npm run integration-test
