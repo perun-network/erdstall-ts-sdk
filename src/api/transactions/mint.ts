@@ -30,7 +30,7 @@ export class Mint extends Transaction {
 	protected txTypeName(): string {
 		return mintTypeName;
 	}
-	protected encodeABI(e: ABIEncoder): string {
+	protected encodeABI(e: ABIEncoder, _: Address): string {
 		e.encode(this.token, ["uint256", this.id]);
 		return "ErdstallMint";
 	}

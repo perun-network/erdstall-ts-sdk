@@ -4,7 +4,7 @@
 import { ErdstallObject, registerErdstallType } from "#erdstall/api";
 import { Signature } from "#erdstall/api";
 import { Address } from "#erdstall/ledger";
-import { BigInteger, CustomJSON, ABIEncoder } from "#erdstall/api/util";
+import { BigInteger, CustomJSON, ABIEncoder, ABIPacked } from "#erdstall/api/util";
 import { jsonObject, jsonMember, TypedJSON, Serializable } from "typedjson";
 import { utils, Signer } from "ethers";
 
@@ -29,14 +29,7 @@ export abstract class Transaction extends ErdstallObject {
 	}
 
 	async sign(contract: Address, signer: Signer): Promise<this> {
-		const encoder = new ABIEncoder().encode(this.sender, [
-			"uint64",
-			this.nonce,
-		]);
-		const tag = this.encodeABI(encoder);
-		const msg = encoder.pack(tag, contract);
-		const hmsg = utils.keccak256(msg);
-		const sig = await signer.signMessage(utils.arrayify(hmsg));
+		const sig = await signer.signMessage(this.asABITagged(contract).keccak256());
 		this.sig = new Signature(utils.arrayify(sig));
 		return this;
 	}
@@ -45,16 +38,8 @@ export abstract class Transaction extends ErdstallObject {
 		if (!this.sig) {
 			return false;
 		}
-
-		const encoder = new ABIEncoder().encode(this.sender, [
-			"uint64",
-			this.nonce,
-		]);
-		const tag = this.encodeABI(encoder);
-		const msg = encoder.pack(tag, contract);
-		const data = utils.keccak256(msg);
 		const rec = utils.verifyMessage(
-			utils.arrayify(data),
+			this.asABITagged(contract).keccak256(),
 			this.sig!.toString(),
 		);
 
@@ -72,6 +57,11 @@ export abstract class Transaction extends ErdstallObject {
 		return TypedJSON.parse(data, transactionImpls.get(js.type)!)!;
 	};
 
+	asABITagged(contract: Address): ABIPacked {
+		const enc = new ABIEncoder(this.sender, ["uint64", this.nonce]);
+		return enc.pack(this.encodeABI(enc, contract), contract);
+	}
+
 	static toJSON(me: Transaction) {
 		return {
 			type: me.txTypeName(),
@@ -88,7 +78,7 @@ export abstract class Transaction extends ErdstallObject {
 
 	public abstract txType(): Serializable<Transaction>;
 	protected abstract txTypeName(): string;
-	protected abstract encodeABI(_: ABIEncoder): string;
+	protected abstract encodeABI(_: ABIEncoder, contract: Address): string;
 }
 
 registerErdstallType(transactionTypeName, Transaction);
