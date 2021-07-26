@@ -18,9 +18,31 @@ export const ErrSubtrahendLargerThanMinuend = new Error(
 export const ErrIncompatibleAssets = new Error("incompatible assets");
 export const ErrValueOutOfBounds = new Error("value is not a uint256");
 
+const assetImpls = new Map<string, (value: any) => Asset>();
+
+export function registerAssetType(typeTag: string, valueParser: (value: any) => Asset) {
+	assetImpls.set(typeTag, valueParser);
+}
+
 export abstract class Asset {
 	abstract toJSON(): any;
-	static fromJSON: (json: any) => Asset;
+
+	static fromJSON(json: any): Asset {
+		for (const key in json) {
+			if (assetImpls.has(key)) {
+				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+				return assetImpls.get(key)!(json[key]);
+			}
+			throw new Error(
+				`Asset.fromJSON: invalid key ${key}, obj=${JSON.stringify(json)}`,
+			);
+		}
+
+		throw new Error(
+			`empty object is not a valid Asset encoding: ${JSON.stringify(json)}`,
+		);
+	}
+
 	abstract typeTag(): string;
 	abstract asABI(): any;
 

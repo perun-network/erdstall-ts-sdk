@@ -7,6 +7,7 @@ import {
 	TypeTags,
 	AssertSubtractable,
 	ErrIncompatibleAssets,
+	registerAssetType,
 } from "./asset";
 import { BigInteger, ABIEncoder } from "#erdstall/api/util";
 
@@ -178,3 +179,5 @@ export class Tokens extends Asset {
 			.concat([id], this.value.splice(pos));
 	}
 }
+
+registerAssetType(TypeTags.Tokens, Tokens.fromJSON);
