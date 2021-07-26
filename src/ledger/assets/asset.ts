@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
+import { isUint256 } from "#erdstall/api/util";
+
 // TokenType resolves TokenType -> Deposit-Routine.
 export type TokenType = "ETH" | "ERC20" | "ERC721";
 
@@ -8,8 +10,6 @@ export const TypeTags = {
 	Amount: "uint",
 	Tokens: "idset",
 };
-
-export const MAX_AMOUNT_VALUE = 2n ** 256n - 1n;
 
 export const ErrUncomparableAssets = new Error("uncomparable assets");
 export const ErrSubtrahendLargerThanMinuend = new Error(
@@ -99,7 +99,7 @@ export function AssertSubtractable(minuend: Asset, subtrahend: Asset): void {
 
 // assertUint256 asserts, that the given value is in range [0, 2^256-1].
 export function AssertUint256(val: bigint): void {
-	if (0 <= val && val >= MAX_AMOUNT_VALUE) {
+	if (!isUint256(val)) {
 		throw ErrValueOutOfBounds;
 	}
 }
