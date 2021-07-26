@@ -5,9 +5,22 @@ import { Option, none, some } from "fp-ts/lib/Option";
 import { jsonObject } from "typedjson";
 import { BigNumber } from "ethers";
 
-import { MAX_AMOUNT_VALUE } from "#erdstall/ledger/assets";
 import { ABIEncodable } from "./abiencoder";
 import { CustomJSON } from "./customjson";
+
+// `Prettier` has no option to ignore mathexpressions and contrary to whatever
+// `Prettier` is deducing, the statement:
+//
+//        `(1n << 256n) - 1n` == `1n << 256n - 1n`
+//
+//  is NOT true...
+//
+//  This seems to be fixed in the newest release of `Prettier`, but we will
+//  keep the `prettier-ignore` line here to be 100% sure it does not get
+//  formatted on accident.
+
+// prettier-ignore
+export const MAX_UINT256 = (1n << 256n) - 1n;
 
 @jsonObject
 export class BigInteger implements ABIEncodable {
@@ -43,8 +56,8 @@ CustomJSON(BigInteger);
 
 export type Uint256 = bigint;
 
-function isUint256(value: bigint): value is Uint256 {
-	return value >= 0 && value <= MAX_AMOUNT_VALUE;
+export function isUint256(value: bigint): value is Uint256 {
+	return value >= 0 && value <= MAX_UINT256;
 }
 
 export function mkUint256(value: bigint): Option<Uint256> {

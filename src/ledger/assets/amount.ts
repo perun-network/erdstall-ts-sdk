@@ -3,7 +3,7 @@
 
 import { BigNumber, utils } from "ethers";
 
-import { Asset, TypeTags, ErrIncompatibleAssets, AssertUint256 } from "./asset";
+import { Asset, TypeTags, ErrIncompatibleAssets, AssertUint256, registerAssetType } from "./asset";
 
 /** Amount represents a currency amount in its smallest unit. */
 export class Amount extends Asset {
@@ -89,3 +89,5 @@ export class Amount extends Asset {
 		}
 	}
 }
+
+registerAssetType(TypeTags.Amount, Amount.fromJSON);

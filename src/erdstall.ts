@@ -9,7 +9,8 @@ import { ethers } from "ethers";
 
 import { TxReceipt } from "#erdstall/api/responses";
 import { BalanceProof } from "#erdstall/api/responses";
-import { Assets, Address, ErdstallEvent } from "#erdstall/ledger";
+import { Address, ErdstallEvent } from "#erdstall/ledger";
+import { Assets } from "#erdstall/ledger/assets";
 import { Uint256 } from "#erdstall/api/util";
 import { Stages } from "#erdstall/utils";
 import Client from "#erdstall/client";

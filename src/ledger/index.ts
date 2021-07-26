@@ -3,8 +3,6 @@
 
 export * from "./account";
 export * from "./address";
-export * as assets from "./assets";
-export { Assets } from "./assets";
 export * from "./event";
 
 export * from "./backend/connection";

@@ -2,7 +2,8 @@
 "use strict";
 
 import { Transaction, registerTransactionType } from "./transaction";
-import { assets, Address } from "#erdstall/ledger";
+import { Address } from "#erdstall/ledger";
+import { Assets } from "#erdstall/ledger/assets";
 import { jsonObject, jsonMember } from "typedjson";
 import { ABIEncoder, ABIValue } from "#erdstall/api/util";
 
@@ -11,13 +12,13 @@ const transferTypeName = "Transfer";
 @jsonObject
 export class Transfer extends Transaction {
 	@jsonMember(Address) recipient: Address;
-	@jsonMember(assets.Assets) values: assets.Assets;
+	@jsonMember(Assets) values: Assets;
 
 	constructor(
 		sender: Address,
 		nonce: bigint,
 		recipient: Address,
-		values: assets.Assets,
+		values: Assets,
 	) {
 		super(sender, nonce);
 		this.recipient = recipient;
