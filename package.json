@@ -2,17 +2,18 @@
   "name": "@polycrypt/erdstall",
   "version": "0.1.0",
   "description": "SDK to interact with Erdstall Layer-2 Networks",
+  "main": "./index.js",
   "exports": {
-    ".": "./dist/index.js",
-    "./*": "./dist/*/index.js"
+    ".": "./index.js",
+    "./enclave": "./enclave/index.js",
+    "./api": "./api/index.js",
+    "./api/util": "./api/util/index.js",
+    "./ledger": "./ledger/index.js",
+    "./test": "./test/index.js",
+    "./utils": "./utils/index.js"
   },
   "imports": {
-    "#erdstall/*": "./dist/*/index.js"
-  },
-  "typesVersions": {
-    "*": {
-      "*": [ "dist/*", "dist/*/index.d.ts" ]
-    }
+    "#erdstall/*": "./*/index.js"
   },
   "repository": "github:perun-network/erdstall-ts-sdk",
   "author": "Norbert Dzikowski <norbert@perun.network> (https://polycry.pt/)",
@@ -60,7 +61,9 @@
     "watch": "npx tsc -w",
     "lint": "npx eslint ./src --ext .ts",
     "bindings": "./scripts/genbindings.sh deps/erdstall-contracts",
-    "test": "env TS_NODE_PROJECT=\"tsconfig.test.json\" mocha --timeout 15000 -r jsdom-global/register -r ts-node/register -r tsconfig-paths/register 'src/**/*.spec.ts'"
+    "test": "env TS_NODE_PROJECT=\"tsconfig.test.json\" mocha --timeout 15000 -r jsdom-global/register -r ts-node/register -r tsconfig-paths/register 'src/**/*.spec.ts'",
+    "devpub": "npm run build && npm run postpublish",
+    "postpublish": "npx ts-node ./scripts/publish_posthook.ts ./package.json ./dist/package.json"
   },
   "dependencies": {
     "ethers": "^5.4.1",
