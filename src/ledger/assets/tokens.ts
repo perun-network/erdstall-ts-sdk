@@ -9,6 +9,7 @@ import {
 	ErrIncompatibleAssets,
 } from "./asset";
 import { BigInteger, ABIEncoder } from "../../api/util";
+import { Amount } from "./amount";
 
 export const ErrIDAlreadyContained = new Error(
 	"given ID already contained in tokens",
@@ -28,7 +29,7 @@ export class Tokens extends Asset {
 			const offset = 32 - arr.length;
 			const abi = new Uint8Array(32);
 			abi.set(arr, offset);
-			return utils.hexlify(abi);
+			return utils.hexValue(abi);
 		});
 	}
 
@@ -44,12 +45,8 @@ export class Tokens extends Asset {
 		return TypeTags.Tokens;
 	}
 
-	asABI(): any {
-		let ids: BigNumber[] = [];
-		this.value.forEach((v) => {
-			ids.push(new BigInteger(v).asABI());
-		});
-		return new ABIEncoder(["uint256[]", ids]).pack_noprefix();
+	asABI(): Uint8Array {
+		return utils.concat(this.value.map((v) => new Amount(v).asABI()));
 	}
 
 	zero(): boolean {

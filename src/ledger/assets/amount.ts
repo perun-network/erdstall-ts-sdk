@@ -27,12 +27,11 @@ export class Amount extends Asset {
 		return TypeTags.Amount;
 	}
 
-	asABI(): any {
+	asABI(): Uint8Array {
 		const arr = utils.arrayify(BigNumber.from(this.value));
-		const offset = 32 - arr.length;
 		const abi = new Uint8Array(32);
-		abi.set(arr, offset);
-		return utils.hexlify(abi);
+		abi.set(arr, 32 - arr.length);
+		return abi;
 	}
 
 	zero(): boolean {

@@ -22,7 +22,7 @@ export abstract class Asset {
 	abstract toJSON(): any;
 	static fromJSON: (json: any) => Asset;
 	abstract typeTag(): string;
-	abstract asABI(): any;
+	abstract asABI(): Uint8Array;
 
 	// isCompatible returns whether the assets are of the same type and are thus
 	// compatible in Add, Sub and Cmp.
