@@ -7,3 +7,4 @@ export * from "./exitrequest";
 export * from "./mint";
 export * from "./transfer";
 export * from "./transaction";
+export * from "./trade";
