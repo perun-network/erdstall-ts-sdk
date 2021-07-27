@@ -26,20 +26,27 @@ That way, common web components, such as payment/donation buttons, can easily be
 To get your Erdstall app started, there are a few steps you need to take.
 
 **Importing Erdstall**&emsp;<!--
--->First, import the SDK's main source directory:
-
-```ts
-import * as erdstall from "erdstall"
-```
-
-Note: the Erdstall SDK is not published as a node package yet.
-It has to be manually cloned and locally registered as a node module like this (in your project folder):
-```
+-->The Erdstall SDK is not published as a node package yet.
+It has to be manually cloned and locally registered as a node module like this:
+```sh
 	git clone https://github.com/perun-network/erdstall-ts-sdk.git erdstall
-	cd erdstall; yarn link; cd ..
-	yarn link erdstall
+	cd erdstall
+	yarn devpub # builds the module into dist/ and creates publishing package.json
+	cd dist
+	yarn link # creates link in yarn cache to package @polycrypt/erdstall
+	cd <your-project>
+	yarn link @polycryt/erdstall # links to package from yarn cache
 ```
-You now have the SDK in your project's `node_modules` directory.
+You now have a link to the SDK in your project's `node_modules` directory.
+
+You can now import from the SDK like:
+```ts
+import { Erdstall } from "@polycrypt/erdstall";
+import { Address } from "@polycrypt/erdstall/ledger";
+// or if you prefer a namespace handle
+import * as erdstall from "@polycrypt/erdstall";
+```
+
 
 **Creating the client object**&emsp;<!--
 -->The SDK is straight-forward to use: everything you need is neatly bundled in the `erdstall.Erdstall` interface, which you can instantiate via `erdstall.NewClient()`, as follows:
@@ -105,6 +112,17 @@ The following `ErdstallEvent` smart contract events exist:
 -->After all events have been set up, call `Erdstall.initialize()` to establish the client's connection to the Erdstall ledger.
 You're now good to go!
 The `open` event will be triggered and your logic will launch.
+
+### TypedJSON
+
+The Erdstall SDK internally uses [`TypedJSON`](https://github.com/JohnWeisz/TypedJSON) to define class JSON serialization.
+If you want to use TypedJSON in your project for class serialization, possibly using some Erdstall classes as field types, you _must_ use the re-exported module `typedjson` from `@polycrypt/erdstall/export/typedjson` like
+```ts
+import { jsonObject, jsonMember, TypedJSON } from "@polycrypt/erdstall/export/typedjson";
+```
+
+The reason is that TypedJSON internally registers class serializations in static members of the `TypedJSON` class.
+If you use your own version of `typedjson` from your `node_modules`, these modules will not share state and serialization will not work.
 
 ## Using the Erdstall client
 

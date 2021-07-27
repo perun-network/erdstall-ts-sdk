@@ -7,10 +7,16 @@
     ".": "./index.js",
     "./enclave": "./enclave/index.js",
     "./api": "./api/index.js",
+    "./api/transactions": "./api/transactions/index.js",
+    "./api/responses": "./api/responses/index.js",
+    "./api/calls": "./api/calls/index.js",
     "./api/util": "./api/util/index.js",
     "./ledger": "./ledger/index.js",
+    "./ledger/assets": "./ledger/assets/index.js",
     "./test": "./test/index.js",
-    "./utils": "./utils/index.js"
+    "./test/assets": "./test/assets/index.js",
+    "./utils": "./utils/index.js",
+    "./export/typedjson": "./export/typedjson.js"
   },
   "imports": {
     "#erdstall/*": "./*/index.js"

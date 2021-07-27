@@ -17,7 +17,7 @@ export class Balance {
 	@jsonMember(BigInteger) epoch: BigInteger;
 	@jsonMember(Address) account: Address;
 	@jsonMember(Boolean) exit: boolean;
-	@jsonMember(Assets) values: Assets;
+	@jsonMember(() => Assets) values: Assets;
 
 	constructor(
 		epoch: bigint,
