@@ -65,13 +65,13 @@
     "ws": "^7.4.5"
   },
   "scripts": {
-    "build": "npx ttsc -p tsconfig.build.json",
-    "watch": "npx ttsc -w",
-    "lint": "npx eslint ./src --ext .ts",
+    "build": "ttsc -p tsconfig.build.json",
+    "watch": "ttsc -w",
+    "lint": "eslint ./src --ext .ts",
     "bindings": "./scripts/genbindings.sh deps/erdstall-contracts",
     "test": "env TS_NODE_PROJECT=\"tsconfig.test.json\" mocha --timeout 15000 -r jsdom-global/register -r ts-node/register -r tsconfig-paths/register 'src/**/*.spec.ts'",
-    "devpub": "npm run build && npm run postpublish",
-    "postpublish": "npx ts-node ./scripts/publish_posthook.ts ./package.json ./dist/package.json"
+    "devpub": "yarn build && yarn postpublish",
+    "postpublish": "ts-node ./scripts/publish_posthook.ts ./package.json ./dist/package.json"
   },
   "dependencies": {
     "ethers": "^5.4.1",
