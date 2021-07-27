@@ -12,8 +12,9 @@ export const ETHZERO = "0x0000000000000000000000000000000000000000";
 export class Assets implements ABIValue {
 	public values: Map<string, Asset>;
 
-	constructor() {
+	constructor(...assets: {token: string, asset: Asset}[]) {
 		this.values = new Map<string, Asset>();
+		assets.forEach(({token, asset}) => this.addAsset(token, asset));
 	}
 
 	static toJSON(me: Assets) {

@@ -11,9 +11,12 @@ export class Account {
 	@jsonMember(() => Assets) values: Assets;
 	@jsonMember(() => Assets) locked: Assets;
 
-	constructor(nonce: bigint, values: Assets, locked: Assets) {
+	constructor(nonce: bigint, values: Assets, locked?: Assets) {
 		this.nonce = new BigInteger(nonce);
 		this.values = values;
+		if (locked === undefined) {
+			locked = new Assets();
+		}
 		this.locked = locked;
 	}
 }
