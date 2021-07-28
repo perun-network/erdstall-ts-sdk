@@ -119,7 +119,7 @@ export default class Client implements Erdstall {
 			token,
 			id,
 		);
-		minttx.sign(this.erdstallConn.erdstall(), this.signer);
+		await minttx.sign(this.erdstallConn.erdstall(), this.signer);
 		return this.enclaveConn.mint(minttx);
 	}
 
@@ -155,6 +155,7 @@ export default class Client implements Erdstall {
 
 	async leave(): Promise<Stages<Promise<ethers.ContractTransaction>>> {
 		const exitProof = await this.exit();
+		await new Promise(accept => this.once("proof", accept));
 		return this.withdraw(exitProof);
 	}
 
