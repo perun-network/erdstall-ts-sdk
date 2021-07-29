@@ -8,3 +8,4 @@ export * from "./random";
 export * from "./transactions/transactions";
 export * from "./account";
 export * from "./proofs";
+export * from "./watcher";
