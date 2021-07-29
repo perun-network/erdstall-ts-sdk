@@ -1,6 +1,6 @@
 {
   "extends": "./tsconfig.json",
   "exclude": [
-  	"src/e2e/**/*"
+    "src/!(e2e)/**/*"
   ]
 }
