@@ -67,7 +67,7 @@ describe("Erdstall-TS-SDK", () => {
 	const clients: Erdstall[] = [];
 
 	it("create clients", async() => {
-		for(let i = 0; i < 3; i++)
+		for(let i = 0; i < 4; i++)
 			clients.push(makeClient(i));
 		
 		// establishes connection to erdstall-contract on ledger and connection
@@ -107,7 +107,7 @@ describe("Erdstall-TS-SDK", () => {
 		for(let i = 0; i < txCount; i++) {
 			const amount = new Assets();
 			amount.addAsset(assets.ETHZERO, new assets.Amount(BigInt(i)));
-			responses.push(clients[0]!.transferTo(amount, clients[1]!.address));
+			responses.push(clients[0].transferTo(amount, clients[1].address));
 		}
 		await Promise.all(responses);
 		const timeMs = (Date.now() - begin);
@@ -119,6 +119,22 @@ describe("Erdstall-TS-SDK", () => {
 		return Promise.all(stages.map(stage => stage.wait()));
 	});
 
-	it("lets users mint tokens", async() =>
-		clients[2].mint(clients[2].address, 89430923n));
+	let nft: bigint;
+	it("lets users mint tokens", async() => {
+		nft = 89430923n;
+		return clients[2].mint(clients[2].address, nft);
+	});
+
+	it("lets users trade", async () => {
+		// Charlie trades his NFT for Dagobert's ETH.
+		const offer = new Assets({
+			token: clients[2].address, asset: new assets.Tokens([nft])
+		});
+		const expect = new Assets({
+			token: assets.ETHZERO, asset: new assets.Amount(1000n)
+		});
+
+		const tradeOffer = await clients[2].createOffer(offer, expect);
+		return clients[3].acceptTrade(tradeOffer);
+	});
 });
