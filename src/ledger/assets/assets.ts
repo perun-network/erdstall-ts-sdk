@@ -12,7 +12,7 @@ export const ETHZERO = "0x0000000000000000000000000000000000000000";
 export class Assets implements ABIValue {
 	public values: Map<string, Asset>;
 
-	constructor(...assets: {token: string, asset: Asset}[]) {
+	constructor(...assets: {token: string | Address, asset: Asset}[]) {
 		this.values = new Map<string, Asset>();
 		assets.forEach(({token, asset}) => this.addAsset(token, asset));
 	}
@@ -69,7 +69,9 @@ export class Assets implements ABIValue {
 		);
 	}
 
-	hasAsset(addr: string): boolean {
+	hasAsset(addr: string | Address): boolean {
+		if(addr instanceof Address)
+			addr = addr.toString();
 		return this.values.has(addr);
 	}
 
@@ -81,7 +83,9 @@ export class Assets implements ABIValue {
 		}
 	}
 
-	addAsset(addr: string, asset: Asset): void {
+	addAsset(addr: string | Address, asset: Asset): void {
+		if(addr instanceof Address)
+			addr = addr.toString();
 		if (asset.zero()) {
 			return;
 		}
