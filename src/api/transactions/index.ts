@@ -5,3 +5,4 @@ export * from "./transaction";
 export * from "./exitrequest";
 export * from "./mint";
 export * from "./transfer";
+export * from "./trade";
