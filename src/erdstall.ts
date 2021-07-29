@@ -8,6 +8,7 @@ import { Signer } from "ethers";
 import { ethers } from "ethers";
 
 import { TxReceipt } from "#erdstall/api/responses";
+import { TradeOffer } from "#erdstall/api/transactions";
 import { BalanceProof } from "#erdstall/api/responses";
 import { Address, ErdstallEvent } from "#erdstall/ledger";
 import { Assets } from "#erdstall/ledger/assets";
@@ -34,6 +35,11 @@ export interface Transactor {
 
 export interface Minter {
 	mint: (token: Address, id: Uint256) => Promise<TxReceipt>;
+}
+
+export interface Trader {
+	createOffer(offer: Assets, expect: Assets): Promise<TradeOffer>;
+	acceptTrade(offer: TradeOffer): Promise<TxReceipt>;
 }
 
 export interface Depositor {
@@ -65,6 +71,7 @@ export interface Erdstall
 	extends Watcher,
 		Transactor,
 		Minter,
+		Trader,
 		Depositor,
 		Withdrawer,
 		Exiter,

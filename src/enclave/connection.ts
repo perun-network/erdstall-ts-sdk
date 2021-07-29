@@ -11,7 +11,7 @@ import {
 	GetAccount,
 	Onboarding,
 } from "#erdstall/api/calls";
-import { Mint, Transfer, ExitRequest } from "#erdstall/api/transactions";
+import { Mint, Transfer, ExitRequest, Trade } from "#erdstall/api/transactions";
 import {
 	ClientConfig,
 	TxReceipt,
@@ -33,6 +33,7 @@ export interface EnclaveConnection extends EnclaveWatcher {
 	onboard(who: Address): Promise<void>;
 	transfer(tx: Transfer): Promise<TxReceipt>;
 	mint(tx: Mint): Promise<TxReceipt>;
+	trade(tx: Trade): Promise<TxReceipt>;
 	exit(exitRequest: ExitRequest): Promise<BalanceProof>;
 	getAccount(acc: Address): Promise<Account>;
 }
@@ -88,6 +89,10 @@ export class Enclave implements EnclaveConnection {
 	}
 
 	public async mint(tx: Mint): Promise<TxReceipt> {
+		return this.sendCall(tx) as Promise<TxReceipt>;
+	}
+
+	public async trade(tx: Trade): Promise<TxReceipt> {
 		return this.sendCall(tx) as Promise<TxReceipt>;
 	}
 
@@ -166,7 +171,7 @@ export class Enclave implements EnclaveConnection {
 			const [resolve, reject] = this.calls.get(msg.id)!;
 			this.calls.delete(msg.id);
 			if (msg.error) {
-				reject(msg.error);
+				reject(new Error(msg.error));
 				return this.callEvent("error", msg.error);
 			} else {
 				return resolve(msg.data);
@@ -180,22 +185,25 @@ export class Enclave implements EnclaveConnection {
 		}
 
 		switch (obj.objectType()) {
-			case ClientConfig:
-				return this.callEvent("config", obj);
-			case TxReceipt:
-				return this.callEvent("receipt", obj);
-			case BalanceProofs:
-				const bps = obj as BalanceProofs;
-				for (const [_, bp] of bps.map) {
-					if (bp.balance.exit) {
-						this.callEvent("exitproof", bp);
-					} else {
-						this.callEvent("proof", bp);
-					}
+		case ClientConfig:
+			return this.callEvent("config", obj);
+		case TxReceipt:
+			return this.callEvent("receipt", obj);
+		case BalanceProofs:
+		{
+			this.callEvent("phaseshift", {} as any);
+			const bps = obj as BalanceProofs;
+			for (const [_, bp] of bps.map) {
+				if (bp.balance.exit) {
+					this.callEvent("exitproof", bp);
+				} else {
+					this.callEvent("proof", bp);
 				}
-				break;
-			default:
-				console.log("Object type: ", obj.objectType());
+			}
+			break;
+		}
+		default:
+			console.log("Object type: ", obj.objectType());
 		}
 	}
 
@@ -218,7 +226,7 @@ export class Enclave implements EnclaveConnection {
 	private onError(ev: Event) {
 		console.error("connection error: ", ev);
 
-		this.callEvent("error", {} as any);
+		this.callEvent("error", new Error("connection error"));
 
 		this.provider.close();
 		setTimeout(() => {

@@ -6,6 +6,7 @@ const event = [
 	"close",
 	"config",
 	"receipt",
+	"phaseshift",
 	"proof",
 	"exitproof",
 	"error",

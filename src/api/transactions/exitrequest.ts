@@ -4,6 +4,7 @@
 import { jsonObject } from "typedjson";
 import { ABIEncoder } from "#erdstall/api/util";
 import { Transaction, registerTransactionType } from "./transaction";
+import { Address } from "#erdstall/ledger";
 
 const exitTypeName = "ExitRequest";
 
@@ -16,7 +17,7 @@ export class ExitRequest extends Transaction {
 		return exitTypeName;
 	}
 
-	protected encodeABI(_e: ABIEncoder): string {
+	protected encodeABI(_e: ABIEncoder, _: Address): string {
 		return "ErdstallExitRequest";
 	}
 }

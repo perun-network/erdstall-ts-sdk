@@ -2,6 +2,6 @@
 "use strict";
 
 export * from "./bigint";
-export { ABIEncoder } from "./abiencoder";
+export { ABIEncoder, ABIPacked } from "./abiencoder";
 export type { ABIEncodable, ABIValue } from "./abiencoder";
 export * from "./customjson";

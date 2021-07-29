@@ -1,10 +1,10 @@
 all: ts
 
-.PHONY: test
+.PHONY: test integration
 
 ts:
-	@npm install -s
-	@npm run build -s
+	@yarn install -s
+	@yarn run build -s
 	@echo "Built erdstall-ts-sdk."
 
 bindings:
@@ -12,4 +12,8 @@ bindings:
 
 test:
 	@echo "Compiling and executing tests."
-	@npm run test
+	@yarn run test
+
+integration:
+	@echo "Compiling and running integration test."
+	@yarn run test:integration

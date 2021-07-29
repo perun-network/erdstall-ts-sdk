@@ -9,7 +9,7 @@
     "plugins": ["@typescript-eslint"],
     "extends": ["eslint:recommended", "prettier"],
     "rules": {
-        "strict": 2,
+        "strict": 0,
         "indent": ["error", "tab"],
         "linebreak-style": 0,
         "quotes": ["error", "double"],
