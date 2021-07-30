@@ -8,6 +8,8 @@ import {
 	Transfer,
 	ExitRequest,
 	Transaction,
+	TradeOffer,
+	Trade,
 } from "#erdstall/api/transactions";
 
 export function NewRandomMint(rng: PRNG): Mint {
@@ -19,7 +21,7 @@ export function NewRandomMint(rng: PRNG): Mint {
 	);
 }
 
-export function NewRandomTransfer(rng: PRNG, size: number): Transfer {
+export function NewRandomTransfer(rng: PRNG, size: number = 1): Transfer {
 	return new Transfer(
 		NewRandomAddress(rng),
 		NewUint64(rng),
@@ -32,7 +34,25 @@ export function NewRandomExitRequest(rng: PRNG): ExitRequest {
 	return new ExitRequest(NewRandomAddress(rng), NewUint64(rng));
 }
 
-export function NewRandomTransaction(rng: PRNG, size: number): Transaction {
+// Returns an unsigned random TradeOffer.
+export function newRandomTradeOffer(rng: PRNG, size: number = 1): TradeOffer {
+	return new TradeOffer(
+		NewRandomAddress(rng),
+		NewRandomAssets(rng, size),
+		NewRandomAssets(rng, size),
+	);
+}
+
+// Returns an unsigned random Trade with an unsigned random TradeOffer.
+export function newRandomTrade(rng: PRNG, size: number = 1): Trade {
+	return new Trade(
+		NewRandomAddress(rng),
+		NewUint64(rng),
+		newRandomTradeOffer(rng, size),
+	)
+}
+
+export function NewRandomTransaction(rng: PRNG, size: number = 1): Transaction {
 	const calls = [
 		(): Transaction => NewRandomMint(rng),
 		(): Transaction => NewRandomTransfer(rng, size),
