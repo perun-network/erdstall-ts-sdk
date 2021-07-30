@@ -14,6 +14,13 @@ export function NewPrng(): PRNG {
 	if (!seed) {
 		seed = new Date().getTime();
 	}
-	console.log(`PRNG with SEED: ${seed}`);
+	console.log(`PRNG with ESSEED=${seed}`);
 	return aleaRNGFactory(seed);
+}
+
+export function NewRandomUint8Array(rng: PRNG, size: number): Uint8Array {
+	const arr = new Uint8Array(size).fill(0).map((_, __, ___) => {
+		return rng.uInt32() % 0xff;
+	});
+	return arr;
 }
