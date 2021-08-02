@@ -44,12 +44,15 @@ export function newRandomTradeOffer(rng: PRNG, size: number = 1): TradeOffer {
 }
 
 // Returns an unsigned random Trade with an unsigned random TradeOffer.
-export function newRandomTrade(rng: PRNG, size: number = 1): Trade {
+export function newRandomTrade(rng: PRNG, size: number = 1, offer?: TradeOffer): Trade {
+	if (offer === undefined) {
+		offer = newRandomTradeOffer(rng, size);
+	}
 	return new Trade(
 		NewRandomAddress(rng),
 		NewUint64(rng),
-		newRandomTradeOffer(rng, size),
-	)
+		offer
+	);
 }
 
 export function NewRandomTransaction(rng: PRNG, size: number = 1): Transaction {

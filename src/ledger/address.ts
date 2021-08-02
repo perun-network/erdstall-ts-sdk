@@ -3,6 +3,7 @@
 
 import { utils } from "ethers";
 import { jsonObject } from "typedjson";
+import { equalArray } from "#erdstall/utils/arrays";
 import { ABIValue, CustomJSON } from "#erdstall/api/util";
 
 @jsonObject
@@ -41,8 +42,7 @@ export class Address implements ABIValue {
 	}
 
 	equals(other: Address): boolean {
-		return (this.value.length === other.value.length)
-			&& this.value.every((x, i) => x === other.value[i]);
+		return equalArray(this.value, other.value);
 	}
 }
 
