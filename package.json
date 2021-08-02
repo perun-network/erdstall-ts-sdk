@@ -16,6 +16,7 @@
     "./test": "./test/index.js",
     "./test/assets": "./test/assets/index.js",
     "./utils": "./utils/index.js",
+    "./utils/arrays": "./utils/arrays/index.js",
     "./export/typedjson": "./export/typedjson.js"
   },
   "imports": {
