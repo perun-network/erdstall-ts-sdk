@@ -38,3 +38,15 @@ export class MockWatcher implements Watcher {
 	}
 }
 
+export class MockClient extends MockWatcher {
+	private readonly contract: Address;
+
+	constructor(contract: Address) {
+		super();
+		this.contract = contract;
+	}
+
+	erdstall(): Address {
+		return this.contract;
+	}
+}
