@@ -57,7 +57,6 @@
     "mocha-suppress-logs": "^0.3.1",
     "number-generator": "^4.0.5",
     "prettier": "^2.2.1",
-    "truffle": "^5.3.7",
     "ts-node": "^9.1.1",
     "tsconfig-paths": "^3.10.1",
     "ttypescript": "^1.5.12",
