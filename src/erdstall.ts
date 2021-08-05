@@ -78,6 +78,7 @@ export interface Onboarder {
 export interface ErdstallClient
 	extends Watcher,
 		Subscriber {
+	erdstall(): Address;
 	// This function has to be called before any subscribe calls can be made.
 	// However, the Watcher calls should be made before this function is called,
 	// if appropriate, to prevent events being missed.

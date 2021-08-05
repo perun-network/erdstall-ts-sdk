@@ -34,6 +34,10 @@ export class Client implements ErdstallClient {
 		this.erdstallOneShotHandlerCache = new OneShotEventCache<ErdstallEvent>();
 	}
 
+	erdstall(): Address {
+		return this.erdstallConn!.erdstall();
+	}
+
 	on(ev: ErdstallEvent | EnclaveEvent, cb: Function): void {
 		if (isLedgerEvent(ev)) {
 			if (this.erdstallConn) {
