@@ -27,11 +27,15 @@ export class Client implements ErdstallClient {
 	constructor(provider: ethers.providers.Provider | Signer, encConn: EnclaveReader | URL) {
 		this.provider = provider;
 		if(encConn! instanceof URL)
-			this.enclaveConn = Enclave.dial(encConn! as URL);
+			this.enclaveConn = Enclave.dial(encConn as URL);
 		else
-			this.enclaveConn = encConn! as EnclaveReader;
+			this.enclaveConn = encConn as EnclaveReader;
 		this.erdstallEventHandlerCache = new EventCache<ErdstallEvent>();
 		this.erdstallOneShotHandlerCache = new OneShotEventCache<ErdstallEvent>();
+	}
+
+	erdstall(): Address {
+		return this.erdstallConn!.erdstall();
 	}
 
 	on(ev: ErdstallEvent | EnclaveEvent, cb: Function): void {
