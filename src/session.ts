@@ -26,21 +26,32 @@ export class Session extends Client implements ErdstallSession {
 		this.enclaveWriter = this.enclaveConn as EnclaveWriter;
 		this.signer = signer;
 		this.address = address;
-		this.nonce = 1n;
-		this.enclaveWriter.on("error", () => { this.updateNonce(); });
+		// Start with an invalid nonce, so that it will be queried anew
+		// upon its next use.
+		this.nonce = 0n;
+		// When encountering any error, assume it might be a nonce mismatch. In
+		// this case, reset the nonce to an invalid value.
+		this.enclaveWriter.on("error", () => { this.nonce = 0n; });
 	}
 
+	// Queries the next nonce and increases the counter. If the nonce has an
+	// invalid value, queries the current nonce from the enclave. This function
+	// can be called concurrently.
 	private async nextNonce(): Promise<bigint> {
-		if (this.nonce === 1n) {
+		if (!this.nonce) {
 			await this.updateNonce();
 		}
 
 		return this.nonce++;
 	}
 
+	// Fetches the current nonce from the enclave. Only overwrites the nonce if
+	// it has an invalid value, so this function can be called concurrently.
 	private async updateNonce(): Promise<void> {
 		const acc = await this.enclaveWriter.getAccount(this.address);
-		this.nonce = acc.account.nonce.valueOf() + 1n;
+		if(!this.nonce) {
+			this.nonce = acc.account.nonce.valueOf() + 1n;
+		}
 	}
 
 	async onboard(): Promise<void> {
