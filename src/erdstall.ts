@@ -4,7 +4,6 @@
 // This file contains the Erdstall implementation, unifying the on-chain and
 // offchain part of Erdstall into a single interface.
 
-import { Signer } from "ethers";
 import { ethers } from "ethers";
 
 import { TxReceipt } from "#erdstall/api/responses";
@@ -14,8 +13,10 @@ import { Address, ErdstallEvent } from "#erdstall/ledger";
 import { Assets } from "#erdstall/ledger/assets";
 import { Uint256 } from "#erdstall/api/util";
 import { Stages } from "#erdstall/utils";
-import Client from "#erdstall/client";
-import { Enclave, EnclaveWSProvider, EnclaveEvent } from "#erdstall/enclave";
+import { EnclaveEvent } from "#erdstall/enclave";
+
+export * from "./client";
+export * from "./session";
 
 interface watcher<T extends ErdstallEvent | EnclaveEvent> {
 	on: (ev: T, cb: Function) => void;
@@ -25,7 +26,7 @@ interface watcher<T extends ErdstallEvent | EnclaveEvent> {
 
 export interface ErdstallWatcher extends watcher<ErdstallEvent> {}
 
-export interface EnclaveWatcher extends watcher<EnclaveEvent> {}
+export interface EnclaveWatcher extends watcher<EnclaveEvent>, Subscriber {}
 
 export interface Watcher extends watcher<ErdstallEvent | EnclaveEvent> {}
 
@@ -62,33 +63,40 @@ export interface Leaver extends Exiter, Withdrawer {
 	leave(): Promise<Stages<Promise<ethers.ContractTransaction>>>;
 }
 
+export interface SelfSubscriber {
+	subscribeSelf(): Promise<void>;
+}
+
 export interface Subscriber {
-	subscribe(): Promise<void>;
+	subscribe(who?: Address):Promise<void>;
+}
+
+export interface Onboarder {
 	onboard(): Promise<void>;
 }
 
-export interface Erdstall
+export interface ErdstallClient
 	extends Watcher,
+		Subscriber {
+	// This function has to be called before any subscribe calls can be made.
+	// However, the Watcher calls should be made before this function is called,
+	// if appropriate, to prevent events being missed.
+	initialize(): Promise<void>;
+}
+
+export interface ErdstallSession
+	extends ErdstallClient,
+		SelfSubscriber,
 		Transactor,
 		Minter,
 		Trader,
 		Depositor,
 		Withdrawer,
 		Exiter,
-		Subscriber,
 		Leaver {
 	readonly address: Address;
+	// This function has to be called before any enclave or ledger calls can be
+	// made. However, the Watcher calls should be made before this function is
+	// called, if appropriate, to prevent events being missed.
 	initialize(): Promise<void>;
-}
-
-export function NewClient(
-	address: Address,
-	signer: Signer,
-	operatorAddress: URL,
-): Erdstall {
-	return new Client(
-		address,
-		signer,
-		new Enclave(new EnclaveWSProvider(operatorAddress)),
-	);
 }

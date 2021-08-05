@@ -22,28 +22,40 @@ import {
 import { TypedJSON } from "typedjson";
 import { EventCache, OneShotEventCache } from "#erdstall/utils";
 import { EnclaveEvent } from "./event";
-import { EnclaveProvider } from "./provider";
+import { EnclaveProvider, EnclaveWSProvider } from "./provider";
+
+export interface Connector {
+	connect(): void;
+	disconnect(): void;
+}
 
 // EnclaveConnection describes the connection a client has to an Enclave
 // running Erdstall.
-export interface EnclaveConnection extends EnclaveWatcher {
-	connect(): void;
-	disconnect(): void;
-	subscribe(who: Address): Promise<void>;
+export interface EnclaveReader extends EnclaveWatcher, Connector {
+	getAccount(acc: Address): Promise<Account>;
+}
+
+export interface EnclaveWriter extends EnclaveReader, Connector {
 	onboard(who: Address): Promise<void>;
 	transfer(tx: Transfer): Promise<TxReceipt>;
 	mint(tx: Mint): Promise<TxReceipt>;
 	trade(tx: Trade): Promise<TxReceipt>;
 	exit(exitRequest: ExitRequest): Promise<BalanceProof>;
-	getAccount(acc: Address): Promise<Account>;
+
+	// needed to allow interface checking.
+	isEnclaveWriter(): void;
 }
 
-export class Enclave implements EnclaveConnection {
+export class Enclave implements EnclaveWriter {
 	private provider: EnclaveProvider;
 	private handlers: EventCache<EnclaveEvent>;
 	private oneShotHandlers: OneShotEventCache<EnclaveEvent>;
 	private calls: Map<string, [Function, Function]>;
 	private id: number;
+
+	static dial(operator: URL): Enclave {
+		return new Enclave(new EnclaveWSProvider(operator));
+	}
 
 	constructor(provider: EnclaveProvider) {
 		this.provider = provider;
@@ -57,6 +69,8 @@ export class Enclave implements EnclaveConnection {
 
 		this.id = 0;
 	}
+
+	public isEnclaveWriter(): void {}
 
 	public connect() {
 		this.provider.onmessage = (ev) => this.onMessage(ev);
@@ -76,7 +90,7 @@ export class Enclave implements EnclaveConnection {
 		return;
 	}
 
-	public async subscribe(who: Address): Promise<void> {
+	public async subscribe(who?: Address): Promise<void> {
 		const subTXs = new SubscribeTXs(who);
 		const subBPs = new SubscribeBalanceProofs(who);
 		await this.sendCall(subTXs);

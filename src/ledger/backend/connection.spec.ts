@@ -7,7 +7,7 @@ import { ETHZERO, Assets, Amount } from "#erdstall/ledger/assets";
 import { EventHelper } from "#erdstall/utils";
 
 import { Erdstall__factory } from "./contracts";
-import { LedgerAdapter } from "./connection";
+import { LedgerWriteConn } from "./writeconn";
 import setup, { Enviroment } from "./enviroment.spec";
 
 describe("ErdstallConnection", () => {
@@ -28,7 +28,7 @@ describe("ErdstallConnection", () => {
 			testenv.users[BOB],
 		);
 
-		const conn = new LedgerAdapter(contract);
+		const conn = new LedgerWriteConn(contract);
 		const depositRegistered = EventHelper.within(10000, conn, "Deposited");
 
 		const stages = await conn.deposit(assets);

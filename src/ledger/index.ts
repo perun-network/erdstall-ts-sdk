@@ -5,4 +5,5 @@ export * from "./account";
 export * from "./address";
 export * from "./event";
 
-export * from "./backend/connection";
+export * from "./backend/readconn";
+export * from "./backend/writeconn";

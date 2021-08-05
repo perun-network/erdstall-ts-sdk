@@ -2,12 +2,11 @@
 "use strict";
 
 import { TxReceipt } from "#erdstall/api/responses";
-import { Mint } from "#erdstall/api/transactions";
 import { Address } from "#erdstall/ledger";
 import { Assets } from "#erdstall/ledger/assets";
 import * as assets from "#erdstall/ledger/assets";
 import * as sdk from "#erdstall";
-import { Erdstall } from "#erdstall";
+import { Session } from "#erdstall";
 
 import { ethers } from "ethers";
 import * as fs from "fs";
@@ -56,15 +55,15 @@ describe("Erdstall-TS-SDK", () => {
 	});
 	after(async() => erdstallProcessTerminate);
 
-	function makeClient(index: number): Erdstall {
+	function makeClient(index: number): Session {
 		const provider = new ethers.providers.JsonRpcProvider(`http://localhost:${nodePort}`);
 		const derivationPath = `m/44'/60'/0'/0/${index+2}`;
 		const user = ethers.Wallet.fromMnemonic(mnemonic, derivationPath);
 		const userAddr = Address.fromString(user.address);
-		return sdk.NewClient(userAddr, user.connect(provider), opAddr);
+		return new Session(userAddr, user.connect(provider), opAddr);
 	}
 
-	const clients: Erdstall[] = [];
+	const clients: Session[] = [];
 
 	it("create clients", async() => {
 		for(let i = 0; i < 4; i++)
@@ -76,7 +75,7 @@ describe("Erdstall-TS-SDK", () => {
 		return Promise.all(clients.map(x => x.initialize()));
 	});
 	it("subscribe clients", async() => Promise.all(
-		clients.map(c => c.subscribe())));
+		clients.map(c => c.subscribeSelf())));
 
 	it("deposits", async() => {
 		const depositBal = new Assets({
