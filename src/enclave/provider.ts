@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
+import WebSocket from "isomorphic-ws";
+
 export const UninitializedConn = new Error("uninitialized connection");
 
 export interface EnclaveProvider {
