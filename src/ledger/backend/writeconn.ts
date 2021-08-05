@@ -2,68 +2,30 @@
 "use strict";
 
 import { ethers, Signer } from "ethers";
-import { ErdstallWatcher, Depositor, Withdrawer } from "#erdstall";
+import { Depositor, Withdrawer } from "#erdstall";
 import { Assets } from "#erdstall/ledger/assets";
 import { Address, ErdstallEvent } from "#erdstall/ledger";
 import { Stages } from "#erdstall/utils";
 import { BalanceProof } from "#erdstall/api/responses";
 import { Erdstall } from "./contracts/Erdstall";
+import { LedgerReader, LedgerReadConn } from "./readconn";
 import { depositors, DepositCalls } from "./tokenmanager";
 import { TokenTypesCache } from "./tokencache";
 
-export const ErrUnsupportedLedgerEvent = new Error(
-	"unsupported ledger event encountered",
-);
-export const ErrErdstallContractNotConnected = new Error(
-	"erdstall contract not connected",
-);
-
 // LedgerConnection describes the connection a client can have to the on-chain
 // part of Erdstall.
-export interface LedgerConnection
-	extends ErdstallWatcher,
-		Depositor,
-		Withdrawer {
+export interface LedgerWriter extends LedgerReader, Depositor, Withdrawer {
 	erdstall(): Address;
 }
 
-export class LedgerAdapter implements LedgerConnection {
+export class LedgerWriteConn extends LedgerReadConn implements LedgerWriter {
 	readonly signer: Signer;
-	readonly contract: Erdstall;
 	readonly tokenCache: TokenTypesCache;
-	private eventCache: Map<Function, (args: Array<any>) => void>;
 
 	constructor(contract: Erdstall) {
-		this.signer = contract.signer;
-		this.contract = contract;
+		super(contract);
 		this.tokenCache = new TokenTypesCache();
-		this.eventCache = new Map<Function, (args: Array<any>) => void>();
-	}
-
-	on(ev: ErdstallEvent, cb: Function): void {
-		const wrappedCB = (args: Array<any>) => {
-			cb(args);
-		};
-		this.eventCache.set(cb, wrappedCB);
-		this.contract.on(ev, wrappedCB);
-	}
-
-	once(ev: ErdstallEvent, cb: Function): void {
-		this.contract.once(ev, (args: Array<any>) => {
-			cb(args);
-		});
-	}
-
-	off(ev: ErdstallEvent, cb: Function): void {
-		if (!this.eventCache.has(cb)) {
-			return;
-		}
-		this.contract.off(ev, this.eventCache.get(cb)!);
-		this.eventCache.delete(cb);
-	}
-
-	erdstall(): Address {
-		return Address.fromString(this.contract.address);
+		this.signer = contract.signer;
 	}
 
 	async withdraw(
@@ -158,5 +120,3 @@ export class LedgerAdapter implements LedgerConnection {
 		return stages;
 	}
 }
-
-export default LedgerAdapter;

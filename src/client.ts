@@ -1,39 +1,35 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { Signer } from "ethers";
-import { ethers } from "ethers";
 
-import { Erdstall } from "erdstall";
+import { ErdstallClient } from "erdstall";
 import { Erdstall__factory } from "#erdstall/ledger/backend/contracts";
-import { TxReceipt } from "#erdstall/api/responses";
-import { BalanceProof } from "#erdstall/api/responses";
 import { ClientConfig } from "#erdstall/api/responses";
-import { Transfer, Mint, ExitRequest, TradeOffer, Trade } from "#erdstall/api/transactions";
-import { EnclaveConnection, EnclaveEvent } from "#erdstall/enclave";
-import { LedgerConnection, LedgerAdapter } from "#erdstall/ledger";
-import { ErdstallEvent, isLedgerEvent } from "#erdstall/ledger";
-import { Assets } from "#erdstall/ledger/assets";
-import { Address } from "#erdstall/ledger";
-import { Uint256 } from "#erdstall/api/util";
-import { EventCache, OneShotEventCache, Stages } from "#erdstall/utils";
+import { Enclave, EnclaveReader, EnclaveEvent } from "#erdstall/enclave";
+import {
+	LedgerWriteConn,
+	LedgerReader,
+	LedgerWriter,
+	Address,
+	ErdstallEvent,
+	isLedgerEvent
+} from "#erdstall/ledger";
+import { EventCache, OneShotEventCache } from "#erdstall/utils";
+import { ethers, Signer } from "ethers";
 
-export const ErrUnitialisedClient = new Error("client unitialised");
-
-export default class Client implements Erdstall {
-	readonly address: Address;
-	private nonce: bigint;
-	private enclaveConn: EnclaveConnection;
-	private erdstallConn?: LedgerConnection;
+export class Client implements ErdstallClient {
+	protected enclaveConn: EnclaveReader;
+	protected provider: ethers.providers.Provider | Signer;
+	protected erdstallConn?: LedgerReader | LedgerWriter;
 	private erdstallEventHandlerCache: EventCache<ErdstallEvent>;
 	private erdstallOneShotHandlerCache: OneShotEventCache<ErdstallEvent>;
-	private signer: Signer;
 
-	constructor(address: Address, signer: Signer, encConn: EnclaveConnection) {
-		this.address = address;
-		this.signer = signer;
-		this.nonce = 1n;
-		this.enclaveConn = encConn;
+	constructor(provider: ethers.providers.Provider | Signer, encConn: EnclaveReader | URL) {
+		this.provider = provider;
+		if(encConn! instanceof URL)
+			this.enclaveConn = Enclave.dial(encConn! as URL);
+		else
+			this.enclaveConn = encConn! as EnclaveReader;
 		this.erdstallEventHandlerCache = new EventCache<ErdstallEvent>();
 		this.erdstallOneShotHandlerCache = new OneShotEventCache<ErdstallEvent>();
 	}
@@ -73,101 +69,8 @@ export default class Client implements Erdstall {
 		}
 	}
 
-	private async nextNonce(): Promise<bigint> {
-		if (this.nonce === 1n) {
-			await this.updateNonce();
-		}
-
-		return this.nonce++;
-	}
-
-	private async updateNonce(): Promise<void> {
-		const acc = await this.enclaveConn.getAccount(this.address);
-		this.nonce = acc.account.nonce.valueOf() + 1n;
-	}
-
-	async onboard(): Promise<void> {
-		return this.enclaveConn.onboard(this.address);
-	}
-
-	async subscribe(): Promise<void> {
-		return this.enclaveConn.subscribe(this.address);
-	}
-
-	async transferTo(assets: Assets, to: Address): Promise<TxReceipt> {
-		if (!this.erdstallConn) {
-			return Promise.reject(ErrUnitialisedClient);
-		}
-		const tx = new Transfer(
-			this.address,
-			await this.nextNonce(),
-			to,
-			assets,
-		);
-		await tx.sign(this.erdstallConn.erdstall(), this.signer);
-		return this.enclaveConn.transfer(tx);
-	}
-
-	async mint(token: Address, id: Uint256): Promise<TxReceipt> {
-		if (!this.erdstallConn) {
-			return Promise.reject(ErrUnitialisedClient);
-		}
-
-		const minttx = new Mint(
-			this.address,
-			await this.nextNonce(),
-			token,
-			id,
-		);
-		await minttx.sign(this.erdstallConn.erdstall(), this.signer);
-		return this.enclaveConn.mint(minttx);
-	}
-
-	async deposit(
-		assets: Assets,
-	): Promise<Stages<Promise<ethers.ContractTransaction>>> {
-		if (!this.erdstallConn) {
-			return Promise.reject(ErrUnitialisedClient);
-		}
-
-		return this.erdstallConn.deposit(assets);
-	}
-
-	async exit(): Promise<BalanceProof> {
-		if (!this.erdstallConn) {
-			return Promise.reject(ErrUnitialisedClient);
-		}
-
-		const exittx = new ExitRequest(this.address, await this.nextNonce());
-		await exittx.sign(this.erdstallConn.erdstall(), this.signer);
-		return this.enclaveConn.exit(exittx);
-	}
-
-	async withdraw(
-		exitProof: BalanceProof,
-	): Promise<Stages<Promise<ethers.ContractTransaction>>> {
-		if (!this.erdstallConn) {
-			return Promise.reject(ErrUnitialisedClient);
-		}
-
-		return this.erdstallConn.withdraw(exitProof);
-	}
-
-	async leave(): Promise<Stages<Promise<ethers.ContractTransaction>>> {
-		const exitProof = await this.exit();
-		await new Promise(accept => this.once("phaseshift", accept));
-		return this.withdraw(exitProof);
-	}
-
-	async createOffer(offer: Assets, expect: Assets): Promise<TradeOffer> {
-		const o = new TradeOffer(this.address, offer, expect);
-		return o.sign(this.erdstallConn!.erdstall(), this.signer);
-	}
-
-	async acceptTrade(offer: TradeOffer): Promise<TxReceipt> {
-		const tx = new Trade(this.address, await this.nextNonce(), offer);
-		await tx.sign(this.erdstallConn!.erdstall(), this.signer);
-		return this.enclaveConn.trade(tx);
+	async subscribe(who?: Address): Promise<void> {
+		return this.enclaveConn.subscribe(who);
 	}
 
 	initialize(timeout?: number): Promise<void> {
@@ -178,15 +81,12 @@ export default class Client implements Erdstall {
 			);
 
 			this.enclaveConn.once("error", reject);
-			this.enclaveConn.once("error", () => {
-				this.updateNonce();
-			});
 			this.enclaveConn.once("config", (config: ClientConfig) => {
 				const erdstall = Erdstall__factory.connect(
 					config.contract.toString(),
-					this.signer,
+					this.provider,
 				);
-				this.erdstallConn = new LedgerAdapter(erdstall);
+				this.erdstallConn = new LedgerWriteConn(erdstall);
 
 				for (const [ev, cbs] of this.erdstallEventHandlerCache) {
 					cbs.forEach((cb) => {
