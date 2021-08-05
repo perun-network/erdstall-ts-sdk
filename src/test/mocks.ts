@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { Watcher } from "#erdstall";
+import { ErdstallClient, Watcher } from "#erdstall";
 import { Mint, Trade } from "#erdstall/api/transactions";
 import { TxReceipt } from "#erdstall/api/responses";
 import { Address, Account, ErdstallEvent } from "#erdstall/ledger";
@@ -38,13 +38,16 @@ export class MockWatcher implements Watcher {
 	}
 }
 
-export class MockClient extends MockWatcher {
+export class MockClient extends MockWatcher implements ErdstallClient {
 	private readonly contract: Address;
 
 	constructor(contract: Address) {
 		super();
 		this.contract = contract;
 	}
+
+	async initialize(): Promise<void> {}
+	async subscribe(_who?: Address):Promise<void> {}
 
 	erdstall(): Address {
 		return this.contract;
