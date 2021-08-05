@@ -30,6 +30,10 @@ export interface EnclaveWatcher extends watcher<EnclaveEvent>, Subscriber {}
 
 export interface Watcher extends watcher<ErdstallEvent | EnclaveEvent> {}
 
+export interface Contracter {
+	erdstall(): Address;
+}
+
 export interface Transactor {
 	transferTo(assets: Assets, to: Address): Promise<TxReceipt>;
 }
@@ -75,18 +79,23 @@ export interface Onboarder {
 	onboard(): Promise<void>;
 }
 
-export interface ErdstallClient
-	extends Watcher,
-		Subscriber {
+export interface Initializer {
 	// This function has to be called before any subscribe calls can be made.
 	// However, the Watcher calls should be made before this function is called,
 	// if appropriate, to prevent events being missed.
 	initialize(): Promise<void>;
 }
 
+export interface ErdstallClient
+	extends Watcher,
+		Contracter,
+		Initializer,
+		Subscriber {}
+
 export interface ErdstallSession
 	extends ErdstallClient,
 		SelfSubscriber,
+		Initializer,
 		Transactor,
 		Minter,
 		Trader,
@@ -95,8 +104,4 @@ export interface ErdstallSession
 		Exiter,
 		Leaver {
 	readonly address: Address;
-	// This function has to be called before any enclave or ledger calls can be
-	// made. However, the Watcher calls should be made before this function is
-	// called, if appropriate, to prevent events being missed.
-	initialize(): Promise<void>;
 }

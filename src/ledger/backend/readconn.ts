@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { ErdstallWatcher } from "#erdstall";
+import { ErdstallWatcher, Contracter } from "#erdstall";
 import { Address, ErdstallEvent } from "#erdstall/ledger";
 import { Erdstall } from "./contracts/Erdstall";
 
@@ -12,11 +12,7 @@ export const ErrErdstallContractNotConnected = new Error(
 	"erdstall contract not connected",
 );
 
-// LedgerConnection describes the connection a client can have to the on-chain
-// part of Erdstall.
-export interface LedgerReader extends ErdstallWatcher {
-	erdstall(): Address;
-}
+export interface LedgerReader extends ErdstallWatcher, Contracter {}
 
 export class LedgerReadConn implements LedgerReader {
 	readonly contract: Erdstall;
