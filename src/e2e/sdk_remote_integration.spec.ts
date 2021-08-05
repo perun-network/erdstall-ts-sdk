@@ -5,14 +5,11 @@ import { TxReceipt } from "#erdstall/api/responses";
 import { Address } from "#erdstall/ledger";
 import { Assets } from "#erdstall/ledger/assets";
 import * as assets from "#erdstall/ledger/assets";
-import * as sdk from "#erdstall";
 import { Session } from "#erdstall";
 
 import { ethers } from "ethers";
 import * as fs from "fs";
 import { exec } from "child_process";
-
-(global as any).WebSocket = require("ws");
 
 describe("Erdstall-TS-SDK", () => {
 	const opPort = 1433;
