@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
+import { Buffer } from "buffer";
 import { aleaRNGFactory } from "number-generator";
 
 export default interface PRNG {
@@ -23,4 +24,13 @@ export function NewRandomUint8Array(rng: PRNG, size: number): Uint8Array {
 		return rng.uInt32() % 0xff;
 	});
 	return arr;
+}
+
+// returns a hex string of given length
+export function newRandomString(rng: PRNG, length: number): string {
+	const buf = Buffer.allocUnsafe(length/2);
+	for (let i = 0; i < length/2; i++) {
+		buf[i] = rng.uInt32() % 0xff;
+	}
+	return buf.toString('hex').slice(0, length);
 }
