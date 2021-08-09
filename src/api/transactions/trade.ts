@@ -43,7 +43,7 @@ export class TradeOffer {
 		this.owner = owner;
 		this.offer = offer;
 		this.request = request;
-		this.expiry = new BigInteger(2n**64n - 1n); // For now, never expire.
+		this.expiry = new BigInteger((1n << 64n) - 1n); // For now, never expire.
 	}
 
 	async sign(contract: Address, signer: Signer): Promise<this> {
