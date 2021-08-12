@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { ErdstallClient, Watcher } from "#erdstall";
-import { Mint, Trade } from "#erdstall/api/transactions";
+import { Mint, Trade, Transfer } from "#erdstall/api/transactions";
 import { TxReceipt } from "#erdstall/api/responses";
 import { Address, Account, ErdstallEvent } from "#erdstall/ledger";
 import { Assets } from "#erdstall/ledger/assets";
@@ -28,13 +28,21 @@ export class MockWatcher implements Watcher {
 		throw new Error("not implemented");
 	}
 
-	mint(nft: {token: Address, id: bigint, owner: Address}): void {
+	mint(nft: { token: Address; id: bigint; owner: Address }): void {
 		const mintTx = new Mint(nft.owner, BigInt(0), nft.token, nft.id);
-		this.txReceiptHandler(new TxReceipt(mintTx, new Account(0n, new Assets())));
+		this.txReceiptHandler(
+			new TxReceipt(mintTx, new Account(0n, new Assets())),
+		);
 	}
 
 	trade(tradeTx: Trade): void {
-		this.txReceiptHandler(new TxReceipt(tradeTx, new Account(0n, new Assets())));
+		this.txReceiptHandler(
+			new TxReceipt(tradeTx, new Account(0n, new Assets())),
+		);
+	}
+
+	transfer(tx: Transfer): void {
+		this.txReceiptHandler(new TxReceipt(tx, new Account(0n, new Assets())));
 	}
 }
 
@@ -47,7 +55,7 @@ export class MockClient extends MockWatcher implements ErdstallClient {
 	}
 
 	async initialize(): Promise<void> {}
-	async subscribe(_who?: Address):Promise<void> {}
+	async subscribe(_who?: Address): Promise<void> {}
 
 	erdstall(): Address {
 		return this.contract;
