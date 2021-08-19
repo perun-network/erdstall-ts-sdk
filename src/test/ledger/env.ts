@@ -8,14 +8,14 @@ import { providers } from "ethers";
 import { deployContract } from "ethereum-waffle";
 import { MockProvider } from "ethereum-waffle";
 
-import { Erdstall__factory } from "./contracts";
+import { Erdstall__factory } from "#erdstall/ledger/backend/contracts";
 import { ETHZERO } from "#erdstall/ledger/assets";
 
-const peruntokenABI = require("./contracts/abi/PerunToken.json");
-const erdstallABI = require("./contracts/abi/Erdstall.json");
-const erc20holderABI = require("./contracts/abi/ERC20Holder.json");
-const erc721holderABI = require("./contracts/abi/ERC721Holder.json");
-const ethholderABI = require("./contracts/abi/ETHHolder.json");
+const peruntokenABI = require("../../ledger/backend/contracts/abi/PerunToken.json");
+const erdstallABI = require("../../ledger/backend/contracts/abi/Erdstall.json");
+const erc20holderABI = require("../../ledger/backend/contracts/abi/ERC20Holder.json");
+const erc721holderABI = require("../../ledger/backend/contracts/abi/ERC721Holder.json");
+const ethholderABI = require("../../ledger/backend/contracts/abi/ETHHolder.json");
 
 export interface Enviroment {
 	provider: providers.Web3Provider;
@@ -25,7 +25,7 @@ export interface Enviroment {
 	erc20Holder: string;
 	erc721Holder: string;
 	op: Wallet;
-	tee: string;
+	tee: Wallet;
 	users: Wallet[];
 }
 
@@ -34,7 +34,7 @@ const wallets = gProvider.getWallets();
 const OP = 0,
 	TEE = 1;
 
-export default async function setup(
+export async function setupEnv(
 	numOfPrefundedAccounts: number = 1,
 	epochDuration: number = 3,
 	lprovider?: providers.Web3Provider,
@@ -44,7 +44,7 @@ export default async function setup(
 	const provider = lprovider ? lprovider : gProvider;
 
 	const op = lop ? lop : wallets[OP];
-	const tee = wallets[TEE].address;
+	const tee = wallets[TEE];
 	const users = pacc
 		? [pacc]
 		: wallets.slice(TEE + 1, TEE + 1 + numOfPrefundedAccounts);
@@ -64,7 +64,7 @@ export default async function setup(
 				utils.parseEther("100000").toBigInt(),
 			],
 		],
-		[erdstallABI, [tee, epochDuration]],
+		[erdstallABI, [tee.address, epochDuration]],
 	];
 
 	let nonce: number = await op.getTransactionCount();
