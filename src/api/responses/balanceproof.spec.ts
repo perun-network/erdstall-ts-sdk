@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { expect } from "chai";
+import chai, { expect } from "chai";
+import { solidity } from "ethereum-waffle";
 import { utils } from "ethers";
 
 import { Address } from "#erdstall/ledger";
@@ -12,6 +13,8 @@ import {
 import * as test from "#erdstall/test";
 import { Enviroment, setupEnv } from "#erdstall/test/ledger";
 import { equalArray } from "#erdstall/utils/arrays";
+
+chai.use(solidity);
 
 describe("BalanceProofs", function () {
 	const rng = test.NewPrng();
@@ -32,5 +35,12 @@ describe("BalanceProofs", function () {
 			await erd.encodeBalanceProof(bp.asABI()),
 		);
 		expect(equalArray(bpEnc, bpContractEnc)).to.be.true;
+	});
+
+	it("should be correctly signed", async function () {
+		const bal = test.NewRandomBalance(rng, 3);
+		const bp = await bal.sign(erdAddr, env.tee);
+		return expect(erd.verifyBalance(bal.asABI(), bp.sig.value)).to.not.be
+			.reverted;
 	});
 });
