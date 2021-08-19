@@ -25,6 +25,12 @@ export class Address implements ABIValue {
 		return Address.fromJSON(addr);
 	}
 
+	static ensure(addr: string | Address): Address {
+		if (addr === undefined) return addr;
+		if (addr instanceof Address) return addr;
+		return Address.fromString(addr);
+	}
+
 	toString(): string {
 		return utils.getAddress(utils.hexlify(this.value));
 	}
