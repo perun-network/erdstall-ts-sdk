@@ -1,9 +1,14 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { ethers } from "ethers";
+import { ethers, Signer, utils } from "ethers";
 import { TypedJSON, jsonObject, jsonMember } from "typedjson";
-import { BigInteger, CustomJSON } from "#erdstall/api/util";
+import {
+	BigInteger,
+	CustomJSON,
+	ABIPacked,
+	ABIEncoder,
+} from "#erdstall/api/util";
 import { Assets } from "#erdstall/ledger/assets";
 import { Address } from "#erdstall/ledger";
 import { Signature } from "#erdstall/api";
@@ -30,6 +35,32 @@ export class Balance {
 		this.exit = exit;
 		this.values = values;
 	}
+
+	// (uint64,address,bool,tuple(address,bytes)[])
+	asABI(): ErdstallBalance {
+		return {
+			epoch: this.epoch.valueOf(),
+			account: this.account.toString(),
+			exit: this.exit,
+			tokens: this.values.asABI(),
+		};
+	}
+
+	packTagged(contract: Address): ABIPacked {
+		return new ABIEncoder(
+			["uint64", this.epoch],
+			this.account,
+			this.exit,
+			this.values,
+		).pack("ErdstallBalance", contract);
+	}
+
+	async sign(contract: Address, signer: Signer): Promise<BalanceProof> {
+		const sig = await signer.signMessage(
+			this.packTagged(contract).keccak256(),
+		);
+		return new BalanceProof(this, new Signature(utils.arrayify(sig)));
+	}
 }
 
 export interface ErdstallBalance {
@@ -50,8 +81,10 @@ export type ErdstallSignature = ethers.utils.BytesLike;
 // phase for each account in the Erdstall system.
 @jsonObject
 export class BalanceProof {
-	@jsonMember(Balance) balance: Balance;
-	@jsonMember(Signature) sig: Signature;
+	@jsonMember(Balance)
+	readonly balance: Balance;
+	@jsonMember(Signature)
+	readonly sig: Signature;
 
 	constructor(balance: Balance, signature: Signature) {
 		this.balance = balance;
@@ -59,16 +92,15 @@ export class BalanceProof {
 	}
 
 	toEthProof(): [ErdstallBalance, ErdstallSignature] {
-		const balance = this.balance;
-		return [
-			{
-				epoch: balance.epoch.valueOf(),
-				account: balance.account.toString(),
-				exit: balance.exit,
-				tokens: balance.values.asABI(), // TODO: This might be wrong.
-			},
-			this.sig.value,
-		];
+		return [this.balance.asABI(), this.sig.value];
+	}
+
+	verify(contract: Address, tee: Address): boolean {
+		const signer = utils.verifyMessage(
+			this.balance.packTagged(contract).keccak256(),
+			this.sig.toString(),
+		);
+		return signer === tee.toString();
 	}
 }
 
