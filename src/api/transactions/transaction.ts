@@ -29,7 +29,7 @@ export abstract class Transaction extends ErdstallObject {
 	}
 
 	async sign(contract: Address, signer: Signer): Promise<this> {
-		const sig = await signer.signMessage(this.asABITagged(contract).keccak256());
+		const sig = await signer.signMessage(this.packTagged(contract).keccak256());
 		this.sig = new Signature(utils.arrayify(sig));
 		return this;
 	}
@@ -39,7 +39,7 @@ export abstract class Transaction extends ErdstallObject {
 			return false;
 		}
 		const rec = utils.verifyMessage(
-			this.asABITagged(contract).keccak256(),
+			this.packTagged(contract).keccak256(),
 			this.sig!.toString(),
 		);
 
@@ -57,7 +57,7 @@ export abstract class Transaction extends ErdstallObject {
 		return TypedJSON.parse(data, transactionImpls.get(js.type)!)!;
 	};
 
-	asABITagged(contract: Address): ABIPacked {
+	packTagged(contract: Address): ABIPacked {
 		const enc = new ABIEncoder(this.sender, ["uint64", this.nonce]);
 		return enc.pack(this.encodeABI(enc, contract), contract);
 	}

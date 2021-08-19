@@ -43,10 +43,10 @@ describe("Wiremessages", () => {
 		const offer = testCase.tradeTX.offer;
 		expect(offer.fees).to.exist;
 		expect(
-			utils.hexlify(offer.asABITagged(testCase.contract).bytes)
+			utils.hexlify(offer.packTagged(testCase.contract).bytes)
 		).eql(testCase.tradeOfferABI);
 		expect(
-			utils.hexlify(testCase.tradeTX.asABITagged(testCase.contract).bytes)
+			utils.hexlify(testCase.tradeTX.packTagged(testCase.contract).bytes)
 		).eql(testCase.tradeTXABI);
 	});
 
@@ -61,10 +61,10 @@ describe("Wiremessages", () => {
 		const offer = testCase.tradeTX.offer;
 		expect(offer.fees).to.be.undefined;
 		expect(
-			utils.hexlify(offer.asABITagged(testCase.contract).bytes)
+			utils.hexlify(offer.packTagged(testCase.contract).bytes)
 		).eql(testCase.tradeOfferABI);
 		expect(
-			utils.hexlify(testCase.tradeTX.asABITagged(testCase.contract).bytes)
+			utils.hexlify(testCase.tradeTX.packTagged(testCase.contract).bytes)
 		).eql(testCase.tradeTXABI);
 	});
 	it("de-/encodes receipts", () => {

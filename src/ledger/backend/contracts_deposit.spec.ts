@@ -12,7 +12,7 @@ import {
 	makeERC721DepositCalls,
 } from "./contracts_deposit";
 
-import setup, { Enviroment } from "./enviroment.spec";
+import { Enviroment, setupEnv } from "#erdstall/test/ledger";
 
 describe("Deposit_Call_Wrapper", () => {
 	let testenv: Enviroment;
@@ -20,7 +20,7 @@ describe("Deposit_Call_Wrapper", () => {
 	const amount = new Amount(100n);
 
 	before(async () => {
-		testenv = await setup();
+		testenv = await setupEnv();
 		bob = testenv.users[0];
 	});
 

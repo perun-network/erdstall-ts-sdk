@@ -8,7 +8,7 @@ import { EventHelper } from "#erdstall/utils";
 
 import { Erdstall__factory } from "./contracts";
 import { LedgerWriteConn } from "./writeconn";
-import setup, { Enviroment } from "./enviroment.spec";
+import { Enviroment, setupEnv } from "#erdstall/test/ledger";
 
 describe("ErdstallConnection", () => {
 	let testenv: Enviroment;
@@ -16,7 +16,7 @@ describe("ErdstallConnection", () => {
 	const amount = new Amount(10n);
 
 	before(async () => {
-		testenv = await setup();
+		testenv = await setupEnv();
 	});
 
 	it("allows interfacing with the erdstall contract", async () => {

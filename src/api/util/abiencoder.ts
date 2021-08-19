@@ -24,15 +24,22 @@ export class ABIPacked {
 	}
 }
 
-export interface ABITaggedEncodable {
-	asABITagged(contract: Address): ABIPacked;
+export interface ABITaggedPackable {
+	packTagged(contract: Address): ABIPacked;
 }
 
 export interface ABIValue {
 	ABIType(): string;
 }
 
-type EncoderArg = ABIValue | ABIEncodable | ABITaggedEncodable | [string, any] | string | Uint8Array | boolean;
+type EncoderArg =
+	| ABIValue
+	| ABIEncodable
+	| ABITaggedPackable
+	| [string, any]
+	| string
+	| Uint8Array
+	| boolean;
 
 /** ABIEncoder encodes values into the Ethereum ABI.
 	It supports values as either `[string, value]` pairs, or as `ABIValue`. A
@@ -55,7 +62,7 @@ export class ABIEncoder {
 	encodeTagged(contract?: Address, ...fields: EncoderArg[]): this {
 		this.types = this.types.concat(
 			fields.map((f): string => {
-				if ((f as ABITaggedEncodable).asABITagged !== undefined)
+				if ((f as ABITaggedPackable).packTagged !== undefined)
 					return "bytes";
 				if (f instanceof Array) return f[0];
 				else if (f instanceof String || typeof f === "string")
@@ -64,24 +71,20 @@ export class ABIEncoder {
 					return "bool";
 				else if ((f as ABIValue).ABIType !== undefined)
 					return (f as ABIValue).ABIType();
-				else if (f instanceof Uint8Array)
-					return "bytes";
+				else if (f instanceof Uint8Array) return "bytes";
 				throw new Error(`cannot encode ${typeof f}`);
 			}),
 		);
 		this.values = this.values.concat(
 			fields.map((f): any => {
-				if ((f as ABITaggedEncodable).asABITagged !== undefined)
-					return (f as ABITaggedEncodable).asABITagged(contract!).bytes;
+				if ((f as ABITaggedPackable).packTagged !== undefined)
+					return (f as ABITaggedPackable).packTagged(contract!).bytes;
 				if ((f as ABIEncodable).asABI !== undefined)
 					return (f as ABIEncodable).asABI();
 
-				if (f instanceof String || typeof f === "string")
-					return f;
-				if(f instanceof Boolean || typeof f === "boolean")
-					return f;
-				if(f instanceof Uint8Array)
-					return f;
+				if (f instanceof String || typeof f === "string") return f;
+				if (f instanceof Boolean || typeof f === "boolean") return f;
+				if (f instanceof Uint8Array) return f;
 
 				if (f instanceof Array)
 					if ((f[1] as ABIEncodable).asABI !== undefined)
@@ -95,14 +98,17 @@ export class ABIEncoder {
 
 	pack_noprefix(): ABIPacked {
 		return new ABIPacked(
-			utils.defaultAbiCoder.encode(this.types, this.values));
+			utils.defaultAbiCoder.encode(this.types, this.values),
+		);
 	}
 
 	pack(tag: string, contract: Address): ABIPacked {
 		const enc = new ABIEncoder(tag, contract);
-		return new ABIPacked(utils.defaultAbiCoder.encode(
-			enc.types.concat(this.types),
-			enc.values.concat(this.values),
-		));
+		return new ABIPacked(
+			utils.defaultAbiCoder.encode(
+				enc.types.concat(this.types),
+				enc.values.concat(this.values),
+			),
+		);
 	}
 }
