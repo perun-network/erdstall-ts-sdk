@@ -26,6 +26,7 @@ export class Address implements ABIValue {
 	}
 
 	static ensure(addr: string | Address): Address {
+		if (addr === undefined) return addr;
 		if (addr instanceof Address) return addr;
 		return Address.fromString(addr);
 	}
