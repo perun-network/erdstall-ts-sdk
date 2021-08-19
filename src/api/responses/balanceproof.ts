@@ -26,12 +26,12 @@ export class Balance {
 
 	constructor(
 		epoch: bigint,
-		address: Address,
+		account: Address | string,
 		exit: boolean,
 		values: Assets,
 	) {
 		this.epoch = new BigInteger(epoch);
-		this.account = address;
+		this.account = Address.ensure(account);
 		this.exit = exit;
 		this.values = values;
 	}
