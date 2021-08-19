@@ -1,8 +1,10 @@
-{
-  "trailingComma": "all",
-  "tabWidth": 4,
-  "useTabs": true,
-  "semi": true,
-  "singleQuote": false,
-  "bracketSpacing": true
-}
+trailingComma: "all"
+tabWidth: 4
+useTabs: true
+semi: true
+singleQuote: false
+bracketSpacing: true
+overrides:
+  - files: "*.yml"
+    options:
+      tabWidth: 2
