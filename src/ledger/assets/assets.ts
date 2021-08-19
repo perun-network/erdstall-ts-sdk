@@ -4,6 +4,7 @@
 import { jsonObject } from "typedjson";
 import { Asset } from "./asset";
 import { ABIValue, CustomJSON } from "#erdstall/api/util";
+import { ErdstallToken } from "#erdstall/api/responses";
 import { Address } from "#erdstall/ledger";
 
 export const ETHZERO = "0x0000000000000000000000000000000000000000";
@@ -12,9 +13,9 @@ export const ETHZERO = "0x0000000000000000000000000000000000000000";
 export class Assets implements ABIValue {
 	public values: Map<string, Asset>;
 
-	constructor(...assets: {token: string | Address, asset: Asset}[]) {
+	constructor(...assets: { token: string | Address; asset: Asset }[]) {
 		this.values = new Map<string, Asset>();
-		assets.forEach(({token, asset}) => this.addAsset(token, asset));
+		assets.forEach(({ token, asset }) => this.addAsset(token, asset));
 	}
 
 	static toJSON(me: Assets) {
@@ -36,21 +37,15 @@ export class Assets implements ABIValue {
 	}
 
 	ABIType(): string {
-		return "(address,bytes)[]";
+		return "tuple(address token,bytes value)[]";
 	}
 
-	asABI(): any {
-		let valuesArr: [any, any][] = [];
-		this.values.forEach((v, k) => {
-			valuesArr.push([Address.fromJSON(k).asABI(), v.asABI()]);
-		});
-
-		const orderedAssets = this.orderedAssets();
-		return orderedAssets.map(([addr, asset]: [string, Asset]): [
-			any,
-			any,
-		] => {
-			return [Address.fromJSON(addr).asABI(), asset.asABI()];
+	asABI(): ErdstallToken[] {
+		return this.orderedAssets().map(([addr, asset]) => {
+			return {
+				token: addr,
+				value: asset.asABI(),
+			};
 		});
 	}
 
@@ -70,8 +65,7 @@ export class Assets implements ABIValue {
 	}
 
 	hasAsset(addr: string | Address): boolean {
-		if(addr instanceof Address)
-			addr = addr.toString();
+		if (addr instanceof Address) addr = addr.toString();
 		return this.values.has(addr);
 	}
 
@@ -84,8 +78,7 @@ export class Assets implements ABIValue {
 	}
 
 	addAsset(addr: string | Address, asset: Asset): void {
-		if(addr instanceof Address)
-			addr = addr.toString();
+		if (addr instanceof Address) addr = addr.toString();
 		if (asset.zero()) {
 			return;
 		}
