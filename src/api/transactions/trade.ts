@@ -19,7 +19,7 @@ export class TradeFees {
 		this.fee = fee;
 	}
 
-	asABITagged(contract: Address): ABIPacked {
+	packTagged(contract: Address): ABIPacked {
 		return new ABIEncoder(this.market, this.fee).pack("ErdstallTradeFees", contract);
 	}
 }
@@ -47,7 +47,7 @@ export class TradeOffer {
 	}
 
 	async sign(contract: Address, signer: Signer): Promise<this> {
-		const sig = await signer.signMessage(this.asABITagged(contract).keccak256());
+		const sig = await signer.signMessage(this.packTagged(contract).keccak256());
 		this.sig = new Signature(utils.arrayify(sig));
 		return this;
 	}
@@ -57,14 +57,14 @@ export class TradeOffer {
 			return false;
 		}
 		const rec = utils.verifyMessage(
-			this.asABITagged(contract).keccak256(),
+			this.packTagged(contract).keccak256(),
 			this.sig!.toString(),
 		);
 
 		return rec === this.owner.toString();
 	}
 
-	asABITagged(contract: Address): ABIPacked {
+	packTagged(contract: Address): ABIPacked {
 		return new ABIEncoder().encodeTagged(contract,
 			this.owner,
 			this.offer,
