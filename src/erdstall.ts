@@ -9,7 +9,7 @@ import { ethers } from "ethers";
 import { TxReceipt } from "#erdstall/api/responses";
 import { TradeOffer } from "#erdstall/api/transactions";
 import { BalanceProof } from "#erdstall/api/responses";
-import { Address, ErdstallEvent } from "#erdstall/ledger";
+import { Address, Account, ErdstallEvent } from "#erdstall/ledger";
 import { Assets } from "#erdstall/ledger/assets";
 import { Uint256 } from "#erdstall/api/util";
 import { Stages } from "#erdstall/utils";
@@ -75,6 +75,14 @@ export interface Subscriber {
 	subscribe(who?: Address):Promise<void>;
 }
 
+export interface OwnAccountGetter {
+	getOwnAccount(): Promise<Account>;
+}
+
+export interface AccountGetter {
+	getAccount(who: Address): Promise<Account>;
+}
+
 export interface Onboarder {
 	onboard(): Promise<void>;
 }
@@ -90,11 +98,13 @@ export interface ErdstallClient
 	extends Watcher,
 		Contracter,
 		Initializer,
-		Subscriber {}
+		Subscriber,
+		AccountGetter {}
 
 export interface ErdstallSession
 	extends ErdstallClient,
 		SelfSubscriber,
+		OwnAccountGetter,
 		Initializer,
 		Transactor,
 		Minter,

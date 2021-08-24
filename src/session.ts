@@ -5,8 +5,8 @@ import { ethers, Signer } from "ethers";
 
 import { TxReceipt, BalanceProof } from "#erdstall/api/responses";
 import { Transfer, Mint, ExitRequest, TradeOffer, Trade } from "#erdstall/api/transactions";
-import { EnclaveWriter, Enclave } from "#erdstall/enclave";
-import { Address, LedgerWriter } from "#erdstall/ledger";
+import { EnclaveWriter } from "#erdstall/enclave";
+import { Address, Account, LedgerWriter } from "#erdstall/ledger";
 import { Assets } from "#erdstall/ledger/assets";
 import { Uint256 } from "#erdstall/api/util";
 import { Stages } from "#erdstall/utils";
@@ -60,6 +60,10 @@ export class Session extends Client implements ErdstallSession {
 
 	async subscribeSelf(): Promise<void> {
 		return this.subscribe(this.address);
+	}
+
+	async getOwnAccount(): Promise<Account> {
+		return this.getAccount(this.address);
 	}
 
 	async transferTo(assets: Assets, to: Address): Promise<TxReceipt> {
