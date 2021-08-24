@@ -56,6 +56,9 @@ export class MockClient extends MockWatcher implements ErdstallClient {
 
 	async initialize(): Promise<void> {}
 	async subscribe(_who?: Address): Promise<void> {}
+	async getAccount(who: Address) : Promise<Account> {
+		throw new Error("cannot query accounts on mock clients");
+	}
 
 	erdstall(): Address {
 		return this.contract;

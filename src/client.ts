@@ -11,6 +11,7 @@ import {
 	LedgerReader,
 	LedgerWriter,
 	Address,
+	Account,
 	ErdstallEvent,
 	isLedgerEvent
 } from "#erdstall/ledger";
@@ -75,6 +76,10 @@ export class Client implements ErdstallClient {
 
 	async subscribe(who?: Address): Promise<void> {
 		return this.enclaveConn.subscribe(who);
+	}
+
+	async getAccount(who: Address): Promise<Account> {
+		return (await this.enclaveConn.getAccount(who)).account;
 	}
 
 	initialize(timeout?: number): Promise<void> {
