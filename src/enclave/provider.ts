@@ -3,7 +3,7 @@
 
 import WebSocket from "isomorphic-ws";
 
-export const UninitializedConn = new Error("uninitialized connection");
+export const UninitializedConn = "uninitialized connection";
 
 export interface EnclaveProvider {
 	connect(): void;
@@ -23,6 +23,7 @@ export class EnclaveWSProvider implements EnclaveProvider {
 
 	private url: string;
 	private ws?: WebSocket;
+	private initialized: boolean;
 
 	constructor(url: URL) {
 		this.url = url.toString();
@@ -30,16 +31,19 @@ export class EnclaveWSProvider implements EnclaveProvider {
 		this.onclose = null;
 		this.onerror = null;
 		this.onmessage = null;
+		this.initialized = false;
 	}
 
 	public connect() {
-		if (this.ws) {
-			this.ws.close();
-		}
+		this.close();
 		this.ws = new WebSocket(this.url);
 		this.ws.onmessage = this.onmessage;
 		this.ws.onerror = this.onerror;
-		this.ws.onopen = this.onopen;
+		this.ws.onopen = (e: Event): any => {
+			this.initialized = true;
+			if(this.onopen)
+				this.onopen(e);
+		};
 		this.ws.onclose = this.onclose;
 	}
 
@@ -49,11 +53,13 @@ export class EnclaveWSProvider implements EnclaveProvider {
 		}
 
 		this.ws.close();
+		this.ws = null;
+		this.initialized = false;
 	}
 
 	public send(data: string | ArrayBufferLike | Blob | ArrayBufferView) {
-		if (!this.ws) {
-			throw UninitializedConn;
+		if (!this.initialized) {
+			throw new Error(UninitializedConn);
 		}
 
 		this.ws.send(data);
