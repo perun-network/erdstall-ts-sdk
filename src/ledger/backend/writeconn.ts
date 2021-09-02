@@ -112,7 +112,7 @@ export class LedgerWriteConn extends LedgerReadConn implements LedgerWriter {
 					resolve(ctx);
 				} catch (e) {
 					for (const [_, reject] of promises.slice(Number(i)))
-						reject(e instanceof Error? e : new Error(e));
+						reject(("message" in e) ? new Error(e.message) : new Error(e));
 				}
 			}
 		})();
