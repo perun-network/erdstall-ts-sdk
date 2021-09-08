@@ -3,6 +3,7 @@
 /* eslint-disable */
 export type { Ownable } from "./Ownable";
 export type { ERC20 } from "./ERC20";
+export type { IERC20Metadata } from "./IERC20Metadata";
 export type { IERC20 } from "./IERC20";
 export type { ERC721 } from "./ERC721";
 export type { IERC721Enumerable } from "./IERC721Enumerable";
@@ -12,8 +13,8 @@ export type { IERC721Receiver } from "./IERC721Receiver";
 export type { ERC165 } from "./ERC165";
 export type { IERC165 } from "./IERC165";
 export type { ERC20Holder } from "./ERC20Holder";
-export type { IERC20Minter } from "./IERC20Minter";
 export type { ERC721Holder } from "./ERC721Holder";
+export type { ERC721MintableHolder } from "./ERC721MintableHolder";
 export type { IERC721Minter } from "./IERC721Minter";
 export type { Erdstall } from "./Erdstall";
 export type { ETHHolder } from "./ETHHolder";
@@ -23,6 +24,7 @@ export type { TokenHolder } from "./TokenHolder";
 
 export { Ownable__factory } from "./factories/Ownable__factory";
 export { ERC20__factory } from "./factories/ERC20__factory";
+export { IERC20Metadata__factory } from "./factories/IERC20Metadata__factory";
 export { IERC20__factory } from "./factories/IERC20__factory";
 export { ERC721__factory } from "./factories/ERC721__factory";
 export { IERC721Enumerable__factory } from "./factories/IERC721Enumerable__factory";
@@ -32,8 +34,8 @@ export { IERC721Receiver__factory } from "./factories/IERC721Receiver__factory";
 export { ERC165__factory } from "./factories/ERC165__factory";
 export { IERC165__factory } from "./factories/IERC165__factory";
 export { ERC20Holder__factory } from "./factories/ERC20Holder__factory";
-export { IERC20Minter__factory } from "./factories/IERC20Minter__factory";
 export { ERC721Holder__factory } from "./factories/ERC721Holder__factory";
+export { ERC721MintableHolder__factory } from "./factories/ERC721MintableHolder__factory";
 export { IERC721Minter__factory } from "./factories/IERC721Minter__factory";
 export { Erdstall__factory } from "./factories/Erdstall__factory";
 export { ETHHolder__factory } from "./factories/ETHHolder__factory";

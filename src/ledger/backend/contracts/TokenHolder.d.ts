@@ -9,7 +9,7 @@ import {
   BigNumber,
   BigNumberish,
   PopulatedTransaction,
-  Contract,
+  BaseContract,
   ContractTransaction,
   Overrides,
   CallOverrides,
@@ -22,28 +22,22 @@ import { TypedEventFilter, TypedEvent, TypedListener } from "./commons";
 interface TokenHolderInterface extends ethers.utils.Interface {
   functions: {
     "erdstall()": FunctionFragment;
-    "mint(address,address,bytes)": FunctionFragment;
     "transfer(address,address,bytes)": FunctionFragment;
   };
 
   encodeFunctionData(functionFragment: "erdstall", values?: undefined): string;
-  encodeFunctionData(
-    functionFragment: "mint",
-    values: [string, string, BytesLike]
-  ): string;
   encodeFunctionData(
     functionFragment: "transfer",
     values: [string, string, BytesLike]
   ): string;
 
   decodeFunctionResult(functionFragment: "erdstall", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "mint", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "transfer", data: BytesLike): Result;
 
   events: {};
 }
 
-export class TokenHolder extends Contract {
+export class TokenHolder extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
@@ -89,30 +83,7 @@ export class TokenHolder extends Contract {
   functions: {
     erdstall(overrides?: CallOverrides): Promise<[string]>;
 
-    "erdstall()"(overrides?: CallOverrides): Promise<[string]>;
-
-    mint(
-      token: string,
-      owner: string,
-      value: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    "mint(address,address,bytes)"(
-      token: string,
-      owner: string,
-      value: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
     transfer(
-      token: string,
-      recipient: string,
-      value: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    "transfer(address,address,bytes)"(
       token: string,
       recipient: string,
       value: BytesLike,
@@ -122,30 +93,7 @@ export class TokenHolder extends Contract {
 
   erdstall(overrides?: CallOverrides): Promise<string>;
 
-  "erdstall()"(overrides?: CallOverrides): Promise<string>;
-
-  mint(
-    token: string,
-    owner: string,
-    value: BytesLike,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  "mint(address,address,bytes)"(
-    token: string,
-    owner: string,
-    value: BytesLike,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
   transfer(
-    token: string,
-    recipient: string,
-    value: BytesLike,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  "transfer(address,address,bytes)"(
     token: string,
     recipient: string,
     value: BytesLike,
@@ -155,30 +103,7 @@ export class TokenHolder extends Contract {
   callStatic: {
     erdstall(overrides?: CallOverrides): Promise<string>;
 
-    "erdstall()"(overrides?: CallOverrides): Promise<string>;
-
-    mint(
-      token: string,
-      owner: string,
-      value: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    "mint(address,address,bytes)"(
-      token: string,
-      owner: string,
-      value: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
     transfer(
-      token: string,
-      recipient: string,
-      value: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    "transfer(address,address,bytes)"(
       token: string,
       recipient: string,
       value: BytesLike,
@@ -191,30 +116,7 @@ export class TokenHolder extends Contract {
   estimateGas: {
     erdstall(overrides?: CallOverrides): Promise<BigNumber>;
 
-    "erdstall()"(overrides?: CallOverrides): Promise<BigNumber>;
-
-    mint(
-      token: string,
-      owner: string,
-      value: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    "mint(address,address,bytes)"(
-      token: string,
-      owner: string,
-      value: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
     transfer(
-      token: string,
-      recipient: string,
-      value: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    "transfer(address,address,bytes)"(
       token: string,
       recipient: string,
       value: BytesLike,
@@ -225,30 +127,7 @@ export class TokenHolder extends Contract {
   populateTransaction: {
     erdstall(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    "erdstall()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    mint(
-      token: string,
-      owner: string,
-      value: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    "mint(address,address,bytes)"(
-      token: string,
-      owner: string,
-      value: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
     transfer(
-      token: string,
-      recipient: string,
-      value: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    "transfer(address,address,bytes)"(
       token: string,
       recipient: string,
       value: BytesLike,

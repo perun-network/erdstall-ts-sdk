@@ -11,6 +11,7 @@ import {
   PopulatedTransaction,
   BaseContract,
   ContractTransaction,
+  Overrides,
   CallOverrides,
 } from "ethers";
 import { BytesLike } from "@ethersproject/bytes";
@@ -18,25 +19,31 @@ import { Listener, Provider } from "@ethersproject/providers";
 import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
 import { TypedEventFilter, TypedEvent, TypedListener } from "./commons";
 
-interface ERC165Interface extends ethers.utils.Interface {
+interface ERC721MintableHolderInterface extends ethers.utils.Interface {
   functions: {
-    "supportsInterface(bytes4)": FunctionFragment;
+    "deposit(address,uint256[])": FunctionFragment;
+    "erdstall()": FunctionFragment;
+    "transfer(address,address,bytes)": FunctionFragment;
   };
 
   encodeFunctionData(
-    functionFragment: "supportsInterface",
-    values: [BytesLike]
+    functionFragment: "deposit",
+    values: [string, BigNumberish[]]
+  ): string;
+  encodeFunctionData(functionFragment: "erdstall", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "transfer",
+    values: [string, string, BytesLike]
   ): string;
 
-  decodeFunctionResult(
-    functionFragment: "supportsInterface",
-    data: BytesLike
-  ): Result;
+  decodeFunctionResult(functionFragment: "deposit", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "erdstall", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "transfer", data: BytesLike): Result;
 
   events: {};
 }
 
-export class ERC165 extends BaseContract {
+export class ERC721MintableHolder extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
@@ -77,40 +84,90 @@ export class ERC165 extends BaseContract {
     toBlock?: string | number | undefined
   ): Promise<Array<TypedEvent<EventArgsArray & EventArgsObject>>>;
 
-  interface: ERC165Interface;
+  interface: ERC721MintableHolderInterface;
 
   functions: {
-    supportsInterface(
-      interfaceId: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<[boolean]>;
+    deposit(
+      token: string,
+      ids: BigNumberish[],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    erdstall(overrides?: CallOverrides): Promise<[string]>;
+
+    transfer(
+      _token: string,
+      recipient: string,
+      value: BytesLike,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
   };
 
-  supportsInterface(
-    interfaceId: BytesLike,
-    overrides?: CallOverrides
-  ): Promise<boolean>;
+  deposit(
+    token: string,
+    ids: BigNumberish[],
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  erdstall(overrides?: CallOverrides): Promise<string>;
+
+  transfer(
+    _token: string,
+    recipient: string,
+    value: BytesLike,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
 
   callStatic: {
-    supportsInterface(
-      interfaceId: BytesLike,
+    deposit(
+      token: string,
+      ids: BigNumberish[],
       overrides?: CallOverrides
-    ): Promise<boolean>;
+    ): Promise<void>;
+
+    erdstall(overrides?: CallOverrides): Promise<string>;
+
+    transfer(
+      _token: string,
+      recipient: string,
+      value: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<void>;
   };
 
   filters: {};
 
   estimateGas: {
-    supportsInterface(
-      interfaceId: BytesLike,
-      overrides?: CallOverrides
+    deposit(
+      token: string,
+      ids: BigNumberish[],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    erdstall(overrides?: CallOverrides): Promise<BigNumber>;
+
+    transfer(
+      _token: string,
+      recipient: string,
+      value: BytesLike,
+      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
   };
 
   populateTransaction: {
-    supportsInterface(
-      interfaceId: BytesLike,
-      overrides?: CallOverrides
+    deposit(
+      token: string,
+      ids: BigNumberish[],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    erdstall(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    transfer(
+      _token: string,
+      recipient: string,
+      value: BytesLike,
+      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
   };
 }
