@@ -162,6 +162,13 @@ Trading works as follows:
 -->`Erdstall.mint(erdstall.ledger.Address, erdstall.Uint256) TXReceipt` can be used to create a new token of the specified kind and with the specified ID.
 The NFT can then be traded freely, and is only minted on-chain upon withdrawal.
 
+## Development
+
+**Contract bindings**&emsp;<!--
+-->Contract bindings have to be generated from the [`erdstall-contracts`]("https://github.com/perun-network/erdstall-contracts") repository.
+Just clone it into a directory of your choice and execute `yarn bindings <path/to/erdstall-contracts>`.
+**Note**: Do not forget to install the dependencies in `erdstall-contracts` with `yarn`.
+
 ## License
 
 This work is released under the Apache 2.0 license. See LICENSE file for more
