@@ -69,7 +69,7 @@
 		"build": "ttsc -p tsconfig.build.json",
 		"watch": "ttsc -w",
 		"lint": "eslint ./src --ext .ts",
-		"bindings": "./scripts/genbindings.sh deps/erdstall-contracts",
+		"bindings": "./scripts/genbindings.sh",
 		"test:integration": "env TS_NODE_PROJECT=\"tsconfig.e2e.json\" mocha -b --timeout 60000 -r jsdom-global/register -r ts-node/register -r tsconfig-paths/register 'src/e2e/**/*.spec.ts'",
 		"test": "env TS_NODE_PROJECT=\"tsconfig.test.json\" mocha --timeout 15000 -r jsdom-global/register -r ts-node/register -r tsconfig-paths/register 'src/{,!(e2e)/**}/*.spec.ts'",
 		"devpub": "yarn build && yarn postpublish",
