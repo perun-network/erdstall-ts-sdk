@@ -852,6 +852,13 @@
   resolved "https://registry.npmjs.org/@types/underscore/-/underscore-1.11.2.tgz"
   integrity sha512-Ls2ylbo7++ITrWk2Yc3G/jijwSq5V3GT0tlgVXEl2kKYXY3ImrtmTCoE2uyTWFRI5owMBriloZFWbE1SXOsE7w==
 
+"@types/walk@^2.3.1":
+  version "2.3.1"
+  resolved "https://registry.yarnpkg.com/@types/walk/-/walk-2.3.1.tgz#985d9ddb2690c32e9b377548cec426918d7248c0"
+  integrity sha512-gEH9G1wA3xKfAgQmJJA/Kdk5Ne9xI1Gn/q2Dwfl06m7IsgEBUUBVzSVfbi9zf6KYL4xfA6tFtzOQk9p0vBzLDg==
+  dependencies:
+    "@types/node" "*"
+
 "@types/web3@1.0.19":
   version "1.0.19"
   resolved "https://registry.npmjs.org/@types/web3/-/web3-1.0.19.tgz"
@@ -4015,6 +4022,11 @@ for-in@^1.0.2:
   version "1.0.2"
   resolved "https://registry.npmjs.org/for-in/-/for-in-1.0.2.tgz"
   integrity sha1-gQaNKVqBQuwKxybG4iAMMPttXoA=
+
+foreachasync@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/foreachasync/-/foreachasync-3.0.0.tgz#5502987dc8714be3392097f32e0071c9dee07cf6"
+  integrity sha1-VQKYfchxS+M5IJfzLgBxyd7gfPY=
 
 forever-agent@~0.6.1:
   version "0.6.1"
@@ -8468,6 +8480,13 @@ w3c-xmlserializer@^2.0.0:
   integrity sha512-4tzD0mF8iSiMiNs30BiLO3EpfGLZUT2MSX/G+o7ZywDzliWQ3OPtTZ0PTC3B3ca1UAf4cJMHB+2Bf56EriJuRA==
   dependencies:
     xml-name-validator "^3.0.0"
+
+walk@^2.3.14:
+  version "2.3.14"
+  resolved "https://registry.yarnpkg.com/walk/-/walk-2.3.14.tgz#60ec8631cfd23276ae1e7363ce11d626452e1ef3"
+  integrity sha512-5skcWAUmySj6hkBdH6B6+3ddMjVQYH5Qy9QGbPmN8kVmLteXk+yVXg+yfk1nbX30EYakahLrr8iPcCxJQSCBeg==
+  dependencies:
+    foreachasync "^3.0.0"
 
 web3-bzz@1.2.11:
   version "1.2.11"
