@@ -2,19 +2,9 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import { Contract, Signer } from "ethers";
+import { Contract, Signer, utils } from "ethers";
 import { Provider } from "@ethersproject/providers";
-
-import type { TokenHolder } from "../TokenHolder";
-
-export class TokenHolder__factory {
-  static connect(
-    address: string,
-    signerOrProvider: Signer | Provider
-  ): TokenHolder {
-    return new Contract(address, _abi, signerOrProvider) as TokenHolder;
-  }
-}
+import type { TokenHolder, TokenHolderInterface } from "../TokenHolder";
 
 const _abi = [
   {
@@ -28,29 +18,6 @@ const _abi = [
       },
     ],
     stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "token",
-        type: "address",
-      },
-      {
-        internalType: "address",
-        name: "owner",
-        type: "address",
-      },
-      {
-        internalType: "bytes",
-        name: "value",
-        type: "bytes",
-      },
-    ],
-    name: "mint",
-    outputs: [],
-    stateMutability: "nonpayable",
     type: "function",
   },
   {
@@ -77,3 +44,16 @@ const _abi = [
     type: "function",
   },
 ];
+
+export class TokenHolder__factory {
+  static readonly abi = _abi;
+  static createInterface(): TokenHolderInterface {
+    return new utils.Interface(_abi) as TokenHolderInterface;
+  }
+  static connect(
+    address: string,
+    signerOrProvider: Signer | Provider
+  ): TokenHolder {
+    return new Contract(address, _abi, signerOrProvider) as TokenHolder;
+  }
+}

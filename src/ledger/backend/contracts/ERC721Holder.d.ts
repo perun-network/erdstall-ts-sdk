@@ -9,7 +9,7 @@ import {
   BigNumber,
   BigNumberish,
   PopulatedTransaction,
-  Contract,
+  BaseContract,
   ContractTransaction,
   Overrides,
   CallOverrides,
@@ -23,7 +23,6 @@ interface ERC721HolderInterface extends ethers.utils.Interface {
   functions: {
     "deposit(address,uint256[])": FunctionFragment;
     "erdstall()": FunctionFragment;
-    "mint(address,address,bytes)": FunctionFragment;
     "transfer(address,address,bytes)": FunctionFragment;
   };
 
@@ -33,23 +32,18 @@ interface ERC721HolderInterface extends ethers.utils.Interface {
   ): string;
   encodeFunctionData(functionFragment: "erdstall", values?: undefined): string;
   encodeFunctionData(
-    functionFragment: "mint",
-    values: [string, string, BytesLike]
-  ): string;
-  encodeFunctionData(
     functionFragment: "transfer",
     values: [string, string, BytesLike]
   ): string;
 
   decodeFunctionResult(functionFragment: "deposit", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "erdstall", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "mint", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "transfer", data: BytesLike): Result;
 
   events: {};
 }
 
-export class ERC721Holder extends Contract {
+export class ERC721Holder extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
@@ -99,38 +93,9 @@ export class ERC721Holder extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    "deposit(address,uint256[])"(
-      token: string,
-      ids: BigNumberish[],
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
     erdstall(overrides?: CallOverrides): Promise<[string]>;
 
-    "erdstall()"(overrides?: CallOverrides): Promise<[string]>;
-
-    mint(
-      token: string,
-      owner: string,
-      value: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    "mint(address,address,bytes)"(
-      token: string,
-      owner: string,
-      value: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
     transfer(
-      token: string,
-      recipient: string,
-      value: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    "transfer(address,address,bytes)"(
       token: string,
       recipient: string,
       value: BytesLike,
@@ -144,38 +109,9 @@ export class ERC721Holder extends Contract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  "deposit(address,uint256[])"(
-    token: string,
-    ids: BigNumberish[],
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
   erdstall(overrides?: CallOverrides): Promise<string>;
 
-  "erdstall()"(overrides?: CallOverrides): Promise<string>;
-
-  mint(
-    token: string,
-    owner: string,
-    value: BytesLike,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  "mint(address,address,bytes)"(
-    token: string,
-    owner: string,
-    value: BytesLike,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
   transfer(
-    token: string,
-    recipient: string,
-    value: BytesLike,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  "transfer(address,address,bytes)"(
     token: string,
     recipient: string,
     value: BytesLike,
@@ -189,38 +125,9 @@ export class ERC721Holder extends Contract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    "deposit(address,uint256[])"(
-      token: string,
-      ids: BigNumberish[],
-      overrides?: CallOverrides
-    ): Promise<void>;
-
     erdstall(overrides?: CallOverrides): Promise<string>;
 
-    "erdstall()"(overrides?: CallOverrides): Promise<string>;
-
-    mint(
-      token: string,
-      owner: string,
-      value: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    "mint(address,address,bytes)"(
-      token: string,
-      owner: string,
-      value: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
     transfer(
-      token: string,
-      recipient: string,
-      value: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    "transfer(address,address,bytes)"(
       token: string,
       recipient: string,
       value: BytesLike,
@@ -237,38 +144,9 @@ export class ERC721Holder extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    "deposit(address,uint256[])"(
-      token: string,
-      ids: BigNumberish[],
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
     erdstall(overrides?: CallOverrides): Promise<BigNumber>;
 
-    "erdstall()"(overrides?: CallOverrides): Promise<BigNumber>;
-
-    mint(
-      token: string,
-      owner: string,
-      value: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    "mint(address,address,bytes)"(
-      token: string,
-      owner: string,
-      value: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
     transfer(
-      token: string,
-      recipient: string,
-      value: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    "transfer(address,address,bytes)"(
       token: string,
       recipient: string,
       value: BytesLike,
@@ -283,38 +161,9 @@ export class ERC721Holder extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    "deposit(address,uint256[])"(
-      token: string,
-      ids: BigNumberish[],
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
     erdstall(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    "erdstall()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    mint(
-      token: string,
-      owner: string,
-      value: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    "mint(address,address,bytes)"(
-      token: string,
-      owner: string,
-      value: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
     transfer(
-      token: string,
-      recipient: string,
-      value: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    "transfer(address,address,bytes)"(
       token: string,
       recipient: string,
       value: BytesLike,

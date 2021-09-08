@@ -9,7 +9,7 @@ import {
   BigNumber,
   BigNumberish,
   PopulatedTransaction,
-  Contract,
+  BaseContract,
   ContractTransaction,
   Overrides,
   CallOverrides,
@@ -276,7 +276,7 @@ interface ErdstallInterface extends ethers.utils.Interface {
   getEvent(nameOrSignatureOrTopic: "Withdrawn"): EventFragment;
 }
 
-export class Erdstall extends Contract {
+export class Erdstall extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
@@ -322,20 +322,7 @@ export class Erdstall extends Contract {
   functions: {
     bigBang(overrides?: CallOverrides): Promise<[BigNumber]>;
 
-    "bigBang()"(overrides?: CallOverrides): Promise<[BigNumber]>;
-
     challenge(
-      balance: {
-        epoch: BigNumberish;
-        account: string;
-        exit: boolean;
-        tokens: { token: string; value: BytesLike }[];
-      },
-      sig: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    "challenge((uint64,address,bool,tuple[]),bytes)"(
       balance: {
         epoch: BigNumberish;
         account: string;
@@ -350,17 +337,7 @@ export class Erdstall extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    "challengeDeposit()"(
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
     challenges(
-      arg0: BigNumberish,
-      arg1: string,
-      overrides?: CallOverrides
-    ): Promise<[boolean]>;
-
-    "challenges(uint64,address)"(
       arg0: BigNumberish,
       arg1: string,
       overrides?: CallOverrides
@@ -373,21 +350,7 @@ export class Erdstall extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    "deposit(address,address,bytes)"(
-      depositor: string,
-      token: string,
-      value: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
     deposits(
-      arg0: BigNumberish,
-      arg1: string,
-      arg2: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[string, string] & { token: string; value: string }>;
-
-    "deposits(uint64,address,uint256)"(
       arg0: BigNumberish,
       arg1: string,
       arg2: BigNumberish,
@@ -404,53 +367,22 @@ export class Erdstall extends Contract {
       overrides?: CallOverrides
     ): Promise<[string]>;
 
-    "encodeBalanceProof((uint64,address,bool,tuple[]))"(
-      balance: {
-        epoch: BigNumberish;
-        account: string;
-        exit: boolean;
-        tokens: { token: string; value: BytesLike }[];
-      },
-      overrides?: CallOverrides
-    ): Promise<[string]>;
-
     ensureFrozen(
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    "ensureFrozen()"(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
     epochDuration(overrides?: CallOverrides): Promise<[BigNumber]>;
 
-    "epochDuration()"(overrides?: CallOverrides): Promise<[BigNumber]>;
-
     frozenEpoch(overrides?: CallOverrides): Promise<[BigNumber]>;
-
-    "frozenEpoch()"(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     numChallenges(
       arg0: BigNumberish,
       overrides?: CallOverrides
     ): Promise<[BigNumber]>;
 
-    "numChallenges(uint64)"(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
-
     owner(overrides?: CallOverrides): Promise<[string]>;
 
-    "owner()"(overrides?: CallOverrides): Promise<[string]>;
-
     registerToken(
-      token: string,
-      holder: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    "registerToken(address,address)"(
       token: string,
       holder: string,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -462,17 +394,7 @@ export class Erdstall extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    "registerTokenType(address,string)"(
-      holder: string,
-      tokenType: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
     renounceOwnership(
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    "renounceOwnership()"(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -487,57 +409,18 @@ export class Erdstall extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    "respondChallenge((uint64,address,bool,tuple[]),bytes)"(
-      balance: {
-        epoch: BigNumberish;
-        account: string;
-        exit: boolean;
-        tokens: { token: string; value: BytesLike }[];
-      },
-      sig: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
     tee(overrides?: CallOverrides): Promise<[string]>;
-
-    "tee()"(overrides?: CallOverrides): Promise<[string]>;
 
     tokenHolders(arg0: string, overrides?: CallOverrides): Promise<[string]>;
 
-    "tokenHolders(address)"(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<[string]>;
-
     tokenTypes(arg0: string, overrides?: CallOverrides): Promise<[string]>;
-
-    "tokenTypes(address)"(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<[string]>;
 
     transferOwnership(
       newOwner: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    "transferOwnership(address)"(
-      newOwner: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
     verifyBalance(
-      balance: {
-        epoch: BigNumberish;
-        account: string;
-        exit: boolean;
-        tokens: { token: string; value: BytesLike }[];
-      },
-      sig: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<[void]>;
-
-    "verifyBalance((uint64,address,bool,tuple[]),bytes)"(
       balance: {
         epoch: BigNumberish;
         account: string;
@@ -559,29 +442,7 @@ export class Erdstall extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    "withdraw((uint64,address,bool,tuple[]),bytes)"(
-      balance: {
-        epoch: BigNumberish;
-        account: string;
-        exit: boolean;
-        tokens: { token: string; value: BytesLike }[];
-      },
-      sig: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
     withdrawFrozen(
-      balance: {
-        epoch: BigNumberish;
-        account: string;
-        exit: boolean;
-        tokens: { token: string; value: BytesLike }[];
-      },
-      sig: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    "withdrawFrozen((uint64,address,bool,tuple[]),bytes)"(
       balance: {
         epoch: BigNumberish;
         account: string;
@@ -596,17 +457,7 @@ export class Erdstall extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    "withdrawFrozenDeposit()"(
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
     withdrawn(
-      arg0: BigNumberish,
-      arg1: string,
-      overrides?: CallOverrides
-    ): Promise<[boolean]>;
-
-    "withdrawn(uint64,address)"(
       arg0: BigNumberish,
       arg1: string,
       overrides?: CallOverrides
@@ -615,20 +466,7 @@ export class Erdstall extends Contract {
 
   bigBang(overrides?: CallOverrides): Promise<BigNumber>;
 
-  "bigBang()"(overrides?: CallOverrides): Promise<BigNumber>;
-
   challenge(
-    balance: {
-      epoch: BigNumberish;
-      account: string;
-      exit: boolean;
-      tokens: { token: string; value: BytesLike }[];
-    },
-    sig: BytesLike,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  "challenge((uint64,address,bool,tuple[]),bytes)"(
     balance: {
       epoch: BigNumberish;
       account: string;
@@ -643,17 +481,7 @@ export class Erdstall extends Contract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  "challengeDeposit()"(
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
   challenges(
-    arg0: BigNumberish,
-    arg1: string,
-    overrides?: CallOverrides
-  ): Promise<boolean>;
-
-  "challenges(uint64,address)"(
     arg0: BigNumberish,
     arg1: string,
     overrides?: CallOverrides
@@ -666,21 +494,7 @@ export class Erdstall extends Contract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  "deposit(address,address,bytes)"(
-    depositor: string,
-    token: string,
-    value: BytesLike,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
   deposits(
-    arg0: BigNumberish,
-    arg1: string,
-    arg2: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<[string, string] & { token: string; value: string }>;
-
-  "deposits(uint64,address,uint256)"(
     arg0: BigNumberish,
     arg1: string,
     arg2: BigNumberish,
@@ -697,53 +511,22 @@ export class Erdstall extends Contract {
     overrides?: CallOverrides
   ): Promise<string>;
 
-  "encodeBalanceProof((uint64,address,bool,tuple[]))"(
-    balance: {
-      epoch: BigNumberish;
-      account: string;
-      exit: boolean;
-      tokens: { token: string; value: BytesLike }[];
-    },
-    overrides?: CallOverrides
-  ): Promise<string>;
-
   ensureFrozen(
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  "ensureFrozen()"(
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
   epochDuration(overrides?: CallOverrides): Promise<BigNumber>;
 
-  "epochDuration()"(overrides?: CallOverrides): Promise<BigNumber>;
-
   frozenEpoch(overrides?: CallOverrides): Promise<BigNumber>;
-
-  "frozenEpoch()"(overrides?: CallOverrides): Promise<BigNumber>;
 
   numChallenges(
     arg0: BigNumberish,
     overrides?: CallOverrides
   ): Promise<BigNumber>;
 
-  "numChallenges(uint64)"(
-    arg0: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
   owner(overrides?: CallOverrides): Promise<string>;
 
-  "owner()"(overrides?: CallOverrides): Promise<string>;
-
   registerToken(
-    token: string,
-    holder: string,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  "registerToken(address,address)"(
     token: string,
     holder: string,
     overrides?: Overrides & { from?: string | Promise<string> }
@@ -755,17 +538,7 @@ export class Erdstall extends Contract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  "registerTokenType(address,string)"(
-    holder: string,
-    tokenType: string,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
   renounceOwnership(
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  "renounceOwnership()"(
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -780,57 +553,18 @@ export class Erdstall extends Contract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  "respondChallenge((uint64,address,bool,tuple[]),bytes)"(
-    balance: {
-      epoch: BigNumberish;
-      account: string;
-      exit: boolean;
-      tokens: { token: string; value: BytesLike }[];
-    },
-    sig: BytesLike,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
   tee(overrides?: CallOverrides): Promise<string>;
-
-  "tee()"(overrides?: CallOverrides): Promise<string>;
 
   tokenHolders(arg0: string, overrides?: CallOverrides): Promise<string>;
 
-  "tokenHolders(address)"(
-    arg0: string,
-    overrides?: CallOverrides
-  ): Promise<string>;
-
   tokenTypes(arg0: string, overrides?: CallOverrides): Promise<string>;
-
-  "tokenTypes(address)"(
-    arg0: string,
-    overrides?: CallOverrides
-  ): Promise<string>;
 
   transferOwnership(
     newOwner: string,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  "transferOwnership(address)"(
-    newOwner: string,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
   verifyBalance(
-    balance: {
-      epoch: BigNumberish;
-      account: string;
-      exit: boolean;
-      tokens: { token: string; value: BytesLike }[];
-    },
-    sig: BytesLike,
-    overrides?: CallOverrides
-  ): Promise<void>;
-
-  "verifyBalance((uint64,address,bool,tuple[]),bytes)"(
     balance: {
       epoch: BigNumberish;
       account: string;
@@ -852,29 +586,7 @@ export class Erdstall extends Contract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  "withdraw((uint64,address,bool,tuple[]),bytes)"(
-    balance: {
-      epoch: BigNumberish;
-      account: string;
-      exit: boolean;
-      tokens: { token: string; value: BytesLike }[];
-    },
-    sig: BytesLike,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
   withdrawFrozen(
-    balance: {
-      epoch: BigNumberish;
-      account: string;
-      exit: boolean;
-      tokens: { token: string; value: BytesLike }[];
-    },
-    sig: BytesLike,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  "withdrawFrozen((uint64,address,bool,tuple[]),bytes)"(
     balance: {
       epoch: BigNumberish;
       account: string;
@@ -889,17 +601,7 @@ export class Erdstall extends Contract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  "withdrawFrozenDeposit()"(
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
   withdrawn(
-    arg0: BigNumberish,
-    arg1: string,
-    overrides?: CallOverrides
-  ): Promise<boolean>;
-
-  "withdrawn(uint64,address)"(
     arg0: BigNumberish,
     arg1: string,
     overrides?: CallOverrides
@@ -907,8 +609,6 @@ export class Erdstall extends Contract {
 
   callStatic: {
     bigBang(overrides?: CallOverrides): Promise<BigNumber>;
-
-    "bigBang()"(overrides?: CallOverrides): Promise<BigNumber>;
 
     challenge(
       balance: {
@@ -921,28 +621,9 @@ export class Erdstall extends Contract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    "challenge((uint64,address,bool,tuple[]),bytes)"(
-      balance: {
-        epoch: BigNumberish;
-        account: string;
-        exit: boolean;
-        tokens: { token: string; value: BytesLike }[];
-      },
-      sig: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
     challengeDeposit(overrides?: CallOverrides): Promise<void>;
 
-    "challengeDeposit()"(overrides?: CallOverrides): Promise<void>;
-
     challenges(
-      arg0: BigNumberish,
-      arg1: string,
-      overrides?: CallOverrides
-    ): Promise<boolean>;
-
-    "challenges(uint64,address)"(
       arg0: BigNumberish,
       arg1: string,
       overrides?: CallOverrides
@@ -955,21 +636,7 @@ export class Erdstall extends Contract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    "deposit(address,address,bytes)"(
-      depositor: string,
-      token: string,
-      value: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
     deposits(
-      arg0: BigNumberish,
-      arg1: string,
-      arg2: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[string, string] & { token: string; value: string }>;
-
-    "deposits(uint64,address,uint256)"(
       arg0: BigNumberish,
       arg1: string,
       arg2: BigNumberish,
@@ -986,49 +653,20 @@ export class Erdstall extends Contract {
       overrides?: CallOverrides
     ): Promise<string>;
 
-    "encodeBalanceProof((uint64,address,bool,tuple[]))"(
-      balance: {
-        epoch: BigNumberish;
-        account: string;
-        exit: boolean;
-        tokens: { token: string; value: BytesLike }[];
-      },
-      overrides?: CallOverrides
-    ): Promise<string>;
-
     ensureFrozen(overrides?: CallOverrides): Promise<void>;
-
-    "ensureFrozen()"(overrides?: CallOverrides): Promise<void>;
 
     epochDuration(overrides?: CallOverrides): Promise<BigNumber>;
 
-    "epochDuration()"(overrides?: CallOverrides): Promise<BigNumber>;
-
     frozenEpoch(overrides?: CallOverrides): Promise<BigNumber>;
-
-    "frozenEpoch()"(overrides?: CallOverrides): Promise<BigNumber>;
 
     numChallenges(
       arg0: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    "numChallenges(uint64)"(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     owner(overrides?: CallOverrides): Promise<string>;
 
-    "owner()"(overrides?: CallOverrides): Promise<string>;
-
     registerToken(
-      token: string,
-      holder: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    "registerToken(address,address)"(
       token: string,
       holder: string,
       overrides?: CallOverrides
@@ -1040,15 +678,7 @@ export class Erdstall extends Contract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    "registerTokenType(address,string)"(
-      holder: string,
-      tokenType: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
     renounceOwnership(overrides?: CallOverrides): Promise<void>;
-
-    "renounceOwnership()"(overrides?: CallOverrides): Promise<void>;
 
     respondChallenge(
       balance: {
@@ -1061,57 +691,18 @@ export class Erdstall extends Contract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    "respondChallenge((uint64,address,bool,tuple[]),bytes)"(
-      balance: {
-        epoch: BigNumberish;
-        account: string;
-        exit: boolean;
-        tokens: { token: string; value: BytesLike }[];
-      },
-      sig: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
     tee(overrides?: CallOverrides): Promise<string>;
-
-    "tee()"(overrides?: CallOverrides): Promise<string>;
 
     tokenHolders(arg0: string, overrides?: CallOverrides): Promise<string>;
 
-    "tokenHolders(address)"(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<string>;
-
     tokenTypes(arg0: string, overrides?: CallOverrides): Promise<string>;
-
-    "tokenTypes(address)"(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<string>;
 
     transferOwnership(
       newOwner: string,
       overrides?: CallOverrides
     ): Promise<void>;
 
-    "transferOwnership(address)"(
-      newOwner: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
     verifyBalance(
-      balance: {
-        epoch: BigNumberish;
-        account: string;
-        exit: boolean;
-        tokens: { token: string; value: BytesLike }[];
-      },
-      sig: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    "verifyBalance((uint64,address,bool,tuple[]),bytes)"(
       balance: {
         epoch: BigNumberish;
         account: string;
@@ -1133,29 +724,7 @@ export class Erdstall extends Contract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    "withdraw((uint64,address,bool,tuple[]),bytes)"(
-      balance: {
-        epoch: BigNumberish;
-        account: string;
-        exit: boolean;
-        tokens: { token: string; value: BytesLike }[];
-      },
-      sig: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
     withdrawFrozen(
-      balance: {
-        epoch: BigNumberish;
-        account: string;
-        exit: boolean;
-        tokens: { token: string; value: BytesLike }[];
-      },
-      sig: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    "withdrawFrozen((uint64,address,bool,tuple[]),bytes)"(
       balance: {
         epoch: BigNumberish;
         account: string;
@@ -1168,15 +737,7 @@ export class Erdstall extends Contract {
 
     withdrawFrozenDeposit(overrides?: CallOverrides): Promise<void>;
 
-    "withdrawFrozenDeposit()"(overrides?: CallOverrides): Promise<void>;
-
     withdrawn(
-      arg0: BigNumberish,
-      arg1: string,
-      overrides?: CallOverrides
-    ): Promise<boolean>;
-
-    "withdrawn(uint64,address)"(
       arg0: BigNumberish,
       arg1: string,
       overrides?: CallOverrides
@@ -1185,10 +746,10 @@ export class Erdstall extends Contract {
 
   filters: {
     ChallengeResponded(
-      epoch: BigNumberish | null,
-      account: string | null,
-      tokens: null,
-      sig: null
+      epoch?: BigNumberish | null,
+      account?: string | null,
+      tokens?: null,
+      sig?: null
     ): TypedEventFilter<
       [
         BigNumber,
@@ -1205,56 +766,56 @@ export class Erdstall extends Contract {
     >;
 
     Challenged(
-      epoch: BigNumberish | null,
-      account: string | null
+      epoch?: BigNumberish | null,
+      account?: string | null
     ): TypedEventFilter<
       [BigNumber, string],
       { epoch: BigNumber; account: string }
     >;
 
     Deposited(
-      epoch: BigNumberish | null,
-      account: string | null,
-      token: null,
-      value: null
+      epoch?: BigNumberish | null,
+      account?: string | null,
+      token?: null,
+      value?: null
     ): TypedEventFilter<
       [BigNumber, string, string, string],
       { epoch: BigNumber; account: string; token: string; value: string }
     >;
 
     Frozen(
-      epoch: BigNumberish | null
+      epoch?: BigNumberish | null
     ): TypedEventFilter<[BigNumber], { epoch: BigNumber }>;
 
     OwnershipTransferred(
-      previousOwner: string | null,
-      newOwner: string | null
+      previousOwner?: string | null,
+      newOwner?: string | null
     ): TypedEventFilter<
       [string, string],
       { previousOwner: string; newOwner: string }
     >;
 
     TokenRegistered(
-      token: string | null,
-      tokenType: null,
-      tokenHolder: null
+      token?: string | null,
+      tokenType?: null,
+      tokenHolder?: null
     ): TypedEventFilter<
       [string, string, string],
       { token: string; tokenType: string; tokenHolder: string }
     >;
 
     TokenTypeRegistered(
-      tokenType: null,
-      tokenHolder: null
+      tokenType?: null,
+      tokenHolder?: null
     ): TypedEventFilter<
       [string, string],
       { tokenType: string; tokenHolder: string }
     >;
 
     Withdrawn(
-      epoch: BigNumberish | null,
-      account: string | null,
-      tokens: null
+      epoch?: BigNumberish | null,
+      account?: string | null,
+      tokens?: null
     ): TypedEventFilter<
       [
         BigNumber,
@@ -1272,20 +833,7 @@ export class Erdstall extends Contract {
   estimateGas: {
     bigBang(overrides?: CallOverrides): Promise<BigNumber>;
 
-    "bigBang()"(overrides?: CallOverrides): Promise<BigNumber>;
-
     challenge(
-      balance: {
-        epoch: BigNumberish;
-        account: string;
-        exit: boolean;
-        tokens: { token: string; value: BytesLike }[];
-      },
-      sig: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    "challenge((uint64,address,bool,tuple[]),bytes)"(
       balance: {
         epoch: BigNumberish;
         account: string;
@@ -1300,17 +848,7 @@ export class Erdstall extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    "challengeDeposit()"(
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
     challenges(
-      arg0: BigNumberish,
-      arg1: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    "challenges(uint64,address)"(
       arg0: BigNumberish,
       arg1: string,
       overrides?: CallOverrides
@@ -1323,21 +861,7 @@ export class Erdstall extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    "deposit(address,address,bytes)"(
-      depositor: string,
-      token: string,
-      value: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
     deposits(
-      arg0: BigNumberish,
-      arg1: string,
-      arg2: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    "deposits(uint64,address,uint256)"(
       arg0: BigNumberish,
       arg1: string,
       arg2: BigNumberish,
@@ -1354,53 +878,22 @@ export class Erdstall extends Contract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    "encodeBalanceProof((uint64,address,bool,tuple[]))"(
-      balance: {
-        epoch: BigNumberish;
-        account: string;
-        exit: boolean;
-        tokens: { token: string; value: BytesLike }[];
-      },
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     ensureFrozen(
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    "ensureFrozen()"(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
     epochDuration(overrides?: CallOverrides): Promise<BigNumber>;
 
-    "epochDuration()"(overrides?: CallOverrides): Promise<BigNumber>;
-
     frozenEpoch(overrides?: CallOverrides): Promise<BigNumber>;
-
-    "frozenEpoch()"(overrides?: CallOverrides): Promise<BigNumber>;
 
     numChallenges(
       arg0: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    "numChallenges(uint64)"(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     owner(overrides?: CallOverrides): Promise<BigNumber>;
 
-    "owner()"(overrides?: CallOverrides): Promise<BigNumber>;
-
     registerToken(
-      token: string,
-      holder: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    "registerToken(address,address)"(
       token: string,
       holder: string,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -1412,32 +905,11 @@ export class Erdstall extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    "registerTokenType(address,string)"(
-      holder: string,
-      tokenType: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
     renounceOwnership(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    "renounceOwnership()"(
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
     respondChallenge(
-      balance: {
-        epoch: BigNumberish;
-        account: string;
-        exit: boolean;
-        tokens: { token: string; value: BytesLike }[];
-      },
-      sig: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    "respondChallenge((uint64,address,bool,tuple[]),bytes)"(
       balance: {
         epoch: BigNumberish;
         account: string;
@@ -1450,44 +922,16 @@ export class Erdstall extends Contract {
 
     tee(overrides?: CallOverrides): Promise<BigNumber>;
 
-    "tee()"(overrides?: CallOverrides): Promise<BigNumber>;
-
     tokenHolders(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
 
-    "tokenHolders(address)"(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     tokenTypes(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
-
-    "tokenTypes(address)"(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
 
     transferOwnership(
       newOwner: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    "transferOwnership(address)"(
-      newOwner: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
     verifyBalance(
-      balance: {
-        epoch: BigNumberish;
-        account: string;
-        exit: boolean;
-        tokens: { token: string; value: BytesLike }[];
-      },
-      sig: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    "verifyBalance((uint64,address,bool,tuple[]),bytes)"(
       balance: {
         epoch: BigNumberish;
         account: string;
@@ -1509,29 +953,7 @@ export class Erdstall extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    "withdraw((uint64,address,bool,tuple[]),bytes)"(
-      balance: {
-        epoch: BigNumberish;
-        account: string;
-        exit: boolean;
-        tokens: { token: string; value: BytesLike }[];
-      },
-      sig: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
     withdrawFrozen(
-      balance: {
-        epoch: BigNumberish;
-        account: string;
-        exit: boolean;
-        tokens: { token: string; value: BytesLike }[];
-      },
-      sig: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    "withdrawFrozen((uint64,address,bool,tuple[]),bytes)"(
       balance: {
         epoch: BigNumberish;
         account: string;
@@ -1546,17 +968,7 @@ export class Erdstall extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    "withdrawFrozenDeposit()"(
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
     withdrawn(
-      arg0: BigNumberish,
-      arg1: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    "withdrawn(uint64,address)"(
       arg0: BigNumberish,
       arg1: string,
       overrides?: CallOverrides
@@ -1566,20 +978,7 @@ export class Erdstall extends Contract {
   populateTransaction: {
     bigBang(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    "bigBang()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
     challenge(
-      balance: {
-        epoch: BigNumberish;
-        account: string;
-        exit: boolean;
-        tokens: { token: string; value: BytesLike }[];
-      },
-      sig: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    "challenge((uint64,address,bool,tuple[]),bytes)"(
       balance: {
         epoch: BigNumberish;
         account: string;
@@ -1594,17 +993,7 @@ export class Erdstall extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    "challengeDeposit()"(
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
     challenges(
-      arg0: BigNumberish,
-      arg1: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    "challenges(uint64,address)"(
       arg0: BigNumberish,
       arg1: string,
       overrides?: CallOverrides
@@ -1617,21 +1006,7 @@ export class Erdstall extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    "deposit(address,address,bytes)"(
-      depositor: string,
-      token: string,
-      value: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
     deposits(
-      arg0: BigNumberish,
-      arg1: string,
-      arg2: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    "deposits(uint64,address,uint256)"(
       arg0: BigNumberish,
       arg1: string,
       arg2: BigNumberish,
@@ -1648,53 +1023,22 @@ export class Erdstall extends Contract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    "encodeBalanceProof((uint64,address,bool,tuple[]))"(
-      balance: {
-        epoch: BigNumberish;
-        account: string;
-        exit: boolean;
-        tokens: { token: string; value: BytesLike }[];
-      },
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     ensureFrozen(
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    "ensureFrozen()"(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
     epochDuration(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    "epochDuration()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
     frozenEpoch(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    "frozenEpoch()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     numChallenges(
       arg0: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    "numChallenges(uint64)"(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     owner(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    "owner()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
     registerToken(
-      token: string,
-      holder: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    "registerToken(address,address)"(
       token: string,
       holder: string,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -1706,17 +1050,7 @@ export class Erdstall extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    "registerTokenType(address,string)"(
-      holder: string,
-      tokenType: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
     renounceOwnership(
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    "renounceOwnership()"(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -1731,27 +1065,9 @@ export class Erdstall extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    "respondChallenge((uint64,address,bool,tuple[]),bytes)"(
-      balance: {
-        epoch: BigNumberish;
-        account: string;
-        exit: boolean;
-        tokens: { token: string; value: BytesLike }[];
-      },
-      sig: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
     tee(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    "tee()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
     tokenHolders(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    "tokenHolders(address)"(
       arg0: string,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
@@ -1761,33 +1077,12 @@ export class Erdstall extends Contract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    "tokenTypes(address)"(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     transferOwnership(
       newOwner: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    "transferOwnership(address)"(
-      newOwner: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
     verifyBalance(
-      balance: {
-        epoch: BigNumberish;
-        account: string;
-        exit: boolean;
-        tokens: { token: string; value: BytesLike }[];
-      },
-      sig: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    "verifyBalance((uint64,address,bool,tuple[]),bytes)"(
       balance: {
         epoch: BigNumberish;
         account: string;
@@ -1809,29 +1104,7 @@ export class Erdstall extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    "withdraw((uint64,address,bool,tuple[]),bytes)"(
-      balance: {
-        epoch: BigNumberish;
-        account: string;
-        exit: boolean;
-        tokens: { token: string; value: BytesLike }[];
-      },
-      sig: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
     withdrawFrozen(
-      balance: {
-        epoch: BigNumberish;
-        account: string;
-        exit: boolean;
-        tokens: { token: string; value: BytesLike }[];
-      },
-      sig: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    "withdrawFrozen((uint64,address,bool,tuple[]),bytes)"(
       balance: {
         epoch: BigNumberish;
         account: string;
@@ -1846,17 +1119,7 @@ export class Erdstall extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    "withdrawFrozenDeposit()"(
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
     withdrawn(
-      arg0: BigNumberish,
-      arg1: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    "withdrawn(uint64,address)"(
       arg0: BigNumberish,
       arg1: string,
       overrides?: CallOverrides

@@ -9,7 +9,7 @@ import {
   BigNumber,
   BigNumberish,
   PopulatedTransaction,
-  Contract,
+  BaseContract,
   ContractTransaction,
   Overrides,
   PayableOverrides,
@@ -24,16 +24,11 @@ interface ETHHolderInterface extends ethers.utils.Interface {
   functions: {
     "deposit()": FunctionFragment;
     "erdstall()": FunctionFragment;
-    "mint(address,address,bytes)": FunctionFragment;
     "transfer(address,address,bytes)": FunctionFragment;
   };
 
   encodeFunctionData(functionFragment: "deposit", values?: undefined): string;
   encodeFunctionData(functionFragment: "erdstall", values?: undefined): string;
-  encodeFunctionData(
-    functionFragment: "mint",
-    values: [string, string, BytesLike]
-  ): string;
   encodeFunctionData(
     functionFragment: "transfer",
     values: [string, string, BytesLike]
@@ -41,13 +36,12 @@ interface ETHHolderInterface extends ethers.utils.Interface {
 
   decodeFunctionResult(functionFragment: "deposit", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "erdstall", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "mint", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "transfer", data: BytesLike): Result;
 
   events: {};
 }
 
-export class ETHHolder extends Contract {
+export class ETHHolder extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
@@ -95,36 +89,9 @@ export class ETHHolder extends Contract {
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    "deposit()"(
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
     erdstall(overrides?: CallOverrides): Promise<[string]>;
 
-    "erdstall()"(overrides?: CallOverrides): Promise<[string]>;
-
-    mint(
-      arg0: string,
-      arg1: string,
-      arg2: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<[void]>;
-
-    "mint(address,address,bytes)"(
-      arg0: string,
-      arg1: string,
-      arg2: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<[void]>;
-
     transfer(
-      token: string,
-      recipient: string,
-      value: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    "transfer(address,address,bytes)"(
       token: string,
       recipient: string,
       value: BytesLike,
@@ -136,36 +103,9 @@ export class ETHHolder extends Contract {
     overrides?: PayableOverrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  "deposit()"(
-    overrides?: PayableOverrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
   erdstall(overrides?: CallOverrides): Promise<string>;
 
-  "erdstall()"(overrides?: CallOverrides): Promise<string>;
-
-  mint(
-    arg0: string,
-    arg1: string,
-    arg2: BytesLike,
-    overrides?: CallOverrides
-  ): Promise<void>;
-
-  "mint(address,address,bytes)"(
-    arg0: string,
-    arg1: string,
-    arg2: BytesLike,
-    overrides?: CallOverrides
-  ): Promise<void>;
-
   transfer(
-    token: string,
-    recipient: string,
-    value: BytesLike,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  "transfer(address,address,bytes)"(
     token: string,
     recipient: string,
     value: BytesLike,
@@ -175,34 +115,9 @@ export class ETHHolder extends Contract {
   callStatic: {
     deposit(overrides?: CallOverrides): Promise<void>;
 
-    "deposit()"(overrides?: CallOverrides): Promise<void>;
-
     erdstall(overrides?: CallOverrides): Promise<string>;
 
-    "erdstall()"(overrides?: CallOverrides): Promise<string>;
-
-    mint(
-      arg0: string,
-      arg1: string,
-      arg2: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    "mint(address,address,bytes)"(
-      arg0: string,
-      arg1: string,
-      arg2: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
     transfer(
-      token: string,
-      recipient: string,
-      value: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    "transfer(address,address,bytes)"(
       token: string,
       recipient: string,
       value: BytesLike,
@@ -217,36 +132,9 @@ export class ETHHolder extends Contract {
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    "deposit()"(
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
     erdstall(overrides?: CallOverrides): Promise<BigNumber>;
 
-    "erdstall()"(overrides?: CallOverrides): Promise<BigNumber>;
-
-    mint(
-      arg0: string,
-      arg1: string,
-      arg2: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    "mint(address,address,bytes)"(
-      arg0: string,
-      arg1: string,
-      arg2: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     transfer(
-      token: string,
-      recipient: string,
-      value: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    "transfer(address,address,bytes)"(
       token: string,
       recipient: string,
       value: BytesLike,
@@ -259,36 +147,9 @@ export class ETHHolder extends Contract {
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    "deposit()"(
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
     erdstall(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    "erdstall()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    mint(
-      arg0: string,
-      arg1: string,
-      arg2: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    "mint(address,address,bytes)"(
-      arg0: string,
-      arg1: string,
-      arg2: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     transfer(
-      token: string,
-      recipient: string,
-      value: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    "transfer(address,address,bytes)"(
       token: string,
       recipient: string,
       value: BytesLike,
