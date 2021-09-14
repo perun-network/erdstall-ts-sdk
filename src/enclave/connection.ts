@@ -205,7 +205,6 @@ export class Enclave implements EnclaveWriter {
 			return this.callEvent("receipt", obj);
 		case BalanceProofs:
 		{
-			this.callEvent("phaseshift", {} as any);
 			const bps = obj as BalanceProofs;
 			for (const [_, bp] of bps.map) {
 				if (bp.balance.exit) {
@@ -214,6 +213,7 @@ export class Enclave implements EnclaveWriter {
 					this.callEvent("proof", bp);
 				}
 			}
+			this.callEvent("phaseshift", {} as any);
 			break;
 		}
 		default:
