@@ -2,21 +2,35 @@
 
 import { ErdstallClient, Watcher } from "#erdstall";
 import { Mint, Trade, Transfer } from "#erdstall/api/transactions";
-import { TxReceipt } from "#erdstall/api/responses";
+import { TxReceipt, BalanceProof, BalanceProofs } from "#erdstall/api/responses";
 import { Address, Account, ErdstallEvent } from "#erdstall/ledger";
 import { Assets } from "#erdstall/ledger/assets";
 import { EnclaveEvent } from "#erdstall/enclave";
 
 export class MockWatcher implements Watcher {
 	private txReceiptHandler!: (tx: TxReceipt) => void;
+	private exitProofHandler!: (p: BalanceProof) => void;
+	private balanceProofHandler!: (p: BalanceProof) => void;
+	private phaseShiftHandler!: () => void;
 
 	// eslint-disable-next-line @typescript-eslint/ban-types
 	on(ev: ErdstallEvent | EnclaveEvent, cb: Function): void {
-		if (ev != "receipt") {
-			throw new Error("MockWatcher only supports tx receipts");
+		switch(ev) {
+		case "receipt":
+			this.txReceiptHandler = cb as (_rec: TxReceipt) => void;
+			break;
+		case "proof":
+			this.balanceProofHandler = cb as (_bp: BalanceProof) => void;
+			break;
+		case "exitproof":
+			this.exitProofHandler = cb as (_ep: BalanceProof) => void;
+			break;
+		case "phaseshift":
+			this.phaseShiftHandler = cb as () => void;
+			break;
+		default:
+			throw new Error(`MockWatcher: unsupported event "${ev}"`);
 		}
-
-		this.txReceiptHandler = cb as (_rec: TxReceipt) => void;
 	}
 
 	// eslint-disable-next-line @typescript-eslint/ban-types
@@ -43,6 +57,16 @@ export class MockWatcher implements Watcher {
 
 	transfer(tx: Transfer): void {
 		this.txReceiptHandler(new TxReceipt(tx, new Account(0n, new Assets())));
+	}
+
+	phaseshift(bps: BalanceProofs) {
+		this.phaseShiftHandler();
+		for(let bp of bps.map.values()) {
+			if(bp.balance.exit)
+				this.exitProofHandler(bp);
+			else
+				this.balanceProofHandler(bp);
+		}
 	}
 }
 
