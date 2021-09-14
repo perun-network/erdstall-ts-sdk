@@ -60,13 +60,13 @@ export class MockWatcher implements Watcher {
 	}
 
 	phaseshift(bps: BalanceProofs) {
-		this.phaseShiftHandler();
 		for(let bp of bps.map.values()) {
 			if(bp.balance.exit)
 				this.exitProofHandler(bp);
 			else
 				this.balanceProofHandler(bp);
 		}
+		this.phaseShiftHandler();
 	}
 }
 
