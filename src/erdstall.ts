@@ -39,7 +39,11 @@ export interface Transactor {
 }
 
 export interface Minter {
-	mint: (token: Address, id: Uint256) => Promise<TxReceipt>;
+	mint(token: Address, id: Uint256): Promise<TxReceipt>;
+}
+
+export interface Burner {
+	burn(assets: Assets): Promise<TxReceipt>;
 }
 
 export interface Trader {
@@ -108,6 +112,7 @@ export interface ErdstallSession
 		Initializer,
 		Transactor,
 		Minter,
+		Burner,
 		Trader,
 		Depositor,
 		Withdrawer,
