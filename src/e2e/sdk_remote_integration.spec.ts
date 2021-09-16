@@ -133,4 +133,14 @@ describe("Erdstall-TS-SDK", () => {
 		const tradeOffer = await clients[2].createOffer(offer, expect);
 		return clients[3].acceptTrade(tradeOffer);
 	});
+
+	it("allows burning tokens", async() => {
+		const token = clients[2].address;
+		const rec = await clients[3].burn(new Assets({
+			token,
+			asset: new assets.Tokens([nft]),
+		}));
+		if(rec.account.values.hasAsset(token))
+			throw new Error("expected asset to be burnt");
+	});
 });
