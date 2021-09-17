@@ -1,5 +1,11 @@
 "use strict";
-import { readFileSync, writeFileSync, copyFileSync } from "fs";
+import {
+	readFileSync,
+	writeFileSync,
+	copyFileSync,
+	existsSync,
+	mkdirSync,
+} from "fs";
 import { walkSync, WalkOptions } from "walk";
 
 const args = process.argv;
@@ -12,20 +18,34 @@ if (args.length != 4) {
 	process.exit(1);
 }
 
-// copyDeclarationFiles copies the declaration files contained in
+type FileExtension = ".d.ts" | ".json" | ".ts";
+
+// copyFilesWithExtension copies the declaration files contained in
 // `src` into `dest` with their respective subfolder structure.
 // e.g.:
 //              src/x/y/z.d.ts -> dist/x/y/z.d.ts.
-function copyDeclarationFiles(src: string, dest: string) {
+function copyFilesWithExtension(
+	src: string,
+	dest: string,
+	ext: FileExtension[],
+) {
 	const options: WalkOptions = {
 		listeners: {
 			file: (base, stats, next) => {
-				if (!stats.name.includes(".d.ts")) return next();
+				const matchesExt = ext
+					.map((ext) => stats.name.includes(ext))
+					.reduce((a, b) => a || b);
+				if (!matchesExt) return next();
 
 				const relativeSrc = [base, stats.name].join("/");
 
 				const strippedBase = base.slice(src.length + 1); // +1 => remove leading "/".
-				const relativeDest = [dest, strippedBase, stats.name].join("/");
+				const relativeDestFolder = [dest, strippedBase].join("/");
+				const relativeDest = `${relativeDestFolder}/${stats.name}`;
+
+				if (!existsSync(relativeDestFolder))
+					mkdirSync(relativeDestFolder);
+
 				copyFileSync(relativeSrc, relativeDest);
 
 				next();
@@ -70,7 +90,7 @@ try {
 const src = "src";
 const dist = "dist";
 try {
-	copyDeclarationFiles(src, dist);
+	copyFilesWithExtension(src, dist, [".d.ts", ".json"]);
 } catch (err) {
 	console.error(`Unable to copy declaration files: ${err}`);
 	process.exit(1);
