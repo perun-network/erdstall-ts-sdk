@@ -3,7 +3,7 @@
 
 import { utils } from "ethers";
 import { jsonObject } from "typedjson";
-import { ABIValue, CustomJSON } from "./util";
+import { ABIValue, customJSON } from "./util";
 
 @jsonObject
 export class Signature implements ABIValue {
@@ -30,4 +30,4 @@ export class Signature implements ABIValue {
 	}
 }
 
-CustomJSON(Signature);
+customJSON(Signature);

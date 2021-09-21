@@ -4,7 +4,7 @@
 import { ErdstallObject, registerErdstallType } from "#erdstall/api";
 import { Signature } from "#erdstall/api";
 import { Address } from "#erdstall/ledger";
-import { BigInteger, CustomJSON, ABIEncoder, ABIPacked } from "#erdstall/api/util";
+import { BigInteger, customJSON, ABIEncoder, ABIPacked } from "#erdstall/api/util";
 import { jsonObject, jsonMember, TypedJSON, Serializable } from "typedjson";
 import { utils, Signer } from "ethers";
 
@@ -82,4 +82,4 @@ export abstract class Transaction extends ErdstallObject {
 }
 
 registerErdstallType(transactionTypeName, Transaction);
-CustomJSON(Transaction);
+customJSON(Transaction);

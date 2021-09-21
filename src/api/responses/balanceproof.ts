@@ -5,7 +5,7 @@ import { ethers, Signer, utils } from "ethers";
 import { TypedJSON, jsonObject, jsonMember } from "typedjson";
 import {
 	BigInteger,
-	CustomJSON,
+	customJSON,
 	ABIPacked,
 	ABIEncoder,
 } from "#erdstall/api/util";
@@ -140,4 +140,4 @@ export class BalanceProofs extends ErdstallObject {
 }
 
 registerErdstallType(balanceProofsTypeName, BalanceProofs);
-CustomJSON(BalanceProofs);
+customJSON(BalanceProofs);
