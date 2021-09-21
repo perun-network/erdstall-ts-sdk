@@ -9,7 +9,6 @@ import {
 	ErrIncompatibleAssets,
 	registerAssetType,
 } from "./asset";
-import { BigInteger, ABIEncoder } from "#erdstall/api/util";
 import { Amount } from "./amount";
 
 export const ErrIDAlreadyContained = new Error(
