@@ -3,7 +3,7 @@
 
 import { BigNumber, utils } from "ethers";
 
-import { Asset, TypeTags, ErrIncompatibleAssets, AssertUint256, registerAssetType } from "./asset";
+import { Asset, TypeTags, ErrIncompatibleAssets, assertUint256, registerAssetType } from "./asset";
 
 /** Amount represents a currency amount in its smallest unit. */
 export class Amount extends Asset {
@@ -11,7 +11,7 @@ export class Amount extends Asset {
 
 	constructor(v: bigint) {
 		super();
-		AssertUint256(v);
+		assertUint256(v);
 		this.value = v;
 	}
 
@@ -56,7 +56,7 @@ export class Amount extends Asset {
 		}
 
 		const res = this.value - (asset as Amount).value;
-		AssertUint256(res);
+		assertUint256(res);
 
 		this.value = res;
 	}
@@ -67,7 +67,7 @@ export class Amount extends Asset {
 		}
 
 		const res = this.value + (asset as Amount).value;
-		AssertUint256(res);
+		assertUint256(res);
 
 		this.value = res;
 	}

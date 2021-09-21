@@ -20,7 +20,10 @@ export const ErrValueOutOfBounds = new Error("value is not a uint256");
 
 const assetImpls = new Map<string, (value: any) => Asset>();
 
-export function registerAssetType(typeTag: string, valueParser: (value: any) => Asset) {
+export function registerAssetType(
+	typeTag: string,
+	valueParser: (value: any) => Asset,
+) {
 	assetImpls.set(typeTag, valueParser);
 }
 
@@ -34,12 +37,16 @@ export abstract class Asset {
 				return assetImpls.get(key)!(json[key]);
 			}
 			throw new Error(
-				`Asset.fromJSON: invalid key ${key}, obj=${JSON.stringify(json)}`,
+				`Asset.fromJSON: invalid key ${key}, obj=${JSON.stringify(
+					json,
+				)}`,
 			);
 		}
 
 		throw new Error(
-			`empty object is not a valid Asset encoding: ${JSON.stringify(json)}`,
+			`empty object is not a valid Asset encoding: ${JSON.stringify(
+				json,
+			)}`,
 		);
 	}
 
@@ -86,9 +93,9 @@ export abstract class Asset {
 	abstract zero(): boolean;
 }
 
-// AssertSubtractable asserts that the two given values are substractable. It
+// assertSubtractable asserts that the two given values are substractable. It
 // throws an error if this is not the case.
-export function AssertSubtractable(minuend: Asset, subtrahend: Asset): void {
+export function assertSubtractable(minuend: Asset, subtrahend: Asset): void {
 	const res = minuend.cmp(subtrahend);
 	if (res === "uncomparable") {
 		throw ErrUncomparableAssets;
@@ -98,7 +105,7 @@ export function AssertSubtractable(minuend: Asset, subtrahend: Asset): void {
 }
 
 // assertUint256 asserts, that the given value is in range [0, 2^256-1].
-export function AssertUint256(val: bigint): void {
+export function assertUint256(val: bigint): void {
 	if (!isUint256(val)) {
 		throw ErrValueOutOfBounds;
 	}

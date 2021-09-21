@@ -5,7 +5,7 @@ import { BigNumber, utils } from "ethers";
 import {
 	Asset,
 	TypeTags,
-	AssertSubtractable,
+	assertSubtractable,
 	ErrIncompatibleAssets,
 	registerAssetType,
 } from "./asset";
@@ -102,7 +102,7 @@ export class Tokens extends Asset {
 	}
 
 	sub(asset: Asset): void {
-		AssertSubtractable(this, asset);
+		assertSubtractable(this, asset);
 
 		let fillIdx = 0;
 		let aIdx = 0;
