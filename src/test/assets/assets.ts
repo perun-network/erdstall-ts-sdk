@@ -2,21 +2,21 @@
 "use strict";
 
 import PRNG from "#erdstall/test/random";
-import { NewRandomAddress } from "#erdstall/test";
+import { newRandomAddress } from "#erdstall/test";
 import { Asset, Assets } from "#erdstall/ledger/assets";
-import { NewRandomTokens } from "./tokens";
-import { NewRandomAmount } from "./amount";
+import { newRandomTokens } from "./tokens";
+import { newRandomAmount } from "./amount";
 
-// NewRandomAssets creates an Assets type. The size is limited by `size` and
+// newRandomAssets creates an Assets type. The size is limited by `size` and
 // all included `Tokens`, if any, have a maximum size of `size`.
-export function NewRandomAssets(rng: PRNG, size: number): Assets {
+export function newRandomAssets(rng: PRNG, size: number): Assets {
 	const assets = new Assets();
 	for (let i = 0; i < size; i++) {
 		const asset: Asset =
 			rng.uFloat32() < 0.5
-				? NewRandomAmount(rng)
-				: NewRandomTokens(rng, size);
-		assets.addAsset(NewRandomAddress(rng).toString(), asset);
+				? newRandomAmount(rng)
+				: newRandomTokens(rng, size);
+		assets.addAsset(newRandomAddress(rng).toString(), asset);
 	}
 	return assets;
 }

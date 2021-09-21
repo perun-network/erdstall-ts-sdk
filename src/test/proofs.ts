@@ -1,39 +1,39 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import PRNG, { NewRandomUint8Array  } from "./random";
+import PRNG, { newRandomUint8Array } from "./random";
 import { Signature } from "#erdstall/api";
 import { Balance, BalanceProof, BalanceProofs } from "#erdstall/api/responses";
-import { NewUint64 } from "./bigint";
-import { NewRandomAddress } from "./address";
-import { NewRandomAssets } from "./assets";
+import { newRandomUint64 } from "./bigint";
+import { newRandomAddress } from "./address";
+import { newRandomAssets } from "./assets";
 
-export function NewRandomBalance(rng: PRNG, size: number): Balance {
+export function newRandomBalance(rng: PRNG, size: number): Balance {
 	return new Balance(
-		NewUint64(rng),
-		NewRandomAddress(rng),
+		newRandomUint64(rng),
+		newRandomAddress(rng),
 		false,
-		NewRandomAssets(rng, size),
+		newRandomAssets(rng, size),
 	);
 }
 
-export function NewRandomBalanceProofs(
+export function newRandomBalanceProofs(
 	rng: PRNG,
 	assetSize: number,
 	size: number,
 ): BalanceProofs {
-	return NewRandomProofs(rng, NewRandomBalanceProof, assetSize, size);
+	return newRandomProofs(rng, newRandomBalanceProof, assetSize, size);
 }
 
-export function NewRandomExitProofs(
+export function newRandomExitProofs(
 	rng: PRNG,
 	assetSize: number,
 	size: number,
 ): BalanceProofs {
-	return NewRandomProofs(rng, NewRandomExitProof, assetSize, size);
+	return newRandomProofs(rng, newRandomExitProof, assetSize, size);
 }
 
-function NewRandomProofs(
+function newRandomProofs(
 	rng: PRNG,
 	proofConstructor: (rng: PRNG, size: number) => BalanceProof,
 	assetSize: number,
@@ -42,22 +42,22 @@ function NewRandomProofs(
 	const bps = new BalanceProofs();
 	for (let i = 0; i < size; i++) {
 		bps.map.set(
-			NewRandomAddress(rng).toString(),
+			newRandomAddress(rng).toString(),
 			proofConstructor(rng, assetSize),
 		);
 	}
 	return bps;
 }
 
-export function NewRandomBalanceProof(rng: PRNG, size: number): BalanceProof {
+export function newRandomBalanceProof(rng: PRNG, size: number): BalanceProof {
 	return new BalanceProof(
-		NewRandomBalance(rng, size),
-		new Signature(NewRandomUint8Array(rng, 32)),
+		newRandomBalance(rng, size),
+		new Signature(newRandomUint8Array(rng, 32)),
 	);
 }
 
-export function NewRandomExitProof(rng: PRNG, size: number): BalanceProof {
-	const bp = NewRandomBalanceProof(rng, size);
+export function newRandomExitProof(rng: PRNG, size: number): BalanceProof {
+	const bp = newRandomBalanceProof(rng, size);
 	bp.balance.exit = true;
 	return bp;
 }

@@ -2,13 +2,13 @@
 
 import assert from "assert";
 
-import { NewPrng } from "./random";
+import { newPrng } from "./random";
 import { newRandomBigInt } from "./bigint";
 
 const NUM_TRIES = 128;
 
 describe("newRandomBigInt", function () {
-	const rng = NewPrng();
+	const rng = newPrng();
 
 	function itShouldGenerateProperSize(bits: number) {
 		it(`shold generate numbers of correct size ${bits}`, function () {

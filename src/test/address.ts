@@ -2,8 +2,8 @@
 "use strict";
 
 import { Address } from "#erdstall/ledger";
-import PRNG, { NewRandomUint8Array } from "./random";
+import PRNG, { newRandomUint8Array } from "./random";
 
-export function NewRandomAddress(rng: PRNG): Address {
-	return new Address(NewRandomUint8Array(rng, 20));
+export function newRandomAddress(rng: PRNG): Address {
+	return new Address(newRandomUint8Array(rng, 20));
 }

@@ -8,7 +8,7 @@ import { EnclaveMockProvider } from "./provider.spec";
 import * as pkgtest from "#erdstall/test";
 
 describe("EnclaveConnection", () => {
-	const rng = pkgtest.NewPrng();
+	const rng = pkgtest.newPrng();
 	const assetsSize = 4;
 	const provider = new EnclaveMockProvider();
 
@@ -16,17 +16,17 @@ describe("EnclaveConnection", () => {
 		const conn = new Enclave(provider);
 		conn.connect();
 		expect(() =>
-			conn.subscribe(pkgtest.NewRandomAddress(rng)),
+			conn.subscribe(pkgtest.newRandomAddress(rng)),
 		).does.not.throw();
 		expect(() =>
-			conn.transfer(pkgtest.NewRandomTransfer(rng, assetsSize)),
+			conn.transfer(pkgtest.newRandomTransfer(rng, assetsSize)),
 		).does.not.throw();
-		expect(() => conn.mint(pkgtest.NewRandomMint(rng))).does.not.throw();
+		expect(() => conn.mint(pkgtest.newRandomMint(rng))).does.not.throw();
 		expect(() =>
-			conn.exit(pkgtest.NewRandomExitRequest(rng)),
+			conn.exit(pkgtest.newRandomExitRequest(rng)),
 		).does.not.throw();
 		expect(() =>
-			conn.getAccount(pkgtest.NewRandomAddress(rng)),
+			conn.getAccount(pkgtest.newRandomAddress(rng)),
 		).does.not.throw();
 	});
 
@@ -34,11 +34,11 @@ describe("EnclaveConnection", () => {
 		const conn = new Enclave(provider);
 		const sendBPtoClient = () =>
 			provider.sendToClient(
-				pkgtest.NewRandomBalanceProofs(rng, assetsSize, 1),
+				pkgtest.newRandomBalanceProofs(rng, assetsSize, 1),
 			);
 		const sendEPtoClient = () =>
 			provider.sendToClient(
-				pkgtest.NewRandomExitProofs(rng, assetsSize, 1),
+				pkgtest.newRandomExitProofs(rng, assetsSize, 1),
 			);
 
 		conn.connect();
@@ -112,7 +112,7 @@ describe("EnclaveConnection", () => {
 		{
 			// exiting over the connection returns an exitproof and is not triggered
 			// by normal balanceproofs.
-			const exitPromise = conn.exit(pkgtest.NewRandomExitRequest(rng));
+			const exitPromise = conn.exit(pkgtest.newRandomExitRequest(rng));
 
 			sendBPtoClient(); // balanceProof which should not trigger the exit request.
 			sendEPtoClient();

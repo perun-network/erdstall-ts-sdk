@@ -3,13 +3,13 @@
 
 import PRNG from "./random";
 import { Account } from "#erdstall/ledger";
-import { NewUint64 } from "./bigint";
-import { NewRandomAssets } from "./assets";
+import { newRandomUint64 } from "./bigint";
+import { newRandomAssets } from "./assets";
 
-export function NewRandomAccount(rng: PRNG, size: number): Account {
+export function newRandomAccount(rng: PRNG, size: number): Account {
 	return new Account(
-		NewUint64(rng),
-		NewRandomAssets(rng, size),
-		NewRandomAssets(rng, size),
+		newRandomUint64(rng),
+		newRandomAssets(rng, size),
+		newRandomAssets(rng, size),
 	);
 }

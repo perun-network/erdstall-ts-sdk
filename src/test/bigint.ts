@@ -21,11 +21,11 @@ export function newRandomBigInt(rng: PRNG, maxBits: number): bigint {
 }
 
 // NewUint256 generates a random bigint with 256 bit precision.
-export function NewUint256(rng: PRNG): bigint {
+export function newRandomUint256(rng: PRNG): bigint {
 	return newRandomBigInt(rng, 256);
 }
 
 // NewUint64 generates a random bigint with 64 bit precision.
-export function NewUint64(rng: PRNG): bigint {
+export function newRandomUint64(rng: PRNG): bigint {
 	return newRandomBigInt(rng, 64);
 }
