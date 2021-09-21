@@ -4,7 +4,14 @@
 import { ethers, Signer } from "ethers";
 
 import { TxReceipt, BalanceProof } from "#erdstall/api/responses";
-import { Transfer, Mint, ExitRequest, TradeOffer, Trade, Burn } from "#erdstall/api/transactions";
+import {
+	Transfer,
+	Mint,
+	ExitRequest,
+	TradeOffer,
+	Trade,
+	Burn,
+} from "#erdstall/api/transactions";
 import { EnclaveWriter } from "#erdstall/enclave";
 import { Address, Account, LedgerWriter } from "#erdstall/ledger";
 import { Assets } from "#erdstall/ledger/assets";
@@ -21,7 +28,11 @@ export class Session extends Client implements ErdstallSession {
 	private readonly enclaveWriter: EnclaveWriter;
 	private readonly signer: Signer;
 
-	constructor(address: Address, signer: Signer, enclave: EnclaveWriter | URL) {
+	constructor(
+		address: Address,
+		signer: Signer,
+		enclave: EnclaveWriter | URL,
+	) {
 		super(signer, enclave);
 		this.enclaveWriter = this.enclaveConn as EnclaveWriter;
 		this.signer = signer;
@@ -31,7 +42,9 @@ export class Session extends Client implements ErdstallSession {
 		this.nonce = 0n;
 		// When encountering any error, assume it might be a nonce mismatch. In
 		// this case, reset the nonce to an invalid value.
-		this.enclaveWriter.on("error", () => { this.nonce = 0n; });
+		this.enclaveWriter.on("error", () => {
+			this.nonce = 0n;
+		});
 	}
 
 	// Queries the next nonce and increases the counter. If the nonce has an
@@ -49,7 +62,7 @@ export class Session extends Client implements ErdstallSession {
 	// it has an invalid value, so this function can be called concurrently.
 	private async updateNonce(): Promise<void> {
 		const acc = await this.enclaveWriter.getAccount(this.address);
-		if(!this.nonce) {
+		if (!this.nonce) {
 			this.nonce = acc.account.nonce.valueOf() + 1n;
 		}
 	}
@@ -96,14 +109,10 @@ export class Session extends Client implements ErdstallSession {
 	}
 
 	async burn(assets: Assets): Promise<TxReceipt> {
-		if(!this.erdstallConn) {
+		if (!this.erdstallConn) {
 			return Promise.reject(ErrUnitialisedClient);
 		}
-		const tx = new Burn(
-			this.address,
-			await this.nextNonce(),
-			assets,
-		);
+		const tx = new Burn(this.address, await this.nextNonce(), assets);
 		await tx.sign(this.erdstallConn.erdstall(), this.signer);
 		return this.enclaveWriter.burn(tx);
 	}
@@ -140,7 +149,7 @@ export class Session extends Client implements ErdstallSession {
 
 	async leave(): Promise<Stages<Promise<ethers.ContractTransaction>>> {
 		const exitProof = await this.exit();
-		await new Promise(accept => this.once("phaseshift", accept));
+		await new Promise((accept) => this.once("phaseshift", accept));
 		return this.withdraw(exitProof);
 	}
 

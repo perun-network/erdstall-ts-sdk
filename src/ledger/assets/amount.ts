@@ -3,7 +3,13 @@
 
 import { BigNumber, utils } from "ethers";
 
-import { Asset, TypeTags, ErrIncompatibleAssets, assertUint256, registerAssetType } from "./asset";
+import {
+	Asset,
+	TypeTags,
+	ErrIncompatibleAssets,
+	assertUint256,
+	registerAssetType,
+} from "./asset";
 
 /** Amount represents a currency amount in its smallest unit. */
 export class Amount extends Asset {

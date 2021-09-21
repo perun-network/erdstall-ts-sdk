@@ -76,7 +76,7 @@ export interface SelfSubscriber {
 }
 
 export interface Subscriber {
-	subscribe(who?: Address):Promise<void>;
+	subscribe(who?: Address): Promise<void>;
 }
 
 export interface OwnAccountGetter {

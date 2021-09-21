@@ -12,7 +12,7 @@ import { Signer, utils } from "ethers";
 @jsonObject
 export class TradeFees {
 	@jsonMember(Address) market: Address;
-	@jsonMember(()=>assets.Assets) fee: assets.Assets;
+	@jsonMember(() => assets.Assets) fee: assets.Assets;
 
 	constructor(market: Address, fee: assets.Assets) {
 		this.market = market;
@@ -20,7 +20,10 @@ export class TradeFees {
 	}
 
 	packTagged(contract: Address): ABIPacked {
-		return new ABIEncoder(this.market, this.fee).pack("ErdstallTradeFees", contract);
+		return new ABIEncoder(this.market, this.fee).pack(
+			"ErdstallTradeFees",
+			contract,
+		);
 	}
 }
 
@@ -29,17 +32,13 @@ const tradeTypeName = "Trade";
 @jsonObject
 export class TradeOffer {
 	@jsonMember(Address) owner: Address;
-	@jsonMember(()=>assets.Assets) offer: assets.Assets;
-	@jsonMember(()=>assets.Assets) request: assets.Assets;
+	@jsonMember(() => assets.Assets) offer: assets.Assets;
+	@jsonMember(() => assets.Assets) request: assets.Assets;
 	@jsonMember(BigInteger) expiry: BigInteger;
 	@jsonMember(TradeFees) fees?: TradeFees;
 	@jsonMember(Signature) sig?: Signature;
 
-	constructor(
-		owner: Address,
-		offer: assets.Assets,
-		request: assets.Assets)
-	{
+	constructor(owner: Address, offer: assets.Assets, request: assets.Assets) {
 		this.owner = owner;
 		this.offer = offer;
 		this.request = request;
@@ -47,7 +46,9 @@ export class TradeOffer {
 	}
 
 	async sign(contract: Address, signer: Signer): Promise<this> {
-		const sig = await signer.signMessage(this.packTagged(contract).keccak256());
+		const sig = await signer.signMessage(
+			this.packTagged(contract).keccak256(),
+		);
 		this.sig = new Signature(utils.arrayify(sig));
 		return this;
 	}
@@ -65,13 +66,16 @@ export class TradeOffer {
 	}
 
 	packTagged(contract: Address): ABIPacked {
-		return new ABIEncoder().encodeTagged(contract,
-			this.owner,
-			this.offer,
-			["uint64", this.expiry],
-			this.request,
-			this.fees ? this.fees! : new Uint8Array(),
-		).pack("ErdstallTradeOffer", contract);
+		return new ABIEncoder()
+			.encodeTagged(
+				contract,
+				this.owner,
+				this.offer,
+				["uint64", this.expiry],
+				this.request,
+				this.fees ? this.fees! : new Uint8Array(),
+			)
+			.pack("ErdstallTradeOffer", contract);
 	}
 }
 
@@ -79,15 +83,10 @@ export class TradeOffer {
 export class Trade extends Transaction {
 	@jsonMember(TradeOffer) offer: TradeOffer;
 
-	constructor(
-		sender: Address,
-		nonce: bigint,
-		offer: TradeOffer,
-	) {
+	constructor(sender: Address, nonce: bigint, offer: TradeOffer) {
 		super(sender, nonce);
 		// Otherwise, throws "TypeError: Cannot read property 'sig' of undefined" in TypedJSON.parse.
-		if(offer && !offer.sig)
-			throw new Error("trade offer must be signed");
+		if (offer && !offer.sig) throw new Error("trade offer must be signed");
 		this.offer = offer;
 	}
 

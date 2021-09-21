@@ -2,7 +2,11 @@
 
 import { ErdstallClient, Watcher } from "#erdstall";
 import { Mint, Trade, Transfer } from "#erdstall/api/transactions";
-import { TxReceipt, BalanceProof, BalanceProofs } from "#erdstall/api/responses";
+import {
+	TxReceipt,
+	BalanceProof,
+	BalanceProofs,
+} from "#erdstall/api/responses";
 import { Address, Account, ErdstallEvent } from "#erdstall/ledger";
 import { Assets } from "#erdstall/ledger/assets";
 import { EnclaveEvent } from "#erdstall/enclave";
@@ -15,21 +19,21 @@ export class MockWatcher implements Watcher {
 
 	// eslint-disable-next-line @typescript-eslint/ban-types
 	on(ev: ErdstallEvent | EnclaveEvent, cb: Function): void {
-		switch(ev) {
-		case "receipt":
-			this.txReceiptHandler = cb as (_rec: TxReceipt) => void;
-			break;
-		case "proof":
-			this.balanceProofHandler = cb as (_bp: BalanceProof) => void;
-			break;
-		case "exitproof":
-			this.exitProofHandler = cb as (_ep: BalanceProof) => void;
-			break;
-		case "phaseshift":
-			this.phaseShiftHandler = cb as () => void;
-			break;
-		default:
-			throw new Error(`MockWatcher: unsupported event "${ev}"`);
+		switch (ev) {
+			case "receipt":
+				this.txReceiptHandler = cb as (_rec: TxReceipt) => void;
+				break;
+			case "proof":
+				this.balanceProofHandler = cb as (_bp: BalanceProof) => void;
+				break;
+			case "exitproof":
+				this.exitProofHandler = cb as (_ep: BalanceProof) => void;
+				break;
+			case "phaseshift":
+				this.phaseShiftHandler = cb as () => void;
+				break;
+			default:
+				throw new Error(`MockWatcher: unsupported event "${ev}"`);
 		}
 	}
 
@@ -60,11 +64,9 @@ export class MockWatcher implements Watcher {
 	}
 
 	phaseshift(bps: BalanceProofs) {
-		for(let bp of bps.map.values()) {
-			if(bp.balance.exit)
-				this.exitProofHandler(bp);
-			else
-				this.balanceProofHandler(bp);
+		for (let bp of bps.map.values()) {
+			if (bp.balance.exit) this.exitProofHandler(bp);
+			else this.balanceProofHandler(bp);
 		}
 		this.phaseShiftHandler();
 	}
@@ -80,7 +82,7 @@ export class MockClient extends MockWatcher implements ErdstallClient {
 
 	async initialize(): Promise<void> {}
 	async subscribe(_who?: Address): Promise<void> {}
-	async getAccount(who: Address) : Promise<Account> {
+	async getAccount(who: Address): Promise<Account> {
 		throw new Error("cannot query accounts on mock clients");
 	}
 

@@ -16,7 +16,7 @@ import {
 	Transfer,
 	ExitRequest,
 	Trade,
-	Burn
+	Burn,
 } from "#erdstall/api/transactions";
 import {
 	ClientConfig,
@@ -210,25 +210,24 @@ export class Enclave implements EnclaveWriter {
 		}
 
 		switch (obj.objectType()) {
-		case ClientConfig:
-			return this.callEvent("config", obj);
-		case TxReceipt:
-			return this.callEvent("receipt", obj);
-		case BalanceProofs:
-		{
-			const bps = obj as BalanceProofs;
-			for (const [_, bp] of bps.map) {
-				if (bp.balance.exit) {
-					this.callEvent("exitproof", bp);
-				} else {
-					this.callEvent("proof", bp);
+			case ClientConfig:
+				return this.callEvent("config", obj);
+			case TxReceipt:
+				return this.callEvent("receipt", obj);
+			case BalanceProofs: {
+				const bps = obj as BalanceProofs;
+				for (const [_, bp] of bps.map) {
+					if (bp.balance.exit) {
+						this.callEvent("exitproof", bp);
+					} else {
+						this.callEvent("proof", bp);
+					}
 				}
+				this.callEvent("phaseshift", {} as any);
+				break;
 			}
-			this.callEvent("phaseshift", {} as any);
-			break;
-		}
-		default:
-			console.log("Object type: ", obj.objectType());
+			default:
+				console.log("Object type: ", obj.objectType());
 		}
 	}
 
