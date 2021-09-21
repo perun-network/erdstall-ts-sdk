@@ -16,6 +16,7 @@ import {
 } from "#erdstall/ledger";
 import { EventCache, OneShotEventCache } from "#erdstall/utils";
 import { ethers, Signer } from "ethers";
+import { NFTMetadata } from "#erdstall/ledger/backend";
 
 export class Client implements ErdstallClient {
 	protected enclaveConn: EnclaveReader;

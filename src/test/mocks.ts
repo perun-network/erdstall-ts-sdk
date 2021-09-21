@@ -8,6 +8,7 @@ import {
 	BalanceProofs,
 } from "#erdstall/api/responses";
 import { Address, Account, ErdstallEvent } from "#erdstall/ledger";
+import { NFTMetadata } from "#erdstall/ledger/backend";
 import { Assets } from "#erdstall/ledger/assets";
 import { EnclaveEvent } from "#erdstall/enclave";
 
@@ -90,6 +91,9 @@ export class MockClient extends MockWatcher implements ErdstallClient {
 	async subscribe(_who?: Address): Promise<void> {}
 	async getAccount(_who: Address): Promise<Account> {
 		throw new Error("cannot query accounts on mock clients");
+	}
+	async getNftMetadata(_token: Address, _id: bigint): Promise<NFTMetadata> {
+		throw new Error("cannot query nft data on mock clients");
 	}
 
 	erdstall(): Address {
