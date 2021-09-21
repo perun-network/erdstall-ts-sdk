@@ -6,7 +6,6 @@ import { describe, it } from "mocha";
 import { TypedJSON } from "typedjson";
 import { Call, Result, ErdstallObject } from "#erdstall/api";
 import { expect } from "chai";
-import { BalanceProofs } from "#erdstall/api/responses";
 import { Transaction } from "./transaction";
 import { Trade } from "./trade";
 import { Address } from "#erdstall/ledger";
