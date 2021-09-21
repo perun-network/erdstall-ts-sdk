@@ -6,6 +6,7 @@ import { NewRandomAddress, NewRandomAssets, NewUint64 } from "#erdstall/test";
 import {
 	Mint,
 	Transfer,
+	Burn,
 	ExitRequest,
 	Transaction,
 	TradeOffer,
@@ -55,11 +56,20 @@ export function newRandomTrade(rng: PRNG, size: number = 1, offer?: TradeOffer):
 	);
 }
 
+export function NewRandomBurn(rng: PRNG, size: number = 1): Burn {
+	return new Burn(
+		NewRandomAddress(rng),
+		NewUint64(rng),
+		NewRandomAssets(rng, size),
+	);
+}
+
 export function NewRandomTransaction(rng: PRNG, size: number = 1): Transaction {
 	const calls = [
 		(): Transaction => NewRandomMint(rng),
 		(): Transaction => NewRandomTransfer(rng, size),
 		(): Transaction => NewRandomExitRequest(rng),
+		(): Transaction => NewRandomBurn(rng),
 	];
-	return calls[(calls.length - 1) * rng.uFloat32()]();
+	return calls[Math.round((calls.length - 1) * rng.uFloat32())]();
 }

@@ -11,7 +11,13 @@ import {
 	GetAccount,
 	Onboarding,
 } from "#erdstall/api/calls";
-import { Mint, Transfer, ExitRequest, Trade } from "#erdstall/api/transactions";
+import {
+	Mint,
+	Transfer,
+	ExitRequest,
+	Trade,
+	Burn
+} from "#erdstall/api/transactions";
 import {
 	ClientConfig,
 	TxReceipt,
@@ -39,6 +45,7 @@ export interface EnclaveWriter extends EnclaveReader, Connector {
 	onboard(who: Address): Promise<void>;
 	transfer(tx: Transfer): Promise<TxReceipt>;
 	mint(tx: Mint): Promise<TxReceipt>;
+	burn(tx: Burn): Promise<TxReceipt>;
 	trade(tx: Trade): Promise<TxReceipt>;
 	exit(exitRequest: ExitRequest): Promise<BalanceProof>;
 
@@ -103,6 +110,10 @@ export class Enclave implements EnclaveWriter {
 	}
 
 	public async mint(tx: Mint): Promise<TxReceipt> {
+		return this.sendCall(tx) as Promise<TxReceipt>;
+	}
+
+	public async burn(tx: Burn): Promise<TxReceipt> {
 		return this.sendCall(tx) as Promise<TxReceipt>;
 	}
 

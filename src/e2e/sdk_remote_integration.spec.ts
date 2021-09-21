@@ -80,7 +80,18 @@ describe("Erdstall-TS-SDK", () => {
 		});
 
 		const stages = await Promise.all(clients.map(c => c.deposit(depositBal)));
-		return Promise.all(stages.map(stage => stage.wait()));
+		await Promise.all(stages.map(stage => stage.wait()));
+
+		// Prevent race: wait for phase shift to finalize deposits.
+		return new Promise((accept, reject) => {
+			const timeout = setTimeout(
+				() => reject(new Error("awaiting deposit finalization")),
+				2000);
+			clients[0].once("phaseshift", () => {
+				clearTimeout(timeout);
+				accept();
+			});
+		});
 	});
 
 	it("off-chain tx + await receipt", async () => {
@@ -132,5 +143,15 @@ describe("Erdstall-TS-SDK", () => {
 
 		const tradeOffer = await clients[2].createOffer(offer, expect);
 		return clients[3].acceptTrade(tradeOffer);
+	});
+
+	it("allows burning tokens", async() => {
+		const token = clients[2].address;
+		const rec = await clients[3].burn(new Assets({
+			token,
+			asset: new assets.Tokens([nft]),
+		}));
+		if(rec.account.values.hasAsset(token))
+			throw new Error("expected asset to be burnt");
 	});
 });

@@ -4,7 +4,7 @@
 import { ethers, Signer } from "ethers";
 
 import { TxReceipt, BalanceProof } from "#erdstall/api/responses";
-import { Transfer, Mint, ExitRequest, TradeOffer, Trade } from "#erdstall/api/transactions";
+import { Transfer, Mint, ExitRequest, TradeOffer, Trade, Burn } from "#erdstall/api/transactions";
 import { EnclaveWriter } from "#erdstall/enclave";
 import { Address, Account, LedgerWriter } from "#erdstall/ledger";
 import { Assets } from "#erdstall/ledger/assets";
@@ -93,6 +93,19 @@ export class Session extends Client implements ErdstallSession {
 		);
 		await minttx.sign(this.erdstallConn.erdstall(), this.signer);
 		return this.enclaveWriter.mint(minttx);
+	}
+
+	async burn(assets: Assets): Promise<TxReceipt> {
+		if(!this.erdstallConn) {
+			return Promise.reject(ErrUnitialisedClient);
+		}
+		const tx = new Burn(
+			this.address,
+			await this.nextNonce(),
+			assets,
+		);
+		await tx.sign(this.erdstallConn.erdstall(), this.signer);
+		return this.enclaveWriter.burn(tx);
 	}
 
 	async deposit(
