@@ -58,6 +58,7 @@
 		"jsdom-global": "^3.0.2",
 		"mocha": "^8.3.2",
 		"mocha-suppress-logs": "^0.3.1",
+		"nock": "^13.1.3",
 		"number-generator": "^4.0.5",
 		"prettier": "^2.2.1",
 		"ts-node": "^9.1.1",
@@ -78,6 +79,7 @@
 		"postpublish": "ts-node ./scripts/publish_posthook.ts ./package.json ./dist/package.json"
 	},
 	"dependencies": {
+		"axios": "^0.21.4",
 		"ethers": "^5.4.1",
 		"ethers-utils": "^2.1.11",
 		"isomorphic-ws": "^4.0.1",
