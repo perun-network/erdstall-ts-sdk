@@ -4,14 +4,22 @@
 import { ErdstallObject, registerErdstallType } from "#erdstall/api";
 import { Signature } from "#erdstall/api";
 import { Address } from "#erdstall/ledger";
-import { BigInteger, CustomJSON, ABIEncoder, ABIPacked } from "#erdstall/api/util";
+import {
+	BigInteger,
+	customJSON,
+	ABIEncoder,
+	ABIPacked,
+} from "#erdstall/api/util";
 import { jsonObject, jsonMember, TypedJSON, Serializable } from "typedjson";
 import { utils, Signer } from "ethers";
 
 const transactionImpls = new Map<string, Serializable<Transaction>>();
 const transactionTypeName = "Transaction";
 
-export function registerTransactionType(typeName: string, typeClass: Serializable<Transaction>) {
+export function registerTransactionType(
+	typeName: string,
+	typeClass: Serializable<Transaction>,
+) {
 	transactionImpls.set(typeName, typeClass);
 }
 
@@ -29,7 +37,9 @@ export abstract class Transaction extends ErdstallObject {
 	}
 
 	async sign(contract: Address, signer: Signer): Promise<this> {
-		const sig = await signer.signMessage(this.packTagged(contract).keccak256());
+		const sig = await signer.signMessage(
+			this.packTagged(contract).keccak256(),
+		);
 		this.sig = new Signature(utils.arrayify(sig));
 		return this;
 	}
@@ -55,7 +65,7 @@ export abstract class Transaction extends ErdstallObject {
 
 		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 		return TypedJSON.parse(data, transactionImpls.get(js.type)!)!;
-	};
+	}
 
 	packTagged(contract: Address): ABIPacked {
 		const enc = new ABIEncoder(this.sender, ["uint64", this.nonce]);
@@ -82,4 +92,4 @@ export abstract class Transaction extends ErdstallObject {
 }
 
 registerErdstallType(transactionTypeName, Transaction);
-CustomJSON(Transaction);
+customJSON(Transaction);

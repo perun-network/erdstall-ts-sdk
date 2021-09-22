@@ -4,7 +4,7 @@
 import { utils } from "ethers";
 import { jsonObject } from "typedjson";
 import { equalArray } from "#erdstall/utils/arrays";
-import { ABIValue, CustomJSON } from "#erdstall/api/util";
+import { ABIValue, customJSON } from "#erdstall/api/util";
 
 @jsonObject
 export class Address implements ABIValue {
@@ -52,4 +52,4 @@ export class Address implements ABIValue {
 	}
 }
 
-CustomJSON(Address);
+customJSON(Address);

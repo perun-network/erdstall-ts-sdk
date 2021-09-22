@@ -41,8 +41,7 @@ export class EnclaveWSProvider implements EnclaveProvider {
 		this.ws.onerror = this.onerror;
 		this.ws.onopen = (e: Event): any => {
 			this.initialized = true;
-			if(this.onopen)
-				this.onopen(e);
+			if (this.onopen) this.onopen(e);
 		};
 		this.ws.onclose = this.onclose;
 	}

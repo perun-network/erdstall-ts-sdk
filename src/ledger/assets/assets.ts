@@ -3,7 +3,7 @@
 
 import { jsonObject } from "typedjson";
 import { Asset } from "./asset";
-import { ABIValue, CustomJSON } from "#erdstall/api/util";
+import { ABIValue, customJSON } from "#erdstall/api/util";
 import { ErdstallToken } from "#erdstall/api/responses";
 import { Address } from "#erdstall/ledger";
 
@@ -149,4 +149,4 @@ function isProperSubset(
 	return true;
 }
 
-CustomJSON(Assets);
+customJSON(Assets);

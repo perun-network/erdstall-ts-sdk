@@ -6,7 +6,7 @@ import { jsonObject } from "typedjson";
 import { BigNumber } from "ethers";
 
 import { ABIEncodable } from "./abiencoder";
-import { CustomJSON } from "./customjson";
+import { customJSON } from "./customjson";
 
 // `Prettier` has no option to ignore mathexpressions and contrary to whatever
 // `Prettier` is deducing, the statement:
@@ -52,7 +52,7 @@ export class BigInteger implements ABIEncodable {
 	}
 }
 
-CustomJSON(BigInteger);
+customJSON(BigInteger);
 
 export type Uint256 = bigint;
 

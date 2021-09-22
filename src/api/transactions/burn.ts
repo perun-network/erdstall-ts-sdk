@@ -13,11 +13,7 @@ const burnTypeName = "Burn";
 export class Burn extends Transaction {
 	@jsonMember(() => Assets) values: Assets;
 
-	constructor(
-		sender: Address,
-		nonce: bigint,
-		values: Assets,
-	) {
+	constructor(sender: Address, nonce: bigint, values: Assets) {
 		super(sender, nonce);
 		this.values = values;
 	}

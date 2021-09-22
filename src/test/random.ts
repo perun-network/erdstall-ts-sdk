@@ -10,7 +10,7 @@ export default interface PRNG {
 }
 
 // NewPrng returns a PRNG seeded with the current `date-time`.
-export function NewPrng(): PRNG {
+export function newPrng(): PRNG {
 	let seed = Number(process.env.ESSEED);
 	if (!seed) {
 		seed = new Date().getTime();
@@ -19,7 +19,7 @@ export function NewPrng(): PRNG {
 	return aleaRNGFactory(seed);
 }
 
-export function NewRandomUint8Array(rng: PRNG, size: number): Uint8Array {
+export function newRandomUint8Array(rng: PRNG, size: number): Uint8Array {
 	const arr = new Uint8Array(size).fill(0).map((_, __, ___) => {
 		return rng.uInt32() % 0xff;
 	});
@@ -28,9 +28,9 @@ export function NewRandomUint8Array(rng: PRNG, size: number): Uint8Array {
 
 // returns a hex string of given length
 export function newRandomString(rng: PRNG, length: number): string {
-	const buf = Buffer.allocUnsafe(length/2);
-	for (let i = 0; i < length/2; i++) {
+	const buf = Buffer.allocUnsafe(length / 2);
+	for (let i = 0; i < length / 2; i++) {
 		buf[i] = rng.uInt32() % 0xff;
 	}
-	return buf.toString('hex').slice(0, length);
+	return buf.toString("hex").slice(0, length);
 }

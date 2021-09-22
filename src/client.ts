@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-
 import { ErdstallClient } from "erdstall";
 import { Erdstall__factory } from "#erdstall/ledger/backend/contracts";
 import { ClientConfig } from "#erdstall/api/responses";
@@ -13,7 +12,7 @@ import {
 	Address,
 	Account,
 	ErdstallEvent,
-	isLedgerEvent
+	isLedgerEvent,
 } from "#erdstall/ledger";
 import { EventCache, OneShotEventCache } from "#erdstall/utils";
 import { ethers, Signer } from "ethers";
@@ -25,14 +24,17 @@ export class Client implements ErdstallClient {
 	private erdstallEventHandlerCache: EventCache<ErdstallEvent>;
 	private erdstallOneShotHandlerCache: OneShotEventCache<ErdstallEvent>;
 
-	constructor(provider: ethers.providers.Provider | Signer, encConn: EnclaveReader | URL) {
+	constructor(
+		provider: ethers.providers.Provider | Signer,
+		encConn: EnclaveReader | URL,
+	) {
 		this.provider = provider;
-		if(encConn! instanceof URL)
+		if (encConn! instanceof URL)
 			this.enclaveConn = Enclave.dial(encConn as URL);
-		else
-			this.enclaveConn = encConn as EnclaveReader;
+		else this.enclaveConn = encConn as EnclaveReader;
 		this.erdstallEventHandlerCache = new EventCache<ErdstallEvent>();
-		this.erdstallOneShotHandlerCache = new OneShotEventCache<ErdstallEvent>();
+		this.erdstallOneShotHandlerCache =
+			new OneShotEventCache<ErdstallEvent>();
 	}
 
 	erdstall(): Address {

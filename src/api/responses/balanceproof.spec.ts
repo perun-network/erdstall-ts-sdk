@@ -17,7 +17,7 @@ import { equalArray } from "#erdstall/utils/arrays";
 chai.use(solidity);
 
 describe("BalanceProofs", function () {
-	const rng = test.NewPrng();
+	const rng = test.newPrng();
 	let env: Enviroment;
 	let erd: Erdstall;
 	let erdAddr: Address;
@@ -29,7 +29,7 @@ describe("BalanceProofs", function () {
 	});
 
 	it("should be correctly encoded", async function () {
-		const bp = test.NewRandomBalance(rng, 3);
+		const bp = test.newRandomBalance(rng, 3);
 		const bpEnc = bp.packTagged(erdAddr).bytes;
 		const bpContractEnc = utils.arrayify(
 			await erd.encodeBalanceProof(bp.asABI()),
@@ -38,7 +38,7 @@ describe("BalanceProofs", function () {
 	});
 
 	it("should be correctly signed", async function () {
-		const bal = test.NewRandomBalance(rng, 3);
+		const bal = test.newRandomBalance(rng, 3);
 		const bp = await bal.sign(erdAddr, env.tee);
 		return expect(erd.verifyBalance(bal.asABI(), bp.sig.value)).to.not.be
 			.reverted;

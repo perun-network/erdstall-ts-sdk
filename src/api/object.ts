@@ -2,12 +2,15 @@
 "use strict";
 
 import { jsonObject, TypedJSON, Serializable } from "typedjson";
-import { CustomJSON } from "./util";
+import { customJSON } from "./util";
 
 const objectImpls = new Map<string, Serializable<ErdstallObject>>();
 
-export function registerErdstallType(typeName: string, typeClass: Serializable<ErdstallObject>) {
-	objectImpls .set(typeName, typeClass);
+export function registerErdstallType(
+	typeName: string,
+	typeClass: Serializable<ErdstallObject>,
+) {
+	objectImpls.set(typeName, typeClass);
 }
 
 /** Base type for all Erdstall messages. */
@@ -35,4 +38,4 @@ export abstract class ErdstallObject {
 	}
 }
 
-CustomJSON(ErdstallObject);
+customJSON(ErdstallObject);

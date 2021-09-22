@@ -4,7 +4,7 @@
 import { ethers, Signer } from "ethers";
 import { Depositor, Withdrawer } from "#erdstall";
 import { Assets } from "#erdstall/ledger/assets";
-import { Address, ErdstallEvent } from "#erdstall/ledger";
+import { Address } from "#erdstall/ledger";
 import { Stages } from "#erdstall/utils";
 import { BalanceProof } from "#erdstall/api/responses";
 import { Erdstall } from "./contracts/Erdstall";
@@ -49,7 +49,7 @@ export class LedgerWriteConn extends LedgerReadConn implements LedgerWriter {
 	): Promise<Stages<Promise<ethers.ContractTransaction>>> {
 		const calls: DepositCalls = [];
 
-		if(!assets.values.size)
+		if (!assets.values.size)
 			throw new Error("attempting to deposit nothing");
 
 		for (const [tokenAddr, asset] of assets.values) {
@@ -83,8 +83,7 @@ export class LedgerWriteConn extends LedgerReadConn implements LedgerWriter {
 			[(ctx: ethers.ContractTransaction) => void, (obj: any) => void]
 		>();
 
-		if(calls.length == 0)
-			throw new Error("0 calls");
+		if (calls.length == 0) throw new Error("0 calls");
 
 		for (const [name, ___] of calls) {
 			const promise = new Promise<ethers.ContractTransaction>(
@@ -112,7 +111,11 @@ export class LedgerWriteConn extends LedgerReadConn implements LedgerWriter {
 					resolve(ctx);
 				} catch (e) {
 					for (const [_, reject] of promises.slice(Number(i)))
-						reject(("message" in e) ? new Error(e.message) : new Error(e));
+						reject(
+							"message" in e
+								? new Error(e.message)
+								: new Error(e),
+						);
 				}
 			}
 		})();
