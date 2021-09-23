@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { ErdstallClient, Watcher } from "#erdstall";
-import { Mint, Trade, Transfer } from "#erdstall/api/transactions";
+import { Mint, Trade, Transfer, Burn } from "#erdstall/api/transactions";
 import {
 	TxReceipt,
 	BalanceProof,
@@ -53,6 +53,12 @@ export class MockWatcher implements Watcher {
 		);
 	}
 
+	burn(burnTx: Burn): void {
+		this.txReceiptHandler(
+			new TxReceipt(burnTx, new Account(0n, new Assets())),
+		);
+	}
+
 	trade(tradeTx: Trade): void {
 		this.txReceiptHandler(
 			new TxReceipt(tradeTx, new Account(0n, new Assets())),
@@ -82,7 +88,7 @@ export class MockClient extends MockWatcher implements ErdstallClient {
 
 	async initialize(): Promise<void> {}
 	async subscribe(_who?: Address): Promise<void> {}
-	async getAccount(who: Address): Promise<Account> {
+	async getAccount(_who: Address): Promise<Account> {
 		throw new Error("cannot query accounts on mock clients");
 	}
 
