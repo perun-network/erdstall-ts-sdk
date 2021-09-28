@@ -263,6 +263,7 @@ interface ErdstallInterface extends ethers.utils.Interface {
     "OwnershipTransferred(address,address)": EventFragment;
     "TokenRegistered(address,string,address)": EventFragment;
     "TokenTypeRegistered(string,address)": EventFragment;
+    "WithdrawalException(uint64,address,address,bytes,bytes)": EventFragment;
     "Withdrawn(uint64,address,tuple[])": EventFragment;
   };
 
@@ -273,6 +274,7 @@ interface ErdstallInterface extends ethers.utils.Interface {
   getEvent(nameOrSignatureOrTopic: "OwnershipTransferred"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "TokenRegistered"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "TokenTypeRegistered"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "WithdrawalException"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Withdrawn"): EventFragment;
 }
 
@@ -810,6 +812,23 @@ export class Erdstall extends BaseContract {
     ): TypedEventFilter<
       [string, string],
       { tokenType: string; tokenHolder: string }
+    >;
+
+    WithdrawalException(
+      epoch?: BigNumberish | null,
+      account?: string | null,
+      token?: string | null,
+      value?: null,
+      error?: null
+    ): TypedEventFilter<
+      [BigNumber, string, string, string, string],
+      {
+        epoch: BigNumber;
+        account: string;
+        token: string;
+        value: string;
+        error: string;
+      }
     >;
 
     Withdrawn(

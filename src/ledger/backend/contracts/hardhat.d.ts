@@ -33,10 +33,6 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ERC721__factory>;
     getContractFactory(
-      name: "IERC721Enumerable",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IERC721Enumerable__factory>;
-    getContractFactory(
       name: "IERC721Metadata",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IERC721Metadata__factory>;
@@ -88,6 +84,10 @@ declare module "hardhat/types/runtime" {
       name: "PerunToken",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.PerunToken__factory>;
+    getContractFactory(
+      name: "RevertToken",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.RevertToken__factory>;
     getContractFactory(
       name: "TokenHolder",
       signerOrOptions?: ethers.Signer | FactoryOptions

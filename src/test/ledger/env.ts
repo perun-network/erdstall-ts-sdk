@@ -8,7 +8,10 @@ import { providers } from "ethers";
 import { deployContract } from "ethereum-waffle";
 import { MockProvider } from "ethereum-waffle";
 
-import { Erdstall__factory } from "#erdstall/ledger/backend/contracts";
+import {
+	Erdstall__factory,
+	PerunArt__factory,
+} from "#erdstall/ledger/backend/contracts";
 import { ETHZERO } from "#erdstall/ledger/assets";
 
 const peruntokenABI = require("../../ledger/backend/contracts/abi/PerunToken.json");
@@ -16,6 +19,7 @@ const erdstallABI = require("../../ledger/backend/contracts/abi/Erdstall.json");
 const erc20holderABI = require("../../ledger/backend/contracts/abi/ERC20Holder.json");
 const erc721holderABI = require("../../ledger/backend/contracts/abi/ERC721Holder.json");
 const ethholderABI = require("../../ledger/backend/contracts/abi/ETHHolder.json");
+const perunArtABI = require("../../ledger/backend/contracts/abi/PerunArt.json");
 
 export interface Enviroment {
 	provider: providers.Web3Provider;
@@ -24,11 +28,16 @@ export interface Enviroment {
 	ethHolder: string;
 	erc20Holder: string;
 	erc721Holder: string;
+	perunArt: string;
 	op: Wallet;
 	tee: Wallet;
 	users: Wallet[];
 }
 
+const PERUNART_NAME = "PerunArt";
+const PERUNART_SYMBOL = "PART";
+const PERUNART_URI = "https://nifty.erdstall.dev/";
+const PERUN_FUNDS = utils.parseEther("100000").toBigInt();
 const gProvider = new MockProvider();
 const wallets = gProvider.getWallets();
 const OP = 0,
@@ -50,33 +59,31 @@ export async function setupEnv(
 		: wallets.slice(TEE + 1, TEE + 1 + numOfPrefundedAccounts);
 
 	const perunContract = 0,
-		erdstallContract = 1,
-		ethHolderContract = 2,
-		erc20HolderContract = 3,
-		erc721HolderContract = 4;
+		perunArtContract = 1,
+		erdstallContract = 2,
+		ethHolderContract = 3,
+		erc20HolderContract = 4,
+		erc721HolderContract = 5;
+
 	const contractDeployments = [
-		[
-			peruntokenABI,
-			[
-				users.map((u) => {
-					return u.address;
-				}),
-				utils.parseEther("100000").toBigInt(),
-			],
-		],
+		[peruntokenABI, [users.map((u) => u.address), PERUN_FUNDS]],
+		[perunArtABI, [PERUNART_NAME, PERUNART_SYMBOL, PERUNART_URI, []]],
 		[erdstallABI, [tee.address, epochDuration]],
 	];
 
 	let nonce: number = await op.getTransactionCount();
 	let contracts: ethers.Contract[] = [];
-	// Trying to do this with a `arr.map(...)` causes nonce issues.
-	for (const [abi, args] of contractDeployments) {
-		const contract = await deployContract(op, abi, args, {
-			nonce: nonce++,
-		});
-		contracts.push(contract);
-	}
 
+	const deployAndStore = async (deployments: typeof contractDeployments) => {
+		for (const [abi, args] of deployments) {
+			const contract = await deployContract(op, abi, args, {
+				nonce: nonce++,
+			});
+			contracts.push(contract);
+		}
+	};
+
+	await deployAndStore(contractDeployments);
 	const erdstall = Erdstall__factory.connect(
 		contracts[erdstallContract].address,
 		op,
@@ -87,56 +94,68 @@ export async function setupEnv(
 		[erc20holderABI, [erdstall.address]],
 		[erc721holderABI, [erdstall.address]],
 	];
+	await deployAndStore(holderDeployments);
 
-	for (const [abi, args] of holderDeployments) {
-		const contract = await deployContract(op, abi, args, {
+	const tryRegister = async (
+		call: typeof erdstall.registerToken,
+		arg1: string,
+		arg2: string,
+		name: string,
+	) => {
+		const tx = await call(arg1, arg2, {
 			nonce: nonce++,
 		});
-		contracts.push(contract);
-	}
-
-	let txs: Promise<ethers.ContractTransaction>[] = [];
-	[
-		[contracts[ethHolderContract].address, "ETH"],
-		[contracts[erc20HolderContract].address, "ERC20"],
-		[contracts[erc721HolderContract].address, "ERC721"],
-	].forEach(async ([addr, ttype]) => {
-		txs.push(
-			erdstall.registerTokenType(addr, ttype, {
-				nonce: nonce++,
-			}),
-		);
-	});
-
-	for (const txp of txs) {
-		const tx = await txp;
 		const rec = await tx.wait();
 		if (!rec.status || rec.status !== 1) {
 			Promise.reject(
-				new Error("unable register token types on erdstall contract"),
+				new Error(`unable to register ${name} on erdstall contract`),
 			);
 		}
+	};
+	const holderRegistration = [
+		[contracts[ethHolderContract].address, "ETH"],
+		[contracts[erc20HolderContract].address, "ERC20"],
+		[contracts[erc721HolderContract].address, "ERC721"],
+	];
+	for (const [addr, ttype] of holderRegistration) {
+		await tryRegister(
+			erdstall.registerTokenType,
+			addr,
+			ttype,
+			"token type",
+		);
 	}
 
-	txs = [];
-	[
+	const tokenRegistration = [
 		[ETHZERO, contracts[ethHolderContract].address],
 		[
 			contracts[perunContract].address,
 			contracts[erc20HolderContract].address,
 		],
-	].forEach(async ([token, holder]) => {
-		txs.push(erdstall.registerToken(token, holder, { nonce: nonce++ }));
-	});
+		[
+			contracts[perunArtContract].address,
+			contracts[erc721HolderContract].address,
+		],
+	];
+	for (const [token, holder] of tokenRegistration) {
+		await tryRegister(erdstall.registerToken, token, holder, "tokens");
+	}
 
-	for (const txp of txs) {
-		const tx = await txp;
-		const rec = await tx.wait();
-		if (!rec.status || rec.status !== 1) {
-			Promise.reject(
-				new Error("unable register tokens on erdstall contract"),
-			);
-		}
+	// Add every account and ERC721Holder as minter to PerunArt.
+	const minters = users
+		.map((w) => w.address)
+		.concat([
+			op.address,
+			tee.address,
+			contracts[erc721HolderContract].address,
+		]);
+	const part = PerunArt__factory.connect(
+		contracts[perunArtContract].address,
+		op,
+	);
+
+	for (const addr of minters) {
+		await part.addMinter(addr);
 	}
 
 	return {
@@ -145,6 +164,7 @@ export async function setupEnv(
 		ethHolder: contracts[ethHolderContract].address,
 		erc20Holder: contracts[erc20HolderContract].address,
 		erc721Holder: contracts[erc721HolderContract].address,
+		perunArt: contracts[perunArtContract].address,
 		perun: contracts[perunContract].address,
 		op: op,
 		tee: tee,
