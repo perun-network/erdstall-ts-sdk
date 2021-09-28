@@ -28,21 +28,24 @@ function checkInstalledLocally() {
   fi
 }
 
-function compileAndMoveTo() {
+function compileTo() {
   if [ ! -d "$1" ] || [ ! -d "$2" ]; then
     echo ERROR: No valid source or destination specified
-    echo compileAndMoveTo [source] [destination]
+    echo compileTo [source] [destination]
     exit 1
   fi
 
   CWD="${PWD}"
   cd "${1}"
 
-  mkdir -p "${2}"/contracts
+  # Clean up existing bindings.
+  rm -rf "${2}"/contracts
   mkdir -p "${2}"/contracts/abi
-  npx hardhat compile && cp -r ./typechain/* "${2}"/contracts/ \
+  yarn hardhat compile && cp -rl ./typechain/* "${2}"/contracts/ \
     && find ./artifacts/contracts/*.sol/ \
-    | grep -v ".dbg" | grep ".json" | xargs cp -t "${2}"/contracts/abi/
+    | grep -v ".dbg" | grep ".json" | xargs cp -l -t "${2}"/contracts/abi/
+  # Clean up typechain generated files.
+  rm -rf ./artifacts ./cache ./typechain
   cd "${CWD}"
 }
 
@@ -65,7 +68,7 @@ ETHBACKEND_TEST="${SRCDIR}"/src/test/ledger/backend
 checkInstalled npm
 checkInstalledLocally typechain
 
-compileAndMoveTo "${1}" "${ETHBACKEND}"
+compileTo "${1}" "${ETHBACKEND}"
 
 if [ $? -ne 0 ]; then
   echo ERROR: Unable to compile contracts and move abi.
