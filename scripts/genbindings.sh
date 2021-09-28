@@ -28,6 +28,24 @@ function checkInstalledLocally() {
   fi
 }
 
+function compileAndMoveTo() {
+  if [ ! -d "$1" ] || [ ! -d "$2" ]; then
+    echo ERROR: No valid source or destination specified
+    echo compileAndMoveTo [source] [destination]
+    exit 1
+  fi
+
+  CWD="${PWD}"
+  cd "${1}"
+
+  mkdir -p "${2}"/contracts
+  mkdir -p "${2}"/contracts/abi
+  npx hardhat compile && cp -r ./typechain/* "${2}"/contracts/ \
+    && find ./artifacts/contracts/*.sol/ \
+    | grep -v ".dbg" | grep ".json" | xargs cp -t "${2}"/contracts/abi/
+  cd "${CWD}"
+}
+
 if [ "$#" -ne 1 ]; then
   echo USAGE: $0 [path_to_contracts]
   exit 1
@@ -42,18 +60,12 @@ fi
 
 SRCDIR="${PWD}"
 ETHBACKEND="${SRCDIR}"/src/ledger/backend
+ETHBACKEND_TEST="${SRCDIR}"/src/test/ledger/backend
 
 checkInstalled npm
-checkInstalledLocally typechain hardhat
+checkInstalledLocally typechain
 
-mkdir -p "${ETHBACKEND}"/contracts
-mkdir -p "${ETHBACKEND}"/contracts/abi
-
-cd $CONTRACTSDIR
-echo $PWD
-npx hardhat compile && cp -r ./typechain/* "${ETHBACKEND}"/contracts/ \
-  && find ./artifacts/contracts/{PerunToken,TokenHolder,Erdstall,ETHHolder,ERC20Holder,ERC721Holder}.sol/ \
-  | grep -v ".dbg" | grep ".json" | xargs cp -t "${ETHBACKEND}"/contracts/abi/
+compileAndMoveTo "${1}" "${ETHBACKEND}"
 
 if [ $? -ne 0 ]; then
   echo ERROR: Unable to compile contracts and move abi.
