@@ -97,10 +97,12 @@ export class MockWatcher implements Watcher {
 
 export class MockClient extends MockWatcher implements ErdstallClient {
 	private readonly contract: Address;
+	private metadata: Map<string, NFTMetadata>;
 
 	constructor(contract: Address) {
 		super();
 		this.contract = contract;
+		this.metadata = new Map();
 	}
 
 	async initialize(): Promise<void> {}
@@ -108,8 +110,17 @@ export class MockClient extends MockWatcher implements ErdstallClient {
 	async getAccount(_who: Address): Promise<Account> {
 		throw new Error("cannot query accounts on mock clients");
 	}
-	async getNftMetadata(_token: Address, _id: bigint): Promise<NFTMetadata> {
-		throw new Error("cannot query nft data on mock clients");
+
+	setMetadata(token: Address, id: bigint, metadata: NFTMetadata): void {
+		this.metadata.set(`${token}:${id}`, metadata);
+	}
+
+	async getNftMetadata(token: Address, id: bigint): Promise<NFTMetadata> {
+		const res = this.metadata.get(`${token}:${id}`);
+		if (!res) {
+			return Promise.reject(new Error(`no metadata for ${token}:${id}`));
+		}
+		return res;
 	}
 
 	erdstall(): Address {
