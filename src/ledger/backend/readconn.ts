@@ -3,6 +3,7 @@
 
 import { ErdstallWatcher, Contracter } from "#erdstall";
 import { Address, ErdstallEvent } from "#erdstall/ledger";
+import { TokenCache } from "./tokencache";
 import { Erdstall } from "./contracts/Erdstall";
 import { NFTMetadata, NFTMetadataProvider } from "./metadata";
 import { IERC721Metadata__factory } from "./contracts";
@@ -24,11 +25,13 @@ export class LedgerReadConn implements LedgerReader {
 	readonly contract: Erdstall;
 	private eventCache: Map<Function, (args: Array<any>) => void>;
 	private metadataCache: Map<string, NFTMetadata>;
+	readonly tokenCache: TokenCache;
 
-	constructor(contract: Erdstall) {
+	constructor(contract: Erdstall, tokenCache: TokenCache) {
 		this.contract = contract;
 		this.eventCache = new Map();
 		this.metadataCache = new Map();
+		this.tokenCache = tokenCache;
 	}
 
 	on(ev: ErdstallEvent, cb: Function): void {
