@@ -23,12 +23,12 @@ export interface LedgerReader
 export class LedgerReadConn implements LedgerReader {
 	readonly contract: Erdstall;
 	private eventCache: Map<Function, (args: Array<any>) => void>;
-	private metadataUriCache: Map<string, NFTMetadata>;
+	private metadataCache: Map<string, NFTMetadata>;
 
 	constructor(contract: Erdstall) {
 		this.contract = contract;
-		this.eventCache = new Map<Function, (args: Array<any>) => void>();
-		this.metadataUriCache = new Map<string, NFTMetadata>();
+		this.eventCache = new Map();
+		this.metadataCache = new Map();
 	}
 
 	on(ev: ErdstallEvent, cb: Function): void {
@@ -57,10 +57,17 @@ export class LedgerReadConn implements LedgerReader {
 		return Address.fromString(this.contract.address);
 	}
 
-	async getNftMetadata(token: Address, id: bigint): Promise<NFTMetadata> {
+	async getNftMetadata(
+		token: Address,
+		id: bigint,
+		useCache?: boolean,
+	): Promise<NFTMetadata> {
 		const tokenS = token.toString();
-		if (this.metadataUriCache.has(tokenS)) {
-			return this.metadataUriCache.get(tokenS)!;
+		if (
+			(useCache == undefined || useCache) &&
+			this.metadataCache.has(tokenS)
+		) {
+			return this.metadataCache.get(tokenS)!;
 		}
 
 		// TODO: Create IMetadata contract interface for which bindings can be
@@ -74,7 +81,7 @@ export class LedgerReadConn implements LedgerReader {
 		const res = await axios
 			.get<NFTMetadata>(tokenURI)
 			.then((res) => res.data);
-		this.metadataUriCache.set(tokenS, res);
+		this.metadataCache.set(tokenS, res);
 		return res;
 	}
 }

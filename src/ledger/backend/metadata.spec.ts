@@ -36,6 +36,10 @@ describe("NFTMetadata", function () {
 		await part.mint(bob.address, id);
 	});
 
+	afterEach(function () {
+		nock.cleanAll();
+	});
+
 	it("correctly queries the tokenURI", async function () {
 		const metadata = test.newRandomMetadata(rng);
 		nock(PERUNART_URI)
@@ -55,5 +59,13 @@ describe("NFTMetadata", function () {
 
 		// Clean up interception.
 		nock.cleanAll();
+
+		// Third request with a forced fetch should query the `tokenURI` again.
+		nock(PERUNART_URI)
+			.defaultReplyHeaders({ "access-control-allow-origin": "*" })
+			.get(`/${token.toString().toLowerCase()}/${id}`)
+			.reply(200, { image: "foo" });
+		res = await erdstall.getNftMetadata(token, id, false);
+		expect(res).to.deep.equal({ image: "foo" });
 	});
 });

@@ -42,11 +42,15 @@ export class Client implements ErdstallClient {
 		return this.erdstallConn!.erdstall();
 	}
 
-	getNftMetadata(token: Address, id: bigint): Promise<NFTMetadata> {
+	getNftMetadata(
+		token: Address,
+		id: bigint,
+		useCache?: boolean,
+	): Promise<NFTMetadata> {
 		if (!this.erdstallConn) {
 			throw new Error("client uninitialized");
 		}
-		return this.erdstallConn.getNftMetadata(token, id);
+		return this.erdstallConn.getNftMetadata(token, id, useCache);
 	}
 
 	on(ev: ErdstallEvent | EnclaveEvent, cb: Function): void {

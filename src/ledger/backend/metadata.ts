@@ -33,5 +33,9 @@ export interface Attribute {
 }
 
 export interface NFTMetadataProvider {
-	getNftMetadata(token: Address, id: bigint): Promise<NFTMetadata>;
+	getNftMetadata(
+		token: Address,
+		id: bigint,
+		useCache?: boolean,
+	): Promise<NFTMetadata>;
 }
