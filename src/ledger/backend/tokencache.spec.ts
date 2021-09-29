@@ -8,10 +8,10 @@ import { Erdstall__factory } from "./contracts";
 import { TokenType, ETHZERO } from "#erdstall/ledger/assets";
 import { TokenTypesCache } from "./tokencache";
 
-import { Enviroment, setupEnv } from "#erdstall/test/ledger";
+import { Environment, setupEnv } from "#erdstall/test/ledger";
 
 describe("Tokencache", () => {
-	let testenv: Enviroment;
+	let testenv: Environment;
 	let bob: Wallet;
 
 	before(async () => {

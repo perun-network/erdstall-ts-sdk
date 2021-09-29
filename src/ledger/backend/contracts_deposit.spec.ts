@@ -14,14 +14,14 @@ import {
 import { DepositerCallsFactory } from "./tokenmanager";
 import { PerunArt__factory } from "./contracts/factories/PerunArt__factory";
 
-import { Enviroment, setupEnv } from "#erdstall/test/ledger";
+import { Environment, setupEnv } from "#erdstall/test/ledger";
 import * as test from "#erdstall/test";
 
 const TOKEN_SIZE = 4;
 
 describe("Deposit_Call_Wrapper", () => {
 	const rng = test.newPrng();
-	let testenv: Enviroment;
+	let testenv: Environment;
 	let bob: Wallet;
 	const amount = new Amount(test.newRandomBigInt(rng, 16));
 	const tokens = test.newRandomTokens(rng, TOKEN_SIZE);

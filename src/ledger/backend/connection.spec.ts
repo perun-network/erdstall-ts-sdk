@@ -11,7 +11,7 @@ import { Balance } from "#erdstall/api/responses";
 
 import { Erdstall__factory, Erdstall } from "./contracts";
 import { LedgerWriteConn, LedgerWriter } from "./writeconn";
-import { Enviroment, setupEnv } from "#erdstall/test/ledger";
+import { Environment, setupEnv } from "#erdstall/test/ledger";
 
 import * as test from "#erdstall/test";
 
@@ -19,7 +19,7 @@ const TOKEN_SIZE = 4;
 
 describe("ErdstallConnection", () => {
 	const rng = test.newPrng();
-	let testenv: Enviroment;
+	let testenv: Environment;
 	let bob: Wallet;
 	const amount = new Amount(10n);
 	const tokens = test.newRandomTokens(rng, TOKEN_SIZE);
