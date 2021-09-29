@@ -4,7 +4,7 @@
 import { isUint256 } from "#erdstall/api/util";
 
 // TokenType resolves TokenType -> Deposit-Routine.
-export type TokenType = "ETH" | "ERC20" | "ERC721";
+export type TokenType = "ETH" | "ERC20" | "ERC721" | "ERC721Mintable";
 
 export const TypeTags = {
 	Amount: "uint",
