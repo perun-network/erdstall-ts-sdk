@@ -7,9 +7,10 @@ import { Wallet } from "ethers";
 import { PerunArt__factory } from "./contracts";
 import { ETHZERO, Assets, Amount } from "#erdstall/ledger/assets";
 import { EventHelper } from "#erdstall/utils";
+import { Balance } from "#erdstall/api/responses";
 
-import { Erdstall__factory } from "./contracts";
-import { LedgerWriteConn } from "./writeconn";
+import { Erdstall__factory, Erdstall } from "./contracts";
+import { LedgerWriteConn, LedgerWriter } from "./writeconn";
 import { Enviroment, setupEnv } from "#erdstall/test/ledger";
 
 import * as test from "#erdstall/test";
@@ -22,6 +23,9 @@ describe("ErdstallConnection", () => {
 	let bob: Wallet;
 	const amount = new Amount(10n);
 	const tokens = test.newRandomTokens(rng, TOKEN_SIZE);
+	const assets = new Assets();
+	let contract: Erdstall;
+	let conn: LedgerWriter;
 
 	before(async () => {
 		testenv = await setupEnv();
@@ -31,16 +35,15 @@ describe("ErdstallConnection", () => {
 		for (const id of tokens.value) {
 			await part.mint(bob.address, id);
 		}
-	});
 
-	it("allows interfacing with the erdstall contract", async () => {
-		const assets = new Assets();
 		assets.addAsset(testenv.perun, amount);
 		assets.addAsset(ETHZERO, amount);
 		assets.addAsset(testenv.perunArt, tokens);
-		const contract = Erdstall__factory.connect(testenv.erdstall, bob);
+		contract = Erdstall__factory.connect(testenv.erdstall, bob);
+		conn = new LedgerWriteConn(contract);
+	});
 
-		const conn = new LedgerWriteConn(contract);
+	it("allows depositing into the erdstall contract", async () => {
 		const depositRegistered = EventHelper.within(10000, conn, "Deposited");
 
 		const stages = await conn.deposit(assets);
@@ -51,5 +54,25 @@ describe("ErdstallConnection", () => {
 		}
 
 		return depositRegistered;
+	});
+
+	it("allows withdrawing from the erdstall contract", async () => {
+		const withdrawRegistered = EventHelper.within(10000, conn, "Withdrawn");
+
+		const bal = new Balance(
+			0n, // epoch
+			bob.address, // account
+			true, // exit
+			assets,
+		);
+		const bp = await bal.sign(conn.erdstall(), testenv.tee);
+		const stages = await conn.withdraw(bp);
+		for (const stage of stages) {
+			const ctx = await stage.value;
+			const rec = await ctx.wait();
+			expect(rec.status, "withdrawing should have worked").to.equal(0x1);
+		}
+
+		return withdrawRegistered;
 	});
 });
