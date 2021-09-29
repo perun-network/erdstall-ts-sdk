@@ -16,6 +16,7 @@ import {
 } from "#erdstall/ledger";
 import { EventCache, OneShotEventCache } from "#erdstall/utils";
 import { ethers, Signer } from "ethers";
+import { NFTMetadata } from "#erdstall/ledger/backend";
 
 export class Client implements ErdstallClient {
 	protected enclaveConn: EnclaveReader;
@@ -39,6 +40,17 @@ export class Client implements ErdstallClient {
 
 	erdstall(): Address {
 		return this.erdstallConn!.erdstall();
+	}
+
+	getNftMetadata(
+		token: Address,
+		id: bigint,
+		useCache?: boolean,
+	): Promise<NFTMetadata> {
+		if (!this.erdstallConn) {
+			throw new Error("client uninitialized");
+		}
+		return this.erdstallConn.getNftMetadata(token, id, useCache);
 	}
 
 	on(ev: ErdstallEvent | EnclaveEvent, cb: Function): void {

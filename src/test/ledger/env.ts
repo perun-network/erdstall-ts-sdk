@@ -21,7 +21,7 @@ const erc721holderABI = require("../../ledger/backend/contracts/abi/ERC721Holder
 const ethholderABI = require("../../ledger/backend/contracts/abi/ETHHolder.json");
 const perunArtABI = require("../../ledger/backend/contracts/abi/PerunArt.json");
 
-export interface Enviroment {
+export interface Environment {
 	provider: providers.Web3Provider;
 	perun: string;
 	erdstall: string;
@@ -36,7 +36,7 @@ export interface Enviroment {
 
 const PERUNART_NAME = "PerunArt";
 const PERUNART_SYMBOL = "PART";
-const PERUNART_URI = "https://nifty.erdstall.dev/";
+export const PERUNART_URI = "https://nifty.erdstall.dev/";
 const PERUN_FUNDS = utils.parseEther("100000").toBigInt();
 const gProvider = new MockProvider();
 const wallets = gProvider.getWallets();
@@ -49,7 +49,7 @@ export async function setupEnv(
 	lprovider?: providers.Web3Provider,
 	lop?: Wallet,
 	pacc?: Wallet,
-): Promise<Enviroment> {
+): Promise<Environment> {
 	const provider = lprovider ? lprovider : gProvider;
 
 	const op = lop ? lop : wallets[OP];

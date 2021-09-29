@@ -7,3 +7,4 @@ export * from "./contracts";
 export * from "./contracts_deposit";
 export * from "./tokencache";
 export * from "./tokenmanager";
+export * from "./metadata";

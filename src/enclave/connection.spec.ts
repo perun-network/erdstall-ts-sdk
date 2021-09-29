@@ -3,7 +3,7 @@
 
 import { expect } from "chai";
 import { Enclave } from "./connection";
-import { EnclaveMockProvider } from "./provider.spec";
+import { EnclaveMockProvider } from "#erdstall/test/mocks";
 
 import * as pkgtest from "#erdstall/test";
 

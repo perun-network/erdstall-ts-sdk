@@ -14,6 +14,7 @@ import { Assets } from "#erdstall/ledger/assets";
 import { Uint256 } from "#erdstall/api/util";
 import { Stages } from "#erdstall/utils";
 import { EnclaveEvent } from "#erdstall/enclave";
+import { NFTMetadataProvider } from "#erdstall/ledger/backend";
 
 export * from "./client";
 export * from "./session";
@@ -103,6 +104,7 @@ export interface ErdstallClient
 		Contracter,
 		Initializer,
 		Subscriber,
+		NFTMetadataProvider,
 		AccountGetter {}
 
 export interface ErdstallSession

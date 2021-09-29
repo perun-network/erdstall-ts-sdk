@@ -11,14 +11,14 @@ import {
 } from "#erdstall/ledger/backend/contracts";
 
 import * as test from "#erdstall/test";
-import { Enviroment, setupEnv } from "#erdstall/test/ledger";
+import { Environment, setupEnv } from "#erdstall/test/ledger";
 import { equalArray } from "#erdstall/utils/arrays";
 
 chai.use(solidity);
 
 describe("BalanceProofs", function () {
 	const rng = test.newPrng();
-	let env: Enviroment;
+	let env: Environment;
 	let erd: Erdstall;
 	let erdAddr: Address;
 
