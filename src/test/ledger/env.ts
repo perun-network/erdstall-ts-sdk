@@ -36,7 +36,7 @@ export interface Environment {
 
 const PERUNART_NAME = "PerunArt";
 const PERUNART_SYMBOL = "PART";
-const PERUNART_URI = "https://nifty.erdstall.dev/";
+export const PERUNART_URI = "https://nifty.erdstall.dev/";
 const PERUN_FUNDS = utils.parseEther("100000").toBigInt();
 const gProvider = new MockProvider();
 const wallets = gProvider.getWallets();
