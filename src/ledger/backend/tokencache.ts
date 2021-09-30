@@ -20,10 +20,29 @@ interface Responder {
 	symbol(): Promise<string>;
 }
 
+export interface TokenProvider {
+	setType(tokenAddr: string, ttype: TokenType): void;
+	tokenHolderFor(erdstall: Erdstall, ttype: TokenType): Promise<string>;
+	tokenTypeOf(erdstall: Erdstall, tokenAddr: string): Promise<TokenType>;
+	findRegisteredTokenWithSymbol(
+		erdstall: Erdstall,
+		symbol: string,
+		fromBlock?: number,
+	): Promise<string | undefined>;
+	queryRegisteredTokenTypes(
+		erdstall: Erdstall,
+		fromBlock?: number,
+	): Promise<TokenTypeRegisteredEvent[]>;
+	queryRegisteredTokens(
+		erdstall: Erdstall,
+		fromBlock?: number,
+	): Promise<TokenRegisteredEvent[]>;
+}
+
 type TokenTypes = Map<string, TokenType>;
 type TokenHolders = Map<TokenType, string>;
 
-export class TokenTypesCache {
+export class TokenFetcher implements TokenProvider {
 	readonly typeCache: TokenTypes;
 	readonly holderCache: TokenHolders;
 	private bigbang?: number;

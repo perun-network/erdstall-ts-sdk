@@ -24,7 +24,11 @@ import {
 } from "#erdstall/api/calls";
 import { Transaction } from "#erdstall/api/transactions";
 import { Address, Account, ErdstallEvent } from "#erdstall/ledger";
-import { NFTMetadata } from "#erdstall/ledger/backend";
+import {
+	NFTMetadata,
+	TokenFetcher,
+	TokenProvider,
+} from "#erdstall/ledger/backend";
 import { Assets, Tokens } from "#erdstall/ledger/assets";
 import { EnclaveEvent, EnclaveProvider } from "#erdstall/enclave";
 
@@ -96,6 +100,7 @@ export class MockWatcher implements Watcher {
 }
 
 export class MockClient extends MockWatcher implements ErdstallClient {
+	readonly tokenProvider: TokenProvider;
 	private readonly contract: Address;
 	private metadata: Map<string, NFTMetadata>;
 
@@ -103,6 +108,7 @@ export class MockClient extends MockWatcher implements ErdstallClient {
 		super();
 		this.contract = contract;
 		this.metadata = new Map();
+		this.tokenProvider = new TokenFetcher();
 	}
 
 	async initialize(): Promise<void> {}

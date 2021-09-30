@@ -10,6 +10,7 @@ import { TxReceipt } from "#erdstall/api/responses";
 import { TradeOffer } from "#erdstall/api/transactions";
 import { BalanceProof } from "#erdstall/api/responses";
 import { Address, Account, ErdstallEvent } from "#erdstall/ledger";
+import { TokenProvider } from "#erdstall/ledger/backend";
 import { Assets } from "#erdstall/ledger/assets";
 import { Uint256 } from "#erdstall/api/util";
 import { Stages } from "#erdstall/utils";
@@ -105,7 +106,9 @@ export interface ErdstallClient
 		Initializer,
 		Subscriber,
 		NFTMetadataProvider,
-		AccountGetter {}
+		AccountGetter {
+	readonly tokenProvider: TokenProvider;
+}
 
 export interface ErdstallSession
 	extends ErdstallClient,

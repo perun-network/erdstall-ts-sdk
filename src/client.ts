@@ -14,11 +14,13 @@ import {
 	ErdstallEvent,
 	isLedgerEvent,
 } from "#erdstall/ledger";
+import { TokenFetcher, TokenProvider } from "#erdstall/ledger/backend";
 import { EventCache, OneShotEventCache } from "#erdstall/utils";
 import { ethers, Signer } from "ethers";
 import { NFTMetadata } from "#erdstall/ledger/backend";
 
 export class Client implements ErdstallClient {
+	readonly tokenProvider: TokenProvider;
 	protected enclaveConn: EnclaveReader;
 	protected provider: ethers.providers.Provider | Signer;
 	protected erdstallConn?: LedgerReader | LedgerWriter;
@@ -36,6 +38,7 @@ export class Client implements ErdstallClient {
 		this.erdstallEventHandlerCache = new EventCache<ErdstallEvent>();
 		this.erdstallOneShotHandlerCache =
 			new OneShotEventCache<ErdstallEvent>();
+		this.tokenProvider = new TokenFetcher();
 	}
 
 	erdstall(): Address {
@@ -109,7 +112,10 @@ export class Client implements ErdstallClient {
 					config.contract.toString(),
 					this.provider,
 				);
-				this.erdstallConn = new LedgerWriteConn(erdstall);
+				this.erdstallConn = new LedgerWriteConn(
+					erdstall,
+					this.tokenProvider,
+				);
 
 				for (const [ev, cbs] of this.erdstallEventHandlerCache) {
 					cbs.forEach((cb) => {
