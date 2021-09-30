@@ -10,7 +10,7 @@ import { BalanceProof } from "#erdstall/api/responses";
 import { Erdstall } from "./contracts/Erdstall";
 import { LedgerReader, LedgerReadConn } from "./readconn";
 import { depositors, DepositCalls } from "./tokenmanager";
-import { TokenCache } from "./tokencache";
+import { TokenProvider } from "./tokencache";
 
 // LedgerConnection describes the connection a client can have to the on-chain
 // part of Erdstall.
@@ -21,7 +21,7 @@ export interface LedgerWriter extends LedgerReader, Depositor, Withdrawer {
 export class LedgerWriteConn extends LedgerReadConn implements LedgerWriter {
 	readonly signer: Signer;
 
-	constructor(contract: Erdstall, tokenCache: TokenCache) {
+	constructor(contract: Erdstall, tokenCache: TokenProvider) {
 		super(contract, tokenCache);
 		this.signer = contract.signer;
 	}

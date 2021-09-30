@@ -20,9 +20,7 @@ interface Responder {
 	symbol(): Promise<string>;
 }
 
-export interface TokenCache {
-	readonly typeCache: TokenTypes;
-	readonly holderCache: TokenHolders;
+export interface TokenProvider {
 	setType(tokenAddr: string, ttype: TokenType): void;
 	tokenHolderFor(erdstall: Erdstall, ttype: TokenType): Promise<string>;
 	tokenTypeOf(erdstall: Erdstall, tokenAddr: string): Promise<TokenType>;
@@ -44,7 +42,7 @@ export interface TokenCache {
 type TokenTypes = Map<string, TokenType>;
 type TokenHolders = Map<TokenType, string>;
 
-export class TokenTypesCache implements TokenCache {
+export class TokenFetcher implements TokenProvider {
 	readonly typeCache: TokenTypes;
 	readonly holderCache: TokenHolders;
 	private bigbang?: number;

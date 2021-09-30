@@ -11,7 +11,7 @@ import { Balance } from "#erdstall/api/responses";
 
 import { Erdstall__factory, Erdstall } from "./contracts";
 import { LedgerWriteConn, LedgerWriter } from "./writeconn";
-import { TokenTypesCache } from "./tokencache";
+import { TokenFetcher } from "./tokencache";
 import { Environment, setupEnv } from "#erdstall/test/ledger";
 
 import * as test from "#erdstall/test";
@@ -41,7 +41,7 @@ describe("ErdstallConnection", () => {
 		assets.addAsset(ETHZERO, amount);
 		assets.addAsset(testenv.perunArt, tokens);
 		contract = Erdstall__factory.connect(testenv.erdstall, bob);
-		conn = new LedgerWriteConn(contract, new TokenTypesCache());
+		conn = new LedgerWriteConn(contract, new TokenFetcher());
 	});
 
 	it("allows depositing into the erdstall contract", async () => {
