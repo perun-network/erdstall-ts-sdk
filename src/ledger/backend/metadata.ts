@@ -26,7 +26,7 @@ export const displayTypes = [
 export type DisplayType = typeof displayTypes[number];
 
 export interface Attribute {
-	trait_type: string;
+	trait_type?: string;
 	value: string | number;
 	max_value?: number;
 	display_type?: DisplayType;
