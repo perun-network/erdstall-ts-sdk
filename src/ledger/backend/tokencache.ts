@@ -206,6 +206,8 @@ export class TokenFetcher implements TokenProvider {
 				return ERC20__factory.connect(token, signer);
 			case "ERC721":
 				return ERC721__factory.connect(token, signer);
+			case "ERC721Mintable":
+				return ERC721__factory.connect(token, signer);
 			case "ETH":
 				return {
 					symbol: async function (): Promise<string> {

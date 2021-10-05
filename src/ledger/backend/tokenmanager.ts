@@ -29,4 +29,5 @@ export const depositors = new Map<TokenType, DepositerCallsFactory>([
 	["ETH", makeETHDepositCalls],
 	["ERC20", makeERC20DepositCalls],
 	["ERC721", makeERC721DepositCalls],
+	["ERC721Mintable", makeERC721DepositCalls],
 ]);
