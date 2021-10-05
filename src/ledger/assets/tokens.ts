@@ -20,7 +20,18 @@ export class Tokens extends Asset {
 
 	constructor(v: bigint[]) {
 		super();
-		this.value = v;
+		this.value = v.sort((a, b) => (a < b ? -1 : a == b ? 0 : 1));
+		Tokens.requireUniquePositiveEntries(this.value);
+	}
+
+	// requireUniquePositiveEntries expects `v` to be sorted and asserts that every
+	// entry in `v` is unique and a positive `bigint`. If the invariant does not
+	// hold, an error is thrown.
+	private static requireUniquePositiveEntries(v: bigint[]) {
+		for (let k = 0; k < v.length - 1; k++) {
+			if (v[k] < 0n) throw new Error("invalid token id in token set");
+			if (v[k] === v[k + 1]) throw new Error("token entries not unique");
+		}
 	}
 
 	toJSON() {
@@ -70,31 +81,22 @@ export class Tokens extends Asset {
 		let cmp = 0;
 		let swap = 1;
 		if (b.length > a.length) {
+			const t = a;
 			a = b;
-			b = (asset as Tokens).value;
+			b = t;
 			swap = -1;
 		}
 
-		if (b.length === 0 && b.length !== a.length) {
-			cmp = 1;
-		}
-
-		let aIdx = 0;
 		let bIdx = 0;
-		for (; aIdx < a.length && bIdx < b.length; aIdx++) {
-			const lhs = a[aIdx];
-			const rhs = b[bIdx];
-			if (lhs < rhs) {
-				cmp = 1;
-			} else if (lhs === rhs) {
-				bIdx++;
-			} else if (lhs > rhs) {
-				break;
-			}
+		for (let i = 0; i < a.length && bIdx < b.length; i++) {
+			if (a[i] == b[bIdx]) ++bIdx;
+			else if (a[i] > b[bIdx]) break; // short circuit.
 		}
 
-		if (bIdx !== b.length) {
-			return "uncomparable";
+		if (bIdx !== b.length) return "uncomparable";
+
+		if (a.length > b.length) {
+			cmp = 1;
 		}
 
 		return res[cmp * swap + 1];
