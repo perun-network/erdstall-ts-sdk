@@ -10,7 +10,7 @@ const txReceiptTypeName = "TxReceipt";
 
 @jsonObject
 export class TxReceipt extends ErdstallObject {
-	@jsonMember(Transaction) tx: Transaction;
+	@jsonMember(() => Transaction) tx: Transaction;
 	@jsonMember(Account) account: Account;
 
 	constructor(tx: Transaction, account: Account) {
