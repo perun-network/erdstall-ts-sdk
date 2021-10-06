@@ -179,3 +179,16 @@ export class Tokens extends Asset {
 }
 
 registerAssetType(TypeTags.Tokens, Tokens.fromJSON);
+
+export function forEachNFT(
+	a: Map<string, Asset>,
+	f: (token: string, id: bigint) => void,
+) {
+	a.forEach((asset, token) => {
+		if (asset instanceof Tokens) {
+			asset.value.forEach((id) => {
+				f(token, id);
+			});
+		}
+	});
+}
