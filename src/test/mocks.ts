@@ -23,6 +23,7 @@ import {
 	GetAccount,
 } from "#erdstall/api/calls";
 import { Transaction } from "#erdstall/api/transactions";
+import { BigInteger } from "#erdstall/api/util";
 import { Address, Account, ErdstallEvent } from "#erdstall/ledger";
 import {
 	NFTMetadata,
@@ -67,8 +68,17 @@ export class MockWatcher implements Watcher {
 		throw new Error("not implemented");
 	}
 
-	mint(nft: { token: Address; id: bigint; owner: Address }): void {
-		const mintTx = new Mint(nft.owner, BigInt(0), nft.token, nft.id);
+	mint(nft: {
+		token: Address;
+		id: bigint | BigInteger;
+		owner: Address;
+	}): void {
+		const mintTx = new Mint(
+			nft.owner,
+			BigInt(0),
+			nft.token,
+			nft.id.valueOf(),
+		);
 		this.txReceiptHandler(
 			new TxReceipt(mintTx, new Account(0n, new Assets())),
 		);
