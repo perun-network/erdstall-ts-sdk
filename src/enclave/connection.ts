@@ -3,7 +3,7 @@
 
 import { Address } from "#erdstall/ledger";
 import { Call, Result } from "#erdstall/api";
-import { EnclaveWatcher } from "#erdstall";
+import { EnclaveWatcher, ErdstallEventHandler } from "#erdstall";
 import { ErdstallObject } from "#erdstall/api";
 import {
 	SubscribeTXs,
@@ -148,15 +148,24 @@ export class Enclave implements EnclaveWriter {
 		return p;
 	}
 
-	public on(eventType: EnclaveEvent, cb: Function) {
+	public on<T extends EnclaveEvent>(
+		eventType: T,
+		cb: ErdstallEventHandler<T>,
+	): void {
 		this.handlers.set(eventType, cb);
 	}
 
-	public once(eventType: EnclaveEvent, cb: Function) {
+	public once<T extends EnclaveEvent>(
+		eventType: T,
+		cb: ErdstallEventHandler<T>,
+	): void {
 		this.oneShotHandlers.set(eventType, cb);
 	}
 
-	public off(eventType: EnclaveEvent, cb: Function) {
+	public off<T extends EnclaveEvent>(
+		eventType: T,
+		cb: ErdstallEventHandler<T>,
+	) {
 		if (!this.handlers.has(eventType)) {
 			return;
 		}

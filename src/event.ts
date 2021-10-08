@@ -5,6 +5,7 @@
 
 import { LedgerEvent } from "./ledger/event";
 import { EnclaveEvent } from "./enclave/event";
+import { ClientConfig, TxReceipt, BalanceProof } from "./api/responses";
 
 export type ErdstallEvent = LedgerEvent | EnclaveEvent;
 
@@ -19,12 +20,12 @@ type _eventHandlers = {
 
 	open: () => void;
 	close: () => void;
-	config: () => void;
-	receipt: () => void;
+	config: (config: ClientConfig) => void;
+	receipt: (receipt: TxReceipt) => void;
 	phaseshift: () => void;
-	proof: () => void;
-	exitproof: () => void;
-	error: () => void;
+	proof: (proof: BalanceProof) => void;
+	exitproof: (exitProof: BalanceProof) => void;
+	error: (error: string | Error) => void;
 };
 
 // ErdstallEventHandler looks up the concretely typed handler from the
@@ -43,5 +44,5 @@ type _eventKeys = keyof _eventHandlers;
 type _requireBijectiveHandlers<T extends _eventKeys> = ErdstallEventHandler<T>;
 
 // `ErdstallEventHandler` and `_requireBijectiveHandlers` together ensure, that
-// all occurrences of events and the extension/removal are tracked at compile
-// time.
+// all occurrences of events and the extension/removal of event names are
+// tracked at compile time.

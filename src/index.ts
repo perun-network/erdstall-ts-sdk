@@ -2,3 +2,4 @@
 "use strict";
 
 export * from "./erdstall";
+export * from "./event";
