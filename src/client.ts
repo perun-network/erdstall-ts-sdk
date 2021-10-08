@@ -36,8 +36,7 @@ export class Client implements ErdstallClient {
 			this.enclaveConn = Enclave.dial(encConn as URL);
 		else this.enclaveConn = encConn as EnclaveReader;
 		this.erdstallEventHandlerCache = new EventCache<LedgerEvent>();
-		this.erdstallOneShotHandlerCache =
-			new OneShotEventCache<LedgerEvent>();
+		this.erdstallOneShotHandlerCache = new OneShotEventCache<LedgerEvent>();
 		this.tokenProvider = new TokenFetcher();
 	}
 
