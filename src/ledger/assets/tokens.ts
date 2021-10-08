@@ -9,7 +9,7 @@ import {
 	ErrIncompatibleAssets,
 	registerAssetType,
 } from "./asset";
-import { Amount } from "./amount";
+import { Amount, encodePackedAmount } from "./amount";
 
 export const ErrIDAlreadyContained = new Error(
 	"given ID already contained in tokens",
@@ -191,4 +191,30 @@ export function forEachNFT(
 			});
 		}
 	});
+}
+
+// decodePackedIds receives a hex encoded string representing one or more ABI
+// packed encoded `uint256` values.
+export function decodePackedIds(ids: string): bigint[] {
+	let idArr: Uint8Array;
+	if (!ids.startsWith("0x")) {
+		idArr = utils.arrayify(`0x${ids}`);
+	} else {
+		idArr = utils.arrayify(ids);
+	}
+
+	if (idArr.length % 32 !== 0)
+		throw new Error("received token array not divisible by 32");
+	const size = idArr.length / 32;
+	const res: bigint[] = new Array(size);
+	for (let i = 0; i < size; i++) {
+		res[i] = utils.defaultAbiCoder
+			.decode(["uint256"], idArr.slice(i * 32, i * 32 + 32))[0]
+			.toBigInt();
+	}
+	return res;
+}
+
+export function encodePackedIds(ids: bigint[]): string {
+	return utils.hexlify(utils.concat(ids.map(encodePackedAmount)));
 }

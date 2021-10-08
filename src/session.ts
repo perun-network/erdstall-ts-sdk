@@ -149,7 +149,7 @@ export class Session extends Client implements ErdstallSession {
 
 	async leave(): Promise<Stages<Promise<ethers.ContractTransaction>>> {
 		const exitProof = await this.exit();
-		await new Promise((accept) => this.once("phaseshift", accept));
+		await new Promise((accept) => this.once("phaseshift", () => accept));
 		return this.withdraw(exitProof);
 	}
 

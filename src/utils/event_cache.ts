@@ -1,13 +1,17 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-export class OneShotEventCache<T> implements Iterable<[T, Function[]]> {
-	m: Map<T, Function[]>;
+import { ErdstallEvent, ErdstallEventHandler } from "#erdstall";
+
+export class OneShotEventCache<T extends ErdstallEvent>
+	implements Iterable<[T, ErdstallEventHandler<T>[]]>
+{
+	m: Map<T, ErdstallEventHandler<T>[]>;
 	constructor() {
-		this.m = new Map<T, Function[]>();
+		this.m = new Map<T, ErdstallEventHandler<T>[]>();
 	}
 
-	set(key: T, cb: Function): OneShotEventCache<T> {
+	set(key: T, cb: ErdstallEventHandler<T>): OneShotEventCache<T> {
 		if (!this.m.has(key)) {
 			this.m.set(key, [cb]);
 			return this;
@@ -21,7 +25,7 @@ export class OneShotEventCache<T> implements Iterable<[T, Function[]]> {
 		return this.m.has(key);
 	}
 
-	get(key: T): Function[] | undefined {
+	get(key: T): ErdstallEventHandler<T>[] | undefined {
 		if (!this.m.has(key)) {
 			return undefined;
 		}
@@ -31,7 +35,7 @@ export class OneShotEventCache<T> implements Iterable<[T, Function[]]> {
 		return cbs;
 	}
 
-	*[Symbol.iterator](): Iterator<[T, Function[]]> {
+	*[Symbol.iterator](): Iterator<[T, ErdstallEventHandler<T>[]]> {
 		for (const [key, cbs] of this.m) {
 			yield [key, cbs];
 		}
@@ -42,12 +46,12 @@ export class OneShotEventCache<T> implements Iterable<[T, Function[]]> {
 	}
 }
 
-export class EventCache<T> extends OneShotEventCache<T> {
+export class EventCache<T extends ErdstallEvent> extends OneShotEventCache<T> {
 	constructor() {
 		super();
 	}
 
-	get(key: T): Function[] | undefined {
+	get(key: T): ErdstallEventHandler<T>[] | undefined {
 		return this.m.get(key);
 	}
 }

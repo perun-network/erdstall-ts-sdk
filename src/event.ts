@@ -3,20 +3,29 @@
 // event.
 "use strict";
 
-import { LedgerEvent } from "./ledger/event";
+import {
+	LedgerEvent,
+	Withdrawn,
+	Deposited,
+	Frozen,
+	Challenged,
+	ChallengeResponded,
+	TokenTypeRegistered,
+	TokenRegistered,
+} from "./ledger";
 import { EnclaveEvent } from "./enclave/event";
 import { ClientConfig, TxReceipt, BalanceProof } from "./api/responses";
 
 export type ErdstallEvent = LedgerEvent | EnclaveEvent;
 
 type _eventHandlers = {
-	Frozen: () => void;
-	Deposited: () => void;
-	Withdrawn: () => void;
-	Challenged: () => void;
-	ChallengeResponded: () => void;
-	TokenTypeRegistered: () => void;
-	TokenRegistered: () => void;
+	Frozen: (ev: Frozen) => void;
+	Deposited: (ev: Deposited) => void;
+	Withdrawn: (ev: Withdrawn) => void;
+	Challenged: (ev: Challenged) => void;
+	ChallengeResponded: (ev: ChallengeResponded) => void;
+	TokenTypeRegistered: (ev: TokenTypeRegistered) => void;
+	TokenRegistered: (ev: TokenRegistered) => void;
 
 	open: () => void;
 	close: () => void;

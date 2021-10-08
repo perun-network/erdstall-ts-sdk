@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { ErdstallWatcher, Contracter } from "#erdstall";
+import { ErdstallWatcher, Contracter, ErdstallEventHandler } from "#erdstall";
 import { Address, LedgerEvent } from "#erdstall/ledger";
 import { TokenProvider } from "./tokencache";
 import { Erdstall } from "./contracts/Erdstall";
 import { NFTMetadata, NFTMetadataProvider } from "./metadata";
 import { IERC721Metadata__factory } from "./contracts";
+import { ethCallbackShim, Listener } from "./ethwrapper";
 import axios from "axios";
 
 export const ErrUnsupportedLedgerEvent = new Error(
@@ -23,7 +24,7 @@ export interface LedgerReader
 
 export class LedgerReadConn implements LedgerReader {
 	readonly contract: Erdstall;
-	private eventCache: Map<Function, (args: Array<any>) => void>;
+	private eventCache: Map<ErdstallEventHandler<LedgerEvent>, Listener>;
 	private metadataCache: Map<string, NFTMetadata>;
 	readonly tokenCache: TokenProvider;
 
@@ -34,25 +35,25 @@ export class LedgerReadConn implements LedgerReader {
 		this.tokenCache = tokenCache;
 	}
 
-	on(ev: LedgerEvent, cb: Function): void {
-		const wrappedCB = (args: Array<any>) => {
-			cb(args);
-		};
-		this.eventCache.set(cb, wrappedCB);
-		this.contract.on(ev, wrappedCB);
+	on<T extends LedgerEvent>(ev: T, cb: ErdstallEventHandler<T>): void {
+		const wcb = ethCallbackShim(this.contract, this.tokenCache, ev, cb);
+		this.eventCache.set(cb, wcb);
+		this.contract.on(ev, wcb);
 	}
 
-	once(ev: LedgerEvent, cb: Function): void {
-		this.contract.once(ev, (args: Array<any>) => {
-			cb(args);
-		});
+	once<T extends LedgerEvent>(ev: T, cb: ErdstallEventHandler<T>): void {
+		this.contract.once(
+			ev,
+			ethCallbackShim(this.contract, this.tokenCache, ev, cb),
+		);
 	}
 
-	off(ev: LedgerEvent, cb: Function): void {
+	off<T extends LedgerEvent>(ev: T, cb: ErdstallEventHandler<T>): void {
 		if (!this.eventCache.has(cb)) {
 			return;
 		}
-		this.contract.off(ev, this.eventCache.get(cb)!);
+		const wcb = this.eventCache.get(cb)!;
+		this.contract.off(ev, wcb);
 		this.eventCache.delete(cb);
 	}
 

@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
+import { ErdstallEvent, ErdstallEventHandler } from "event";
 import { ErdstallClient } from "erdstall";
 import { Erdstall__factory } from "#erdstall/ledger/backend/contracts";
 import { ClientConfig } from "#erdstall/api/responses";
-import { Enclave, EnclaveReader, EnclaveEvent } from "#erdstall/enclave";
+import { Enclave, EnclaveReader } from "#erdstall/enclave";
 import {
 	LedgerWriteConn,
 	LedgerReader,
@@ -55,38 +56,59 @@ export class Client implements ErdstallClient {
 		return this.erdstallConn.getNftMetadata(token, id, useCache);
 	}
 
-	on(ev: LedgerEvent | EnclaveEvent, cb: Function): void {
+	on<T extends ErdstallEvent>(ev: T, cb: ErdstallEventHandler<T>): void;
+	on(ev: ErdstallEvent, cb: ErdstallEventHandler<typeof ev>): void {
 		if (isLedgerEvent(ev)) {
 			if (this.erdstallConn) {
-				this.erdstallConn.on(ev, cb);
+				this.erdstallConn.on(ev, cb as ErdstallEventHandler<typeof ev>);
 			} else {
-				this.erdstallEventHandlerCache.set(ev, cb);
+				this.erdstallEventHandlerCache.set(
+					ev,
+					cb as ErdstallEventHandler<typeof ev>,
+				);
 			}
 		} else {
-			return this.enclaveConn.on(ev, cb);
+			return this.enclaveConn.on(
+				ev,
+				cb as ErdstallEventHandler<typeof ev>,
+			);
 		}
 	}
 
-	once(ev: LedgerEvent | EnclaveEvent, cb: Function): void {
+	once<T extends ErdstallEvent>(ev: T, cb: ErdstallEventHandler<T>): void;
+	once(ev: ErdstallEvent, cb: ErdstallEventHandler<typeof ev>): void {
 		if (isLedgerEvent(ev)) {
 			if (this.erdstallConn) {
-				this.erdstallConn.once(ev, cb);
+				this.erdstallConn.once(
+					ev,
+					cb as ErdstallEventHandler<typeof ev>,
+				);
 			} else {
-				this.erdstallOneShotHandlerCache.set(ev, cb);
+				this.erdstallOneShotHandlerCache.set(
+					ev,
+					cb as ErdstallEventHandler<typeof ev>,
+				);
 			}
 		} else {
-			return this.enclaveConn.once(ev, cb);
+			return this.enclaveConn.once(
+				ev,
+				cb as ErdstallEventHandler<typeof ev>,
+			);
 		}
 	}
 
-	off(ev: LedgerEvent | EnclaveEvent, cb: Function): void {
+	off<T extends ErdstallEvent>(ev: T, cb: ErdstallEventHandler<T>): void;
+	off(ev: ErdstallEvent, cb: ErdstallEventHandler<typeof ev>) {
 		if (isLedgerEvent(ev)) {
 			if (!this.erdstallConn) {
 				return;
 			}
-			this.erdstallConn.off(ev, cb);
+			this.erdstallConn.off(ev, cb as ErdstallEventHandler<typeof ev>);
 		} else {
-			return this.enclaveConn.off(ev, cb);
+			return this.enclaveConn.off(
+				ev,
+				cb as ErdstallEventHandler<typeof ev>,
+			);
 		}
 	}
 
@@ -124,7 +146,7 @@ export class Client implements ErdstallClient {
 
 				for (const [ev, cbs] of this.erdstallOneShotHandlerCache) {
 					cbs.forEach((cb) => {
-						this.erdstallConn!.on(ev, cb);
+						this.erdstallConn!.once(ev, cb);
 					});
 				}
 				this.erdstallOneShotHandlerCache.clear();

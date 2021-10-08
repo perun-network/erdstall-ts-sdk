@@ -95,4 +95,13 @@ export class Amount extends Asset {
 	}
 }
 
+export function encodePackedAmount(value: bigint): string {
+	return utils.defaultAbiCoder.encode(["uint256"], [value]);
+}
+
+export function decodePackedAmount(data: string): Amount {
+	const res = utils.defaultAbiCoder.decode(["uint256"], data);
+	return new Amount(res[0].toBigInt());
+}
+
 registerAssetType(TypeTags.Amount, Amount.fromJSON);

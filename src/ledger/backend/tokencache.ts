@@ -2,19 +2,10 @@
 "use strict";
 
 import { Signer } from "ethers";
-import { TokenType, ETHZERO } from "#erdstall/ledger/assets";
+import { Address } from "#erdstall/ledger";
+import { TokenRegistered, TokenTypeRegistered } from "#erdstall/ledger";
+import { TokenType, requireTokenType, ETHZERO } from "#erdstall/ledger/assets";
 import { Erdstall, ERC20__factory, ERC721__factory } from "./contracts";
-
-interface TokenRegisteredEvent {
-	token: string;
-	tokenType: string;
-	tokenHolder: string;
-}
-
-interface TokenTypeRegisteredEvent {
-	tokenType: string;
-	tokenHolder: string;
-}
 
 interface Responder {
 	symbol(): Promise<string>;
@@ -28,15 +19,15 @@ export interface TokenProvider {
 		erdstall: Erdstall,
 		symbol: string,
 		fromBlock?: number,
-	): Promise<string | undefined>;
+	): Promise<Address | undefined>;
 	queryRegisteredTokenTypes(
 		erdstall: Erdstall,
 		fromBlock?: number,
-	): Promise<TokenTypeRegisteredEvent[]>;
+	): Promise<TokenTypeRegistered[]>;
 	queryRegisteredTokens(
 		erdstall: Erdstall,
 		fromBlock?: number,
-	): Promise<TokenRegisteredEvent[]>;
+	): Promise<TokenRegistered[]>;
 }
 
 type TokenTypes = Map<string, TokenType>;
@@ -104,7 +95,7 @@ export class TokenFetcher implements TokenProvider {
 		erdstall: Erdstall,
 		symbol: string,
 		fromBlock?: number,
-	): Promise<string | undefined> {
+	): Promise<Address | undefined> {
 		const from = fromBlock
 			? fromBlock
 			: (await erdstall.bigBang()).toNumber();
@@ -118,9 +109,7 @@ export class TokenFetcher implements TokenProvider {
 			try {
 				const token = this.resolveTokenType(
 					erdstall.signer,
-					// FIXME: Figure out a way to assert this cast and make it more
-					// elegant.
-					ev.tokenType as TokenType,
+					requireTokenType(ev.tokenType),
 					ev.token,
 				);
 				const sym = await token.symbol();
@@ -137,7 +126,7 @@ export class TokenFetcher implements TokenProvider {
 	async queryRegisteredTokenTypes(
 		erdstall: Erdstall,
 		fromBlock?: number,
-	): Promise<TokenTypeRegisteredEvent[]> {
+	): Promise<TokenTypeRegistered[]> {
 		const from = fromBlock
 			? fromBlock
 			: (await erdstall.bigBang()).toNumber();
@@ -145,8 +134,7 @@ export class TokenFetcher implements TokenProvider {
 		const filter = erdstall.filters.TokenTypeRegistered(null, null);
 		return erdstall.queryFilter(filter, from).then((ev) => {
 			return ev.map((entry) => {
-				// FIXME: Check that `ttype` is really a `TokenType`.
-				const ttype = entry.args.tokenType as TokenType;
+				const ttype = requireTokenType(entry.args.tokenType);
 				const tokenHolder = entry.args.tokenHolder;
 
 				if (!this.holderCache.has(ttype)) {
@@ -155,7 +143,7 @@ export class TokenFetcher implements TokenProvider {
 
 				return {
 					tokenType: ttype,
-					tokenHolder: tokenHolder,
+					tokenHolder: Address.fromString(tokenHolder),
 				};
 			});
 		});
@@ -166,7 +154,7 @@ export class TokenFetcher implements TokenProvider {
 	async queryRegisteredTokens(
 		erdstall: Erdstall,
 		fromBlock?: number,
-	): Promise<TokenRegisteredEvent[]> {
+	): Promise<TokenRegistered[]> {
 		const from = fromBlock
 			? fromBlock
 			: (await erdstall.bigBang()).toNumber();
@@ -175,8 +163,7 @@ export class TokenFetcher implements TokenProvider {
 		return erdstall.queryFilter(filter, from).then((ev) => {
 			return ev.map((entry) => {
 				const token = entry.args.token;
-				// FIXME: Check that `ttype` is really a `TokenType`.
-				const ttype = entry.args.tokenType as TokenType;
+				const ttype = requireTokenType(entry.args.tokenType);
 				const tokenHolder = entry.args.tokenHolder;
 
 				if (!this.typeCache.has(token)) {
@@ -188,9 +175,9 @@ export class TokenFetcher implements TokenProvider {
 				}
 
 				return {
-					token: token,
+					token: Address.fromString(token),
 					tokenType: ttype,
-					tokenHolder: tokenHolder,
+					tokenHolder: Address.fromString(tokenHolder),
 				};
 			});
 		});
@@ -199,15 +186,16 @@ export class TokenFetcher implements TokenProvider {
 	resolveTokenType(
 		signer: Signer,
 		ttype: TokenType,
-		token: string,
+		token: string | Address,
 	): Responder {
+		const token_s = token instanceof Address ? token.toString() : token;
 		switch (ttype) {
 			case "ERC20":
-				return ERC20__factory.connect(token, signer);
+				return ERC20__factory.connect(token_s, signer);
 			case "ERC721":
-				return ERC721__factory.connect(token, signer);
+				return ERC721__factory.connect(token_s, signer);
 			case "ERC721Mintable":
-				return ERC721__factory.connect(token, signer);
+				return ERC721__factory.connect(token_s, signer);
 			case "ETH":
 				return {
 					symbol: async function (): Promise<string> {

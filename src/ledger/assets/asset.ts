@@ -3,8 +3,17 @@
 
 import { isUint256 } from "#erdstall/api/util";
 
+const _tokenTypes = ["ETH", "ERC20", "ERC721", "ERC721Mintable"] as const;
 // TokenType resolves TokenType -> Deposit-Routine.
-export type TokenType = "ETH" | "ERC20" | "ERC721" | "ERC721Mintable";
+export type TokenType = typeof _tokenTypes[number];
+
+export function isTokenType(maybeToken: any): maybeToken is TokenType {
+	return _tokenTypes.includes(maybeToken);
+}
+export function requireTokenType(maybeToken: string): TokenType {
+	if (!isTokenType(maybeToken)) throw ErrInvalidTokenType;
+	return maybeToken;
+}
 
 export const TypeTags = {
 	Amount: "uint",
@@ -17,6 +26,7 @@ export const ErrSubtrahendLargerThanMinuend = new Error(
 );
 export const ErrIncompatibleAssets = new Error("incompatible assets");
 export const ErrValueOutOfBounds = new Error("value is not a uint256");
+export const ErrInvalidTokenType = new Error("invalid tokentype");
 
 const assetImpls = new Map<string, (value: any) => Asset>();
 
