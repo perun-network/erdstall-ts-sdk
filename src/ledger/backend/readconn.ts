@@ -2,7 +2,7 @@
 "use strict";
 
 import { ErdstallWatcher, Contracter } from "#erdstall";
-import { Address, ErdstallEvent } from "#erdstall/ledger";
+import { Address, LedgerEvent } from "#erdstall/ledger";
 import { TokenProvider } from "./tokencache";
 import { Erdstall } from "./contracts/Erdstall";
 import { NFTMetadata, NFTMetadataProvider } from "./metadata";
@@ -34,7 +34,7 @@ export class LedgerReadConn implements LedgerReader {
 		this.tokenCache = tokenCache;
 	}
 
-	on(ev: ErdstallEvent, cb: Function): void {
+	on(ev: LedgerEvent, cb: Function): void {
 		const wrappedCB = (args: Array<any>) => {
 			cb(args);
 		};
@@ -42,13 +42,13 @@ export class LedgerReadConn implements LedgerReader {
 		this.contract.on(ev, wrappedCB);
 	}
 
-	once(ev: ErdstallEvent, cb: Function): void {
+	once(ev: LedgerEvent, cb: Function): void {
 		this.contract.once(ev, (args: Array<any>) => {
 			cb(args);
 		});
 	}
 
-	off(ev: ErdstallEvent, cb: Function): void {
+	off(ev: LedgerEvent, cb: Function): void {
 		if (!this.eventCache.has(cb)) {
 			return;
 		}

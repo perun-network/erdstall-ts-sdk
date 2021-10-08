@@ -9,7 +9,7 @@ import { ethers } from "ethers";
 import { TxReceipt } from "#erdstall/api/responses";
 import { TradeOffer } from "#erdstall/api/transactions";
 import { BalanceProof } from "#erdstall/api/responses";
-import { Address, Account, ErdstallEvent } from "#erdstall/ledger";
+import { Address, Account, LedgerEvent } from "#erdstall/ledger";
 import { TokenProvider } from "#erdstall/ledger/backend";
 import { Assets } from "#erdstall/ledger/assets";
 import { Uint256 } from "#erdstall/api/util";
@@ -20,17 +20,17 @@ import { NFTMetadataProvider } from "#erdstall/ledger/backend";
 export * from "./client";
 export * from "./session";
 
-interface watcher<T extends ErdstallEvent | EnclaveEvent> {
+interface watcher<T extends LedgerEvent | EnclaveEvent> {
 	on: (ev: T, cb: Function) => void;
 	once: (ev: T, cb: Function) => void;
 	off: (ev: T, cb: Function) => void;
 }
 
-export interface ErdstallWatcher extends watcher<ErdstallEvent> {}
+export interface ErdstallWatcher extends watcher<LedgerEvent> {}
 
 export interface EnclaveWatcher extends watcher<EnclaveEvent>, Subscriber {}
 
-export interface Watcher extends watcher<ErdstallEvent | EnclaveEvent> {}
+export interface Watcher extends watcher<LedgerEvent | EnclaveEvent> {}
 
 export interface Contracter {
 	erdstall(): Address;

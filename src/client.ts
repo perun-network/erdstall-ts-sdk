@@ -11,7 +11,7 @@ import {
 	LedgerWriter,
 	Address,
 	Account,
-	ErdstallEvent,
+	LedgerEvent,
 	isLedgerEvent,
 } from "#erdstall/ledger";
 import { TokenFetcher, TokenProvider } from "#erdstall/ledger/backend";
@@ -24,8 +24,8 @@ export class Client implements ErdstallClient {
 	protected enclaveConn: EnclaveReader;
 	protected provider: ethers.providers.Provider | Signer;
 	protected erdstallConn?: LedgerReader | LedgerWriter;
-	private erdstallEventHandlerCache: EventCache<ErdstallEvent>;
-	private erdstallOneShotHandlerCache: OneShotEventCache<ErdstallEvent>;
+	private erdstallEventHandlerCache: EventCache<LedgerEvent>;
+	private erdstallOneShotHandlerCache: OneShotEventCache<LedgerEvent>;
 
 	constructor(
 		provider: ethers.providers.Provider | Signer,
@@ -35,9 +35,9 @@ export class Client implements ErdstallClient {
 		if (encConn! instanceof URL)
 			this.enclaveConn = Enclave.dial(encConn as URL);
 		else this.enclaveConn = encConn as EnclaveReader;
-		this.erdstallEventHandlerCache = new EventCache<ErdstallEvent>();
+		this.erdstallEventHandlerCache = new EventCache<LedgerEvent>();
 		this.erdstallOneShotHandlerCache =
-			new OneShotEventCache<ErdstallEvent>();
+			new OneShotEventCache<LedgerEvent>();
 		this.tokenProvider = new TokenFetcher();
 	}
 
@@ -56,7 +56,7 @@ export class Client implements ErdstallClient {
 		return this.erdstallConn.getNftMetadata(token, id, useCache);
 	}
 
-	on(ev: ErdstallEvent | EnclaveEvent, cb: Function): void {
+	on(ev: LedgerEvent | EnclaveEvent, cb: Function): void {
 		if (isLedgerEvent(ev)) {
 			if (this.erdstallConn) {
 				this.erdstallConn.on(ev, cb);
@@ -68,7 +68,7 @@ export class Client implements ErdstallClient {
 		}
 	}
 
-	once(ev: ErdstallEvent | EnclaveEvent, cb: Function): void {
+	once(ev: LedgerEvent | EnclaveEvent, cb: Function): void {
 		if (isLedgerEvent(ev)) {
 			if (this.erdstallConn) {
 				this.erdstallConn.once(ev, cb);
@@ -80,7 +80,7 @@ export class Client implements ErdstallClient {
 		}
 	}
 
-	off(ev: ErdstallEvent | EnclaveEvent, cb: Function): void {
+	off(ev: LedgerEvent | EnclaveEvent, cb: Function): void {
 		if (isLedgerEvent(ev)) {
 			if (!this.erdstallConn) {
 				return;

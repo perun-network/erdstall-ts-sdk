@@ -3,13 +3,13 @@
 
 import { EnclaveWatcher, ErdstallWatcher } from "#erdstall";
 import { EnclaveEvent, isEnclaveEvent } from "#erdstall/enclave";
-import { ErdstallEvent } from "#erdstall/ledger";
+import { LedgerEvent } from "#erdstall/ledger";
 
 export const EventHelper = {
 	within(
 		ms: number,
 		eventEmitter: EnclaveWatcher | ErdstallWatcher,
-		event: EnclaveEvent | ErdstallEvent,
+		event: EnclaveEvent | LedgerEvent,
 	): Promise<boolean> {
 		let timeout: NodeJS.Timeout;
 		let cb: Function;

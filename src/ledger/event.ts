@@ -12,8 +12,8 @@ const event = [
 	"TokenRegistered",
 ] as const;
 
-export type ErdstallEvent = typeof event[number];
+export type LedgerEvent = typeof event[number];
 
-export function isLedgerEvent(v: any): v is ErdstallEvent {
+export function isLedgerEvent(v: any): v is LedgerEvent {
 	return event.includes(v);
 }
