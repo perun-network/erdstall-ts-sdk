@@ -21,8 +21,32 @@ export class OneShotEventCache<T extends ErdstallEvent>
 		return this;
 	}
 
-	has(key: T): boolean {
-		return this.m.has(key);
+	has(key: T, val?: ErdstallEventHandler<T>): boolean {
+		const events = this.m.get(key);
+		if (events === undefined || !val) {
+			return !!events;
+		}
+
+		return !!events.find((other) => other === val);
+	}
+
+	delete(key: T, val?: ErdstallEventHandler<T>): boolean {
+		const events = this.m.get(key);
+		if (events === undefined) {
+			return false;
+		}
+
+		if (!val) {
+			return this.m.delete(key);
+		}
+
+		const id = events.findIndex((other) => other === val);
+		if (id === -1) {
+			return false;
+		}
+
+		events.splice(id, 1);
+		return true;
 	}
 
 	get(key: T): ErdstallEventHandler<T>[] | undefined {
