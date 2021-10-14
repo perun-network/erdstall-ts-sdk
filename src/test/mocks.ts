@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { ErdstallClient, Watcher } from "#erdstall";
+import { ErdstallClient, Watcher, ErdstallEvent } from "#erdstall";
 import {
 	Mint,
 	Trade,
@@ -24,14 +24,14 @@ import {
 } from "#erdstall/api/calls";
 import { Transaction } from "#erdstall/api/transactions";
 import { BigInteger } from "#erdstall/api/util";
-import { Address, Account, LedgerEvent } from "#erdstall/ledger";
+import { Address, Account } from "#erdstall/ledger";
 import {
 	NFTMetadata,
 	TokenFetcher,
 	TokenProvider,
 } from "#erdstall/ledger/backend";
 import { Assets, Tokens } from "#erdstall/ledger/assets";
-import { EnclaveEvent, EnclaveProvider } from "#erdstall/enclave";
+import { EnclaveProvider } from "#erdstall/enclave";
 
 export class MockWatcher implements Watcher {
 	private txReceiptHandler!: (tx: TxReceipt) => void;
@@ -40,7 +40,7 @@ export class MockWatcher implements Watcher {
 	private phaseShiftHandler!: () => void;
 
 	// eslint-disable-next-line @typescript-eslint/ban-types
-	on(ev: LedgerEvent | EnclaveEvent, cb: Function): void {
+	on(ev: ErdstallEvent, cb: Function): void {
 		switch (ev) {
 			case "receipt":
 				this.txReceiptHandler = cb as (_rec: TxReceipt) => void;
@@ -60,11 +60,11 @@ export class MockWatcher implements Watcher {
 	}
 
 	// eslint-disable-next-line @typescript-eslint/ban-types
-	once(_ev: LedgerEvent | EnclaveEvent, _cb: Function): void {
+	once(_ev: ErdstallEvent, _cb: Function): void {
 		throw new Error("not implemented");
 	}
 	// eslint-disable-next-line @typescript-eslint/ban-types
-	off(_ev: LedgerEvent | EnclaveEvent, _cb: Function): void {
+	off(_ev: ErdstallEvent, _cb: Function): void {
 		throw new Error("not implemented");
 	}
 
