@@ -5,7 +5,7 @@ import { ErdstallEvent, ErdstallEventHandler } from "event";
 import { ErdstallClient } from "erdstall";
 import { Erdstall__factory } from "#erdstall/ledger/backend/contracts";
 import { ClientConfig } from "#erdstall/api/responses";
-import { Enclave, EnclaveReader } from "#erdstall/enclave";
+import { Enclave, isEnclaveEvent, EnclaveReader } from "#erdstall/enclave";
 import {
 	LedgerWriteConn,
 	LedgerReader,
@@ -56,8 +56,7 @@ export class Client implements ErdstallClient {
 		return this.erdstallConn.getNftMetadata(token, id, useCache);
 	}
 
-	on<T extends ErdstallEvent>(ev: T, cb: ErdstallEventHandler<T>): void;
-	on(ev: ErdstallEvent, cb: ErdstallEventHandler<typeof ev>): void {
+	on<T extends ErdstallEvent>(ev: T, cb: ErdstallEventHandler<T>): void {
 		if (isLedgerEvent(ev)) {
 			if (this.erdstallConn) {
 				this.erdstallConn.on(ev, cb as ErdstallEventHandler<typeof ev>);
@@ -67,16 +66,18 @@ export class Client implements ErdstallClient {
 					cb as ErdstallEventHandler<typeof ev>,
 				);
 			}
-		} else {
+		} else if (isEnclaveEvent(ev)) {
 			return this.enclaveConn.on(
 				ev,
 				cb as ErdstallEventHandler<typeof ev>,
 			);
+		} else {
+			const exhaustiveCheck: never = ev;
+			throw new Error(`unhandled eventtype: ${exhaustiveCheck}`);
 		}
 	}
 
-	once<T extends ErdstallEvent>(ev: T, cb: ErdstallEventHandler<T>): void;
-	once(ev: ErdstallEvent, cb: ErdstallEventHandler<typeof ev>): void {
+	once<T extends ErdstallEvent>(ev: T, cb: ErdstallEventHandler<T>): void {
 		if (isLedgerEvent(ev)) {
 			if (this.erdstallConn) {
 				this.erdstallConn.once(
@@ -89,26 +90,33 @@ export class Client implements ErdstallClient {
 					cb as ErdstallEventHandler<typeof ev>,
 				);
 			}
-		} else {
+		} else if (isEnclaveEvent(ev)) {
 			return this.enclaveConn.once(
 				ev,
 				cb as ErdstallEventHandler<typeof ev>,
 			);
+		} else {
+			// Happens statically in TS and also throws an error when used as a JS lib.
+			const exhaustiveCheck: never = ev;
+			throw new Error(`unhandled eventtype: ${exhaustiveCheck}`);
 		}
 	}
 
-	off<T extends ErdstallEvent>(ev: T, cb: ErdstallEventHandler<T>): void;
-	off(ev: ErdstallEvent, cb: ErdstallEventHandler<typeof ev>) {
+	off<T extends ErdstallEvent>(ev: T, cb: ErdstallEventHandler<T>): void {
 		if (isLedgerEvent(ev)) {
 			if (!this.erdstallConn) {
 				return;
 			}
 			this.erdstallConn.off(ev, cb as ErdstallEventHandler<typeof ev>);
-		} else {
+		} else if (isEnclaveEvent(ev)) {
 			return this.enclaveConn.off(
 				ev,
 				cb as ErdstallEventHandler<typeof ev>,
 			);
+		} else {
+			// Happens statically in TS and also throws an error when used as a JS lib.
+			const exhaustiveCheck: never = ev;
+			throw new Error(`unhandled eventtype: ${exhaustiveCheck}`);
 		}
 	}
 
