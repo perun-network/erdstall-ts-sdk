@@ -80,24 +80,24 @@ export class MockWatcher implements Watcher {
 			nft.id.valueOf(),
 		);
 		this.txReceiptHandler(
-			new TxReceipt(mintTx, new Account(0n, new Assets())),
+			new TxReceipt(mintTx, new Map<string, Account>()),
 		);
 	}
 
 	burn(burnTx: Burn): void {
 		this.txReceiptHandler(
-			new TxReceipt(burnTx, new Account(0n, new Assets())),
+			new TxReceipt(burnTx, new Map<string, Account>()),
 		);
 	}
 
 	trade(tradeTx: Trade): void {
 		this.txReceiptHandler(
-			new TxReceipt(tradeTx, new Account(0n, new Assets())),
+			new TxReceipt(tradeTx, new Map<string, Account>()),
 		);
 	}
 
 	transfer(tx: Transfer): void {
-		this.txReceiptHandler(new TxReceipt(tx, new Account(0n, new Assets())));
+		this.txReceiptHandler(new TxReceipt(tx, new Map<string, Account>()));
 	}
 
 	phaseshift(bps: BalanceProofs) {
@@ -257,6 +257,8 @@ function newTxReceiptResult(
 	const _acc = acc
 		? acc
 		: new Account(tx.nonce.valueOf(), new Assets(), new Assets());
-	const txr = new TxReceipt(tx, _acc);
+	const delta = new Map<string, Account>();
+	delta.set(tx.sender.toString(), _acc);
+	const txr = new TxReceipt(tx, delta);
 	return new Result(id, txr);
 }
