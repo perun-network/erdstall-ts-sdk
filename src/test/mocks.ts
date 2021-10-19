@@ -257,8 +257,7 @@ function newTxReceiptResult(
 	const _acc = acc
 		? acc
 		: new Account(tx.nonce.valueOf(), new Assets(), new Assets());
-	const delta = new Map<string, Account>();
-	delta.set(tx.sender.toString(), _acc);
+	const delta = new Map<string, Account>([[tx.sender.key, _acc]]);
 	const txr = new TxReceipt(tx, delta);
 	return new Result(id, txr);
 }

@@ -35,6 +35,10 @@ export class Address implements ABIValue {
 		return utils.getAddress(utils.hexlify(this.value));
 	}
 
+	get key(): string {
+		return Address.toJSON(this);
+	}
+
 	asABI(): any {
 		return this.toString();
 	}
