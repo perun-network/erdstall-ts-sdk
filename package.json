@@ -84,7 +84,7 @@
 		"ethers-utils": "^2.1.11",
 		"isomorphic-ws": "^4.0.1",
 		"reflect-metadata": "^0.1.13",
-		"typedjson": "^1.7.0",
+		"typedjson": "^1.8.0",
 		"ws": "^8.0.0"
 	}
 }

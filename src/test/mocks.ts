@@ -68,11 +68,14 @@ export class MockWatcher implements Watcher {
 		throw new Error("not implemented");
 	}
 
-	mint(nft: {
-		token: Address;
-		id: bigint | BigInteger;
-		owner: Address;
-	}): void {
+	mint(
+		nft: {
+			token: Address;
+			id: bigint | BigInteger;
+			owner: Address;
+		},
+		deltas?: Map<string, Account>,
+	): void {
 		const mintTx = new Mint(
 			nft.owner,
 			BigInt(0),
@@ -80,24 +83,26 @@ export class MockWatcher implements Watcher {
 			nft.id.valueOf(),
 		);
 		this.txReceiptHandler(
-			new TxReceipt(mintTx, new Account(0n, new Assets())),
+			new TxReceipt(mintTx, deltas ?? new Map<string, Account>()),
 		);
 	}
 
-	burn(burnTx: Burn): void {
+	burn(burnTx: Burn, deltas?: Map<string, Account>): void {
 		this.txReceiptHandler(
-			new TxReceipt(burnTx, new Account(0n, new Assets())),
+			new TxReceipt(burnTx, deltas ?? new Map<string, Account>()),
 		);
 	}
 
-	trade(tradeTx: Trade): void {
+	trade(tradeTx: Trade, deltas?: Map<string, Account>): void {
 		this.txReceiptHandler(
-			new TxReceipt(tradeTx, new Account(0n, new Assets())),
+			new TxReceipt(tradeTx, deltas ?? new Map<string, Account>()),
 		);
 	}
 
-	transfer(tx: Transfer): void {
-		this.txReceiptHandler(new TxReceipt(tx, new Account(0n, new Assets())));
+	transfer(tx: Transfer, deltas?: Map<string, Account>): void {
+		this.txReceiptHandler(
+			new TxReceipt(tx, deltas ?? new Map<string, Account>()),
+		);
 	}
 
 	phaseshift(bps: BalanceProofs) {
@@ -257,6 +262,7 @@ function newTxReceiptResult(
 	const _acc = acc
 		? acc
 		: new Account(tx.nonce.valueOf(), new Assets(), new Assets());
-	const txr = new TxReceipt(tx, _acc);
+	const delta = new Map<string, Account>([[tx.sender.key, _acc]]);
+	const txr = new TxReceipt(tx, delta);
 	return new Result(id, txr);
 }

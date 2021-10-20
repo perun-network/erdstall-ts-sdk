@@ -179,7 +179,9 @@ describe("Erdstall-TS-SDK", () => {
 				asset: new assets.Tokens([nft]),
 			}),
 		);
-		if (rec.account.values.hasAsset(token))
+		if (!rec.delta.has(clients[3].address.key))
+			throw new Error("expected client[3] to be affected");
+		if (rec.delta.get(clients[3].address.key)!.values.hasAsset(token))
 			throw new Error("expected asset to be burnt");
 	});
 });

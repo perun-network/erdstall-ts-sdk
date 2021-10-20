@@ -4,19 +4,21 @@
 import { ErdstallObject, registerErdstallType } from "#erdstall/api";
 import { Account } from "#erdstall/ledger";
 import { Transaction } from "#erdstall/api/transactions";
-import { jsonObject, jsonMember } from "typedjson";
+import { jsonObject, jsonMember, jsonMapMember, MapShape } from "typedjson";
 
 const txReceiptTypeName = "TxReceipt";
 
 @jsonObject
 export class TxReceipt extends ErdstallObject {
 	@jsonMember(() => Transaction) tx: Transaction;
-	@jsonMember(Account) account: Account;
 
-	constructor(tx: Transaction, account: Account) {
+	@jsonMapMember(String, () => Account, { shape: MapShape.OBJECT })
+	delta: Map<string, Account>;
+
+	constructor(tx: Transaction, delta: Map<string, Account>) {
 		super();
 		this.tx = tx;
-		this.account = account;
+		this.delta = delta;
 	}
 
 	public objectType(): any {
