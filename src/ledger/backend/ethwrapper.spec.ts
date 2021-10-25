@@ -3,7 +3,7 @@
 
 import { expect } from "chai";
 
-import { Wallet, utils } from "ethers";
+import { Wallet } from "ethers";
 import { PerunArt__factory } from "./contracts";
 import { Address } from "#erdstall/ledger";
 import {
@@ -35,12 +35,22 @@ describe("ErdstallEventWrapping", function () {
 	let bobAddr: Address;
 	const amount = new Amount(10n);
 	const tokens = test.newRandomTokens(rng, TOKEN_SIZE);
-	const o_assets = new Assets();
+	const oAssets = new Assets();
 	let bobContract: Erdstall;
 	let opContract: Erdstall;
 	let conn: LedgerWriter;
 	let tokenProvider: Pick<TokenProvider, "tokenTypeOf">;
 	let deposits: [string, Asset][] = [];
+	const unusedTokenProvider: Pick<TokenProvider, "tokenTypeOf"> = {
+		tokenTypeOf: async (
+			_erdstall: Erdstall,
+			_token: string,
+		): Promise<TokenType> => {
+			throw new Error(
+				"unexpected use of tokenProvider in callback implementation",
+			);
+		},
+	};
 
 	before(async () => {
 		testenv = await setupEnv(1, EPOCH_DURATION);
@@ -57,7 +67,7 @@ describe("ErdstallEventWrapping", function () {
 			[ETHZERO, amount],
 			[testenv.perunArt, tokens],
 		];
-		deposits.forEach(([token, value]) => o_assets.addAsset(token, value));
+		deposits.forEach(([token, value]) => oAssets.addAsset(token, value));
 
 		opContract = Erdstall__factory.connect(testenv.erdstall, testenv.op);
 		bobContract = Erdstall__factory.connect(testenv.erdstall, bob);
@@ -81,55 +91,72 @@ describe("ErdstallEventWrapping", function () {
 		};
 	});
 
-	it("wraps challenges", function (done) {
-		const w_epoch = 4n;
-		const wcb = ethCallbackShim(
-			bobContract,
-			unusedTokenProvider(),
-			"Challenged",
-			({ address, epoch }) => {
-				expect(address.equals(bobAddr)).to.be.true;
-				// We challenged with proof for `epoch n` and are currently in `epoch
-				// n+1`, which results in the challenge epoch to be offset by one.
-				expect(epoch).to.equal(w_epoch + 1n);
-				done();
-			},
-		);
-		bobContract.once("Challenged", wcb);
+	let challengedEpoch = 0n;
+	it("wraps challenges", async function () {
+		let timeout: NodeJS.Timeout;
+		challengedEpoch = (await testenv.currentEpoch()) - 1n;
 
-		const bal = new Balance(w_epoch, bobAddr, false, o_assets);
-		bal.sign(conn.erdstall(), testenv.tee).then((bp) => {
-			const [p, sig] = bp.toEthProof();
-			bobContract.challenge(p, sig);
+		const res = new Promise((resolve, reject) => {
+			timeout = setTimeout(reject, TIMEOUT_MS);
+			const wcb = ethCallbackShim(
+				bobContract,
+				unusedTokenProvider,
+				"Challenged",
+				({ address, epoch }) => {
+					expect(address.equals(bobAddr)).to.be.true;
+					// We challenged with proof for `epoch n` and are currently in `epoch
+					// n+1`, which results in the challenge epoch to be offset by one.
+					expect(epoch).to.equal(challengedEpoch + 1n);
+					resolve(true);
+				},
+			);
+			bobContract.once("Challenged", wcb);
+		});
+
+		const bal = new Balance(challengedEpoch, bobAddr, false, oAssets);
+		const bp = await bal.sign(conn.erdstall(), testenv.tee);
+		const [p, sig] = bp.toEthProof();
+		const ctx = await bobContract.challenge(p, sig);
+		const rec = await ctx.wait();
+		expect(rec.status, "challenging should have worked").to.equal(0x1);
+
+		return res.finally(() => {
+			clearTimeout(timeout);
 		});
 	});
 
-	// mocha does not allow to use `async function (done)` together, so we can
-	// either use manual timeouts or enter slight callback hell.
-	it("wraps challenge responses", function (done) {
-		let o_sig: Signature;
-		const w_epoch = 5n;
-		// Wait an epoch before responding to challenge.
-		sealEpoch(bob).then(() => {
+	it("wraps challenge responses", async function () {
+		let timeout: NodeJS.Timeout;
+		let oSig: Signature;
+		const wEpoch = challengedEpoch + 1n;
+
+		// Seal the epoch in which we challenged before responding to challenge.
+		await testenv.sealEpoch(wEpoch);
+		const res = new Promise((resolve, reject) => {
+			timeout = setTimeout(reject, TIMEOUT_MS);
 			const wcb = ethCallbackShim(
 				bobContract,
 				tokenProvider,
 				"ChallengeResponded",
 				({ address, epoch, tokens, sig }) => {
 					expect(address.equals(bobAddr)).to.be.true;
-					expect(epoch).to.equal(w_epoch);
-					expect(tokens.cmp(o_assets)).to.equal("eq");
-					expect(sig.toString()).to.equal(o_sig.toString());
-					done();
+					expect(epoch).to.equal(wEpoch);
+					expect(tokens.cmp(oAssets)).to.equal("eq");
+					expect(sig.toString()).to.equal(oSig.toString());
+					resolve(true);
 				},
 			);
 			bobContract.once("ChallengeResponded", wcb);
-			const bal = new Balance(w_epoch, bobAddr, true, o_assets);
-			bal.sign(conn.erdstall(), testenv.tee).then((bp) => {
-				const [p, s] = bp.toEthProof();
-				o_sig = new Signature(utils.arrayify(s));
-				opContract.respondChallenge(p, s);
-			});
+		});
+
+		const bal = new Balance(wEpoch, bobAddr, true, oAssets);
+		bal.sign(conn.erdstall(), testenv.tee).then((bp) => {
+			const [p, s] = bp.toEthProof();
+			oSig = new Signature(s);
+			opContract.respondChallenge(p, s);
+		});
+		return res.finally(() => {
+			clearTimeout(timeout);
 		});
 	});
 
@@ -150,7 +177,7 @@ describe("ErdstallEventWrapping", function () {
 				"Deposited",
 				({ address, assets }) => {
 					expect(address.equals(bobAddr)).to.be.true;
-					expect(assets.cmp(o_assets)).to.equal("lt");
+					expect(assets.cmp(oAssets)).to.equal("lt");
 
 					numOfEvents++;
 					if (numOfEvents === expectedNumOfEvents) resolve(true);
@@ -159,7 +186,7 @@ describe("ErdstallEventWrapping", function () {
 			bobContract.on("Deposited", wcb);
 		});
 
-		const stages = await conn.deposit(o_assets);
+		const stages = await conn.deposit(oAssets);
 		for (const stage of stages) {
 			const ctx = await stage.value;
 			const rec = await ctx.wait();
@@ -172,111 +199,139 @@ describe("ErdstallEventWrapping", function () {
 		});
 	});
 
-	it("wraps withdrawals", function (done) {
-		const w_epoch = 5n;
-		const wcb = ethCallbackShim(
-			bobContract,
-			tokenProvider,
-			"Withdrawn",
-			({ address, tokens, epoch }) => {
-				expect(address.equals(bobAddr)).to.be.true;
-				expect(tokens.cmp(o_assets)).to.equal("eq");
-				expect(epoch).to.equal(w_epoch);
-				done();
-			},
-		);
-		bobContract.once("Withdrawn", wcb);
-		const bal = new Balance(w_epoch, bobAddr, true, o_assets);
-		bal.sign(conn.erdstall(), testenv.tee).then(async (bp) => {
-			const stages = await conn.withdraw(bp);
-			for (const stage of stages) {
-				const ctx = await stage.value;
-				const rec = await ctx.wait();
-				expect(rec.status, "withdrawing should have worked").to.equal(
-					0x1,
-				);
-			}
+	it("wraps withdrawals", async function () {
+		let timeout: NodeJS.Timeout;
+		const wEpoch = await testenv.currentEpoch();
+		await testenv.sealEpoch(wEpoch);
+
+		const res = new Promise((resolve, reject) => {
+			timeout = setTimeout(reject, TIMEOUT_MS);
+			const wcb = ethCallbackShim(
+				bobContract,
+				tokenProvider,
+				"Withdrawn",
+				({ address, tokens, epoch }) => {
+					expect(address.equals(bobAddr)).to.be.true;
+					expect(tokens.cmp(oAssets)).to.equal("eq");
+					expect(epoch).to.equal(wEpoch);
+					resolve(true);
+				},
+			);
+			bobContract.once("Withdrawn", wcb);
+		});
+
+		const bal = new Balance(wEpoch, bobAddr, true, oAssets);
+		const bp = await bal.sign(conn.erdstall(), testenv.tee);
+		const stages = await conn.withdraw(bp);
+		for (const stage of stages) {
+			const ctx = await stage.value;
+			const rec = await ctx.wait();
+			expect(rec.status, "withdrawing should have worked").to.equal(0x1);
+		}
+		return res.finally(() => {
+			clearTimeout(timeout);
 		});
 	});
 
-	it("wraps token registrations", function (done) {
+	it("wraps token registrations", async function () {
+		let timeout: NodeJS.Timeout;
 		const newToken = test.newRandomAddress(rng);
-		const wcb = ethCallbackShim(
-			bobContract,
-			unusedTokenProvider(),
-			"TokenRegistered",
-			({ token, tokenHolder, tokenType }) => {
-				expect(token.equals(newToken)).to.be.true;
-				expect(
-					tokenHolder.equals(Address.fromString(testenv.erc20Holder)),
-				).to.be.true;
-				expect(tokenType).to.equal("ERC20");
-				done();
-			},
+
+		const res = new Promise((resolve, reject) => {
+			timeout = setTimeout(reject, TIMEOUT_MS);
+			const wcb = ethCallbackShim(
+				bobContract,
+				unusedTokenProvider,
+				"TokenRegistered",
+				({ token, tokenHolder, tokenType }) => {
+					expect(token.equals(newToken)).to.be.true;
+					expect(
+						tokenHolder.equals(
+							Address.fromString(testenv.erc20Holder),
+						),
+					).to.be.true;
+					expect(tokenType).to.equal("ERC20");
+					resolve(true);
+				},
+			);
+			bobContract.once("TokenRegistered", wcb);
+		});
+		const ctx = await opContract.registerToken(
+			newToken.toString(),
+			testenv.erc20Holder,
 		);
-		bobContract.once("TokenRegistered", wcb);
-		opContract.registerToken(newToken.toString(), testenv.erc20Holder);
+		const rec = await ctx.wait();
+		expect(rec.status, "registering token should have worked").to.equal(
+			0x1,
+		);
+		return res.finally(() => {
+			clearTimeout(timeout);
+		});
 	});
 
-	it("wraps tokentype registrations", function (done) {
+	it("wraps tokentype registrations", async function () {
+		let timeout: NodeJS.Timeout;
 		const newTokenType = "2$IDEA";
 		const newHolder = test.newRandomAddress(rng);
-		const wcb = ethCallbackShim(
-			bobContract,
-			unusedTokenProvider(),
-			"TokenTypeRegistered",
-			({ tokenHolder, tokenType }) => {
-				expect(tokenHolder.equals(newHolder)).to.be.true;
-				expect(tokenType).to.equal(newTokenType);
-				done();
-			},
+		const res = new Promise((resolve, reject) => {
+			timeout = setTimeout(reject, TIMEOUT_MS);
+			const wcb = ethCallbackShim(
+				bobContract,
+				unusedTokenProvider,
+				"TokenTypeRegistered",
+				({ tokenHolder, tokenType }) => {
+					expect(tokenHolder.equals(newHolder)).to.be.true;
+					expect(tokenType).to.equal(newTokenType);
+					resolve(true);
+				},
+			);
+			bobContract.once("TokenTypeRegistered", wcb);
+		});
+		const ctx = await opContract.registerTokenType(
+			newHolder.toString(),
+			newTokenType,
 		);
-		bobContract.once("TokenTypeRegistered", wcb);
-		opContract.registerTokenType(newHolder.toString(), newTokenType);
+		const rec = await ctx.wait();
+		expect(rec.status, "registering token should have worked").to.equal(
+			0x1,
+		);
+		return res.finally(() => {
+			clearTimeout(timeout);
+		});
 	});
 
-	it("wraps contract freeze", function (done) {
-		const w_epoch = 9n; // <- Current epoch, found by trial and error...
-		const wcb = ethCallbackShim(
-			bobContract,
-			unusedTokenProvider(),
-			"Frozen",
-			({ epoch }) => {
-				expect(epoch).to.equal(w_epoch);
-				done();
-			},
-		);
-		bobContract.once("Frozen", wcb);
+	it("wraps contract freeze", async function () {
+		let timeout: NodeJS.Timeout;
+		const wEpoch = (await testenv.currentEpoch()) - 2n;
+		const res = new Promise((resolve, reject) => {
+			timeout = setTimeout(reject, TIMEOUT_MS);
+			const wcb = ethCallbackShim(
+				bobContract,
+				unusedTokenProvider,
+				"Frozen",
+				({ epoch }) => {
+					expect(epoch).to.equal(wEpoch);
+					resolve(true);
+				},
+			);
+			bobContract.once("Frozen", wcb);
+		});
 
-		const bal = new Balance(w_epoch, bobAddr, false, o_assets);
-		// We use callbacks here because it is easier on the eyes, than the
-		// alternative.
-		bal.sign(conn.erdstall(), testenv.tee).then((bp) => {
-			const [p, sig] = bp.toEthProof();
-			bobContract.challenge(p, sig).then(async () => {
-				await sealEpoch(bob); // seal current epoch.
-				await sealEpoch(bob); // seal epoch in which op can respond.
-				bobContract.ensureFrozen();
-			});
+		const bal = new Balance(wEpoch, bobAddr, false, oAssets);
+		const bp = await bal.sign(conn.erdstall(), testenv.tee);
+		const [p, sig] = bp.toEthProof();
+		let ctx = await bobContract.challenge(p, sig);
+		let rec = await ctx.wait();
+		expect(rec.status, "challenging should have worked").to.equal(0x1);
+
+		await testenv.sealEpoch(wEpoch + 2n); // seal current epoch.
+
+		ctx = await bobContract.ensureFrozen();
+		rec = await ctx.wait();
+		expect(rec.status, "freezing should have worked").to.equal(0x1);
+
+		return res.finally(() => {
+			clearTimeout(timeout);
 		});
 	});
 });
-
-function unusedTokenProvider(): Pick<TokenProvider, "tokenTypeOf"> {
-	return {
-		tokenTypeOf: async (
-			_erdstall: Erdstall,
-			_token: string,
-		): Promise<TokenType> => {
-			throw new Error(
-				"unexpected use of tokenProvider in callback implementation",
-			);
-		},
-	};
-}
-
-async function sealEpoch(w: Wallet, n = 1) {
-	for (let i = 0; i < EPOCH_DURATION * n; i++) {
-		await w.sendTransaction({ to: w.address, value: 0n });
-	}
-}
