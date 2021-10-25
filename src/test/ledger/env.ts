@@ -32,6 +32,8 @@ export interface Environment {
 	op: Wallet;
 	tee: Wallet;
 	users: Wallet[];
+	currentEpoch: () => Promise<bigint>;
+	sealEpoch: (ep: bigint) => Promise<bigint>;
 }
 
 const PERUNART_NAME = "PerunArt";
@@ -50,6 +52,10 @@ export async function setupEnv(
 	lop?: Wallet,
 	pacc?: Wallet,
 ): Promise<Environment> {
+	if (epochDuration <= 0) {
+		throw new Error("epochDuration must not be negative or zero");
+	}
+
 	const provider = lprovider ? lprovider : gProvider;
 
 	const op = lop ? lop : wallets[OP];
@@ -158,6 +164,46 @@ export async function setupEnv(
 		await part.addMinter(addr);
 	}
 
+	const mineBlocks = async (n: number | bigint) => {
+		for (let i = 0; i < n; i++) {
+			await provider.send("evm_mine", []);
+		}
+	};
+
+	const currentEpoch = async (): Promise<bigint> => {
+		return Promise.all([
+			erdstall.bigBang(),
+			provider.getBlockNumber(),
+		]).then(([bigbang, currentBlock]) => {
+			return (
+				(BigInt(currentBlock) - bigbang.toBigInt()) /
+				BigInt(epochDuration)
+			);
+		});
+	};
+
+	const sealEpoch = async (epoch: bigint): Promise<bigint> => {
+		const bInit = await erdstall.bigBang();
+		const targetEpoch = epoch + 2n; // an epoch is sealed on-chain if the current block is two epochs further
+		const targetBlock =
+			bInit.toBigInt() + targetEpoch * BigInt(epochDuration);
+		const currentBlock = BigInt(await provider.getBlockNumber());
+		const bdelta = targetBlock - currentBlock;
+		if (bdelta <= -epochDuration)
+			throw new Error(
+				`Sealed epoch ${targetEpoch} already passed, current: ${
+					(BigInt(currentBlock) - bInit.toBigInt()) /
+					BigInt(epochDuration)
+				}`,
+			);
+		if (bdelta <= 0) {
+			console.log(`Current sealed epoch already at ${targetEpoch}`);
+			return bdelta;
+		}
+		await mineBlocks(bdelta);
+		return bdelta;
+	};
+
 	return {
 		provider: provider,
 		erdstall: contracts[erdstallContract].address,
@@ -169,5 +215,7 @@ export async function setupEnv(
 		op: op,
 		tee: tee,
 		users: users,
+		currentEpoch: currentEpoch,
+		sealEpoch: sealEpoch,
 	};
 }
