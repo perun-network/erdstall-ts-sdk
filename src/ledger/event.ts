@@ -27,22 +27,27 @@ export interface Deposited {
 	address: Address;
 	assets: Assets;
 }
+
 export interface TokenRegistered {
 	token: Address;
 	tokenType: TokenType;
 	tokenHolder: Address;
 }
+
 export interface TokenTypeRegistered {
 	tokenType: TokenType;
 	tokenHolder: Address;
 }
+
 export interface Frozen {
 	epoch: bigint;
 }
+
 export interface OwnershipTransferrerd {
 	previousOwner: Address;
 	newOwner: Address;
 }
+
 export interface WithdrawalException {
 	epoch: bigint;
 	address: Address;
@@ -50,15 +55,18 @@ export interface WithdrawalException {
 	value: Assets;
 	error: string;
 }
+
 export interface Withdrawn {
 	epoch: bigint;
 	address: Address;
 	tokens: Assets;
 }
+
 export interface Challenged {
 	epoch: bigint;
 	address: Address;
 }
+
 export interface ChallengeResponded {
 	epoch: bigint;
 	address: Address;
