@@ -11,7 +11,7 @@ export function isTokenType(maybeToken: any): maybeToken is TokenType {
 	return _tokenTypes.includes(maybeToken);
 }
 export function requireTokenType(maybeToken: string): TokenType {
-	if (!isTokenType(maybeToken)) throw ErrInvalidTokenType;
+	if (!isTokenType(maybeToken)) throw ErrUnknownTokenType;
 	return maybeToken;
 }
 
@@ -26,7 +26,7 @@ export const ErrSubtrahendLargerThanMinuend = new Error(
 );
 export const ErrIncompatibleAssets = new Error("incompatible assets");
 export const ErrValueOutOfBounds = new Error("value is not a uint256");
-export const ErrInvalidTokenType = new Error("invalid tokentype");
+export const ErrUnknownTokenType = new Error("unkown tokentype");
 
 const assetImpls = new Map<string, (value: any) => Asset>();
 
