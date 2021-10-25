@@ -188,14 +188,14 @@ export class TokenFetcher implements TokenProvider {
 		ttype: TokenType,
 		token: string | Address,
 	): Responder {
-		const token_s = token instanceof Address ? token.toString() : token;
+		token = token instanceof Address ? token.toString() : token;
 		switch (ttype) {
 			case "ERC20":
-				return ERC20__factory.connect(token_s, signer);
+				return ERC20__factory.connect(token, signer);
 			case "ERC721":
-				return ERC721__factory.connect(token_s, signer);
+				return ERC721__factory.connect(token, signer);
 			case "ERC721Mintable":
-				return ERC721__factory.connect(token_s, signer);
+				return ERC721__factory.connect(token, signer);
 			case "ETH":
 				return {
 					symbol: async function (): Promise<string> {
