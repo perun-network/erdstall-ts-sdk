@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { utils } from "ethers";
 import { expect } from "chai";
 import { Tokens, encodePackedIds, decodePackedIds } from "./tokens";
 import * as test from "#erdstall/test";

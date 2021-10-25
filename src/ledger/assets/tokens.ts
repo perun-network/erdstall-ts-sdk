@@ -9,6 +9,7 @@ import {
 	ErrIncompatibleAssets,
 	registerAssetType,
 } from "./asset";
+import { mkBigInt } from "#erdstall/utils/bigint";
 import { Amount, encodePackedAmount } from "./amount";
 
 export const ErrIDAlreadyContained = new Error(
@@ -206,12 +207,9 @@ export function decodePackedIds(ids: string): bigint[] {
 	if (idArr.length % 32 !== 0)
 		throw new Error("received token array not divisible by 32");
 	const size = idArr.length / 32;
-	const res: bigint[] = new Array(size);
-	for (let i = 0; i < size; i++) {
-		res[i] = utils.defaultAbiCoder
-			.decode(["uint256"], idArr.slice(i * 32, i * 32 + 32))[0]
-			.toBigInt();
-	}
+	const res = Array.from({ length: size }, (_, i) => {
+		return mkBigInt(idArr.slice(i * 32, i * 32 + 32).values(), 256, 8);
+	});
 	return res;
 }
 

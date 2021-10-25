@@ -10,6 +10,7 @@ import {
 	assertUint256,
 	registerAssetType,
 } from "./asset";
+import { mkBigInt } from "#erdstall/utils/bigint";
 
 /** Amount represents a currency amount in its smallest unit. */
 export class Amount extends Asset {
@@ -100,8 +101,13 @@ export function encodePackedAmount(value: bigint): string {
 }
 
 export function decodePackedAmount(data: string): Amount {
-	const res = utils.defaultAbiCoder.decode(["uint256"], data);
-	return new Amount(res[0].toBigInt());
+	let idArr: Uint8Array;
+	if (!data.startsWith("0x")) {
+		idArr = utils.arrayify(`0x${data}`);
+	} else {
+		idArr = utils.arrayify(data);
+	}
+	return new Amount(mkBigInt(idArr.values(), 256, 8));
 }
 
 registerAssetType(TypeTags.Amount, Amount.fromJSON);

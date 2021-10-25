@@ -1,23 +1,13 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
+import { mkBigInt } from "#erdstall/utils";
 import PRNG from "./random";
 
 // newRandomBigInt generates a random `BigInt` with max. `maxBits` number of
 // bits.
 export function newRandomBigInt(rng: PRNG, maxBits: number): bigint {
-	const numInts = Math.trunc(maxBits / 32);
-	let x = 0n;
-	for (let i = 0; i < numInts; ++i) {
-		x += BigInt(rng.uInt32()) << BigInt(i * 32);
-	}
-	const restBits = maxBits % 32;
-	if (restBits > 0) {
-		x +=
-			BigInt(rng.uInt32() & ((1 << restBits) - 1)) <<
-			BigInt(numInts * 32);
-	}
-	return x;
+	return mkBigInt(rng.valuesUInt32(), maxBits, 32);
 }
 
 // NewUint256 generates a random bigint with 256 bit precision.

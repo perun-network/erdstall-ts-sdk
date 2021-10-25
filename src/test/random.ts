@@ -7,6 +7,8 @@ import { aleaRNGFactory } from "number-generator";
 export default interface PRNG {
 	uFloat32: () => number;
 	uInt32: () => number;
+	valuesUInt32: () => Iterator<number>;
+	valuesUFloat32: () => Iterator<number>;
 }
 
 // NewPrng returns a PRNG seeded with the current `date-time`.
@@ -16,7 +18,18 @@ export function newPrng(): PRNG {
 		seed = new Date().getTime();
 	}
 	console.log(`PRNG with ESSEED=${seed}`);
-	return aleaRNGFactory(seed);
+	const rng = aleaRNGFactory(seed);
+	const valuesWithGen = (
+		gen: () => number,
+	): (() => IteratorResult<number>) => {
+		return () => ({ value: gen(), done: false });
+	};
+
+	return {
+		...rng,
+		valuesUInt32: () => ({ next: valuesWithGen(rng.uInt32) }),
+		valuesUFloat32: () => ({ next: valuesWithGen(rng.uFloat32) }),
+	};
 }
 
 export function newRandomUint8Array(rng: PRNG, size: number): Uint8Array {
