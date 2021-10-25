@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { utils } from "ethers";
+import { utils, BytesLike } from "ethers";
 import { jsonObject } from "typedjson";
 import { ABIValue, customJSON } from "./util";
 
 @jsonObject
 export class Signature implements ABIValue {
 	value: Uint8Array;
-	constructor(value: Uint8Array) {
-		this.value = value;
+	constructor(value: Uint8Array | BytesLike) {
+		this.value = utils.arrayify(value);
 	}
 
 	toString(): string {
