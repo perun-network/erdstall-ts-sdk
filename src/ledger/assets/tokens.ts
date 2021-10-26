@@ -181,17 +181,17 @@ export class Tokens extends Asset {
 
 registerAssetType(TypeTags.Tokens, Tokens.fromJSON);
 
-export function forEachNFT(
+export function mapNFTs<T>(
 	a: Map<string, Asset>,
-	f: (token: string, id: bigint) => void,
-) {
-	a.forEach((asset, token) => {
+	f: (token: string, id: bigint) => T,
+): T[] {
+	return Array.from(a, ([token, asset]) => {
 		if (asset instanceof Tokens) {
-			asset.value.forEach((id) => {
-				f(token, id);
-			});
+			return asset.value.map((id) => f(token, id));
+		} else {
+			return [];
 		}
-	});
+	}).flat();
 }
 
 // decodePackedIds receives a hex encoded string representing one or more ABI
