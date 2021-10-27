@@ -6,6 +6,11 @@ import { Asset } from "./asset";
 import { ABIValue, customJSON } from "#erdstall/api/util";
 import { ErdstallToken } from "#erdstall/api/responses";
 import { Address } from "#erdstall/ledger";
+import { TokenProvider } from "#erdstall/ledger/backend";
+import { Erdstall } from "#erdstall/ledger/backend/contracts";
+import { decodePackedAmount } from "./amount";
+import { Tokens, decodePackedIds } from "./tokens";
+import { TokenType } from "./asset";
 
 export const ETHZERO = "0x0000000000000000000000000000000000000000";
 
@@ -147,6 +152,38 @@ function isProperSubset(
 		}
 	}
 	return true;
+}
+
+export async function decodePackedAssets(
+	erdstall: Erdstall,
+	tokenProvider: Pick<TokenProvider, "tokenTypeOf">,
+	values: [string, string][],
+): Promise<Assets> {
+	const assets = new Assets();
+	for (const [t, v] of values) {
+		const ttype = await tokenProvider.tokenTypeOf(erdstall, t);
+		assets.addAsset(t, decodePackedAsset(v, ttype));
+	}
+	return assets;
+}
+
+function decodePackedAsset(data: string, ttype: TokenType): Asset {
+	switch (ttype) {
+		case "ETH": {
+			return decodePackedAmount(data);
+		}
+		case "ERC20": {
+			return decodePackedAmount(data);
+		}
+		case "ERC721": {
+			const res = decodePackedIds(data);
+			return new Tokens(res);
+		}
+		case "ERC721Mintable": {
+			const res = decodePackedIds(data);
+			return new Tokens(res);
+		}
+	}
 }
 
 customJSON(Assets);

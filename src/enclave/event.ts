@@ -1,5 +1,6 @@
 // Event describes all on-chain events related to Erdstall, which are emitted
 // by the ledger backends.
+"use strict";
 
 const event = [
 	"open",

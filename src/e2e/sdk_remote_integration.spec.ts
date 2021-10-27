@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { TxReceipt } from "#erdstall/api/responses";
 import { Address } from "#erdstall/ledger";
 import { Assets } from "#erdstall/ledger/assets";
 import * as assets from "#erdstall/ledger/assets";
@@ -118,7 +117,7 @@ describe("Erdstall-TS-SDK", () => {
 				() => reject(new Error("Bob's receipt timed out")),
 				15000,
 			);
-			clients[1].once("receipt", (_: TxReceipt) => {
+			clients[1].once("receipt", () => {
 				clearTimeout(timeout);
 				resolve();
 			});

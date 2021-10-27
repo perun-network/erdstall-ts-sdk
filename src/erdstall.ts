@@ -9,7 +9,7 @@ import { ethers } from "ethers";
 import { TxReceipt } from "#erdstall/api/responses";
 import { TradeOffer } from "#erdstall/api/transactions";
 import { BalanceProof } from "#erdstall/api/responses";
-import { Address, Account, ErdstallEvent } from "#erdstall/ledger";
+import { Address, Account, LedgerEvent } from "#erdstall/ledger";
 import { TokenProvider } from "#erdstall/ledger/backend";
 import { Assets } from "#erdstall/ledger/assets";
 import { Uint256 } from "#erdstall/api/util";
@@ -17,20 +17,21 @@ import { Stages } from "#erdstall/utils";
 import { EnclaveEvent } from "#erdstall/enclave";
 import { NFTMetadataProvider } from "#erdstall/ledger/backend";
 
+import { ErdstallEvent, ErdstallEventHandler } from "./event";
 export * from "./client";
 export * from "./session";
 
-interface watcher<T extends ErdstallEvent | EnclaveEvent> {
-	on: (ev: T, cb: Function) => void;
-	once: (ev: T, cb: Function) => void;
-	off: (ev: T, cb: Function) => void;
+interface watcher<T extends ErdstallEvent> {
+	on: <EV extends T>(ev: EV, cb: ErdstallEventHandler<EV>) => void;
+	once: <EV extends T>(ev: EV, cb: ErdstallEventHandler<EV>) => void;
+	off: <EV extends T>(ev: EV, cb: ErdstallEventHandler<EV>) => void;
 }
 
-export interface ErdstallWatcher extends watcher<ErdstallEvent> {}
+export interface ErdstallWatcher extends watcher<LedgerEvent> {}
 
 export interface EnclaveWatcher extends watcher<EnclaveEvent>, Subscriber {}
 
-export interface Watcher extends watcher<ErdstallEvent | EnclaveEvent> {}
+export interface Watcher extends watcher<ErdstallEvent> {}
 
 export interface Contracter {
 	erdstall(): Address;

@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { ErdstallClient, Watcher } from "#erdstall";
+import {
+	ErdstallClient,
+	Watcher,
+	ErdstallEvent,
+	ErdstallEventHandler,
+} from "#erdstall";
 import {
 	Mint,
 	Trade,
@@ -24,47 +29,45 @@ import {
 } from "#erdstall/api/calls";
 import { Transaction } from "#erdstall/api/transactions";
 import { BigInteger } from "#erdstall/api/util";
-import { Address, Account, ErdstallEvent } from "#erdstall/ledger";
+import { Address, Account } from "#erdstall/ledger";
 import {
 	NFTMetadata,
 	TokenFetcher,
 	TokenProvider,
 } from "#erdstall/ledger/backend";
 import { Assets, Tokens } from "#erdstall/ledger/assets";
-import { EnclaveEvent, EnclaveProvider } from "#erdstall/enclave";
+import { EnclaveProvider } from "#erdstall/enclave";
 
 export class MockWatcher implements Watcher {
-	private txReceiptHandler!: (tx: TxReceipt) => void;
-	private exitProofHandler!: (p: BalanceProof) => void;
-	private balanceProofHandler!: (p: BalanceProof) => void;
-	private phaseShiftHandler!: () => void;
+	private txReceiptHandler!: ErdstallEventHandler<"receipt">;
+	private exitProofHandler!: ErdstallEventHandler<"exitproof">;
+	private balanceProofHandler!: ErdstallEventHandler<"proof">;
+	private phaseShiftHandler!: ErdstallEventHandler<"phaseshift">;
 
-	// eslint-disable-next-line @typescript-eslint/ban-types
-	on(ev: ErdstallEvent | EnclaveEvent, cb: Function): void {
+	on<T extends ErdstallEvent>(ev: T, cb: ErdstallEventHandler<T>): void {
 		switch (ev) {
 			case "receipt":
-				this.txReceiptHandler = cb as (_rec: TxReceipt) => void;
+				this.txReceiptHandler = cb as ErdstallEventHandler<"receipt">;
 				break;
 			case "proof":
-				this.balanceProofHandler = cb as (_bp: BalanceProof) => void;
+				this.balanceProofHandler = cb as ErdstallEventHandler<"proof">;
 				break;
 			case "exitproof":
-				this.exitProofHandler = cb as (_ep: BalanceProof) => void;
+				this.exitProofHandler = cb as ErdstallEventHandler<"exitproof">;
 				break;
 			case "phaseshift":
-				this.phaseShiftHandler = cb as () => void;
+				this.phaseShiftHandler =
+					cb as ErdstallEventHandler<"phaseshift">;
 				break;
 			default:
 				throw new Error(`MockWatcher: unsupported event "${ev}"`);
 		}
 	}
 
-	// eslint-disable-next-line @typescript-eslint/ban-types
-	once(_ev: ErdstallEvent | EnclaveEvent, _cb: Function): void {
+	once<T extends ErdstallEvent>(_ev: T, _cb: ErdstallEventHandler<T>): void {
 		throw new Error("not implemented");
 	}
-	// eslint-disable-next-line @typescript-eslint/ban-types
-	off(_ev: ErdstallEvent | EnclaveEvent, _cb: Function): void {
+	off<T extends ErdstallEvent>(_ev: T, _cb: ErdstallEventHandler<T>): void {
 		throw new Error("not implemented");
 	}
 

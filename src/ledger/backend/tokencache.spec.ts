@@ -53,8 +53,12 @@ describe("Tokencache", () => {
 			"retrieving the symbol for tokens should work",
 		).equals("PRN");
 
+		const token = await cache.findRegisteredTokenWithSymbol(
+			erdstall,
+			"PRN",
+		);
 		expect(
-			await cache.findRegisteredTokenWithSymbol(erdstall, "PRN"),
+			token?.toString(),
 			"finding the symbol of a registered token should work",
 		).equals(testenv.perun);
 	});
