@@ -71,4 +71,26 @@ describe("bigints", function () {
 			);
 		}
 	});
+
+	it("uses MSB of input value to fill remaining bits", function () {
+		const NUM_TESTCASES = 64;
+		const intSizes = [8, 16, 32] as const;
+		for (let i = 0; i < NUM_TESTCASES; ++i) {
+			const intSize = intSizes[rng.uInt32() % 3];
+			const bitWidth = rng.uInt32() % intSize;
+			const expBitMask = Number(
+				`0b${"1".repeat(bitWidth)}${"0".repeat(intSize - bitWidth)}`,
+			);
+			const arr = [rng.uInt32()];
+			const expRes =
+				(BigInt(arr[0]) & BigInt(expBitMask)) >>
+				(BigInt(intSize) - BigInt(bitWidth));
+			expect(
+				mkBigInt(arr.values(), bitWidth, intSize),
+				`bitWidth: ${bitWidth} intSize: ${intSize} value: ${arr[0].toString(
+					2,
+				)}`,
+			).to.equal(expRes);
+		}
+	});
 });

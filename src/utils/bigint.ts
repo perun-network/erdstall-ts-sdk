@@ -21,13 +21,13 @@ export function mkBigInt(
 	if (restBits > 0) {
 		// Shift by remaining bits to have properly sized bigints as required by maxBits.
 		x = x << BigInt(restBits);
-	}
-	if (maxBits < intSize) {
-		// No value from `genVal` was read yet and the result is smaller than the
-		// value from the generator.
-		x += BigInt(genVal.value & ((1 << maxBits) - 1));
-	} else if (restBits > 0 && !genVal.done) {
-		x += BigInt(genVal.value & ((1 << restBits) - 1));
+
+		if (!genVal.done) {
+			// Fill remaining bits with a value from generator using MSBs.
+			const bitDiff = BigInt(intSize) - BigInt(restBits);
+			const maxIntOfIntSize = (1n << BigInt(intSize)) - 1n; // 0x1111...
+			x += (BigInt(genVal.value) & maxIntOfIntSize) >> bitDiff;
+		}
 	}
 	return x;
 }
