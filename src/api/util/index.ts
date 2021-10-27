@@ -5,3 +5,4 @@ export * from "./bigint";
 export { ABIEncoder, ABIPacked } from "./abiencoder";
 export type { ABIEncodable, ABIValue } from "./abiencoder";
 export * from "./customjson";
+export * from "./types";
