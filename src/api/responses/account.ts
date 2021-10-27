@@ -1,8 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
+import {
+	jsonBigIntMember,
+	jsonObject,
+	jsonMember,
+} from "#erdstall/export/typedjson";
 import { ErdstallObject, registerErdstallType } from "#erdstall/api";
-import { jsonObject, jsonMember } from "typedjson";
 import * as ledger from "#erdstall/ledger";
 
 const accountTypeName = "AccountResponse";
@@ -10,7 +14,7 @@ const accountTypeName = "AccountResponse";
 @jsonObject
 export class Account extends ErdstallObject {
 	@jsonMember(ledger.Account) account: ledger.Account;
-	@jsonMember(BigInt) epoch: bigint;
+	@jsonBigIntMember() epoch: bigint;
 
 	constructor(account: ledger.Account, epoch: bigint) {
 		super();

@@ -4,7 +4,7 @@
 import { Transaction, registerTransactionType } from "./transaction";
 import { Address } from "#erdstall/ledger";
 import { Assets } from "#erdstall/ledger/assets";
-import { jsonObject, jsonMember } from "typedjson";
+import { jsonObject, jsonMember } from "#erdstall/export/typedjson";
 import { ABIEncoder } from "#erdstall/api/util";
 
 const burnTypeName = "Burn";

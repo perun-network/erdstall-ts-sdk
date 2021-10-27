@@ -2,7 +2,7 @@
 "use strict";
 
 import { utils } from "ethers";
-import { jsonObject } from "typedjson";
+import { jsonObject } from "#erdstall/export/typedjson";
 import { equalArray } from "#erdstall/utils/arrays";
 import { ABIValue, customJSON } from "#erdstall/api/util";
 

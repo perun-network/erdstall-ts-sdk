@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { jsonObject } from "typedjson";
+import { jsonObject } from "#erdstall/export/typedjson";
 import { Asset } from "./asset";
 import { ABIValue, customJSON } from "#erdstall/api/util";
 import { ErdstallToken } from "#erdstall/api/responses";

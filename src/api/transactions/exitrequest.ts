@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { jsonObject } from "typedjson";
+import { jsonObject } from "#erdstall/export/typedjson";
 import { ABIEncoder } from "#erdstall/api/util";
 import { Transaction, registerTransactionType } from "./transaction";
 import { Address } from "#erdstall/ledger";

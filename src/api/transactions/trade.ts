@@ -4,7 +4,11 @@
 import { Transaction, registerTransactionType } from "./transaction";
 import { Address } from "#erdstall/ledger";
 import * as assets from "#erdstall/ledger/assets";
-import { jsonObject, jsonMember } from "typedjson";
+import {
+	jsonObject,
+	jsonMember,
+	jsonBigIntMember,
+} from "#erdstall/export/typedjson";
 import { ABIEncoder, ABIPacked } from "#erdstall/api/util";
 import { Signature } from "#erdstall/api";
 import { Signer, utils } from "ethers";
@@ -34,7 +38,7 @@ export class TradeOffer {
 	@jsonMember(Address) owner: Address;
 	@jsonMember(() => assets.Assets) offer: assets.Assets;
 	@jsonMember(() => assets.Assets) request: assets.Assets;
-	@jsonMember(BigInt) expiry: bigint;
+	@jsonBigIntMember() expiry: bigint;
 	@jsonMember(TradeFees) fees?: TradeFees;
 	@jsonMember(Signature) sig?: Signature;
 

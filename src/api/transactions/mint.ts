@@ -3,7 +3,11 @@
 
 import { Transaction, registerTransactionType } from "./transaction";
 import { Address } from "#erdstall/ledger";
-import { jsonObject, jsonMember } from "typedjson";
+import {
+	jsonObject,
+	jsonMember,
+	jsonBigIntMember,
+} from "#erdstall/export/typedjson";
 import { ABIEncoder } from "#erdstall/api/util";
 
 const mintTypeName = "Mint";
@@ -11,7 +15,7 @@ const mintTypeName = "Mint";
 @jsonObject
 export class Mint extends Transaction {
 	@jsonMember(Address) token: Address;
-	@jsonMember(BigInt) id: bigint;
+	@jsonBigIntMember() id: bigint;
 
 	constructor(
 		sender: Address,

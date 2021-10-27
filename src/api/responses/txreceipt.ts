@@ -4,7 +4,12 @@
 import { ErdstallObject, registerErdstallType } from "#erdstall/api";
 import { Account } from "#erdstall/ledger";
 import { Transaction } from "#erdstall/api/transactions";
-import { jsonObject, jsonMember, jsonMapMember, MapShape } from "typedjson";
+import {
+	jsonObject,
+	jsonMember,
+	jsonMapMember,
+	MapShape,
+} from "#erdstall/export/typedjson";
 
 const txReceiptTypeName = "TxReceipt";
 

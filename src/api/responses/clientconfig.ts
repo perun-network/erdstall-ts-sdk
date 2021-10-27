@@ -2,7 +2,7 @@
 "use strict";
 
 import { ErdstallObject, registerErdstallType } from "#erdstall/api";
-import { jsonObject, jsonMember } from "typedjson";
+import { jsonObject, jsonMember } from "#erdstall/export/typedjson";
 import { Address } from "#erdstall/ledger";
 
 const clientConfigTypeName = "ClientConfig";

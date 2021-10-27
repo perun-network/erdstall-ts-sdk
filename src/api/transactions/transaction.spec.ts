@@ -3,7 +3,7 @@
 
 import "reflect-metadata";
 import { describe, it } from "mocha";
-import { TypedJSON } from "typedjson";
+import { TypedJSON } from "#erdstall/export/typedjson";
 import { Call, Result, ErdstallObject } from "#erdstall/api";
 import { expect } from "chai";
 import { Transaction } from "./transaction";

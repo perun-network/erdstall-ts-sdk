@@ -25,7 +25,7 @@ import {
 	BalanceProofs,
 	Account,
 } from "#erdstall/api/responses";
-import { TypedJSON } from "typedjson";
+import { TypedJSON } from "#erdstall/export/typedjson";
 import { EventCache, OneShotEventCache } from "#erdstall/utils";
 import { EnclaveEvent } from "./event";
 import { EnclaveProvider, EnclaveWSProvider } from "./provider";

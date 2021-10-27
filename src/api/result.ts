@@ -2,7 +2,7 @@
 "use strict";
 
 import { ErdstallObject } from "./object";
-import { jsonObject, jsonMember } from "typedjson";
+import { jsonObject, jsonMember } from "#erdstall/export/typedjson";
 
 /** All incoming messages. */
 @jsonObject

@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { jsonObject, TypedJSON, Serializable } from "typedjson";
+import {
+	jsonObject,
+	TypedJSON,
+	Serializable,
+} from "#erdstall/export/typedjson";
 import { customJSON } from "./util";
 
 const objectImpls = new Map<string, Serializable<ErdstallObject>>();

@@ -15,7 +15,6 @@ import {
 } from "#erdstall/api/transactions";
 import {
 	TxReceipt,
-	BalanceProof,
 	BalanceProofs,
 	ClientConfig,
 	Account as RAccount,

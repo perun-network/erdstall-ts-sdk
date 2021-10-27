@@ -5,7 +5,13 @@ import { ErdstallObject, registerErdstallType } from "#erdstall/api";
 import { Signature } from "#erdstall/api";
 import { Address } from "#erdstall/ledger";
 import { customJSON, ABIEncoder, ABIPacked } from "#erdstall/api/util";
-import { jsonObject, jsonMember, TypedJSON, Serializable } from "typedjson";
+import {
+	jsonObject,
+	jsonMember,
+	TypedJSON,
+	Serializable,
+	jsonBigIntMember,
+} from "#erdstall/export/typedjson";
 import { utils, Signer } from "ethers";
 
 const transactionImpls = new Map<string, Serializable<Transaction>>();
@@ -22,7 +28,7 @@ export function registerTransactionType(
 @jsonObject
 export abstract class Transaction extends ErdstallObject {
 	@jsonMember(Address) sender: Address;
-	@jsonMember(BigInt) nonce: bigint;
+	@jsonBigIntMember() nonce: bigint;
 	@jsonMember(Signature) sig?: Signature;
 
 	constructor(sender: Address, nonce: bigint) {
