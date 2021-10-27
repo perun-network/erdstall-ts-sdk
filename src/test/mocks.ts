@@ -69,44 +69,49 @@ export class MockWatcher implements Watcher {
 		throw new Error("not implemented");
 	}
 
-	mint(
+	async mint(
 		nft: {
 			token: Address;
 			id: bigint;
 			owner: Address;
 		},
 		deltas?: Map<string, Account>,
-	): void {
+	): Promise<void> {
 		const mintTx = new Mint(nft.owner, BigInt(0), nft.token, nft.id);
-		this.txReceiptHandler(
-			new TxReceipt(mintTx, deltas ?? new Map<string, Account>()),
+		return this.transact(mintTx, deltas);
+	}
+
+	async burn(burnTx: Burn, deltas?: Map<string, Account>): Promise<void> {
+		return this.transact(burnTx, deltas);
+	}
+
+	async trade(tradeTx: Trade, deltas?: Map<string, Account>): Promise<void> {
+		return this.transact(tradeTx, deltas);
+	}
+
+	async transfer(tx: Transfer, deltas?: Map<string, Account>): Promise<void> {
+		return this.transact(tx, deltas);
+	}
+
+	private async transact(
+		tx: Transaction,
+		deltas?: Map<string, Account>,
+	): Promise<void> {
+		return Promise.resolve(
+			this.txReceiptHandler(
+				new TxReceipt(tx, deltas ?? new Map<string, Account>()),
+			),
 		);
 	}
 
-	burn(burnTx: Burn, deltas?: Map<string, Account>): void {
-		this.txReceiptHandler(
-			new TxReceipt(burnTx, deltas ?? new Map<string, Account>()),
-		);
-	}
-
-	trade(tradeTx: Trade, deltas?: Map<string, Account>): void {
-		this.txReceiptHandler(
-			new TxReceipt(tradeTx, deltas ?? new Map<string, Account>()),
-		);
-	}
-
-	transfer(tx: Transfer, deltas?: Map<string, Account>): void {
-		this.txReceiptHandler(
-			new TxReceipt(tx, deltas ?? new Map<string, Account>()),
-		);
-	}
-
-	phaseshift(bps: BalanceProofs) {
-		for (let bp of bps.map.values()) {
-			if (bp.balance.exit) this.exitProofHandler(bp);
-			else this.balanceProofHandler(bp);
-		}
-		this.phaseShiftHandler();
+	async phaseshift(bps: BalanceProofs): Promise<void> {
+		return Promise.all(
+			Array.from(bps.map, ([_acc, bp]) => {
+				return bp.balance.exit
+					? this.exitProofHandler(bp)
+					: this.balanceProofHandler(bp);
+			}),
+		).then(() => this.phaseShiftHandler());
 	}
 }
 
