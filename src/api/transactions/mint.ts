@@ -4,14 +4,14 @@
 import { Transaction, registerTransactionType } from "./transaction";
 import { Address } from "#erdstall/ledger";
 import { jsonObject, jsonMember } from "typedjson";
-import { ABIEncoder, BigInteger } from "#erdstall/api/util";
+import { ABIEncoder } from "#erdstall/api/util";
 
 const mintTypeName = "Mint";
 
 @jsonObject
 export class Mint extends Transaction {
 	@jsonMember(Address) token: Address;
-	@jsonMember(BigInteger) id: BigInteger;
+	@jsonMember(BigInt) id: bigint;
 
 	constructor(
 		sender: Address,
@@ -21,7 +21,7 @@ export class Mint extends Transaction {
 	) {
 		super(sender, nonce);
 		this.token = tokenType;
-		this.id = new BigInteger(id);
+		this.id = id;
 	}
 
 	public txType() {

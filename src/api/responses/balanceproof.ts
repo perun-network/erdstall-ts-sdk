@@ -3,12 +3,7 @@
 
 import { ethers, Signer, utils } from "ethers";
 import { TypedJSON, jsonObject, jsonMember } from "typedjson";
-import {
-	BigInteger,
-	customJSON,
-	ABIPacked,
-	ABIEncoder,
-} from "#erdstall/api/util";
+import { customJSON, ABIPacked, ABIEncoder } from "#erdstall/api/util";
 import { Assets } from "#erdstall/ledger/assets";
 import { Address } from "#erdstall/ledger";
 import { Signature } from "#erdstall/api";
@@ -19,7 +14,7 @@ const balanceProofsTypeName = "BalanceProofs";
 // Balance is the value of funds for the account within epoch.
 @jsonObject
 export class Balance {
-	@jsonMember(BigInteger) epoch: BigInteger;
+	@jsonMember(BigInt) epoch: bigint;
 	@jsonMember(Address) account: Address;
 	@jsonMember(Boolean) exit: boolean;
 	@jsonMember(() => Assets) values: Assets;
@@ -30,7 +25,7 @@ export class Balance {
 		exit: boolean,
 		values: Assets,
 	) {
-		this.epoch = new BigInteger(epoch);
+		this.epoch = epoch;
 		this.account = Address.ensure(account);
 		this.exit = exit;
 		this.values = values;

@@ -5,7 +5,7 @@ import { Transaction, registerTransactionType } from "./transaction";
 import { Address } from "#erdstall/ledger";
 import * as assets from "#erdstall/ledger/assets";
 import { jsonObject, jsonMember } from "typedjson";
-import { ABIEncoder, ABIPacked, BigInteger } from "#erdstall/api/util";
+import { ABIEncoder, ABIPacked } from "#erdstall/api/util";
 import { Signature } from "#erdstall/api";
 import { Signer, utils } from "ethers";
 
@@ -34,7 +34,7 @@ export class TradeOffer {
 	@jsonMember(Address) owner: Address;
 	@jsonMember(() => assets.Assets) offer: assets.Assets;
 	@jsonMember(() => assets.Assets) request: assets.Assets;
-	@jsonMember(BigInteger) expiry: BigInteger;
+	@jsonMember(BigInt) expiry: bigint;
 	@jsonMember(TradeFees) fees?: TradeFees;
 	@jsonMember(Signature) sig?: Signature;
 
@@ -42,7 +42,7 @@ export class TradeOffer {
 		this.owner = owner;
 		this.offer = offer;
 		this.request = request;
-		this.expiry = new BigInteger((1n << 64n) - 1n); // For now, never expire.
+		this.expiry = (1n << 64n) - 1n; // For now, never expire.
 	}
 
 	async sign(contract: Address, signer: Signer): Promise<this> {

@@ -4,12 +4,7 @@
 import { ErdstallObject, registerErdstallType } from "#erdstall/api";
 import { Signature } from "#erdstall/api";
 import { Address } from "#erdstall/ledger";
-import {
-	BigInteger,
-	customJSON,
-	ABIEncoder,
-	ABIPacked,
-} from "#erdstall/api/util";
+import { customJSON, ABIEncoder, ABIPacked } from "#erdstall/api/util";
 import { jsonObject, jsonMember, TypedJSON, Serializable } from "typedjson";
 import { utils, Signer } from "ethers";
 
@@ -27,13 +22,13 @@ export function registerTransactionType(
 @jsonObject
 export abstract class Transaction extends ErdstallObject {
 	@jsonMember(Address) sender: Address;
-	@jsonMember(BigInteger) nonce: BigInteger;
+	@jsonMember(BigInt) nonce: bigint;
 	@jsonMember(Signature) sig?: Signature;
 
 	constructor(sender: Address, nonce: bigint) {
 		super();
 		this.sender = sender;
-		this.nonce = new BigInteger(nonce);
+		this.nonce = nonce;
 	}
 
 	async sign(contract: Address, signer: Signer): Promise<this> {

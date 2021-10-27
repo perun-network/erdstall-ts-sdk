@@ -20,7 +20,7 @@ import {
 	ClientConfig,
 	Account as RAccount,
 } from "#erdstall/api/responses";
-import { TypedJSON } from "typedjson";
+import { TypedJSON } from "#erdstall/export/typedjson";
 import { Result, Call, ErdstallObject } from "#erdstall/api";
 import {
 	SubscribeTXs,
@@ -28,7 +28,6 @@ import {
 	GetAccount,
 } from "#erdstall/api/calls";
 import { Transaction } from "#erdstall/api/transactions";
-import { BigInteger } from "#erdstall/api/util";
 import { Address, Account } from "#erdstall/ledger";
 import {
 	NFTMetadata,
@@ -74,17 +73,12 @@ export class MockWatcher implements Watcher {
 	mint(
 		nft: {
 			token: Address;
-			id: bigint | BigInteger;
+			id: bigint;
 			owner: Address;
 		},
 		deltas?: Map<string, Account>,
 	): void {
-		const mintTx = new Mint(
-			nft.owner,
-			BigInt(0),
-			nft.token,
-			nft.id.valueOf(),
-		);
+		const mintTx = new Mint(nft.owner, BigInt(0), nft.token, nft.id);
 		this.txReceiptHandler(
 			new TxReceipt(mintTx, deltas ?? new Map<string, Account>()),
 		);
@@ -204,11 +198,7 @@ export class EnclaveMockProvider implements EnclaveProvider {
 		switch (tx.txType()) {
 			case Transfer: {
 				const txc = tx as Transfer;
-				const acc = new Account(
-					txc.nonce.valueOf(),
-					txc.values,
-					new Assets(),
-				);
+				const acc = new Account(txc.nonce, txc.values, new Assets());
 
 				const res = newTxReceiptResult(id, tx, acc);
 				const msg = newErdstallMessageEvent(res);
@@ -217,15 +207,8 @@ export class EnclaveMockProvider implements EnclaveProvider {
 			case Mint: {
 				const txc = tx as Mint;
 				const assets = new Assets();
-				assets.addAsset(
-					txc.token.toString(),
-					new Tokens([txc.id.valueOf()]),
-				);
-				const acc = new Account(
-					txc.nonce.valueOf(),
-					assets,
-					new Assets(),
-				);
+				assets.addAsset(txc.token.toString(), new Tokens([txc.id]));
+				const acc = new Account(txc.nonce, assets, new Assets());
 
 				const res = newTxReceiptResult(id, tx, acc);
 				const msg = newErdstallMessageEvent(res);
@@ -262,9 +245,7 @@ function newTxReceiptResult(
 	tx: Transaction,
 	acc?: Account,
 ): Result {
-	const _acc = acc
-		? acc
-		: new Account(tx.nonce.valueOf(), new Assets(), new Assets());
+	const _acc = acc ? acc : new Account(tx.nonce, new Assets(), new Assets());
 	const delta = new Map<string, Account>([[tx.sender.key, _acc]]);
 	const txr = new TxReceipt(tx, delta);
 	return new Result(id, txr);
