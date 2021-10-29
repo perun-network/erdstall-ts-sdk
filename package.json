@@ -84,7 +84,6 @@
 		"ethereum-waffle": "^3.4.0",
 		"number-generator": "^4.0.5",
 		"ethers": "^5.4.1",
-		"ethers-utils": "^2.1.11",
 		"isomorphic-ws": "^4.0.1",
 		"reflect-metadata": "^0.1.13",
 		"typedjson": "^1.8.0",
