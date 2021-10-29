@@ -21,7 +21,6 @@ function copyDeclarationFiles(src: string, dest: string) {
 		listeners: {
 			file: (base, stats, next) => {
 				if (!stats.name.includes(".d.ts")) return next();
-
 				const relativeSrc = [base, stats.name].join("/");
 
 				const strippedBase = base.slice(src.length + 1); // +1 => remove leading "/".
@@ -50,10 +49,12 @@ let publishPackageJSON = {
 	exports: basePackageJSON.exports,
 	imports: basePackageJSON.imports,
 	repository: basePackageJSON.repository,
+	keywords: basePackageJSON.keywords,
 	author: basePackageJSON.author,
 	contributors: basePackageJSON.contributors,
 	license: basePackageJSON.license,
-	private: basePackageJSON.private,
+	bugs: basePackageJSON.bugs,
+	homepage: basePackageJSON.homepage,
 	dependencies: basePackageJSON.dependencies,
 };
 
