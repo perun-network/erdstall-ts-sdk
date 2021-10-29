@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { Option, none, some } from "fp-ts/lib/Option";
-
 // `Prettier` has no option to ignore mathexpressions and contrary to whatever
 // `Prettier` is deducing, the statement:
 //
@@ -23,6 +21,7 @@ export function isUint256(value: bigint): value is Uint256 {
 	return value >= 0 && value <= MAX_UINT256;
 }
 
-export function mkUint256(value: bigint): Option<Uint256> {
-	return isUint256(value) ? some(value) : none;
+export function mkUint256(value: bigint): Uint256 {
+	if (!isUint256(value)) throw new Error("given value not a `uint256`");
+	return value;
 }

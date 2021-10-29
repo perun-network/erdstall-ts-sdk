@@ -49,7 +49,6 @@
 		"eslint-config-prettier": "^8.2.0",
 		"eslint-plugin-prettier": "^3.4.0",
 		"ethereum-waffle": "^3.4.0",
-		"fp-ts": "^1.19.3",
 		"ganache-cli": "^6.12.2",
 		"ganache-core": "^2.13.2",
 		"hardhat": "^2.4.0",
