@@ -4,8 +4,8 @@
 import { Transaction, registerTransactionType } from "./transaction";
 import { Address } from "#erdstall/ledger";
 import { Assets } from "#erdstall/ledger/assets";
-import { jsonObject, jsonMember } from "typedjson";
-import { ABIEncoder, ABIValue } from "#erdstall/api/util";
+import { jsonObject, jsonMember } from "#erdstall/export/typedjson";
+import { ABIEncoder } from "#erdstall/api/util";
 
 const transferTypeName = "Transfer";
 
@@ -32,7 +32,7 @@ export class Transfer extends Transaction {
 		return transferTypeName;
 	}
 	protected encodeABI(e: ABIEncoder, _: Address): string {
-		e.encode(this.recipient, this.values as ABIValue);
+		e.encode(this.recipient, this.values);
 		return "ErdstallTransaction";
 	}
 }

@@ -63,7 +63,7 @@ export class Session extends Client implements ErdstallSession {
 	private async updateNonce(): Promise<void> {
 		const acc = await this.enclaveWriter.getAccount(this.address);
 		if (!this.nonce) {
-			this.nonce = acc.account.nonce.valueOf() + 1n;
+			this.nonce = acc.account.nonce + 1n;
 		}
 	}
 

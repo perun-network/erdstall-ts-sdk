@@ -2,7 +2,7 @@
 "use strict";
 
 import { utils, BytesLike } from "ethers";
-import { jsonObject } from "typedjson";
+import { jsonObject } from "#erdstall/export/typedjson";
 import { ABIValue, customJSON } from "./util";
 
 @jsonObject

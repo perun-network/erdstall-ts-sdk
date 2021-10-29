@@ -3,7 +3,7 @@
 
 import { ErdstallObject, registerErdstallType } from "#erdstall/api";
 import { Address } from "#erdstall/ledger";
-import { jsonObject, jsonMember } from "typedjson";
+import { jsonObject, jsonMember } from "#erdstall/export/typedjson";
 
 const subBPsTypeName = "SubscribeBalanceProofs";
 const subTXsTypeName = "SubscribeTXs";

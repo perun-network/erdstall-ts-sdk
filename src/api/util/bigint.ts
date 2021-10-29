@@ -2,11 +2,6 @@
 "use strict";
 
 import { Option, none, some } from "fp-ts/lib/Option";
-import { jsonObject } from "typedjson";
-import { BigNumber } from "ethers";
-
-import { ABIEncodable } from "./abiencoder";
-import { customJSON } from "./customjson";
 
 // `Prettier` has no option to ignore mathexpressions and contrary to whatever
 // `Prettier` is deducing, the statement:
@@ -21,38 +16,6 @@ import { customJSON } from "./customjson";
 
 // prettier-ignore
 export const MAX_UINT256 = (1n << 256n) - 1n;
-
-@jsonObject
-export class BigInteger implements ABIEncodable {
-	private value: bigint;
-
-	constructor(value: bigint) {
-		this.value = value;
-	}
-
-	static fromJSON(val: any): BigInteger {
-		return new BigInteger(BigInt(val));
-	}
-	static toJSON(me: BigInteger): string {
-		return me.toString();
-	}
-
-	toString(): string {
-		return this.value.toString();
-	}
-	valueOf(): bigint {
-		return this.value;
-	}
-	asABI(): any {
-		return BigNumber.from(this.value);
-	}
-
-	equals(other: BigInteger): boolean {
-		return this.value === other.value;
-	}
-}
-
-customJSON(BigInteger);
 
 export type Uint256 = bigint;
 
