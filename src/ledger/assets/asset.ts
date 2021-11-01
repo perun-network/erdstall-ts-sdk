@@ -18,7 +18,10 @@ export function requireTokenType(maybeToken: string): TokenType {
 export const TypeTags = {
 	Amount: "uint",
 	Tokens: "idset",
-};
+} as const;
+
+type _typeTags = typeof TypeTags;
+export type TypeTagName = _typeTags[keyof _typeTags];
 
 export const ErrUncomparableAssets = new Error("uncomparable assets");
 export const ErrSubtrahendLargerThanMinuend = new Error(
@@ -31,7 +34,7 @@ export const ErrUnknownTokenType = new Error("unkown tokentype");
 const assetImpls = new Map<string, (value: any) => Asset>();
 
 export function registerAssetType(
-	typeTag: string,
+	typeTag: TypeTagName,
 	valueParser: (value: any) => Asset,
 ) {
 	assetImpls.set(typeTag, valueParser);
@@ -60,7 +63,7 @@ export abstract class Asset {
 		);
 	}
 
-	abstract typeTag(): string;
+	abstract typeTag(): TypeTagName;
 	abstract asABI(): Uint8Array;
 
 	// isCompatible returns whether the assets are of the same type and are thus

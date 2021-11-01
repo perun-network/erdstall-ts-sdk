@@ -5,6 +5,7 @@ import { BigNumber, utils } from "ethers";
 import {
 	Asset,
 	TypeTags,
+	TypeTagName,
 	assertSubtractable,
 	ErrIncompatibleAssets,
 	registerAssetType,
@@ -53,7 +54,7 @@ export class Tokens extends Asset {
 		return new Tokens(s);
 	}
 
-	typeTag(): string {
+	typeTag(): TypeTagName {
 		return TypeTags.Tokens;
 	}
 
