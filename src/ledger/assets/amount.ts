@@ -6,6 +6,7 @@ import { BigNumber, utils } from "ethers";
 import {
 	Asset,
 	TypeTags,
+	TypeTagName,
 	ErrIncompatibleAssets,
 	assertUint256,
 	registerAssetType,
@@ -30,7 +31,7 @@ export class Amount extends Asset {
 		return new Amount(BigInt(hexString));
 	}
 
-	typeTag(): string {
+	typeTag(): TypeTagName {
 		return TypeTags.Amount;
 	}
 
