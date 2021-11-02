@@ -166,22 +166,7 @@ export class Enclave implements EnclaveWriter {
 		eventType: T,
 		cb: ErdstallEventHandler<T>,
 	) {
-		if (!this.handlers.has(eventType)) {
-			return;
-		}
-		const handlers = this.handlers.get(eventType)!;
-		const idx = handlers.indexOf(cb);
-		if (idx === -1) {
-			return;
-		}
-		for (let i = 0; i < handlers.length; i++) {
-			if (i <= idx) {
-				continue;
-			}
-			handlers[i - 1] = handlers[i];
-		}
-		handlers.pop();
-		return;
+		this.handlers.delete(eventType, cb);
 	}
 
 	private nextID(): number {
