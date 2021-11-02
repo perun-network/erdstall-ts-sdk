@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
+import { utils } from "ethers";
 import { jsonObject } from "#erdstall/export/typedjson";
 import { Asset } from "./asset";
 import { ABIValue, customJSON } from "#erdstall/api/util";
@@ -36,7 +37,11 @@ export class Assets implements ABIValue {
 	static fromJSON(data: any): Assets {
 		const vs = new Assets();
 		for (const k in data) {
-			vs.values.set(k, Asset.fromJSON(data[k]));
+			if (!utils.isAddress(k)) {
+				throw new Error(`decoding asset with malformed address: ${k}`);
+			}
+			// Make sure addresses are lowercase keys and not checksum encoded.
+			vs.values.set(k.toLowerCase(), Asset.fromJSON(data[k]));
 		}
 		return vs;
 	}
