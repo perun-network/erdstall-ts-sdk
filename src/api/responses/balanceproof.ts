@@ -59,7 +59,7 @@ export class Balance {
 		const sig = await signer.signMessage(
 			this.packTagged(contract).keccak256(),
 		);
-		return new BalanceProof(this, new Signature(utils.arrayify(sig)));
+		return new BalanceProof(this, new Signature(sig));
 	}
 }
 
