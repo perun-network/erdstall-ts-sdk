@@ -41,7 +41,7 @@ export abstract class Transaction extends ErdstallObject {
 		const sig = await signer.signMessage(
 			this.packTagged(contract).keccak256(),
 		);
-		this.sig = new Signature(utils.arrayify(sig));
+		this.sig = new Signature(sig);
 		return this;
 	}
 

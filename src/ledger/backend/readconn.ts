@@ -66,26 +66,26 @@ export class LedgerReadConn implements LedgerReader {
 		id: bigint,
 		useCache?: boolean,
 	): Promise<NFTMetadata> {
-		const tokenS = token.toString();
+		const tokenKey = token.key;
 		if (
 			(useCache == undefined || useCache) &&
-			this.metadataCache.has(tokenS)
+			this.metadataCache.has(tokenKey)
 		) {
-			return this.metadataCache.get(tokenS)!;
+			return this.metadataCache.get(tokenKey)!;
 		}
 
 		// TODO: Create IMetadata contract interface for which bindings can be
 		// generated, so we have a single interface over which we can query
 		// metadata for different contract implementations in the future.
 		const metadataContract = IERC721Metadata__factory.connect(
-			tokenS,
+			tokenKey,
 			this.contract.provider,
 		);
 		const tokenURI = await metadataContract.tokenURI(id);
 		const res = await axios
 			.get<NFTMetadata>(tokenURI)
 			.then((res) => res.data);
-		this.metadataCache.set(tokenS, res);
+		this.metadataCache.set(tokenKey, res);
 		return res;
 	}
 }

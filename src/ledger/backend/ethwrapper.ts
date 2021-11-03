@@ -176,7 +176,7 @@ function wrapChallengeResponded(
 			epoch: epoch.toBigInt(),
 			address: Address.fromString(account),
 			tokens: assets,
-			sig: new Signature(utils.arrayify(sig)),
+			sig: new Signature(sig),
 		});
 	};
 	return wcb;

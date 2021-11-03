@@ -19,7 +19,7 @@ export class Signature implements ABIValue {
 		return utils.hexlify(me.value);
 	}
 	static fromJSON(val: any): Signature {
-		return new Signature(utils.arrayify(val));
+		return new Signature(val);
 	}
 
 	asABI(): any {

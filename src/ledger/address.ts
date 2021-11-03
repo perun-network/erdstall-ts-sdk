@@ -57,3 +57,7 @@ export class Address implements ABIValue {
 }
 
 customJSON(Address);
+
+export function addressKey(addr: Address | string): string {
+	return addr instanceof Address ? addr.key : addr.toLowerCase();
+}

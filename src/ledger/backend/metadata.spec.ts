@@ -44,7 +44,7 @@ describe("NFTMetadata", function () {
 		const metadata = test.newRandomMetadata(rng);
 		nock(PERUNART_URI)
 			.defaultReplyHeaders({ "access-control-allow-origin": "*" })
-			.get(`/${token.toString().toLowerCase()}/${id}`)
+			.get(`/${token.key}/${id}`)
 			.reply(200, metadata);
 		let res = await erdstall.getNftMetadata(token, id);
 		expect(res).to.deep.equal(metadata);
@@ -52,7 +52,7 @@ describe("NFTMetadata", function () {
 		// Second request should be cached, resulting in `nock` being unable to
 		// intercept a GET request.
 		nock(PERUNART_URI)
-			.get(`/${token.toString().toLowerCase()}/${id}`)
+			.get(`/${token.key}/${id}`)
 			.replyWithError("this should never be called");
 		res = await erdstall.getNftMetadata(token, id);
 		expect(res).to.deep.equal(metadata);
@@ -63,7 +63,7 @@ describe("NFTMetadata", function () {
 		// Third request with a forced fetch should query the `tokenURI` again.
 		nock(PERUNART_URI)
 			.defaultReplyHeaders({ "access-control-allow-origin": "*" })
-			.get(`/${token.toString().toLowerCase()}/${id}`)
+			.get(`/${token.key}/${id}`)
 			.reply(200, { image: "foo" });
 		res = await erdstall.getNftMetadata(token, id, false);
 		expect(res).to.deep.equal({ image: "foo" });
