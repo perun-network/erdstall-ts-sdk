@@ -6,7 +6,7 @@ import { jsonObject } from "#erdstall/export/typedjson";
 import { Asset } from "./asset";
 import { ABIValue, customJSON } from "#erdstall/api/util";
 import { ErdstallToken } from "#erdstall/api/responses";
-import { Address } from "#erdstall/ledger";
+import { Address, addressKey } from "#erdstall/ledger";
 import { TokenProvider } from "#erdstall/ledger/backend";
 import { Erdstall } from "#erdstall/ledger/backend/contracts";
 import { decodePackedAmount } from "./amount";
@@ -41,7 +41,7 @@ export class Assets implements ABIValue {
 				throw new Error(`decoding asset with malformed address: ${k}`);
 			}
 			// Make sure addresses are lowercase keys and not checksum encoded.
-			vs.values.set(k.toLowerCase(), Asset.fromJSON(data[k]));
+			vs.values.set(addressKey(k), Asset.fromJSON(data[k]));
 		}
 		return vs;
 	}
@@ -75,8 +75,7 @@ export class Assets implements ABIValue {
 	}
 
 	hasAsset(addr: string | Address): boolean {
-		if (addr instanceof Address) addr = addr.toString();
-		return this.values.has(addr);
+		return this.values.has(addressKey(addr));
 	}
 
 	addAssets(assets: Assets): void {
@@ -88,7 +87,7 @@ export class Assets implements ABIValue {
 	}
 
 	addAsset(addr: string | Address, asset: Asset): void {
-		if (addr instanceof Address) addr = addr.toString();
+		addr = addressKey(addr);
 		if (asset.zero()) {
 			return;
 		}

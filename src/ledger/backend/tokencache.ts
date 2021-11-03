@@ -2,7 +2,7 @@
 "use strict";
 
 import { Signer } from "ethers";
-import { Address } from "#erdstall/ledger";
+import { Address, addressKey } from "#erdstall/ledger";
 import { TokenRegistered, TokenTypeRegistered } from "#erdstall/ledger";
 import { TokenType, requireTokenType, ETHZERO } from "#erdstall/ledger/assets";
 import { Erdstall, ERC20__factory, ERC721__factory } from "./contracts";
@@ -45,7 +45,7 @@ export class TokenFetcher implements TokenProvider {
 	}
 
 	setType(tokenAddr: string, ttype: TokenType) {
-		this.typeCache.set(tokenAddr, ttype);
+		this.typeCache.set(addressKey(tokenAddr), ttype);
 	}
 
 	async tokenHolderFor(
@@ -70,13 +70,16 @@ export class TokenFetcher implements TokenProvider {
 		erdstall: Erdstall,
 		tokenAddr: string,
 	): Promise<TokenType> {
+		tokenAddr = addressKey(tokenAddr);
 		if (this.typeCache.has(tokenAddr)) {
 			return this.typeCache.get(tokenAddr)!;
 		}
 
 		const ttype = await this.queryTokenType(erdstall, tokenAddr);
 		if (!ttype) {
-			Promise.reject(new Error("given token not registered."));
+			Promise.reject(
+				new Error(`given token not registered: ${tokenAddr}`),
+			);
 		}
 
 		this.typeCache.set(tokenAddr, ttype!);
@@ -87,6 +90,7 @@ export class TokenFetcher implements TokenProvider {
 		erdstall: Erdstall,
 		tokenAddr: string,
 	): Promise<TokenType | undefined> {
+		tokenAddr = addressKey(tokenAddr);
 		await this.queryRegisteredTokens(erdstall, this.bigbang);
 		return this.typeCache.get(tokenAddr);
 	}
@@ -162,7 +166,7 @@ export class TokenFetcher implements TokenProvider {
 		const filter = erdstall.filters.TokenRegistered(null, null, null);
 		return erdstall.queryFilter(filter, from).then((ev) => {
 			return ev.map((entry) => {
-				const token = entry.args.token;
+				const token = addressKey(entry.args.token);
 				const ttype = requireTokenType(entry.args.tokenType);
 				const tokenHolder = entry.args.tokenHolder;
 
@@ -188,7 +192,7 @@ export class TokenFetcher implements TokenProvider {
 		ttype: TokenType,
 		token: string | Address,
 	): Responder {
-		token = token instanceof Address ? token.toString() : token;
+		token = addressKey(token);
 		switch (ttype) {
 			case "ERC20":
 				return ERC20__factory.connect(token, signer);
