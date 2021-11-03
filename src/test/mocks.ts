@@ -134,13 +134,15 @@ export class MockClient extends MockWatcher implements ErdstallClient {
 	}
 
 	setMetadata(token: Address, id: bigint, metadata: NFTMetadata): void {
-		this.metadata.set(`${token}:${id}`, metadata);
+		this.metadata.set(`${token.key}:${id}`, metadata);
 	}
 
 	async getNftMetadata(token: Address, id: bigint): Promise<NFTMetadata> {
-		const res = this.metadata.get(`${token}:${id}`);
+		const res = this.metadata.get(`${token.key}:${id}`);
 		if (!res) {
-			return Promise.reject(new Error(`no metadata for ${token}:${id}`));
+			return Promise.reject(
+				new Error(`no metadata for ${token.key}:${id}`),
+			);
 		}
 		return res;
 	}
