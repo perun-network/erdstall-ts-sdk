@@ -5,21 +5,19 @@ import { utils } from "ethers";
 import { ethers } from "ethers";
 import { Wallet } from "ethers";
 import { providers } from "ethers";
-import { deployContract } from "ethereum-waffle";
-import { MockProvider } from "ethereum-waffle";
-
+import { deployContract, MockProvider } from "ethereum-waffle";
 import {
 	Erdstall__factory,
 	PerunArt__factory,
 } from "#erdstall/ledger/backend/contracts";
 import { ETHZERO } from "#erdstall/ledger/assets";
 
-const peruntokenABI = require("../../ledger/backend/contracts/abi/PerunToken.json");
-const erdstallABI = require("../../ledger/backend/contracts/abi/Erdstall.json");
-const erc20holderABI = require("../../ledger/backend/contracts/abi/ERC20Holder.json");
-const erc721holderABI = require("../../ledger/backend/contracts/abi/ERC721Holder.json");
-const ethholderABI = require("../../ledger/backend/contracts/abi/ETHHolder.json");
-const perunArtABI = require("../../ledger/backend/contracts/abi/PerunArt.json");
+import peruntokenABI from "../../ledger/backend/contracts/abi/PerunToken.json";
+import erdstallABI from "../../ledger/backend/contracts/abi/Erdstall.json";
+import erc20holderABI from "../../ledger/backend/contracts/abi/ERC20Holder.json";
+import erc721holderABI from "../../ledger/backend/contracts/abi/ERC721Holder.json";
+import ethholderABI from "../../ledger/backend/contracts/abi/ETHHolder.json";
+import perunArtABI from "../../ledger/backend/contracts/abi/PerunArt.json";
 
 export interface Environment {
 	provider: providers.Web3Provider;
@@ -72,9 +70,12 @@ export async function setupEnv(
 		erc721HolderContract = 5;
 
 	const contractDeployments = [
-		[peruntokenABI, [users.map((u) => u.address), PERUN_FUNDS]],
-		[perunArtABI, [PERUNART_NAME, PERUNART_SYMBOL, PERUNART_URI, []]],
-		[erdstallABI, [tee.address, epochDuration]],
+		[peruntokenABI as any, [users.map((u) => u.address), PERUN_FUNDS]],
+		[
+			perunArtABI as any,
+			[PERUNART_NAME, PERUNART_SYMBOL, PERUNART_URI, []],
+		],
+		[erdstallABI as any, [tee.address, epochDuration]],
 	];
 
 	let nonce: number = await op.getTransactionCount();
