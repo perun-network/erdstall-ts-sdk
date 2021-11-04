@@ -4,7 +4,6 @@
 // typechain generated events types, which are rather cumbersome to use anyway.
 "use strict";
 
-import { utils } from "ethers";
 import { TypedListener, TypedEventFilter } from "./contracts/commons";
 import { ErdstallEventHandler } from "#erdstall";
 import { Signature } from "#erdstall/api";

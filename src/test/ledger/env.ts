@@ -5,21 +5,23 @@ import { utils } from "ethers";
 import { ethers } from "ethers";
 import { Wallet } from "ethers";
 import { providers } from "ethers";
-import { deployContract } from "ethereum-waffle";
-import { MockProvider } from "ethereum-waffle";
-
+import { deployContract, MockProvider } from "ethereum-waffle";
 import {
 	Erdstall__factory,
 	PerunArt__factory,
 } from "#erdstall/ledger/backend/contracts";
 import { ETHZERO } from "#erdstall/ledger/assets";
 
-const peruntokenABI = require("../../ledger/backend/contracts/abi/PerunToken.json");
-const erdstallABI = require("../../ledger/backend/contracts/abi/Erdstall.json");
-const erc20holderABI = require("../../ledger/backend/contracts/abi/ERC20Holder.json");
-const erc721holderABI = require("../../ledger/backend/contracts/abi/ERC721Holder.json");
-const ethholderABI = require("../../ledger/backend/contracts/abi/ETHHolder.json");
-const perunArtABI = require("../../ledger/backend/contracts/abi/PerunArt.json");
+import peruntokenABI from "../../ledger/backend/contracts/abi/PerunToken.json";
+import erdstallABI from "../../ledger/backend/contracts/abi/Erdstall.json";
+import erc20holderABI from "../../ledger/backend/contracts/abi/ERC20Holder.json";
+import erc721holderABI from "../../ledger/backend/contracts/abi/ERC721Holder.json";
+import ethholderABI from "../../ledger/backend/contracts/abi/ETHHolder.json";
+import perunArtABI from "../../ledger/backend/contracts/abi/PerunArt.json";
+
+// ethereum-waffle does not expose this type...
+type _params = ConstructorParameters<typeof MockProvider>;
+export type MockProviderOptions = NonNullable<_params[0]>["ganacheOptions"];
 
 export interface Environment {
 	provider: providers.Web3Provider;
@@ -32,6 +34,7 @@ export interface Environment {
 	op: Wallet;
 	tee: Wallet;
 	users: Wallet[];
+	mine: (numBlocks?: number | bigint) => Promise<void>;
 	currentEpoch: () => Promise<bigint>;
 	sealEpoch: (ep: bigint) => Promise<bigint>;
 }
@@ -40,29 +43,26 @@ const PERUNART_NAME = "PerunArt";
 const PERUNART_SYMBOL = "PART";
 export const PERUNART_URI = "https://nifty.erdstall.dev/";
 const PERUN_FUNDS = utils.parseEther("100000").toBigInt();
-const gProvider = new MockProvider();
-const wallets = gProvider.getWallets();
 const OP = 0,
 	TEE = 1;
 
 export async function setupEnv(
 	numOfPrefundedAccounts: number = 1,
 	epochDuration: number = 3,
-	lprovider?: providers.Web3Provider,
-	lop?: Wallet,
-	pacc?: Wallet,
+	ganacheOptions?: MockProviderOptions,
 ): Promise<Environment> {
 	if (epochDuration <= 0) {
 		throw new Error("epochDuration must not be negative or zero");
 	}
 
-	const provider = lprovider ? lprovider : gProvider;
+	const provider = new MockProvider(
+		ganacheOptions ? { ganacheOptions: ganacheOptions } : undefined,
+	);
+	const wallets = provider.getWallets();
 
-	const op = lop ? lop : wallets[OP];
+	const op = wallets[OP];
 	const tee = wallets[TEE];
-	const users = pacc
-		? [pacc]
-		: wallets.slice(TEE + 1, TEE + 1 + numOfPrefundedAccounts);
+	const users = wallets.slice(TEE + 1, TEE + 1 + numOfPrefundedAccounts);
 
 	const perunContract = 0,
 		perunArtContract = 1,
@@ -72,9 +72,12 @@ export async function setupEnv(
 		erc721HolderContract = 5;
 
 	const contractDeployments = [
-		[peruntokenABI, [users.map((u) => u.address), PERUN_FUNDS]],
-		[perunArtABI, [PERUNART_NAME, PERUNART_SYMBOL, PERUNART_URI, []]],
-		[erdstallABI, [tee.address, epochDuration]],
+		[peruntokenABI as any, [users.map((u) => u.address), PERUN_FUNDS]],
+		[
+			perunArtABI as any,
+			[PERUNART_NAME, PERUNART_SYMBOL, PERUNART_URI, []],
+		],
+		[erdstallABI as any, [tee.address, epochDuration]],
 	];
 
 	let nonce: number = await op.getTransactionCount();
@@ -164,7 +167,7 @@ export async function setupEnv(
 		await part.addMinter(addr);
 	}
 
-	const mineBlocks = async (n: number | bigint) => {
+	const mineBlocks = async (n: number | bigint = 1) => {
 		for (let i = 0; i < n; i++) {
 			await provider.send("evm_mine", []);
 		}
@@ -215,6 +218,7 @@ export async function setupEnv(
 		op: op,
 		tee: tee,
 		users: users,
+		mine: mineBlocks,
 		currentEpoch: currentEpoch,
 		sealEpoch: sealEpoch,
 	};
