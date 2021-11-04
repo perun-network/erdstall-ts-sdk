@@ -31,7 +31,7 @@
 		"bindings": "./scripts/genbindings.sh",
 		"test:integration": "env TS_NODE_PROJECT=\"tsconfig.e2e.json\" mocha -b --timeout 60000 -r jsdom-global/register -r ts-node/register -r tsconfig-paths/register 'src/e2e/**/*.spec.ts'",
 		"test": "env TS_NODE_PROJECT=\"tsconfig.test.json\" mocha --timeout 15000 -r jsdom-global/register -r ts-node/register -r tsconfig-paths/register 'src/{,!(e2e)/**}/*.spec.ts'",
-		"prepack": "yarn build && ts-node ./scripts/publish_posthook.ts ./package.json ./dist/package.json",
+		"prepack": "yarn build && ts-node ./scripts/prepack.ts ./package.json ./dist/package.json",
 		"devpub": "yarn prepack"
 	},
 	"repository": "github:perun-network/erdstall-ts-sdk",
