@@ -1,5 +1,6 @@
 "use strict";
 import { readFileSync, writeFileSync, copyFileSync } from "fs";
+import { join } from "path";
 import { walkSync, WalkOptions } from "walk";
 
 const args = process.argv;
@@ -70,8 +71,10 @@ try {
 
 const src = "src";
 const dist = "dist";
+const README = "README.md";
 try {
 	copyDeclarationFiles(src, dist);
+	copyFileSync(`${README}`, join(dist, README));
 } catch (err) {
 	console.error(`Unable to copy declaration files: ${err}`);
 	process.exit(1);
