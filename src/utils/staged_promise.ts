@@ -3,6 +3,10 @@
 
 export type StageName = "approve" | "deposit" | "withdraw";
 
+/**
+ * Implements a single stage which can be awaited containing a result of the
+ * type specified by the template type parameter.
+ */
 export class Stage<T> {
 	private done: Promise<void>;
 	value: T;
@@ -19,6 +23,10 @@ export class Stage<T> {
 	}
 }
 
+/**
+ * Implements a multi stage operation where each stage contains a result
+ * defined by the template type parameter.
+ */
 export class Stages<T> {
 	private stages: Stage<T>[];
 
@@ -26,6 +34,14 @@ export class Stages<T> {
 		this.stages = [];
 	}
 
+	/**
+	 * Adds a stage with the given name and value as a result.
+	 *
+	 * @param name - The name of the stage.
+	 * @param value - The result of this stage.
+	 * @returns A tuple containing the [resolve, reject] functions for this stage
+	 * to trigger.
+	 */
 	add(name: StageName, value: T): [(obj: T) => void, (obj: any) => void] {
 		var resolve: () => void = () => {};
 		var reject: (obj: any) => void = () => {};
@@ -41,6 +57,9 @@ export class Stages<T> {
 		return [resolve, reject];
 	}
 
+	/**
+	 * Waits for the current active stage to finish.
+	 */
 	async wait(): Promise<void> {
 		if (!this.stages || this.stages.length === 0)
 			return Promise.reject(new Error("no stages available"));

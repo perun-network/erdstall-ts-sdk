@@ -16,6 +16,11 @@ import {
 import { EnclaveEvent } from "./enclave/event";
 import { ClientConfig, TxReceipt, BalanceProof } from "./api/responses";
 
+/**
+ * ErdstallEvent is comprised of all the events related to Erdstall. These
+ * include events which originate from the ledger as well as from Erdstall
+ * itself.
+ */
 export type ErdstallEvent = LedgerEvent | EnclaveEvent;
 
 type _eventHandlers = {
@@ -37,18 +42,23 @@ type _eventHandlers = {
 	error: (error: string | Error) => void;
 };
 
-// ErdstallEventHandler looks up the concretely typed handler from the
-// `_eventHandlers` type. If `enclave.Event` or `ledger.Event` get extended the
-// compiler will require that the `_eventHandlers` type will be extended too.
-//
-// This is equivalent to checking the mapping: _eventHandlers -> ErdstallEvent
+/**
+ * ErdstallEventHandler looks up the concretely typed handler from the
+ * `_eventHandlers` type. If `enclave.Event` or `ledger.Event` get extended the
+ * compiler will require that the `_eventHandlers` type will be extended too.
+ * This is equivalent to checking the mapping:
+ * `_eventHandlers` -> `ErdstallEvent`
+ */
 export type ErdstallEventHandler<T extends ErdstallEvent> = _eventHandlers[T];
 
-// `_requireBijectiveHandlers` double checks that no superfluous entries are
-// registered in the `_eventHandlers` type, which do not belong in either
-// `LedgerEvent` or `EnclaveEvent`.
-//
-// This is equivalent of checking the mapping: Erdstall -> _eventHandlers
+/**
+ * `_requireBijectiveHandlers` double checks that no superfluous entries are
+ * registered in the `_eventHandlers` type, which do not belong in either
+ * `LedgerEvent` or `EnclaveEvent`.
+ *
+ * This is equivalent of checking the mapping:
+ * `ErdstallEvent` -> `_eventHandlers`
+ */
 type _eventKeys = keyof _eventHandlers;
 type _requireBijectiveHandlers<T extends _eventKeys> = ErdstallEventHandler<T>;
 
