@@ -212,6 +212,9 @@ export async function setupEnv(
 		return bdelta;
 	};
 
+	// seal current epoch!
+	sealEpoch(await currentEpoch());
+
 	return {
 		provider: provider,
 		erdstall: contracts[erdstallContract].address,
