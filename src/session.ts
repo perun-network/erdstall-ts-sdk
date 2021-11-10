@@ -16,9 +16,10 @@ import { EnclaveWriter } from "#erdstall/enclave";
 import { Address, Account, LedgerWriter } from "#erdstall/ledger";
 import { Assets } from "#erdstall/ledger/assets";
 import { Uint256 } from "#erdstall/api/util";
-import { Stages } from "#erdstall/utils";
+import { StageName } from "#erdstall/utils";
 import { ErdstallSession } from "./erdstall";
 import { Client } from "./client";
+import { StagesGenerator } from ".";
 
 export const ErrUnitialisedClient = new Error("client unitialised");
 
@@ -117,9 +118,7 @@ export class Session extends Client implements ErdstallSession {
 		return this.enclaveWriter.burn(tx);
 	}
 
-	async deposit(
-		assets: Assets,
-	): Promise<Stages<Promise<ethers.ContractTransaction>>> {
+	async deposit(assets: Assets): Promise<StagesGenerator> {
 		if (!this.erdstallConn) {
 			return Promise.reject(ErrUnitialisedClient);
 		}
@@ -137,9 +136,7 @@ export class Session extends Client implements ErdstallSession {
 		return this.enclaveWriter.exit(exittx);
 	}
 
-	async withdraw(
-		exitProof: BalanceProof,
-	): Promise<Stages<Promise<ethers.ContractTransaction>>> {
+	async withdraw(exitProof: BalanceProof): Promise<StagesGenerator> {
 		if (!this.erdstallConn) {
 			return Promise.reject(ErrUnitialisedClient);
 		}
@@ -147,7 +144,7 @@ export class Session extends Client implements ErdstallSession {
 		return (this.erdstallConn as LedgerWriter).withdraw(exitProof);
 	}
 
-	async leave(): Promise<Stages<Promise<ethers.ContractTransaction>>> {
+	async leave(): Promise<StagesGenerator> {
 		const exitProof = await this.exit();
 		await new Promise<void>((accept) =>
 			this.once("phaseshift", () => accept()),
