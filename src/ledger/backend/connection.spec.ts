@@ -5,7 +5,13 @@ import { expect } from "chai";
 
 import { Wallet } from "ethers";
 import { PerunArt__factory } from "./contracts";
-import { ETHZERO, Assets, Amount } from "#erdstall/ledger/assets";
+import {
+	ETHZERO,
+	Assets,
+	Amount,
+	Tokens,
+	TypeTags,
+} from "#erdstall/ledger/assets";
 import { EventHelper } from "#erdstall/utils";
 import { Balance } from "#erdstall/api/responses";
 
@@ -28,6 +34,24 @@ describe("ErdstallConnection", () => {
 	let contract: Erdstall;
 	let conn: LedgerWriter;
 
+	const depositStagesForAssets = (assets: Assets): number => {
+		let result = 0;
+		assets.values.forEach((asset, token) => {
+			switch (asset.typeTag()) {
+				case TypeTags.Amount:
+					// ETHZERO -> one onchain transfer.
+					// ERC20 -> one onchain approve + one onchain transfer.
+					result += token === ETHZERO ? 1 : 2;
+					break;
+				case TypeTags.Tokens:
+					// ERC721 -> Tokens.length onchain approves + one onchain transfer.
+					result += (asset as Tokens).value.length + 1;
+					break;
+			}
+		});
+		return result;
+	};
+
 	before(async () => {
 		testenv = await setupEnv();
 		bob = testenv.users[0];
@@ -47,12 +71,13 @@ describe("ErdstallConnection", () => {
 	it("allows depositing into the erdstall contract", async () => {
 		const depositRegistered = EventHelper.within(10000, conn, "Deposited");
 
-		const stages = await conn.deposit(assets);
-		for (const stage of stages) {
-			const ctx = await stage.value;
-			const rec = await ctx.wait();
+		const { stages, numStages } = await conn.deposit(assets);
+		for await (const [_name, tx] of stages) {
+			const rec = await tx.wait();
 			expect(rec.status, "depositing should have worked").to.equal(0x1);
 		}
+
+		expect(numStages).to.equal(depositStagesForAssets(assets));
 
 		return depositRegistered;
 	});
@@ -67,13 +92,12 @@ describe("ErdstallConnection", () => {
 			assets,
 		);
 		const bp = await bal.sign(conn.erdstall(), testenv.tee);
-		const stages = await conn.withdraw(bp);
-		for (const stage of stages) {
-			const ctx = await stage.value;
-			const rec = await ctx.wait();
+		const { stages, numStages } = await conn.withdraw(bp);
+		for await (const [_name, tx] of stages) {
+			const rec = await tx.wait();
 			expect(rec.status, "withdrawing should have worked").to.equal(0x1);
 		}
-
+		expect(numStages).to.equal(1);
 		return withdrawRegistered;
 	});
 });

@@ -186,9 +186,9 @@ describe("ErdstallEventWrapping", function () {
 			bobContract.on("Deposited", wcb);
 		});
 
-		const stages = await conn.deposit(oAssets);
-		for (const stage of stages) {
-			const ctx = await stage.value;
+		const { stages, numStages } = await conn.deposit(oAssets);
+		for await (const [name, stage] of stages) {
+			const ctx = stage;
 			const rec = await ctx.wait();
 			expect(rec.status, "depositing should have worked").to.equal(0x1);
 		}
@@ -222,9 +222,9 @@ describe("ErdstallEventWrapping", function () {
 
 		const bal = new Balance(wEpoch, bobAddr, true, oAssets);
 		const bp = await bal.sign(conn.erdstall(), testenv.tee);
-		const stages = await conn.withdraw(bp);
-		for (const stage of stages) {
-			const ctx = await stage.value;
+		const { stages, numStages } = await conn.withdraw(bp);
+		for await (const [name, stage] of stages) {
+			const ctx = stage;
 			const rec = await ctx.wait();
 			expect(rec.status, "withdrawing should have worked").to.equal(0x1);
 		}
