@@ -1,0 +1,147 @@
+<!DOCTYPE html><html class="default"><head><meta charSet="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>@polycrypt/erdstall</title><meta name="description" content="Documentation for @polycrypt/erdstall"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="assets/style.css"/><link rel="stylesheet" href="assets/highlight.css"/><script async src="assets/search.js" id="search-script"></script></head><body><script>document.body.classList.add(localStorage.getItem("tsd-theme") || "os")</script><header><div class="tsd-page-toolbar"><div class="container"><div class="table-wrap"><div class="table-cell" id="tsd-search" data-base="."><div class="field"><label for="tsd-search-field" class="tsd-widget search no-caption">Search</label><input type="text" id="tsd-search-field"/></div><ul class="results"><li class="state loading">Preparing search index...</li><li class="state failure">The search index is not available</li></ul><a href="index.html" class="title">@polycrypt/erdstall</a></div><div class="table-cell" id="tsd-widgets"><div id="tsd-filter"><a href="#" class="tsd-widget options no-caption" data-toggle="options">Options</a><div class="tsd-filter-group"><div class="tsd-select" id="tsd-filter-visibility"><span class="tsd-select-label">All</span><ul class="tsd-select-list"><li data-value="public">Public</li><li data-value="protected">Public/Protected</li><li data-value="private" class="selected">All</li></ul></div> <input type="checkbox" id="tsd-filter-inherited" checked/><label class="tsd-widget" for="tsd-filter-inherited">Inherited</label><input type="checkbox" id="tsd-filter-externals" checked/><label class="tsd-widget" for="tsd-filter-externals">Externals</label></div></div><a href="#" class="tsd-widget menu no-caption" data-toggle="menu">Menu</a></div></div></div></div><div class="tsd-page-title"><div class="container"><h1> @polycrypt/erdstall</h1></div></div></header><div class="container container-main"><div class="row"><div class="col-8 col-content"><div class="tsd-panel tsd-typography">
+<a href="#erdstall-typescript-sdk" id="erdstall-typescript-sdk" style="color: inherit; text-decoration: none;">
+  <h1>Erdstall TypeScript SDK</h1>
+</a>
+<p><strong>What is Erdstall?</strong>&emsp;<!--
+--><a href="https://erdstall.dev">Erdstall</a> is a layer-2 platform for Ethereum developed by <a href="https://polycry.pt">PolyCrypt</a> based on research by the chair of applied cryptography at the technical university of Darmstadt, Germany.
+It uses a <a href="https://en.wikipedia.org/wiki/Trusted_Platform_Module">TPM</a> — such as Intel SGX or ARM TrustZone — ensuring reliable and trustworthy execution of the platform without the need for public verification of all computations (in comparison to accumulated zero-knowledge proofs, TPMs allow the generation of more compact and less computationally expensive proofs, thereby scaling much better and consuming less power).
+In Erdstall, the TEE operator periodically generates checkpoints, also called balance proofs, that can be used to exit the system if the operator were to go offline.</p>
+<p><strong>Benefits of Erdstall</strong>&emsp;<!--
+-->In addition to scaling payments as a layer-2 platform, Erdstall also specifically aims to be the secure asset management layer for non-custodial off-chain marketplaces.
+A marketplace building on top of Erdstall does not have to manage any funds on its own, it only has to match the trading parties, while earning a flat fee per facilitated trade.
+This makes the marketplace more trustworthy, as a cyber-attack on the marketplace cannot result in lost funds.
+As a result, Erdstall allows users to enjoy the security, control, and trust of non-custodial trading, combined with the low cost of off-chain transacting.
+Meanwhile, market operators benefit from fast throughput and low operation costs, innate user-trust, and fast and cheap deposits and withdrawals via Erdstall.
+Another benefit is that content creators can natively mint NFTs off-chain, and the cost of on-chain token creation only happens when the NFT is withdrawn by a user into the Ethereum mainnet.
+Because our protocol is very light-weight, it is easy to integrate into existing solutions.</p>
+<p><strong>Scope of this SDK</strong>&emsp;<!--
+-->This SDK is designed to offer the complete client-side functionality of Erdstall.
+It natively integrates with any ethers.js provider, such as Metamask, as its wallet manager.
+The SDK offers full control, but also packages the most important functionality into an easy-to-use API.
+The SDK is designed such that code snippets that use Erdstall can be written generically to be reused within any site using Erdstall.
+That way, common web components, such as payment/donation buttons, can easily be reused on your own homepage.</p>
+
+<a href="#getting-started" id="getting-started" style="color: inherit; text-decoration: none;">
+  <h2>Getting started</h2>
+</a>
+<p>To get your Erdstall app started, there are a few steps you need to take.</p>
+<p><strong>Importing Erdstall</strong>&emsp;<!--
+-->The Erdstall SDK is not published as a node package yet.
+It has to be manually cloned and locally registered as a node module like this:</p>
+<pre><code class="language-sh"><span class="hl-0">    git clone https://github.com/perun-network/erdstall-ts-sdk.git erdstall</span><br/><span class="hl-0">    </span><span class="hl-1">cd</span><span class="hl-0"> erdstall</span><br/><span class="hl-0">    yarn devpub </span><span class="hl-2"># builds the module into dist/ and creates publishing package.json</span><br/><span class="hl-0">    </span><span class="hl-1">cd</span><span class="hl-0"> dist</span><br/><span class="hl-0">    yarn link </span><span class="hl-2"># creates link in yarn cache to package @polycrypt/erdstall</span><br/><span class="hl-0">    </span><span class="hl-1">cd</span><span class="hl-0"> &lt;your-project&gt;</span><br/><span class="hl-0">    yarn link @polycryt/erdstall </span><span class="hl-2"># links to package from yarn cache</span>
+</code></pre>
+<p>You now have a link to the SDK in your project&#39;s <code>node_modules</code> directory.</p>
+<p>You can now import from the SDK like:</p>
+<pre><code class="language-ts"><span class="hl-3">import</span><span class="hl-0"> { </span><span class="hl-4">Erdstall</span><span class="hl-0"> } </span><span class="hl-3">from</span><span class="hl-0"> </span><span class="hl-5">&quot;@polycrypt/erdstall&quot;</span><span class="hl-0">;</span><br/><span class="hl-3">import</span><span class="hl-0"> { </span><span class="hl-4">Address</span><span class="hl-0"> } </span><span class="hl-3">from</span><span class="hl-0"> </span><span class="hl-5">&quot;@polycrypt/erdstall/ledger&quot;</span><span class="hl-0">;</span><br/><span class="hl-2">// or if you prefer a namespace handle</span><br/><span class="hl-3">import</span><span class="hl-0"> </span><span class="hl-6">*</span><span class="hl-0"> </span><span class="hl-3">as</span><span class="hl-0"> </span><span class="hl-4">erdstall</span><span class="hl-0"> </span><span class="hl-3">from</span><span class="hl-0"> </span><span class="hl-5">&quot;@polycrypt/erdstall&quot;</span><span class="hl-0">;</span>
+</code></pre>
+<p><strong>Creating the client object</strong>&emsp;<!--
+-->The SDK is straight-forward to use: everything you need is neatly bundled in the <code>erdstall.Erdstall</code> interface, which you can instantiate via <code>erdstall.NewClient()</code>, as follows:</p>
+<pre><code class="language-ts"><span class="hl-2">// Initialize these fields with values received from your ethers or web3 setup.</span><br/><span class="hl-6">var</span><span class="hl-0"> </span><span class="hl-4">ethAccount</span><span class="hl-0">: {</span><span class="hl-4">address</span><span class="hl-0">: </span><span class="hl-7">erdstall</span><span class="hl-0">.</span><span class="hl-7">ledger</span><span class="hl-0">.</span><span class="hl-7">Address</span><span class="hl-0">, </span><span class="hl-4">signer</span><span class="hl-0">: </span><span class="hl-7">ethers</span><span class="hl-0">.</span><span class="hl-7">Signer</span><span class="hl-0">};</span><br/><span class="hl-2">// Create client object.</span><br/><span class="hl-6">let</span><span class="hl-0"> </span><span class="hl-4">client</span><span class="hl-0"> = </span><span class="hl-4">erdstall</span><span class="hl-0">.</span><span class="hl-1">NewClient</span><span class="hl-0">(</span><br/><span class="hl-0">    </span><span class="hl-4">ethAccount</span><span class="hl-0">.</span><span class="hl-4">address</span><span class="hl-0">,</span><br/><span class="hl-0">    </span><span class="hl-4">ethAccount</span><span class="hl-0">.</span><span class="hl-4">signer</span><span class="hl-0">,</span><br/><span class="hl-0">    </span><span class="hl-6">new</span><span class="hl-0"> </span><span class="hl-1">URL</span><span class="hl-0">(</span><span class="hl-5">&quot;https://operator.erdstall.dev&quot;</span><span class="hl-0">));</span><br/><span class="hl-2">// Set up any event listeners needed by the application.</span><br/><span class="hl-2">// client.on(event, handler);</span><br/><span class="hl-2">// Establish the client&#39;s connection.</span><br/><span class="hl-3">await</span><span class="hl-0"> </span><span class="hl-4">client</span><span class="hl-0">.</span><span class="hl-1">initialize</span><span class="hl-0">();</span><br/><span class="hl-4">myDApp</span><span class="hl-0">.</span><span class="hl-1">run</span><span class="hl-0">(</span><span class="hl-4">client</span><span class="hl-0">);</span>
+</code></pre>
+<p><strong>Setting up events</strong>&emsp;<!--
+-->After creation, the Erdstall client is now only partially initialized.
+Now is the time to set up any <code>erdstall.ledger.ErdstallEvent</code> and <code>erdstall.enclave.EnclaveEvent</code> handlers using <code>Erdstall.on()</code> and <code>Erdstall.once()</code>.
+The following <code>EnclaveEvent</code> events exist (emitted event types are written in parentheses):</p>
+<ul>
+<li><strong><code>&quot;open&quot;</code></strong>:
+  triggered when the connection to Erdstall is established.
+  This event is triggered again if the Erdstall connection is lost and automatically re-established.
+  This is the most important event and must be set during setup, or it might get lost.
+  Use this event to launch your Erdstall-related logic.
+  Alternatively, if you can <code>await client.initialize()</code>, which does the same as waiting for this event.</li>
+<li><strong><code>&quot;receipt&quot;(erdstall.TxReceipt)</code></strong>:
+  triggered when a receipt is received from a transaction subscription.
+  This does not include transaction receipts directly received as a response when issuing transactions.
+  A transaction receipt contains the transaction, an affected party, and the party&#39;s new balance.</li>
+<li><code>&quot;close&quot;</code>: triggered when the connection to Erdstall is terminated due to any reason.</li>
+<li><code>&quot;error&quot;</code>: triggered when an error occurred with the Erdstall connection.</li>
+<li><code>&quot;proof&quot;(erdstall.BalanceProof)</code>:
+  triggered when a balance proof is received from a proof subscription.
+  These balance proofs are used for exiting the system in case the operator ceases to function.</li>
+<li><code>&quot;exitproof&quot;(erdstall.BalanceProof)</code>:
+  triggered when a balance proof intended for exiting Erdstall on-chain is received from a proof subscription.
+  This happens after a call to <code>Erdstall.exit()</code> or during <code>Erdstall.leave()</code>.</li>
+</ul>
+<p>The following <code>ErdstallEvent</code> smart contract events exist:</p>
+<ul>
+<li><strong><code>&quot;Deposited&quot;</code></strong>:
+  you deposited money into Erdstall.</li>
+<li><strong><code>&quot;Withdrawn&quot;</code></strong>:
+  you withdrew funds from Erdstall.</li>
+<li><code>&quot;Frozen&quot;</code>:
+  an unrecoverable error occurred and the Erdstall system is now frozen forever, and funds must be withdrawn using the latest &quot;sealed&quot; balance proof.</li>
+<li><code>&quot;Challenged&quot;</code>:
+  someone challenged the Erdstall operator to prove it is still alive.</li>
+<li><code>&quot;ChallengeResponded&quot;</code>:
+  the Erdstall operator successfully proved it still operates.</li>
+<li><code>&quot;TokenTypeRegistered&quot;</code>:
+  a new token type (such as ETH, ERC20, ERC721, etc.) has been registered with Erdstall on-chain.</li>
+<li><code>&quot;TokenRegistered&quot;</code>:
+  a specific token contract has been registered on-chain.</li>
+</ul>
+<p><strong>Finishing up</strong>&emsp;<!--
+-->After all events have been set up, call <code>Erdstall.initialize()</code> to establish the client&#39;s connection to the Erdstall ledger.
+You&#39;re now good to go!
+The <code>open</code> event will be triggered and your logic will launch.</p>
+
+<a href="#typedjson" id="typedjson" style="color: inherit; text-decoration: none;">
+  <h3>TypedJSON</h3>
+</a>
+<p>The Erdstall SDK internally uses <a href="https://github.com/JohnWeisz/TypedJSON"><code>TypedJSON</code></a> to define class JSON serialization.
+If you want to use TypedJSON in your project for class serialization, possibly using some Erdstall classes as field types, you <em>must</em> use the re-exported module <code>typedjson</code> from <code>@polycrypt/erdstall/export/typedjson</code> like</p>
+<pre><code class="language-ts"><span class="hl-3">import</span><span class="hl-0"> { </span><span class="hl-4">jsonObject</span><span class="hl-0">, </span><span class="hl-4">jsonMember</span><span class="hl-0">, </span><span class="hl-4">TypedJSON</span><span class="hl-0"> } </span><span class="hl-3">from</span><span class="hl-0"> </span><span class="hl-5">&quot;@polycrypt/erdstall/export/typedjson&quot;</span><span class="hl-0">;</span>
+</code></pre>
+<p>The reason is that TypedJSON internally registers class serializations in static members of the <code>TypedJSON</code> class.
+If you use your own version of <code>typedjson</code> from your <code>node_modules</code>, these modules will not share state and serialization will not work.</p>
+
+<a href="#using-the-erdstall-client" id="using-the-erdstall-client" style="color: inherit; text-decoration: none;">
+  <h2>Using the Erdstall client</h2>
+</a>
+<p>The Erdstall client mainly offers these operations:</p>
+<p><strong>Deposits and withdrawals</strong>&emsp;<!--
+--><code>Erdstall.deposit(erdstall.ledger.Assets)</code> creates a bunch of Ethereum transactions that need to be sent on-chain to deposit the requested amount of assets into Erdstall.
+Once the transactions are confirmed on-chain, the funds will be made available in Erdstall.
+To withdraw your funds, <code>Erdstall.leave()</code> can be used.
+It requests that the user exits, then, after a balance proof is issued, returns a bunch of Ethereum transactions that need to be sent on-chain immediately.
+These transactions will withdraw the user&#39;s funds from Erdstall back into his normal wallet.</p>
+<p><strong>Subscriptions</strong>&emsp;<!--
+-->Subscribe to events using <code>Erdstall.subscribeTXs(filter: erdstall.ledger.Address?)</code> and <code>Erdstall.subscribeBalanceProofs(filter: erdstall.ledger.Address?)</code>.
+Both of these calls will listen for their respective events for either all accounts, or only for the account passed to the call.
+Each call also has a corresponding <code>unsubscribe</code> version.
+The current balance of any account can be queried using <code>Erdstall.getAccount(erdstall.ledger.Address)</code>.</p>
+<p><strong>Off-chain transacting</strong>&emsp;<!--
+-->To transfer funds within Erdstall, use <code>Erdstall.transferTo(erdstall.ledger.Assets, erdstall.ledger.Address) TXReceipt</code>.
+This transfers the specified assets to the specified recipient, and returns the sender&#39;s new balances.
+This is only a simple transaction, and only useful for payments, but not for digital asset trades.</p>
+<p><strong>Off-chain trading</strong>&emsp;<!--
+-->Erdstall natively supports digital asset trades in the form of fungible and non-fungible tokens (FT, NFT).
+All trading requires an external marketplace that builds on-top of Erdstall.
+The marketplace&#39;s role is to facilitate order match-making and to track the currently open offers.
+Trading works as follows:</p>
+<ol>
+<li>The seller creates a trade offer — which is a promise indicating he is willing to trade certain assets for a certain price — and sends it to a market operator.</li>
+<li>The market operator broadcasts the trade offer to potential buyers, who can respond with a trade agreement, indicating they are willing to match the offer.</li>
+<li>The market operator sends both the trade offer and the trade agreement to Erdstall.</li>
+</ol>
+<blockquote>
+<p><em>This is currently not implemented, we still need to create a more unified API on how to connect the Erdstall client to any Market operator, both for proposing and accepting trades.</em></p>
+</blockquote>
+<p><strong>Off-chain NFT minting</strong>&emsp;<!--
+--><code>Erdstall.mint(erdstall.ledger.Address, erdstall.Uint256) TXReceipt</code> can be used to create a new token of the specified kind and with the specified ID.
+The NFT can then be traded freely, and is only minted on-chain upon withdrawal.</p>
+
+<a href="#development" id="development" style="color: inherit; text-decoration: none;">
+  <h2>Development</h2>
+</a>
+<p><strong>Contract bindings</strong>&emsp;<!--
+-->Contract bindings have to be generated from the <a href="%22https://github.com/perun-network/erdstall-contracts%22"><code>erdstall-contracts</code></a> repository.
+Just clone it into a directory of your choice and execute <code>yarn bindings &lt;path/to/erdstall-contracts&gt;</code>.
+<strong>Note</strong>: Do not forget to install the dependencies in <code>erdstall-contracts</code> with <code>yarn</code>.</p>
+
+<a href="#license" id="license" style="color: inherit; text-decoration: none;">
+  <h2>License</h2>
+</a>
+<p>This work is released under the Apache 2.0 license. See LICENSE file for more
+details.</p>
+<p><em>Copyright (C) 2021 - The Erdstall Authors.</em></p>
+</div></div><div class="col-4 col-menu menu-sticky-wrap menu-highlight"><nav class="tsd-navigation primary"><ul><li class="current"><a href="modules.html">Modules</a></li><li class=" tsd-kind-module"><a href="modules/api.html">api</a></li><li class=" tsd-kind-module"><a href="modules/enclave.html">enclave</a></li><li class=" tsd-kind-module"><a href="modules/index.html">index</a></li><li class=" tsd-kind-module"><a href="modules/ledger.html">ledger</a></li><li class=" tsd-kind-module"><a href="modules/ledger_backend.html">ledger/backend</a></li><li class=" tsd-kind-module"><a href="modules/test.html">test</a></li><li class=" tsd-kind-module"><a href="modules/utils.html">utils</a></li></ul></nav></div></div></div><footer class="with-border-bottom"><div class="container"><h2>Legend</h2><div class="tsd-legend-group"><ul class="tsd-legend"><li class="tsd-kind-namespace"><span class="tsd-kind-icon">Namespace</span></li><li class="tsd-kind-variable"><span class="tsd-kind-icon">Variable</span></li><li class="tsd-kind-function"><span class="tsd-kind-icon">Function</span></li><li class="tsd-kind-type-alias"><span class="tsd-kind-icon">Type alias</span></li><li class="tsd-kind-type-alias tsd-has-type-parameter"><span class="tsd-kind-icon">Type alias with type parameter</span></li></ul><ul class="tsd-legend"><li class="tsd-kind-class"><span class="tsd-kind-icon">Class</span></li><li class="tsd-kind-class tsd-has-type-parameter"><span class="tsd-kind-icon">Class with type parameter</span></li></ul><ul class="tsd-legend"><li class="tsd-kind-interface"><span class="tsd-kind-icon">Interface</span></li></ul></div><h2>Settings</h2><p>Theme <select id="theme"><option value="os">OS</option><option value="light">Light</option><option value="dark">Dark</option></select></p></div></footer><div class="container tsd-generator"><p>Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p></div><div class="overlay"></div><script src="assets/main.js"></script></body></html>

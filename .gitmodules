@@ -1,3 +1,0 @@
-[submodule "deps/erdstall-contracts"]
-	path = deps/erdstall-contracts
-	url = git@github.com:perun-network/erdstall-contracts
