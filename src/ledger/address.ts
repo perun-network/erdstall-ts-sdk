@@ -6,6 +6,10 @@ import { jsonObject } from "#erdstall/export/typedjson";
 import { equalArray } from "#erdstall/utils/arrays";
 import { ABIValue, customJSON } from "#erdstall/api/util";
 
+/**
+ * This class implements an address representation and is used within the SDK
+ * wherever an address is required.
+ */
 @jsonObject
 export class Address implements ABIValue {
 	private value: Uint8Array;

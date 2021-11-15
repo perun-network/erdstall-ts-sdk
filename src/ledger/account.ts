@@ -8,6 +8,10 @@ import {
 } from "#erdstall/export/typedjson";
 import { Assets } from "#erdstall/ledger/assets";
 
+/**
+ * Account is the state of a user within Erdstall, including the last nonce and
+ * free locked assets. It is returned by an `EnclaveReader.getAccount` query.
+ */
 @jsonObject
 export class Account {
 	@jsonBigIntMember() nonce: bigint;

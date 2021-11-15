@@ -30,23 +30,66 @@ import { EventCache, OneShotEventCache } from "#erdstall/utils";
 import { EnclaveEvent } from "./event";
 import { EnclaveProvider, EnclaveWSProvider } from "./provider";
 
+/**
+ * Describes an entity which can build and cut its connection to some target.
+ */
 export interface Connector {
 	connect(): void;
 	disconnect(): void;
 }
 
-// EnclaveConnection describes the connection a client has to an Enclave
-// running Erdstall.
+/**
+ * Describes the connection a client has to an Enclave running Erdstall.
+ */
 export interface EnclaveReader extends EnclaveWatcher, Connector {
+	/**
+	 * Retrieves the account state for the given address within Erdstall.
+	 *
+	 * @param acc - The address of interest.
+	 * @returns A promise containing the state of the account in Erdstall.
+	 */
 	getAccount(acc: Address): Promise<Account>;
 }
 
 export interface EnclaveWriter extends EnclaveReader, Connector {
+	/**
+	 * Enters Erdstall with the given address.
+	 */
 	onboard(who: Address): Promise<void>;
+	/**
+	 * Sends the given transfer transaction to the enclave.
+	 *
+	 * @param tx - The transfer transaction to send.
+	 * @returns A promise containing the transaction receipt for this transfer.
+	 */
 	transfer(tx: Transfer): Promise<TxReceipt>;
+	/**
+	 * Sends the given mint transaction to the enclave.
+	 *
+	 * @param tx - The mint transaction to send.
+	 * @returns A promise containing the transaction receipt for this mint.
+	 */
 	mint(tx: Mint): Promise<TxReceipt>;
+	/**
+	 * Sends the given burn transaction to the enclave.
+	 *
+	 * @param tx - The burn transaction to send.
+	 * @returns A promise containing the transaction receipt for this burn.
+	 */
 	burn(tx: Burn): Promise<TxReceipt>;
+	/**
+	 * Sends the given trade transaction to the enclave.
+	 *
+	 * @param tx - The trade transaction to send.
+	 * @returns A promise containing the transaction receipt for this trade.
+	 */
 	trade(tx: Trade): Promise<TxReceipt>;
+	/**
+	 * Sends the given exit request to the enclave.
+	 *
+	 * @param tx - The exit request to send.
+	 * @returns A promise containing the balance proof with its exit flag set.
+	 */
 	exit(exitRequest: ExitRequest): Promise<BalanceProof>;
 
 	// needed to allow interface checking.
