@@ -27,7 +27,7 @@ import {
 	GetAccount,
 } from "#erdstall/api/calls";
 import { Transaction } from "#erdstall/api/transactions";
-import { Address, Account } from "#erdstall/ledger";
+import { Address, Account, OnChainQuerier } from "#erdstall/ledger";
 import {
 	NFTMetadata,
 	TokenFetcher,
@@ -117,6 +117,7 @@ export class MockWatcher implements Watcher {
 
 export class MockClient extends MockWatcher implements ErdstallClient {
 	readonly tokenProvider: TokenProvider;
+	readonly onChainQuerier: OnChainQuerier;
 	private readonly contract: Address;
 	private metadata: Map<string, NFTMetadata>;
 
@@ -125,6 +126,7 @@ export class MockClient extends MockWatcher implements ErdstallClient {
 		this.contract = contract;
 		this.metadata = new Map();
 		this.tokenProvider = new TokenFetcher();
+		this.onChainQuerier = new MockOnChainQuerier();
 	}
 
 	async initialize(): Promise<void> {}
@@ -255,4 +257,14 @@ function newTxReceiptResult(
 	const delta = new Map<string, Account>([[tx.sender.key, _acc]]);
 	const txr = new TxReceipt(tx, delta);
 	return new Result(id, txr);
+}
+
+class MockOnChainQuerier implements OnChainQuerier {
+	constructor() {}
+	async queryTokensOwnedByAddress(
+		_token: string,
+		_address: string,
+	): Promise<Tokens> {
+		return new Tokens([]);
+	}
 }
