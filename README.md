@@ -177,6 +177,35 @@ Meanwhile, market operators benefit from fast throughput and low operation costs
 Another benefit is that content creators can natively mint NFTs off-chain, and the cost of on-chain token creation only happens when the NFT is withdrawn by a user into the Ethereum mainnet.
 Because our protocol is very light-weight, it is easy to integrate into existing solutions.
 
+## Glossary
+
+-   _balance proof_:
+
+-   _challenge_: Even though the use of a TEE guarantees that the operator
+    cannot tamper with the calculations happening inside the enclave, the
+    operator may cease to operate, that is, be online at any point in time, either
+    due to technical problems or intended malicious behavior.
+    For this reason,
+    users of the Erdstall system must have the possibility of _challenging_ the
+    operator on-chain.
+    The operator then has to proof that it's still online by
+    posting the requested balance proof.
+    If he fails to answer all open challenges in time, the contract enters a
+    _fozen_ state.
+    Users can then exit the system with their latest _sealed_ balance proofs.
+
+-   _epoch_: The Erdstall network progresses in so-called _epochs_.
+    An epoch is a timespan determined by a fixed number of on-chain blocks, the
+    so-called _epoch duration_. Once the enclave has received this amount of blocks,
+    it seals the epoch by creating balance proofs for all accounts in the system.
+    In this sense, an epoch can be thought of as an off-chain block, but spanning a
+    longer timespan.
+
+-   _sealed_: An epoch `n` is sealed on-chain once the last block of the _next_ epoch `n+1` has been mined, i.e., a further full epoch after epoch `n` has passed.
+    The outcome, that is, all balance proofs of a sealed epoch, can be considered final and can thus be withdrawn.
+    For this reason, the balance proofs sent out at the end of a sealed balance proof are also called _sealed balance proofs_.
+    It is a security requirement of the Erdstall protocol to wait another full epoch before assets can be withdrawn.
+
 ## License
 
 This work is released under the Apache 2.0 license. See LICENSE file for more
