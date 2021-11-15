@@ -94,7 +94,7 @@ describe("ErdstallEventWrapping", function () {
 	let challengedEpoch = 0n;
 	it("wraps challenges", async function () {
 		let timeout: NodeJS.Timeout;
-		challengedEpoch = (await testenv.currentEpoch()) - 1n;
+		challengedEpoch = (await testenv.currentEpoch()) - 2n;
 
 		const res = new Promise((resolve, reject) => {
 			timeout = setTimeout(reject, TIMEOUT_MS);

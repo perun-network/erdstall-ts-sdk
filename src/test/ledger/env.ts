@@ -58,6 +58,13 @@ export async function setupEnv(
 	const provider = new MockProvider(
 		ganacheOptions ? { ganacheOptions: ganacheOptions } : undefined,
 	);
+
+	const mineBlocks = async (n: number | bigint = 1) => {
+		for (let i = 0; i < n; i++) {
+			await provider.send("evm_mine", []);
+		}
+	};
+
 	const wallets = provider.getWallets();
 
 	const op = wallets[OP];
@@ -85,10 +92,11 @@ export async function setupEnv(
 
 	const deployAndStore = async (deployments: typeof contractDeployments) => {
 		for (const [abi, args] of deployments) {
-			const contract = await deployContract(op, abi, args, {
+			const contract = deployContract(op, abi, args, {
 				nonce: nonce++,
 			});
-			contracts.push(contract);
+			await mineBlocks(8);
+			contracts.push(await contract);
 		}
 	};
 
@@ -114,6 +122,7 @@ export async function setupEnv(
 		const tx = await call(arg1, arg2, {
 			nonce: nonce++,
 		});
+		await mineBlocks();
 		const rec = await tx.wait();
 		if (!rec.status || rec.status !== 1) {
 			Promise.reject(
@@ -163,15 +172,11 @@ export async function setupEnv(
 		op,
 	);
 
+	nonce = await op.getTransactionCount();
 	for (const addr of minters) {
-		await part.addMinter(addr);
+		await part.addMinter(addr, { nonce: nonce++ });
 	}
-
-	const mineBlocks = async (n: number | bigint = 1) => {
-		for (let i = 0; i < n; i++) {
-			await provider.send("evm_mine", []);
-		}
-	};
+	await mineBlocks();
 
 	const currentEpoch = async (): Promise<bigint> => {
 		return Promise.all([
@@ -206,6 +211,9 @@ export async function setupEnv(
 		await mineBlocks(bdelta);
 		return bdelta;
 	};
+
+	// seal current epoch!
+	sealEpoch(await currentEpoch());
 
 	return {
 		provider: provider,
