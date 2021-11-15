@@ -1,6 +1,7 @@
 # Erdstall TypeScript SDK
 
 [![CI Status](https://github.com/perun-network/erdstall-ts-sdk/actions/workflows/ci.yml/badge.svg)](https://github.com/perun-network/erdstall-ts-sdk/actions/workflows/ci.yml)
+[![TypeDoc Status](https://github.com/perun-network/erdstall-ts-sdk/actions/workflows/typedoc.yml/badge.svg)](https://perun-network.github.io/erdstall-ts-sdk/)
 [![@polycrypt/erdstall at npm](https://img.shields.io/npm/v/@polycrypt/erdstall)](https://www.npmjs.com/package/@polycrypt/erdstall)
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202-blue)](https://www.apache.org/licenses/LICENSE-2.0.txt)
 
