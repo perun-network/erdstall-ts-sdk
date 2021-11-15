@@ -1,4 +1,4 @@
-name: Github Pages
+name: TypeDoc
 
 on:
   workflow_dispatch:
@@ -17,7 +17,7 @@ jobs:
           node-version: "16"
           cache: "yarn"
       - name: Install dependencies
-        run: yarn install
+        run: yarn
       - name: Generate docs
         run: yarn doc
       - name: Deploy
