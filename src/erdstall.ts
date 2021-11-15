@@ -16,6 +16,7 @@ import { Uint256 } from "#erdstall/api/util";
 import { Stages } from "#erdstall/utils";
 import { EnclaveEvent } from "#erdstall/enclave";
 import { NFTMetadataProvider } from "#erdstall/ledger/backend";
+import { OnChainQuerier } from "./ledger";
 
 import { ErdstallEvent, ErdstallEventHandler } from "./event";
 export * from "./client";
@@ -109,6 +110,7 @@ export interface ErdstallClient
 		NFTMetadataProvider,
 		AccountGetter {
 	readonly tokenProvider: TokenProvider;
+	readonly onChainQuerier: OnChainQuerier;
 }
 
 export interface ErdstallSession

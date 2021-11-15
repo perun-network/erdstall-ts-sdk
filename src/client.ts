@@ -19,9 +19,12 @@ import { TokenFetcher, TokenProvider } from "#erdstall/ledger/backend";
 import { EventCache, OneShotEventCache } from "#erdstall/utils";
 import { ethers, Signer } from "ethers";
 import { NFTMetadata } from "#erdstall/ledger/backend";
+import { OnChainQuerier } from "./ledger/onChainQuerier";
+import { EthereumOnChainQuerier } from "./ledger/backend/ethereumOnChainQuerier";
 
 export class Client implements ErdstallClient {
 	readonly tokenProvider: TokenProvider;
+	readonly onChainQuerier: OnChainQuerier;
 	protected enclaveConn: EnclaveReader;
 	protected provider: ethers.providers.Provider | Signer;
 	protected erdstallConn?: LedgerReader | LedgerWriter;
@@ -39,6 +42,7 @@ export class Client implements ErdstallClient {
 		this.erdstallEventHandlerCache = new EventCache<LedgerEvent>();
 		this.erdstallOneShotHandlerCache = new OneShotEventCache<LedgerEvent>();
 		this.tokenProvider = new TokenFetcher();
+		this.onChainQuerier = new EthereumOnChainQuerier(this.provider);
 	}
 
 	erdstall(): Address {
