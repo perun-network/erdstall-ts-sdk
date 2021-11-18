@@ -4,8 +4,6 @@
 // This file contains the Erdstall implementation, unifying the on-chain and
 // offchain part of Erdstall into a single interface.
 
-import { ethers } from "ethers";
-
 import { TxReceipt } from "#erdstall/api/responses";
 import { TradeOffer } from "#erdstall/api/transactions";
 import { BalanceProof } from "#erdstall/api/responses";
@@ -13,7 +11,7 @@ import { Address, Account, LedgerEvent } from "#erdstall/ledger";
 import { TokenProvider } from "#erdstall/ledger/backend";
 import { Assets } from "#erdstall/ledger/assets";
 import { Uint256 } from "#erdstall/api/util";
-import { StageName } from "#erdstall/utils";
+import { TransactionGenerator } from "#erdstall/utils";
 import { EnclaveEvent } from "#erdstall/enclave";
 import { NFTMetadataProvider } from "#erdstall/ledger/backend";
 import { OnChainQuerier } from "./ledger";
@@ -153,11 +151,6 @@ export interface Trader {
 	acceptTrade(offer: TradeOffer): Promise<TxReceipt>;
 }
 
-export interface StagesGenerator {
-	stages: AsyncGenerator<[StageName, ethers.ContractTransaction], void, void>;
-	numStages: number;
-}
-
 /**
  * Describes an entity with the ability to deposit funds in Erdstall.
  */
@@ -175,7 +168,7 @@ export interface Depositor {
 	 * function. For more information about stages look at the corresponding
 	 * documentation.
 	 */
-	deposit(assets: Assets): Promise<StagesGenerator>;
+	deposit(assets: Assets): Promise<TransactionGenerator>;
 }
 
 /**
@@ -196,7 +189,7 @@ export interface Withdrawer {
 	 * Withdrawing is a multistep process which might contain different amount of
 	 * steps for each type of asset contained in the balance proof.
 	 */
-	withdraw(exitProof: BalanceProof): Promise<StagesGenerator>;
+	withdraw(exitProof: BalanceProof): Promise<TransactionGenerator>;
 }
 
 /**
@@ -232,7 +225,7 @@ export interface Leaver extends Exiter, Withdrawer {
 	 * Check out the documentation for `Withdrawer.withdraw` and `Stages` for
 	 * more information about theh return type.
 	 */
-	leave(): Promise<StagesGenerator>;
+	leave(): Promise<TransactionGenerator>;
 }
 
 /**

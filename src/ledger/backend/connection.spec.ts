@@ -34,7 +34,7 @@ describe("ErdstallConnection", () => {
 	let contract: Erdstall;
 	let conn: LedgerWriter;
 
-	const depositStagesForAssets = (assets: Assets): number => {
+	const numDepositTransactions = (assets: Assets): number => {
 		let result = 0;
 		assets.values.forEach((asset, token) => {
 			switch (asset.typeTag()) {
@@ -77,7 +77,7 @@ describe("ErdstallConnection", () => {
 			expect(rec.status, "depositing should have worked").to.equal(0x1);
 		}
 
-		expect(numStages).to.equal(depositStagesForAssets(assets));
+		expect(numStages).to.equal(numDepositTransactions(assets));
 
 		return depositRegistered;
 	});

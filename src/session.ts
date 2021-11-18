@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { ethers, Signer } from "ethers";
+import { Signer } from "ethers";
 
 import { TxReceipt, BalanceProof } from "#erdstall/api/responses";
 import {
@@ -16,10 +16,9 @@ import { EnclaveWriter } from "#erdstall/enclave";
 import { Address, Account, LedgerWriter } from "#erdstall/ledger";
 import { Assets } from "#erdstall/ledger/assets";
 import { Uint256 } from "#erdstall/api/util";
-import { StageName } from "#erdstall/utils";
 import { ErdstallSession } from "./erdstall";
 import { Client } from "./client";
-import { StagesGenerator } from ".";
+import { TransactionGenerator } from "#erdstall/utils";
 
 export const ErrUnitialisedClient = new Error("client unitialised");
 
@@ -118,7 +117,7 @@ export class Session extends Client implements ErdstallSession {
 		return this.enclaveWriter.burn(tx);
 	}
 
-	async deposit(assets: Assets): Promise<StagesGenerator> {
+	async deposit(assets: Assets): Promise<TransactionGenerator> {
 		if (!this.erdstallConn) {
 			return Promise.reject(ErrUnitialisedClient);
 		}
@@ -136,7 +135,7 @@ export class Session extends Client implements ErdstallSession {
 		return this.enclaveWriter.exit(exittx);
 	}
 
-	async withdraw(exitProof: BalanceProof): Promise<StagesGenerator> {
+	async withdraw(exitProof: BalanceProof): Promise<TransactionGenerator> {
 		if (!this.erdstallConn) {
 			return Promise.reject(ErrUnitialisedClient);
 		}
@@ -144,7 +143,7 @@ export class Session extends Client implements ErdstallSession {
 		return (this.erdstallConn as LedgerWriter).withdraw(exitProof);
 	}
 
-	async leave(): Promise<StagesGenerator> {
+	async leave(): Promise<TransactionGenerator> {
 		const exitProof = await this.exit();
 		await new Promise<void>((accept) =>
 			this.once("phaseshift", () => accept()),

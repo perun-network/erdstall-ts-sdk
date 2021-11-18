@@ -12,14 +12,14 @@ import { Address } from "#erdstall/ledger";
 import { Asset } from "#erdstall/ledger/assets";
 import { Amount } from "#erdstall/ledger/assets";
 import { Tokens } from "#erdstall/ledger/assets";
-import { DepositCalls } from "./tokenmanager";
+import { Calls } from "./tokenmanager";
 
 export function makeETHDepositCalls(
 	signer: Signer,
 	holderAddr: Address,
 	_: Address,
 	amount: Asset,
-): DepositCalls {
+): Calls {
 	if (!(amount instanceof Amount)) {
 		throw new Error("given value is not of type Amount");
 	}
@@ -47,7 +47,7 @@ export function makeERC20DepositCalls(
 	holderAddr: Address,
 	tokenAddr: Address,
 	amount: Asset,
-): DepositCalls {
+): Calls {
 	if (!(amount instanceof Amount)) {
 		throw new Error("given value is not of type Amount");
 	}
@@ -88,7 +88,7 @@ export function makeERC721DepositCalls(
 	holderAddr: Address,
 	tokenAddr: Address,
 	amount: Asset,
-): DepositCalls {
+): Calls {
 	if (!(amount instanceof Tokens)) {
 		throw new Error("given value is not of type Tokens");
 	}
@@ -96,7 +96,7 @@ export function makeERC721DepositCalls(
 	const token = IERC721__factory.connect(tokenAddr.toString(), signer);
 	const holder = ERC721Holder__factory.connect(holderAddr.toString(), signer);
 
-	const calls: DepositCalls = [];
+	const calls: Calls = [];
 
 	for (const id of amount.value) {
 		calls.push([

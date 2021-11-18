@@ -5,13 +5,13 @@ import { ethers, Signer } from "ethers";
 import { Depositor, Withdrawer } from "#erdstall";
 import { Assets } from "#erdstall/ledger/assets";
 import { Address } from "#erdstall/ledger";
-import { StageName } from "#erdstall/utils";
+import { TransactionName } from "#erdstall/utils";
 import { BalanceProof } from "#erdstall/api/responses";
 import { Erdstall } from "./contracts/Erdstall";
 import { LedgerReader, LedgerReadConn } from "./readconn";
-import { depositors, DepositCalls } from "./tokenmanager";
+import { depositors, Calls } from "./tokenmanager";
 import { TokenProvider } from "./tokencache";
-import { StagesGenerator } from "#erdstall";
+import { TransactionGenerator } from "#erdstall/utils";
 
 // LedgerConnection describes the connection a client can have to the on-chain
 // part of Erdstall.
@@ -27,7 +27,7 @@ export class LedgerWriteConn extends LedgerReadConn implements LedgerWriter {
 		this.signer = contract.signer;
 	}
 
-	async withdraw(exitProof: BalanceProof): Promise<StagesGenerator> {
+	async withdraw(exitProof: BalanceProof): Promise<TransactionGenerator> {
 		return {
 			stages: this.call([
 				[
@@ -44,8 +44,8 @@ export class LedgerWriteConn extends LedgerReadConn implements LedgerWriter {
 		};
 	}
 
-	async deposit(assets: Assets): Promise<StagesGenerator> {
-		const calls: DepositCalls = [];
+	async deposit(assets: Assets): Promise<TransactionGenerator> {
+		const calls: Calls = [];
 
 		if (!assets.values.size)
 			throw new Error("attempting to deposit nothing");
@@ -72,14 +72,18 @@ export class LedgerWriteConn extends LedgerReadConn implements LedgerWriter {
 	}
 
 	private async *call(
-		calls: DepositCalls,
-	): AsyncGenerator<[StageName, ethers.ContractTransaction], void, void> {
+		calls: Calls,
+	): AsyncGenerator<
+		[TransactionName, ethers.ContractTransaction],
+		void,
+		void
+	> {
 		if (calls.length == 0) throw new Error("0 calls");
 
 		let nonce = await this.signer.getTransactionCount();
 		for (const [name, call] of calls) {
 			yield (async (): Promise<
-				[StageName, ethers.ContractTransaction]
+				[TransactionName, ethers.ContractTransaction]
 			> => {
 				try {
 					const ctx = await call({ nonce: nonce++ });
