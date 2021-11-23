@@ -6,7 +6,7 @@ import { ethers, Signer } from "ethers";
 import { Address } from "#erdstall/ledger";
 import { Asset } from "#erdstall/ledger/assets";
 import { TokenType } from "#erdstall/ledger/assets";
-import { StageName } from "#erdstall/utils";
+import { TransactionName } from "#erdstall/utils";
 import {
 	makeETHDepositCalls,
 	makeERC20DepositCalls,
@@ -16,14 +16,14 @@ import {
 export type DepositCall = (
 	obj?: ethers.PayableOverrides,
 ) => Promise<ethers.ContractTransaction>;
-export type DepositCalls = [StageName, DepositCall][];
+export type Calls = [TransactionName, DepositCall][];
 
 export type DepositerCallsFactory = (
 	signer: Signer,
 	holderAddr: Address,
 	tokenAddr: Address,
 	amount: Asset,
-) => DepositCalls;
+) => Calls;
 
 export const depositors = new Map<TokenType, DepositerCallsFactory>([
 	["ETH", makeETHDepositCalls],
