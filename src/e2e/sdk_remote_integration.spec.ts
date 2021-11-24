@@ -90,10 +90,17 @@ describe("Erdstall-TS-SDK", () => {
 			asset: new assets.Amount(100000000n),
 		});
 
-		const stages = await Promise.all(
+		const transactionGenerators = await Promise.all(
 			clients.map((c) => c.deposit(depositBal)),
 		);
-		await Promise.all(stages.map((stage) => stage.wait()));
+
+		await Promise.all(
+			transactionGenerators.map(async ({ stages }) => {
+				for await (const [, stage] of stages) {
+					await stage.wait();
+				}
+			}),
+		);
 
 		// Prevent race: wait for phase shift to finalize deposits.
 		return new Promise((accept, reject) => {
@@ -143,10 +150,16 @@ describe("Erdstall-TS-SDK", () => {
 	});
 
 	it("leave", async () => {
-		const stages = await Promise.all(
+		const transactionGenerators = await Promise.all(
 			clients.slice(0, 2).map((c) => c.leave()),
 		);
-		return Promise.all(stages.map((stage) => stage.wait()));
+		return Promise.all(
+			transactionGenerators.map(async ({ stages }) => {
+				for await (const [, stage] of stages) {
+					stage.wait();
+				}
+			}),
+		);
 	});
 
 	let nft: bigint;
