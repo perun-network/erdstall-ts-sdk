@@ -58,6 +58,7 @@ export async function setupEnv(
 	const provider = new MockProvider(
 		ganacheOptions ? { ganacheOptions: ganacheOptions } : undefined,
 	);
+	provider.pollingInterval = 100;
 
 	const mineBlocks = async (n: number | bigint = 1) => {
 		for (let i = 0; i < n; i++) {
