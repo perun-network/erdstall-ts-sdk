@@ -11,15 +11,36 @@ jobs:
   ci:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Setup Node.js
+      - name: "Checkout SDK"
+        uses: actions/checkout@v2
+      - name: "Prettier Check"
+        uses: creyD/prettier_action@v4.0
+        with:
+          dry: True
+          prettier_options: --config .prettierrc --check **/*.ts
+      - name: "Setup Node.js"
         uses: actions/setup-node@v2
         with:
           node-version: "16"
           cache: "yarn"
-      - name: Install dependencies
+      - name: "Install dependencies"
         run: yarn install
-      - name: Build
+      - name: "Build"
         run: yarn build
-      - name: Test
+      - name: "Test"
         run: yarn test
+      - name: "Checkout Erdstall Core"
+        uses: actions/checkout@v2
+        with:
+          ssh-key: ${{ secrets.SSH_PRIV_KEY }}
+          repository: "perun-network/erdstall-ext"
+          path: "erdstall"
+      - name: "Set up Go 1.x"
+        uses: actions/setup-go@v2
+        with:
+          go-version: ^1.17
+      - name: "Build walkthrough operator"
+        working-directory: "erdstall"
+        run: go build -o wo ./cmd/walkthrough/main.go
+      - name: "End-2-End Test"
+        run: ERDSTALL_EXE=erdstall/wo yarn test:e2e
