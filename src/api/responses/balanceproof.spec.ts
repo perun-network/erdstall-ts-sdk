@@ -13,6 +13,7 @@ import {
 import * as test from "#erdstall/test";
 import { Environment, setupEnv } from "#erdstall/test/ledger";
 import { equalArray } from "#erdstall/utils/arrays";
+import { logSeedOnFailure } from "#erdstall/test";
 
 chai.use(solidity);
 
@@ -42,5 +43,9 @@ describe("BalanceProofs", function () {
 		const bp = await bal.sign(erdAddr, env.tee);
 		return expect(erd.verifyBalance(bal.asABI(), bp.sig.value)).to.not.be
 			.reverted;
+	});
+
+	afterEach(function () {
+		logSeedOnFailure(rng, this.currentTest);
 	});
 });

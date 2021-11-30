@@ -1,6 +1,7 @@
 import { expect } from "chai";
 import { mkBigInt } from "./bigint";
 import * as test from "#erdstall/test";
+import { logSeedOnFailure } from "#erdstall/test";
 
 describe("bigints", function () {
 	const rng = test.newPrng();
@@ -92,5 +93,9 @@ describe("bigints", function () {
 				)}`,
 			).to.equal(expRes);
 		}
+	});
+
+	afterEach(function () {
+		logSeedOnFailure(rng, this.currentTest);
 	});
 });

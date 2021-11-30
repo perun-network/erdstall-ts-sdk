@@ -16,6 +16,7 @@ import { PerunArt__factory } from "./contracts/factories/PerunArt__factory";
 
 import { Environment, setupEnv } from "#erdstall/test/ledger";
 import * as test from "#erdstall/test";
+import { logSeedOnFailure } from "#erdstall/test";
 
 const TOKEN_SIZE = 4;
 
@@ -66,5 +67,9 @@ describe("Deposit_Call_Wrapper", () => {
 				).to.be.equal(0x1);
 			}
 		}
+	});
+
+	afterEach(function () {
+		logSeedOnFailure(rng, this.currentTest);
 	});
 });

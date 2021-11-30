@@ -4,6 +4,7 @@ import assert from "assert";
 
 import { newPrng } from "./random";
 import { newRandomBigInt } from "./bigint";
+import { logSeedOnFailure } from ".";
 
 const NUM_TRIES = 128;
 
@@ -33,4 +34,8 @@ describe("newRandomBigInt", function () {
 	for (const i of [1, 7, 8, 9, 31, 32, 33, 255, 256, 257]) {
 		itShouldGenerateProperSize(i);
 	}
+
+	afterEach(function () {
+		logSeedOnFailure(rng, this.currentTest);
+	});
 });

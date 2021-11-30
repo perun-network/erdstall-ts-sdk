@@ -9,6 +9,13 @@ export default interface PRNG {
 	uInt32: () => number;
 	valuesUInt32: () => Iterator<number>;
 	valuesUFloat32: () => Iterator<number>;
+	seed: number;
+}
+
+export function logSeedOnFailure(prng: PRNG, currentTest?: Mocha.Test) {
+	if (currentTest && currentTest.state == "failed") {
+		console.log(`Failed with PRNG ESSEED ${prng.seed}`);
+	}
 }
 
 // NewPrng returns a PRNG seeded with the current `date-time`.
@@ -17,7 +24,6 @@ export function newPrng(): PRNG {
 	if (!seed) {
 		seed = new Date().getTime();
 	}
-	console.log(`PRNG with ESSEED=${seed}`);
 	const rng = aleaRNGFactory(seed);
 	const valuesWithGen = (
 		gen: () => number,
@@ -29,6 +35,7 @@ export function newPrng(): PRNG {
 		...rng,
 		valuesUInt32: () => ({ next: valuesWithGen(rng.uInt32) }),
 		valuesUFloat32: () => ({ next: valuesWithGen(rng.uFloat32) }),
+		seed,
 	};
 }
 

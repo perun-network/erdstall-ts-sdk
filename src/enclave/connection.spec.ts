@@ -6,6 +6,7 @@ import { Enclave } from "./connection";
 import { EnclaveMockProvider } from "#erdstall/test/mocks";
 
 import * as pkgtest from "#erdstall/test";
+import { logSeedOnFailure } from "#erdstall/test";
 
 describe("EnclaveConnection", () => {
 	const rng = pkgtest.newPrng();
@@ -123,5 +124,9 @@ describe("EnclaveConnection", () => {
 				"the returned exitproof should be a valid exitproof",
 			).to.be.true;
 		}
+	});
+
+	afterEach(function () {
+		logSeedOnFailure(rng, this.currentTest);
 	});
 });

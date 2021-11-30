@@ -23,6 +23,7 @@ import { Environment, setupEnv } from "#erdstall/test/ledger";
 import { ethCallbackShim, Listener } from "./ethwrapper";
 
 import * as test from "#erdstall/test";
+import { logSeedOnFailure } from "#erdstall/test";
 
 const TOKEN_SIZE = 4;
 const TIMEOUT_MS = 15000;
@@ -333,5 +334,9 @@ describe("ErdstallEventWrapping", function () {
 		return res.finally(() => {
 			clearTimeout(timeout);
 		});
+	});
+
+	afterEach(function () {
+		logSeedOnFailure(rng, this.currentTest);
 	});
 });

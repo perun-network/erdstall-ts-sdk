@@ -5,6 +5,7 @@ import { expect } from "chai";
 import { Amount, encodePackedAmount, decodePackedAmount } from "./amount";
 import { Tokens } from "./tokens";
 import * as test from "#erdstall/test";
+import { logSeedOnFailure } from "#erdstall/test";
 
 describe("Amount", () => {
 	it("can add amounts", () => {
@@ -41,5 +42,9 @@ describe("Amount:Decoding", function () {
 		const v = test.newRandomAmount(rng);
 		const packedV = encodePackedAmount(v.value);
 		expect(decodePackedAmount(packedV).value).to.deep.equal(v.value);
+	});
+
+	afterEach(function () {
+		logSeedOnFailure(rng, this.currentTest);
 	});
 });

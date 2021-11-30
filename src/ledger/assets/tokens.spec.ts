@@ -4,6 +4,7 @@
 import { expect } from "chai";
 import { Tokens, encodePackedIds, decodePackedIds } from "./tokens";
 import * as test from "#erdstall/test";
+import { logSeedOnFailure } from "#erdstall/test";
 
 describe("Tokens", () => {
 	it("can add tokens", () => {
@@ -81,5 +82,9 @@ describe("Tokens:Decoding", function () {
 		expect(decodePackedIds("")).to.deep.equal([]);
 		expect(decodePackedIds("0x")).to.deep.equal([]);
 		expect(() => decodePackedIds("0x01")).to.throw;
+	});
+
+	afterEach(function () {
+		logSeedOnFailure(rng, this.currentTest);
 	});
 });

@@ -5,6 +5,7 @@ import "reflect-metadata";
 import { expect } from "chai";
 import { Address } from "#erdstall/ledger";
 import * as test from "#erdstall/test";
+import { logSeedOnFailure } from "#erdstall/test";
 
 describe("Signatures", () => {
 	const rng = test.newPrng();
@@ -25,5 +26,9 @@ describe("Signatures", () => {
 		tx.sender = Address.fromString(wallet.address);
 		await tx.sign(contract, wallet);
 		expect(tx.verify(contract)).to.be.true;
+	});
+
+	afterEach(function () {
+		logSeedOnFailure(rng, this.currentTest);
 	});
 });
