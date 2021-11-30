@@ -9,7 +9,7 @@ import { Environment, setupEnv } from "test/ledger";
 import { Wallet } from "@ethersproject/wallet";
 import { IERC721Minter__factory, IERC721__factory } from ".";
 import { Tokens } from "../assets";
-import PRNG from "#erdstall/test/random";
+import PRNG, { logSeedOnFailure } from "#erdstall/test/random";
 import { afterEach } from "mocha";
 
 const PRIMES = [2, 3, 5, 7];
@@ -144,5 +144,6 @@ describe("EthereumOnChainQuerier", function () {
 			alice.tokens,
 			false,
 		);
+		logSeedOnFailure(RNG, this.currentTest);
 	});
 });

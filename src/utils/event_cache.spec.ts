@@ -2,6 +2,7 @@ import { expect } from "chai";
 import { OneShotEventCache, EventCache } from "./event_cache";
 import { ErdstallEvent, ErdstallEventHandler } from "#erdstall";
 import * as test from "#erdstall/test";
+import { logSeedOnFailure } from "#erdstall/test";
 
 describe("OneShotEventCache", function () {
 	const rng = test.newPrng();
@@ -56,6 +57,10 @@ describe("OneShotEventCache", function () {
 		expect(cache.get(key)).to.deep.equal(cbs);
 		expectAllToBe(false, key, cbs, cache);
 		expect(cache.has(key)).to.be.false;
+	});
+
+	afterEach(function () {
+		logSeedOnFailure(rng, this.currentTest);
 	});
 });
 

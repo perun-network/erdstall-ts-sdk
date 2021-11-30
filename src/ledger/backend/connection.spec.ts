@@ -21,6 +21,7 @@ import { TokenFetcher } from "./tokencache";
 import { Environment, setupEnv } from "#erdstall/test/ledger";
 
 import * as test from "#erdstall/test";
+import { logSeedOnFailure } from "#erdstall/test";
 
 const TOKEN_SIZE = 4;
 
@@ -99,5 +100,9 @@ describe("ErdstallConnection", () => {
 		}
 		expect(numStages).to.equal(1);
 		return withdrawRegistered;
+	});
+
+	afterEach(function () {
+		logSeedOnFailure(rng, this.currentTest);
 	});
 });

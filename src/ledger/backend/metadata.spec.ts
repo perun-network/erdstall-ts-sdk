@@ -10,6 +10,7 @@ import { PerunArt__factory } from "#erdstall/ledger/backend/contracts";
 import * as test from "#erdstall/test";
 import { Environment, setupEnv, PERUNART_URI } from "#erdstall/test/ledger";
 import nock from "nock";
+import { logSeedOnFailure } from "#erdstall/test";
 
 describe("NFTMetadata", function () {
 	const rng = test.newPrng();
@@ -38,6 +39,7 @@ describe("NFTMetadata", function () {
 
 	afterEach(function () {
 		nock.cleanAll();
+		logSeedOnFailure(rng, this.currentTest);
 	});
 
 	it("correctly queries the tokenURI", async function () {
