@@ -1,6 +1,6 @@
 {
 	"name": "@polycrypt/erdstall",
-	"version": "0.1.2",
+	"version": "0.1.3",
 	"description": "SDK to interact with Erdstall Layer-2 Networks",
 	"main": "./index.js",
 	"exports": {
