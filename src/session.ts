@@ -11,6 +11,7 @@ import {
 	TradeOffer,
 	Trade,
 	Burn,
+	SignedTradeOffer,
 } from "#erdstall/api/transactions";
 import { EnclaveWriter } from "#erdstall/enclave";
 import { Address, Account, LedgerWriter } from "#erdstall/ledger";
@@ -151,7 +152,10 @@ export class Session extends Client implements ErdstallSession {
 		return this.withdraw(exitProof);
 	}
 
-	async createOffer(offer: Assets, expect: Assets): Promise<TradeOffer> {
+	async createOffer(
+		offer: Assets,
+		expect: Assets,
+	): Promise<SignedTradeOffer> {
 		const o = new TradeOffer(this.address, offer, expect);
 		return o.sign(this.erdstallConn!.erdstall(), this.signer);
 	}
