@@ -14,6 +14,9 @@ describe("Erdstall-TS-SDK", () => {
 	const opPort = 1433;
 	const opAddr = new URL(`ws://127.0.0.1:${opPort}/ws`);
 	const nodePort = 1362;
+	const numOfEpochs = 10;
+	const numOfAccs = 10;
+	const fundingAmountETH = 1000;
 	const mnemonic =
 		"pistol kiwi shrug future ozone ostrich match remove crucial oblige cream critic";
 	let erdstallProcessTerminate: Promise<void>;
@@ -26,12 +29,12 @@ describe("Erdstall-TS-SDK", () => {
 				OperatorDerivationPath: "m/44'/60'/0'/0/0",
 				EnclaveDerivationPath: "m/44'/60'/0'/0/1",
 				EpochDuration: 2,
-				ResponseDuration: 3,
 				PowDepth: 0,
 				RPCPort: opPort,
 				RPCHost: "0.0.0.0",
 				NodeReqTimeout: 10,
 				WaitMinedTimeout: 60,
+				NFTokenBaseURI: "http://127.0.0.1:8440/metadata/",
 			}),
 		);
 
@@ -40,8 +43,10 @@ describe("Erdstall-TS-SDK", () => {
 				[
 					"$ERDSTALL_EXE",
 					"-config operator.cfg",
-					"-epochs 10",
+					`-epochs ${numOfEpochs}`,
 					`-ledger-port ${nodePort}`,
+					`-n ${numOfAccs}`,
+					`-funds ${fundingAmountETH}`,
 				].join(" "),
 				(e) => {
 					if (e) reject(e);
@@ -52,7 +57,7 @@ describe("Erdstall-TS-SDK", () => {
 				process.on("close", accept);
 				process.on("error", reject);
 			});
-			const timeout = setTimeout(accept, 10000);
+			const timeout = setTimeout(accept, 30000);
 			process.on("error", (e: Error) => {
 				clearTimeout(timeout);
 				reject(e);
@@ -76,7 +81,7 @@ describe("Erdstall-TS-SDK", () => {
 	it("create clients", async () => {
 		for (let i = 0; i < 4; i++) clients.push(makeClient(i));
 
-		// establishes connection to erdstall-contract on ledger and connection
+		// Establishes connection to erdstall-contract on ledger and connection
 		// to enclave with the given url. All event handlers were registered and
 		// forwarded were necessary.
 		return Promise.all(clients.map((x) => x.initialize()));
