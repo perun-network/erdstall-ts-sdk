@@ -14,7 +14,12 @@ import {
 	TokenRegistered,
 } from "./ledger";
 import { EnclaveEvent } from "./enclave/event";
-import { ClientConfig, TxReceipt, BalanceProof } from "./api/responses";
+import {
+	ClientConfig,
+	TxReceipt,
+	BalanceProof,
+	PhaseShift,
+} from "./api/responses";
 
 /**
  * ErdstallEvent is comprised of all the events related to Erdstall. These
@@ -36,7 +41,7 @@ type _eventHandlers = {
 	close: () => void;
 	config: (config: ClientConfig) => void;
 	receipt: (receipt: TxReceipt) => void;
-	phaseshift: () => void;
+	phaseshift: (phaseShift: PhaseShift) => void;
 	proof: (proof: BalanceProof) => void;
 	exitproof: (exitProof: BalanceProof) => void;
 	error: (error: string | Error) => void;

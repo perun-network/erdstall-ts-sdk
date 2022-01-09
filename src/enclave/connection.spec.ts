@@ -3,6 +3,7 @@
 
 import { expect } from "chai";
 import { Enclave } from "./connection";
+import { EnclaveEvent } from "./event";
 import { EnclaveMockProvider } from "#erdstall/test/mocks";
 
 import * as pkgtest from "#erdstall/test";
@@ -31,6 +32,16 @@ describe("EnclaveConnection", () => {
 		).does.not.throw();
 	});
 
+	it("allows subscribing to phaseshifts", async () => {
+		const conn = new Enclave(provider);
+		const sendPhaseShiftToClient = () =>
+			provider.sendToClient(pkgtest.newRandomPhaseShift(rng));
+		conn.connect();
+
+		testRecurrentEventSubs(conn, "phaseshift", sendPhaseShiftToClient);
+		testOnceEventSubs(conn, "phaseshift", sendPhaseShiftToClient);
+	});
+
 	it("allows subscribing to balanceproofs", async () => {
 		const conn = new Enclave(provider);
 		const sendBPtoClient = () =>
@@ -44,51 +55,8 @@ describe("EnclaveConnection", () => {
 
 		conn.connect();
 
-		{
-			// recurrent event subs are executed as expected.
-			let calledCounter = 0;
-			const cb = () => {
-				calledCounter++;
-			};
-			conn.on("proof", cb);
-
-			for (let i = 0; i < 10; i++) {
-				sendBPtoClient();
-			}
-
-			expect(
-				calledCounter,
-				"receiving 10 proofs, should trigger the eventhandler 10 times",
-			).equals(10);
-
-			conn.off("proof", cb);
-
-			for (let i = 0; i < 10; i++) {
-				sendBPtoClient();
-			}
-
-			expect(
-				calledCounter,
-				"turning the subscription off should not trigger the callback anymore",
-			).equals(10);
-		}
-
-		{
-			// `once` subscription are only executed a single time.
-			let calledCounter = 0;
-			conn.once("proof", () => {
-				calledCounter++;
-			});
-
-			for (let i = 0; i < 10; i++) {
-				sendBPtoClient();
-			}
-
-			expect(
-				calledCounter,
-				"registering a one shot transaction is only executed once",
-			).equals(1);
-		}
+		testRecurrentEventSubs(conn, "proof", sendBPtoClient);
+		testOnceEventSubs(conn, "proof", sendBPtoClient);
 
 		{
 			let exitedCalled = false;
@@ -130,3 +98,56 @@ describe("EnclaveConnection", () => {
 		logSeedOnFailure(rng, this.currentTest);
 	});
 });
+
+function testRecurrentEventSubs(
+	conn: Enclave,
+	eventName: EnclaveEvent,
+	sendPayloadToClient: () => void,
+) {
+	let calledCounter = 0;
+	const cb = () => {
+		calledCounter++;
+	};
+	conn.on(eventName, cb);
+
+	for (let i = 0; i < 10; i++) {
+		sendPayloadToClient();
+	}
+
+	expect(
+		calledCounter,
+		`receiving 10 payloads for ${eventName}, should trigger the eventhandler 10 times`,
+	).equals(10);
+
+	conn.off(eventName, cb);
+
+	for (let i = 0; i < 10; i++) {
+		sendPayloadToClient();
+	}
+
+	expect(
+		calledCounter,
+		`turning the ${eventName} subscription off should not trigger the callback anymore`,
+	).equals(10);
+}
+
+function testOnceEventSubs(
+	conn: Enclave,
+	eventName: EnclaveEvent,
+	sendPayloadToClient: () => void,
+) {
+	// `once` subscription are only executed a single time.
+	let calledCounter = 0;
+	conn.once(eventName, () => {
+		calledCounter++;
+	});
+
+	for (let i = 0; i < 10; i++) {
+		sendPayloadToClient();
+	}
+
+	expect(
+		calledCounter,
+		"registering a one shot event is only executed once",
+	).equals(1);
+}

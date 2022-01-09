@@ -7,6 +7,7 @@ import { jsonObject, jsonMember } from "#erdstall/export/typedjson";
 
 const subBPsTypeName = "SubscribeBalanceProofs";
 const subTXsTypeName = "SubscribeTXs";
+const subPhaseShiftName = "SubscribePhaseShifts";
 
 @jsonObject
 export class SubscribeBalanceProofs extends ErdstallObject {
@@ -46,5 +47,23 @@ export class SubscribeTXs extends ErdstallObject {
 	}
 }
 
+@jsonObject
+export class SubscribePhaseShifts extends ErdstallObject {
+	@jsonMember(Boolean) cancel?: boolean;
+
+	constructor(cancel?: boolean) {
+		super();
+		this.cancel = cancel;
+	}
+
+	public objectType(): any {
+		return SubscribePhaseShifts;
+	}
+	protected objectTypeName(): string {
+		return subPhaseShiftName;
+	}
+}
+
 registerErdstallType(subBPsTypeName, SubscribeBalanceProofs);
 registerErdstallType(subTXsTypeName, SubscribeTXs);
+registerErdstallType(subPhaseShiftName, SubscribePhaseShifts);

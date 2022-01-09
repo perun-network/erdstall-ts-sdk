@@ -5,3 +5,4 @@ export * from "./account";
 export * from "./balanceproof";
 export * from "./clientconfig";
 export * from "./txreceipt";
+export * from "./phaseshift";

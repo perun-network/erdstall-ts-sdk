@@ -7,6 +7,7 @@ export * from "./assets";
 export * from "./bigint";
 export * from "./mocks";
 export * from "./proofs";
+export * from "./phaseshift";
 export * from "./random";
 export * from "./transactions/transactions";
 export * from "./wallet";
