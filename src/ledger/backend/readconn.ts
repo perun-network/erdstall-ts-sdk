@@ -57,6 +57,11 @@ export class LedgerReadConn implements LedgerReader {
 		this.eventCache.delete(cb);
 	}
 
+	removeAllListeners() {
+		this.eventCache.clear();
+		this.contract.removeAllListeners();
+	}
+
 	erdstall(): Address {
 		return Address.fromString(this.contract.address);
 	}

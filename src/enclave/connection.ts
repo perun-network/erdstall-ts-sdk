@@ -212,6 +212,11 @@ export class Enclave implements EnclaveWriter {
 		this.handlers.delete(eventType, cb);
 	}
 
+	public removeAllListeners() {
+		this.handlers.clear();
+		this.oneShotHandlers.clear();
+	}
+
 	private nextID(): number {
 		return this.id++;
 	}

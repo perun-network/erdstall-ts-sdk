@@ -68,6 +68,9 @@ export class MockWatcher implements Watcher {
 	off<T extends ErdstallEvent>(_ev: T, _cb: ErdstallEventHandler<T>): void {
 		throw new Error("not implemented");
 	}
+	removeAllListeners(): void {
+		throw new Error("not implemented");
+	}
 
 	async mint(
 		nft: {
