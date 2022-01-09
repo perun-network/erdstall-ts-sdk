@@ -140,7 +140,7 @@ export class TokenFetcher implements TokenProvider {
 
 		const ttype = await this.queryTokenType(erdstall, tokenAddr);
 		if (!ttype) {
-			Promise.reject(
+			return Promise.reject(
 				new Error(`given token not registered: ${tokenAddr}`),
 			);
 		}
