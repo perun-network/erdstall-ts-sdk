@@ -30,6 +30,10 @@ await erdClient.subscribe(); // subscribes to all receipts and balance proofs
 myDApp.run(client);
 ```
 
+### More documentation
+
+[This repository's Github Wiki](https://github.com/perun-network/erdstall-ts-sdk/wiki/Erdstall-SDK) contains a description of the CI end-to-end test, whose sources act as a **full tutorial for the SDK**.
+
 TypeScript declaration files are shipped with the npm package. Full [TypeDoc](https://typedoc.org/)-generated documentation of the source code can be found at [this repository's Github pages](https://perun-network.github.io/erdstall-ts-sdk/).
 
 ## Erdstall interactions
