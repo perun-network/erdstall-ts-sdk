@@ -8,6 +8,7 @@ import { ErdstallObject } from "#erdstall/api";
 import {
 	SubscribeTXs,
 	SubscribeBalanceProofs,
+	SubscribePhaseShifts,
 	GetAccount,
 	Onboarding,
 } from "#erdstall/api/calls";
@@ -24,6 +25,7 @@ import {
 	BalanceProof,
 	BalanceProofs,
 	Account,
+	PhaseShift,
 } from "#erdstall/api/responses";
 import { TypedJSON } from "#erdstall/export/typedjson";
 import { EventCache, OneShotEventCache } from "#erdstall/utils";
@@ -143,8 +145,10 @@ export class Enclave implements EnclaveWriter {
 	public async subscribe(who?: Address): Promise<void> {
 		const subTXs = new SubscribeTXs(who);
 		const subBPs = new SubscribeBalanceProofs(who);
+		const subPSs = new SubscribePhaseShifts();
 		await this.sendCall(subTXs);
 		await this.sendCall(subBPs);
+		await this.sendCall(subPSs);
 		return;
 	}
 
@@ -212,6 +216,11 @@ export class Enclave implements EnclaveWriter {
 		this.handlers.delete(eventType, cb);
 	}
 
+	public removeAllListeners() {
+		this.handlers.clear();
+		this.oneShotHandlers.clear();
+	}
+
 	private nextID(): number {
 		return this.id++;
 	}
@@ -260,7 +269,11 @@ export class Enclave implements EnclaveWriter {
 						this.callEvent("proof", bp);
 					}
 				}
-				this.callEvent("phaseshift", {} as any);
+				break;
+			}
+			case PhaseShift: {
+				const ps = obj as PhaseShift;
+				this.callEvent("phaseshift", ps);
 				break;
 			}
 			default:

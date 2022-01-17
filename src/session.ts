@@ -17,6 +17,7 @@ import { Address, Account, LedgerWriter } from "#erdstall/ledger";
 import { Assets } from "#erdstall/ledger/assets";
 import { Uint256 } from "#erdstall/api/util";
 import { ErdstallSession } from "./erdstall";
+import { ErdstallEventHandler } from "./event";
 import { Client } from "./client";
 import { TransactionGenerator } from "#erdstall/utils";
 
@@ -83,12 +84,8 @@ export class Session extends Client implements ErdstallSession {
 		if (!this.erdstallConn) {
 			return Promise.reject(ErrUnitialisedClient);
 		}
-		const tx = new Transfer(
-			this.address,
-			await this.nextNonce(),
-			to,
-			assets,
-		);
+		const nonce = await this.nextNonce();
+		const tx = new Transfer(this.address, nonce, to, assets);
 		await tx.sign(this.erdstallConn.erdstall(), this.signer);
 		return this.enclaveWriter.transfer(tx);
 	}
@@ -144,10 +141,23 @@ export class Session extends Client implements ErdstallSession {
 	}
 
 	async leave(): Promise<TransactionGenerator> {
+		let skipped = 0;
+		let cb: ErdstallEventHandler<"phaseshift">;
+		const p = new Promise<void>((accept) => {
+			cb = () => {
+				// One Epoch when the current epoch ends for which we receive the ExitProof.
+				// One more Epoch to guarantee that our ExitProof is part of a sealed epoch.
+				if (skipped < 2) {
+					skipped++;
+				} else {
+					accept();
+				}
+			};
+			this.on("phaseshift", cb);
+		});
 		const exitProof = await this.exit();
-		await new Promise<void>((accept) =>
-			this.once("phaseshift", () => accept()),
-		);
+		await p.then(() => this.off("phaseshift", cb));
+
 		return this.withdraw(exitProof);
 	}
 

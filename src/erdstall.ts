@@ -60,6 +60,11 @@ interface watcher<T extends ErdstallEvent> {
 	 * @param cb - The callback depending on the type of ev.
 	 */
 	off: <EV extends T>(ev: EV, cb: ErdstallEventHandler<EV>) => void;
+
+	/**
+	 * Removes all registered callbacks for all events.
+	 */
+	removeAllListeners: () => void;
 }
 
 /**

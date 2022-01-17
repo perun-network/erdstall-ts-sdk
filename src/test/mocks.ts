@@ -16,6 +16,7 @@ import {
 import {
 	TxReceipt,
 	BalanceProofs,
+	PhaseShift,
 	ClientConfig,
 	Account as RAccount,
 } from "#erdstall/api/responses";
@@ -24,6 +25,7 @@ import { Result, Call, ErdstallObject } from "#erdstall/api";
 import {
 	SubscribeTXs,
 	SubscribeBalanceProofs,
+	SubscribePhaseShifts,
 	GetAccount,
 } from "#erdstall/api/calls";
 import { Transaction } from "#erdstall/api/transactions";
@@ -68,6 +70,9 @@ export class MockWatcher implements Watcher {
 	off<T extends ErdstallEvent>(_ev: T, _cb: ErdstallEventHandler<T>): void {
 		throw new Error("not implemented");
 	}
+	removeAllListeners(): void {
+		throw new Error("not implemented");
+	}
 
 	async mint(
 		nft: {
@@ -104,14 +109,14 @@ export class MockWatcher implements Watcher {
 		);
 	}
 
-	async phaseshift(bps: BalanceProofs): Promise<void> {
+	async phaseshift(bps: BalanceProofs, ps: PhaseShift): Promise<void> {
 		return Promise.all(
 			Array.from(bps.map, ([_acc, bp]) => {
 				return bp.balance.exit
 					? this.exitProofHandler(bp)
 					: this.balanceProofHandler(bp);
 			}),
-		).then(() => this.phaseShiftHandler());
+		).then(() => this.phaseShiftHandler(ps));
 	}
 }
 
@@ -185,6 +190,10 @@ export class EnclaveMockProvider implements EnclaveProvider {
 				return this.onmessage!(msg);
 			}
 			case SubscribeBalanceProofs: {
+				const msg = newErdstallMessageEvent(new Result(call.id));
+				return this.onmessage!(msg);
+			}
+			case SubscribePhaseShifts: {
 				const msg = newErdstallMessageEvent(new Result(call.id));
 				return this.onmessage!(msg);
 			}

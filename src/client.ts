@@ -124,6 +124,13 @@ export class Client implements ErdstallClient {
 		}
 	}
 
+	removeAllListeners(): void {
+		this.enclaveConn.removeAllListeners();
+		this.erdstallConn?.removeAllListeners();
+		this.erdstallEventHandlerCache.clear();
+		this.erdstallOneShotHandlerCache.clear();
+	}
+
 	async subscribe(who?: Address): Promise<void> {
 		return this.enclaveConn.subscribe(who);
 	}
