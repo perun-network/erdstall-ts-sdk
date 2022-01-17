@@ -31,8 +31,9 @@ export type SDKActions = typeof sdkActions;
 export const sdkActions = {
 	// One can either create an `ErdstallClient` or an `ErdstallSession`. The
 	// `ErdstallClient` is a passive observer of the system, while an
-	// `ErdstallSession` is an `ErdstallClient` with the added ability to
-	// participate in the system.
+	// `ErdstallSession` is an `ErdstallClient` bound to a user. This gives a
+	// session the additional ability to actively participate in the system by
+	// sending transactions etc.
 	create: async (
 		nodeUrl: string,
 		signer: ethers.Signer,
@@ -92,11 +93,12 @@ export const sdkActions = {
 		});
 
 		// (Onchain) Erdstall handlers:
+		session.on("TokenTypeRegistered", (_tokenTypeRegisteredEvent) => {
+			// A new token type with its token holder contract was registered on the
+			// Erdstall smart contract.
+		});
 		session.on("TokenRegistered", (_tokenRegisteredEvent) => {
 			// A new token was registered on Erdstall.
-		});
-		session.on("TokenTypeRegistered", (_tokenTypeRegisteredEvent) => {
-			// The associated tokentype for a token on Erdstall was registered.
 		});
 		session.on("Deposited", (_depositEvent) => {
 			// A deposit was registered on Erdstall.
@@ -111,7 +113,7 @@ export const sdkActions = {
 			// Operator responded to the challenge, everything seems fine.
 		});
 		session.on("Frozen", (_frozenEvent) => {
-			// Ups, apparently not fine. The contract is frozen and we can use our
+			// Oops, apparently not fine. The contract is frozen and we can use our
 			// latest valid balanceproof to withdraw our funds.
 		});
 
@@ -145,7 +147,7 @@ export const sdkActions = {
 		// used for depositing in the next step.
 		const depositBal = new Assets(
 			{
-				token: assets.ETHZERO,
+				token: assets.ETHZERO, // ETH is represented by the zero address 0x00..
 				asset: new assets.Amount(ethAmount),
 			},
 			{
@@ -202,12 +204,12 @@ export const sdkActions = {
 
 		aliceTxReceipt.tx.sender.equals(alice.address); // true
 
-		// We expect BOB to receive a receipt, so we resolve and clear the
-		// timeout as soon as that receipt is received.
-		//
 		// Note how we use a `once` call. If a persistent eventhandler shall be
 		// registered one can just use the equivalent `on` method on the
 		// `ErdstallClient`/`ErdstallSession`.
+		//
+		// REMARK: In a real scenario Bob would have to register his `EventHandler`
+		// BEFORE Alice sends her TX to guarantee him seeing it!
 		//
 		// Depending on the `subscribe` call issued beforehand bob could also
 		// receive tx receipts for other users. This is the default for an
@@ -266,8 +268,6 @@ export const sdkActions = {
 	},
 
 	mint: async (session: Session, nftID: bigint) => {
-		// FIXME: Is this okay to say?
-		//
 		// Offchain minting is simply a matter of passing an ERC721 contract
 		// address and an ID (unique!). Currently it is possible to mint for any
 		// contract offchain which is registered in Erdstall and counts as an
