@@ -146,8 +146,8 @@ export class Session extends Client implements ErdstallSession {
 		const p = new Promise<void>((accept) => {
 			cb = () => {
 				// One Epoch when the current epoch ends for which we receive the ExitProof.
-				// Two Epochs to guarantee that our ExitProof is part of a sealed epoch.
-				if (skipped <= 2) {
+				// One more Epoch to guarantee that our ExitProof is part of a sealed epoch.
+				if (skipped < 2) {
 					skipped++;
 				} else {
 					accept();
