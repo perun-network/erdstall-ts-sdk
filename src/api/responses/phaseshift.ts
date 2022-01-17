@@ -10,11 +10,11 @@ const phaseShiftTypeName = "PhaseShift";
 // phase for each account in the Erdstall system.
 @jsonObject
 export class PhaseShift extends ErdstallObject {
-	@jsonBigIntMember() current_epoch: bigint;
+	@jsonBigIntMember({ name: "current_epoch" }) currentEpoch: bigint;
 
 	constructor(currentEpoch: bigint) {
 		super();
-		this.current_epoch = currentEpoch;
+		this.currentEpoch = currentEpoch;
 	}
 
 	public objectType(): any {
