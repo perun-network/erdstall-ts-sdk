@@ -12,6 +12,7 @@ import {
 	PerunArt__factory,
 	PerunToken__factory,
 } from "#erdstall/ledger/backend/contracts";
+import { withTimeout } from "#erdstall/utils";
 
 import { ethers, utils } from "ethers";
 import * as fs from "fs";
@@ -35,7 +36,7 @@ export const DAGOBERT = 3;
 export function endToEndTestHarness(sdkActions: SDKActions) {
 	return () => {
 		const rng = test.newPrng();
-		const numOfEpochs = 30;
+		const numOfEpochs = 36;
 		const numOfAccs = 10;
 		const fundingAmountETH = 1000;
 		let erdstallProcessTerminate: Promise<void>;
@@ -121,22 +122,14 @@ export function endToEndTestHarness(sdkActions: SDKActions) {
 		it("subscribe clients", async function () {
 			forSessionsDo(sdkActions.subscribe);
 
-			return new Promise((resolve, reject) => {
-				const timeout = setTimeout(
-					() =>
-						reject(
-							new Error(
-								"subscribing should result in clients receiving phaseshift events",
-							),
-						),
-					10000,
-				);
-
-				sessions[ALICE].once("phaseshift", () => {
-					clearTimeout(timeout);
-					resolve();
-				});
-			});
+			await withTimeout(
+				10000,
+				new Promise<void>((resolve, _) => {
+					sessions[ALICE].once("phaseshift", () => {
+						resolve();
+					});
+				}),
+			);
 		});
 
 		// All clients in this scenario start with 100 ETH,
@@ -151,16 +144,14 @@ export function endToEndTestHarness(sdkActions: SDKActions) {
 			);
 
 			// Prevent race: wait for phase shift to finalize deposits.
-			return new Promise((accept, reject) => {
-				const timeout = setTimeout(
-					() => reject(new Error("awaiting deposit finalization")),
-					2000,
-				);
-				sessions[ALICE].once("phaseshift", () => {
-					clearTimeout(timeout);
-					accept();
-				});
-			});
+			return withTimeout(
+				2000,
+				new Promise<void>((resolve) => {
+					sessions[ALICE].once("phaseshift", () => {
+						resolve();
+					});
+				}),
+			);
 		});
 
 		it("off-chain tx + await receipt", async function () {
@@ -170,17 +161,14 @@ export function endToEndTestHarness(sdkActions: SDKActions) {
 				utils.parseEther("1").toBigInt(),
 			);
 
-			return new Promise((resolve, reject) => {
-				let timeout = setTimeout(
-					() => reject(new Error("Bob's receipt timed out")),
-					15000,
-				);
-
-				sessions[BOB].once("receipt", () => {
-					clearTimeout(timeout);
-					resolve();
-				});
-			});
+			return withTimeout(
+				15000,
+				new Promise<void>((resolve) => {
+					sessions[BOB].once("receipt", () => {
+						resolve();
+					});
+				}),
+			);
 		});
 
 		// Offchain:
@@ -221,21 +209,14 @@ export function endToEndTestHarness(sdkActions: SDKActions) {
 			// Because of the quick succession in which we issue our commands, we
 			// will sync with the next epoch to have a predictable outcome from here
 			// on out.
-			await new Promise<void>((resolve, reject) => {
-				const timeout = setTimeout(
-					() =>
-						reject(
-							new Error(
-								"operator seems to have stopped execution",
-							),
-						),
-					15000,
-				);
-				sessions[ALICE].once("phaseshift", () => {
-					clearTimeout(timeout);
-					resolve();
-				});
-			});
+			await withTimeout(
+				15000,
+				new Promise<void>((resolve) => {
+					sessions[ALICE].once("phaseshift", () => {
+						resolve();
+					});
+				}),
+			);
 
 			return forSessionsDo(sdkActions.leave, {
 				from: ALICE,
@@ -283,45 +264,39 @@ export function endToEndTestHarness(sdkActions: SDKActions) {
 				requestedPrn,
 			);
 
-			return new Promise((resolve, reject) => {
-				const timeout = setTimeout(
-					() =>
-						reject(
-							new Error(
-								`expected a trade receipt for clients[${CHARLIE}]`,
-							),
-						),
-					15000,
-				);
+			return withTimeout(
+				15000,
+				new Promise<void>((resolve) => {
+					sessions[CHARLIE].once("receipt", (tradeRec) => {
+						expect(tradeRec.tx.txType()).to.equal(Trade);
 
-				sessions[CHARLIE].once("receipt", (tradeRec) => {
-					expect(tradeRec.tx.txType()).to.equal(Trade);
+						const tx = tradeRec.tx as Trade;
+						expect(tx.sender.equals(sessions[DAGOBERT].address)).to
+							.be.true;
+						expect(tx.verify(teeAddress)).to.be.true;
+						expect(tx.offer.owner.equals(sessions[CHARLIE].address))
+							.to.be.true;
+						expect(tx.offer.offer.hasAsset(PART_ADDR)).to.be.true;
 
-					const tx = tradeRec.tx as Trade;
-					expect(tx.sender.equals(sessions[DAGOBERT].address)).to.be
-						.true;
-					expect(tx.verify(teeAddress)).to.be.true;
-					expect(tx.offer.owner.equals(sessions[CHARLIE].address)).to
-						.be.true;
-					expect(tx.offer.offer.hasAsset(PART_ADDR)).to.be.true;
+						const expectedOffer = new Assets({
+							token: PART_ADDR,
+							asset: new assets.Tokens([charlieNft]),
+						});
+						const expectedRequest = new Assets({
+							token: PERUN_ADDR,
+							asset: new assets.Amount(requestedPrn),
+						});
+						expect(tx.offer.offer.cmp(expectedOffer)).to.equal(
+							"eq",
+						);
+						expect(tx.offer.request.cmp(expectedRequest)).to.equal(
+							"eq",
+						);
 
-					const expectedOffer = new Assets({
-						token: PART_ADDR,
-						asset: new assets.Tokens([charlieNft]),
+						resolve();
 					});
-					const expectedRequest = new Assets({
-						token: PERUN_ADDR,
-						asset: new assets.Amount(requestedPrn),
-					});
-					expect(tx.offer.offer.cmp(expectedOffer)).to.equal("eq");
-					expect(tx.offer.request.cmp(expectedRequest)).to.equal(
-						"eq",
-					);
-
-					clearTimeout(timeout);
-					resolve();
-				});
-			});
+				}),
+			);
 		});
 
 		// Offchain:
@@ -335,33 +310,25 @@ export function endToEndTestHarness(sdkActions: SDKActions) {
 		it("allows burning tokens", async function () {
 			sdkActions.burn(sessions[DAGOBERT], nfts[CHARLIE]);
 
-			return new Promise((resolve, reject) => {
-				const timeout = setTimeout(
-					() =>
-						reject(
-							new Error(
-								`burning tokens should result in a receipt for clients[${DAGOBERT}]`,
-							),
-						),
-					5000,
-				);
+			return withTimeout(
+				5000,
+				new Promise<void>((resolve) => {
+					sessions[DAGOBERT].once("receipt", (rec) => {
+						expect(
+							rec.delta.has(sessions[DAGOBERT].address.key),
+							`expected client[${DAGOBERT}] to be affected`,
+						).to.be.true;
+						expect(
+							rec.delta
+								.get(sessions[DAGOBERT].address.key)!
+								.values.hasAsset(PART_ADDR),
+							`expected asset to be burnt`,
+						).to.be.false;
 
-				sessions[DAGOBERT].once("receipt", (rec) => {
-					expect(
-						rec.delta.has(sessions[DAGOBERT].address.key),
-						`expected client[${DAGOBERT}] to be affected`,
-					).to.be.true;
-					expect(
-						rec.delta
-							.get(sessions[DAGOBERT].address.key)!
-							.values.hasAsset(PART_ADDR),
-						`expected asset to be burnt`,
-					).to.be.false;
-
-					clearTimeout(timeout);
-					resolve();
-				});
-			});
+						resolve();
+					});
+				}),
+			);
 		});
 
 		// Offchain:
@@ -396,21 +363,14 @@ export function endToEndTestHarness(sdkActions: SDKActions) {
 		];
 
 		it("withdrawing results in clients holding tokens on-chain", async function () {
-			await new Promise<void>((resolve, reject) => {
-				const timeout = setTimeout(
-					() =>
-						reject(
-							new Error(
-								"operator seems to have stopped execution",
-							),
-						),
-					15000,
-				);
-				sessions[ALICE].once("phaseshift", () => {
-					clearTimeout(timeout);
-					resolve();
-				});
-			});
+			await withTimeout(
+				15000,
+				new Promise<void>((resolve) => {
+					sessions[ALICE].once("phaseshift", () => {
+						resolve();
+					});
+				}),
+			);
 
 			await forSessionsDo((c) =>
 				sdkActions.leavingAndSeeFundsOnchain(c, makeProvider()),
@@ -443,11 +403,11 @@ function getGanacheSigner(index: number): ethers.Signer {
 
 // We use `string`s here because it is easier to test with `chai` in the next
 // steps.
-type balances = {
+interface balances {
 	eth: string;
 	prn: string;
 	part: string;
-};
+}
 
 async function listOnchainBalances(address: Address): Promise<balances> {
 	const provider = makeProvider();
