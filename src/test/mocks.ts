@@ -19,6 +19,7 @@ import {
 	PhaseShift,
 	ClientConfig,
 	Account as RAccount,
+	TxStatusCode,
 } from "#erdstall/api/responses";
 import { TypedJSON } from "#erdstall/export/typedjson";
 import { Result, Call, ErdstallObject } from "#erdstall/api";
@@ -104,7 +105,7 @@ export class MockWatcher implements Watcher {
 	): Promise<void> {
 		return Promise.resolve(
 			this.txReceiptHandler(
-				new TxReceipt(tx, deltas ?? new Map<string, Account>()),
+				new TxReceipt(tx, deltas ?? new Map<string, Account>(), 1),
 			),
 		);
 	}
@@ -261,10 +262,11 @@ function newTxReceiptResult(
 	id: string,
 	tx: Transaction,
 	acc?: Account,
+	status: TxStatusCode = 1,
 ): Result {
 	const _acc = acc ? acc : new Account(tx.nonce, new Assets(), new Assets());
 	const delta = new Map<string, Account>([[tx.sender.key, _acc]]);
-	const txr = new TxReceipt(tx, delta);
+	const txr = new TxReceipt(tx, delta, status);
 	return new Result(id, txr);
 }
 

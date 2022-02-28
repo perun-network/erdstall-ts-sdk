@@ -4,7 +4,7 @@
 // This file contains the Erdstall implementation, unifying the on-chain and
 // offchain part of Erdstall into a single interface.
 
-import { TxReceipt } from "#erdstall/api/responses";
+import { PendingTransaction } from "#erdstall/api/util/pending_transaction";
 import { TradeOffer } from "#erdstall/api/transactions";
 import { BalanceProof } from "#erdstall/api/responses";
 import { Address, Account, LedgerEvent } from "#erdstall/ledger";
@@ -103,9 +103,9 @@ export interface Transactor {
 	 *
 	 * @param assets - The assets to transfer.
 	 * @param to - The recipient of this transfer action.
-	 * @returns A promise containing the transaction receipt for this transfer.
+	 * @returns A promise containing the pending transaction for this transfer.
 	 */
-	transferTo(assets: Assets, to: Address): Promise<TxReceipt>;
+	transferTo(assets: Assets, to: Address): Promise<PendingTransaction>;
 }
 
 /**
@@ -117,9 +117,9 @@ export interface Minter {
 	 *
 	 * @param token - The address of the token contract the token is part of.
 	 * @param id - The id of the token within the specified token contract.
-	 * @returns A promise containing the transaction receipt for this mint.
+	 * @returns A promise containing the pending transaction for this mint.
 	 */
-	mint(token: Address, id: Uint256): Promise<TxReceipt>;
+	mint(token: Address, id: Uint256): Promise<PendingTransaction>;
 }
 
 /**
@@ -130,9 +130,9 @@ export interface Burner {
 	 * Unrecoverably burns the specified assets.
 	 *
 	 * @param assets - The assets to be burned by this transaction.
-	 * @returns A promise containing the transaction receipt for this burn.
+	 * @returns A promise containing the pending transaction for this burn.
 	 */
-	burn(assets: Assets): Promise<TxReceipt>;
+	burn(assets: Assets): Promise<PendingTransaction>;
 }
 
 /**
@@ -153,7 +153,7 @@ export interface Trader {
 	 *
 	 * @param offer - The trade offer to be accepted by this entity.
 	 */
-	acceptTrade(offer: TradeOffer): Promise<TxReceipt>;
+	acceptTrade(offer: TradeOffer): Promise<PendingTransaction>;
 }
 
 /**
