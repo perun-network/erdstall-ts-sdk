@@ -6,3 +6,4 @@ export * from "./balanceproof";
 export * from "./clientconfig";
 export * from "./txreceipt";
 export * from "./phaseshift";
+export * from "./txaccepted";

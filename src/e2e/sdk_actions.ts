@@ -192,15 +192,19 @@ export const sdkActions = {
 			token: PERUN_ADDR,
 			asset: new assets.Amount(prnAmount),
 		});
-		// All off-chain transactions return a `TxReceipt`. When a user is the
-		// source for a transaction, e.g. calling `session.transferTo(...)` then
-		// the return value for that call can be awaited, resulting in the
-		// TxReceipt for this transaction.
+		// All off-chain transactions return a `Promise<PendingTransaction>`.
+		// When a user is the source for a transaction, e.g. calling `session.transferTo(...)` then
+		// the return value for that call can be awaited. The `PendingTransaction` in turn
+		// contains promises for both the message that the transaction has been accepted `PendingTransaction.accepted`
+		// and that for the transaction receipt `PendingTransaction.receipt`, which can be awaited
+		// and timed as needed.
 		//
 		// When a user is the target for a transaction he will also receive a
 		// txreceipt. These receipts can be caught using the `"receipt"`
 		// eventhandler as shown below.
-		const aliceTxReceipt = await alice.transferTo(amount, bob.address);
+		const aliceTxReceipt = await (
+			await alice.transferTo(amount, bob.address)
+		).receipt;
 
 		aliceTxReceipt.tx.sender.equals(alice.address); // true
 
@@ -272,7 +276,7 @@ export const sdkActions = {
 		// address and an ID (unique!). Currently it is possible to mint for any
 		// contract offchain which is registered in Erdstall and counts as an
 		// `ERC721Mintable`.
-		return session.mint(PART_ADDR, nftID);
+		return (await session.mint(PART_ADDR, nftID)).receipt;
 	},
 
 	trade: async (
@@ -317,7 +321,7 @@ export const sdkActions = {
 		// To finalise the trade, if both parties agree of course, the acceptee has
 		// to sign the trade offer of Charlie and publish it within Erdstall, where
 		// it gets validated and executed.
-		return dagobert.acceptTrade(tradeOffer);
+		return (await dagobert.acceptTrade(tradeOffer)).receipt;
 	},
 
 	burn: async (dagobert: Session, formerCharlieNft: bigint) => {
