@@ -13,17 +13,34 @@ import {
 
 const txReceiptTypeName = "TxReceipt";
 
+export enum TxStatusCode {
+	Fail = 0,
+	Success = 1,
+}
+
 @jsonObject
 export class TxReceipt extends ErdstallObject {
 	@jsonMember(() => Transaction) tx: Transaction;
 
 	@jsonMapMember(String, () => Account, { shape: MapShape.OBJECT })
 	delta: Map<string, Account>;
+	/**
+	 * Erdstall standard status codes can be checked against the enum TxStatusCode
+	 */
+	@jsonMember(Number) status: Number;
+	@jsonMember(String) error?: string;
 
-	constructor(tx: Transaction, delta: Map<string, Account>) {
+	constructor(
+		tx: Transaction,
+		delta: Map<string, Account>,
+		status: Number,
+		error?: string,
+	) {
 		super();
 		this.tx = tx;
 		this.delta = delta;
+		this.status = status;
+		this.error = error;
 	}
 
 	public objectType(): any {

@@ -26,6 +26,7 @@ import {
 	BalanceProofs,
 	Account,
 	PhaseShift,
+	TxAccepted,
 } from "#erdstall/api/responses";
 import { TypedJSON } from "#erdstall/export/typedjson";
 import { EventCache, OneShotEventCache } from "#erdstall/utils";
@@ -62,30 +63,30 @@ export interface EnclaveWriter extends EnclaveReader, Connector {
 	 * Sends the given transfer transaction to the enclave.
 	 *
 	 * @param tx - The transfer transaction to send.
-	 * @returns A promise containing the transaction receipt for this transfer.
+	 * @returns A promise containing the transaction accepted message for this transfer.
 	 */
-	transfer(tx: Transfer): Promise<TxReceipt>;
+	transfer(tx: Transfer): Promise<TxAccepted>;
 	/**
 	 * Sends the given mint transaction to the enclave.
 	 *
 	 * @param tx - The mint transaction to send.
-	 * @returns A promise containing the transaction receipt for this mint.
+	 * @returns A promise containing the transaction accepted message for this mint.
 	 */
-	mint(tx: Mint): Promise<TxReceipt>;
+	mint(tx: Mint): Promise<TxAccepted>;
 	/**
 	 * Sends the given burn transaction to the enclave.
 	 *
 	 * @param tx - The burn transaction to send.
-	 * @returns A promise containing the transaction receipt for this burn.
+	 * @returns A promise containing the transaction accepted message for this burn.
 	 */
-	burn(tx: Burn): Promise<TxReceipt>;
+	burn(tx: Burn): Promise<TxAccepted>;
 	/**
 	 * Sends the given trade transaction to the enclave.
 	 *
 	 * @param tx - The trade transaction to send.
-	 * @returns A promise containing the transaction receipt for this trade.
+	 * @returns A promise containing the transaction accepted message for this trade.
 	 */
-	trade(tx: Trade): Promise<TxReceipt>;
+	trade(tx: Trade): Promise<TxAccepted>;
 	/**
 	 * Sends the given exit request to the enclave.
 	 *
@@ -152,20 +153,20 @@ export class Enclave implements EnclaveWriter {
 		return;
 	}
 
-	public async transfer(tx: Transfer): Promise<TxReceipt> {
-		return this.sendCall(tx) as Promise<TxReceipt>;
+	public async transfer(tx: Transfer): Promise<TxAccepted> {
+		return this.sendCall(tx) as Promise<TxAccepted>;
 	}
 
-	public async mint(tx: Mint): Promise<TxReceipt> {
-		return this.sendCall(tx) as Promise<TxReceipt>;
+	public async mint(tx: Mint): Promise<TxAccepted> {
+		return this.sendCall(tx) as Promise<TxAccepted>;
 	}
 
-	public async burn(tx: Burn): Promise<TxReceipt> {
-		return this.sendCall(tx) as Promise<TxReceipt>;
+	public async burn(tx: Burn): Promise<TxAccepted> {
+		return this.sendCall(tx) as Promise<TxAccepted>;
 	}
 
-	public async trade(tx: Trade): Promise<TxReceipt> {
-		return this.sendCall(tx) as Promise<TxReceipt>;
+	public async trade(tx: Trade): Promise<TxAccepted> {
+		return this.sendCall(tx) as Promise<TxAccepted>;
 	}
 
 	public async exit(exitRequest: ExitRequest): Promise<BalanceProof> {

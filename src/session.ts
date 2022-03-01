@@ -3,7 +3,7 @@
 
 import { Signer } from "ethers";
 
-import { TxReceipt, BalanceProof } from "#erdstall/api/responses";
+import { BalanceProof } from "#erdstall/api/responses";
 import {
 	Transfer,
 	Mint,
@@ -20,6 +20,8 @@ import { ErdstallSession } from "./erdstall";
 import { ErdstallEventHandler } from "./event";
 import { Client } from "./client";
 import { TransactionGenerator } from "#erdstall/utils";
+import { ReceiptDispatcher } from "./utils/receipt_dispatcher";
+import { PendingTransaction } from "./api/util/pending_transaction";
 
 export const ErrUnitialisedClient = new Error("client unitialised");
 
@@ -28,6 +30,7 @@ export class Session extends Client implements ErdstallSession {
 	private nonce: bigint;
 	private readonly enclaveWriter: EnclaveWriter;
 	private readonly signer: Signer;
+	readonly receiptDispatcher: ReceiptDispatcher;
 
 	constructor(
 		address: Address,
@@ -46,6 +49,11 @@ export class Session extends Client implements ErdstallSession {
 		this.enclaveWriter.on("error", () => {
 			this.nonce = 0n;
 		});
+		this.receiptDispatcher = new ReceiptDispatcher(this.erdstallConn);
+		this.on(
+			"receipt",
+			this.receiptDispatcher.watch.bind(this.receiptDispatcher),
+		);
 	}
 
 	// Queries the next nonce and increases the counter. If the nonce has an
@@ -80,38 +88,43 @@ export class Session extends Client implements ErdstallSession {
 		return this.getAccount(this.address);
 	}
 
-	async transferTo(assets: Assets, to: Address): Promise<TxReceipt> {
+	async transferTo(assets: Assets, to: Address): Promise<PendingTransaction> {
 		if (!this.erdstallConn) {
-			return Promise.reject(ErrUnitialisedClient);
+			throw ErrUnitialisedClient;
 		}
 		const nonce = await this.nextNonce();
 		const tx = new Transfer(this.address, nonce, to, assets);
-		await tx.sign(this.erdstallConn.erdstall(), this.signer);
-		return this.enclaveWriter.transfer(tx);
+		await tx.sign(this.erdstallConn!.erdstall(), this.signer);
+		const hash = tx.hash(this.erdstallConn!.erdstall());
+		const receipt = this.receiptDispatcher.register(hash);
+		const accepted = this.enclaveWriter.transfer(tx);
+		return { receipt, accepted };
 	}
 
-	async mint(token: Address, id: Uint256): Promise<TxReceipt> {
+	async mint(token: Address, id: Uint256): Promise<PendingTransaction> {
 		if (!this.erdstallConn) {
-			return Promise.reject(ErrUnitialisedClient);
+			throw ErrUnitialisedClient;
 		}
-
-		const minttx = new Mint(
-			this.address,
-			await this.nextNonce(),
-			token,
-			id,
-		);
-		await minttx.sign(this.erdstallConn.erdstall(), this.signer);
-		return this.enclaveWriter.mint(minttx);
+		const nonce = await this.nextNonce();
+		const tx = new Mint(this.address, nonce, token, id);
+		await tx.sign(this.erdstallConn!.erdstall(), this.signer);
+		const hash = tx.hash(this.erdstallConn!.erdstall());
+		const receipt = this.receiptDispatcher.register(hash);
+		const accepted = this.enclaveWriter.mint(tx);
+		return { receipt, accepted };
 	}
 
-	async burn(assets: Assets): Promise<TxReceipt> {
+	async burn(assets: Assets): Promise<PendingTransaction> {
 		if (!this.erdstallConn) {
-			return Promise.reject(ErrUnitialisedClient);
+			throw ErrUnitialisedClient;
 		}
-		const tx = new Burn(this.address, await this.nextNonce(), assets);
-		await tx.sign(this.erdstallConn.erdstall(), this.signer);
-		return this.enclaveWriter.burn(tx);
+		const nonce = await this.nextNonce();
+		const tx = new Burn(this.address, nonce, assets);
+		await tx.sign(this.erdstallConn!.erdstall(), this.signer);
+		const hash = tx.hash(this.erdstallConn!.erdstall());
+		const receipt = this.receiptDispatcher.register(hash);
+		const accepted = this.enclaveWriter.burn(tx);
+		return { receipt, accepted };
 	}
 
 	async deposit(assets: Assets): Promise<TransactionGenerator> {
@@ -166,9 +179,24 @@ export class Session extends Client implements ErdstallSession {
 		return o.sign(this.erdstallConn!.erdstall(), this.signer);
 	}
 
-	async acceptTrade(offer: TradeOffer): Promise<TxReceipt> {
-		const tx = new Trade(this.address, await this.nextNonce(), offer);
+	async acceptTrade(offer: TradeOffer): Promise<PendingTransaction> {
+		if (!this.erdstallConn) {
+			throw ErrUnitialisedClient;
+		}
+		const nonce = await this.nextNonce();
+		const tx = new Trade(this.address, nonce, offer);
 		await tx.sign(this.erdstallConn!.erdstall(), this.signer);
-		return this.enclaveWriter.trade(tx);
+		const hash = tx.hash(this.erdstallConn!.erdstall());
+		const receipt = this.receiptDispatcher.register(hash);
+		const accepted = this.enclaveWriter.trade(tx);
+		return { receipt, accepted };
+	}
+
+	removeAllListeners(): void {
+		super.removeAllListeners();
+		this.on(
+			"receipt",
+			this.receiptDispatcher.watch.bind(this.receiptDispatcher),
+		);
 	}
 }

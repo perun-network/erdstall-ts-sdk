@@ -21,6 +21,7 @@ import { ethers, Signer } from "ethers";
 import { NFTMetadata } from "#erdstall/ledger/backend";
 import { OnChainQuerier } from "./ledger/onChainQuerier";
 import { EthereumOnChainQuerier } from "./ledger/backend/ethereumOnChainQuerier";
+import { Session } from "#erdstall";
 
 export class Client implements ErdstallClient {
 	readonly tokenProvider: TokenProvider;
@@ -156,6 +157,9 @@ export class Client implements ErdstallClient {
 					erdstall,
 					this.tokenProvider,
 				);
+				if (this instanceof Session) {
+					this.receiptDispatcher.erdstallConn = this.erdstallConn;
+				}
 
 				for (const [ev, cbs] of this.erdstallEventHandlerCache) {
 					cbs.forEach((cb) => {

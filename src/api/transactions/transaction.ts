@@ -73,6 +73,13 @@ export abstract class Transaction extends ErdstallObject {
 		return enc.pack(this.encodeABI(enc, contract), contract);
 	}
 
+	hash(contract: Address): string {
+		const toHash = this.packTagged(contract);
+		return utils.keccak256(
+			new Uint8Array([...toHash.bytes, ...this.sig!.value]),
+		);
+	}
+
 	static toJSON(me: Transaction) {
 		return {
 			type: me.txTypeName(),
