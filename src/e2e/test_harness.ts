@@ -181,28 +181,32 @@ export function endToEndTestHarness(sdkActions: SDKActions) {
 
 		it("off-chain transactions benchmark", async function () {
 			const txCount = 500;
-			const begin = Date.now();
-			const receipts = [];
+			let signingTimeMs = 0;
+			let roundtripTimeMs = 0;
 			for (let i = 0; i < txCount; i++) {
 				const amount = new Assets({
 					token: PERUN_ADDR,
 					asset: new assets.Amount(utils.parseEther("1").toBigInt()),
 				});
-				receipts.push(
-					(
-						await sessions[ALICE].transferTo(
-							amount,
-							sessions[BOB].address,
-						)
-					).receipt,
+				const begin = Date.now();
+
+				let pending = await sessions[ALICE].transferTo(
+					amount,
+					sessions[BOB].address,
 				);
+				const signed = Date.now();
+				await pending.receipt;
+				const confirmed = Date.now();
+				signingTimeMs += signed - begin;
+				roundtripTimeMs += confirmed - signed;
 			}
-			await Promise.all(receipts);
-			const timeMs = Date.now() - begin;
+			const timeMs = signingTimeMs + roundtripTimeMs;
 			console.log(
 				`Sent ${txCount} TXs in ${timeMs / 1000}s (${
-					timeMs / txCount
-				}ms/tx | ${(1000 * txCount) / timeMs}Hz)`,
+					roundtripTimeMs / txCount
+				}ms/tx | ${(1000 * txCount) / roundtripTimeMs}Hz) (${
+					signingTimeMs / txCount
+				}ms/sig | ${(1000 * txCount) / signingTimeMs}Hz)`,
 			);
 		});
 
