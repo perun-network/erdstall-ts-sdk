@@ -108,6 +108,10 @@ export class Enclave implements EnclaveWriter {
 	private calls: Map<string, [Function, Function]>;
 	private id: number;
 
+	private globallySubscribed: boolean;
+	private individuallySubscribed: Set<string>;
+	private phaseShiftSubscribed: boolean;
+
 	static dial(operator: URL): Enclave {
 		return new Enclave(new EnclaveWSProvider(operator));
 	}
@@ -123,6 +127,10 @@ export class Enclave implements EnclaveWriter {
 		>();
 
 		this.id = 0;
+
+		this.globallySubscribed = false;
+		this.individuallySubscribed = new Set<string>();
+		this.phaseShiftSubscribed = false;
 	}
 
 	public isEnclaveWriter(): void {}
@@ -146,6 +154,13 @@ export class Enclave implements EnclaveWriter {
 	}
 
 	public async subscribe(who?: Address): Promise<void> {
+		this.phaseShiftSubscribed = true;
+		if(who) {
+			this.individuallySubscribed.add(who.key);
+		} else {
+			this.globallySubscribed = true;
+		}
+
 		const subTXs = new SubscribeTXs(who);
 		const subBPs = new SubscribeBalanceProofs(who);
 		const subPSs = new SubscribePhaseShifts();
