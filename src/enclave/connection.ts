@@ -355,7 +355,22 @@ export class Enclave implements EnclaveWriter {
 	}
 
 	private onOpen(_: Event) {
+		const calls = [];
+		if(this.globallySubscribed)
+			calls.push(
+				new SubscribeTXs(null),
+				new SubscribeBalanceProofs(null));
+
+		this.individuallySubscribed.forEach(addr => calls.push(
+			new SubscribeTXs(addr),
+			new SubscribeBalanceProofs(addr)));
+
+		if(this.phaseShiftSubscribed)
+			calls.push(new SubscribePhaseShifts());
+
 		this.callEvent("open", {} as any);
+
+		calls.forEach(c => this.sendCall(c));
 	}
 
 	private onClose(_: Event) {
