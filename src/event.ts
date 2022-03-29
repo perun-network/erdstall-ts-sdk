@@ -28,6 +28,8 @@ import {
  */
 export type ErdstallEvent = LedgerEvent | EnclaveEvent;
 
+export type { EnclaveEvent };
+
 type _eventHandlers = {
 	Frozen: (ev: Frozen) => void;
 	Deposited: (ev: Deposited) => void;

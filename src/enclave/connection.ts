@@ -119,7 +119,9 @@ export class Enclave implements EnclaveWriter {
 	constructor(provider: EnclaveProvider) {
 		this.provider = provider;
 		this.handlers = new EventCache<EnclaveEvent>();
+		this.internalHandlers = new EventCache<EnclaveEvent>();
 		this.oneShotHandlers = new OneShotEventCache<EnclaveEvent>();
+		this.internalOneShotHandlers = new OneShotEventCache<EnclaveEvent>();
 
 		this.calls = new Map<
 			string,
@@ -358,12 +360,12 @@ export class Enclave implements EnclaveWriter {
 		const calls = [];
 		if(this.globallySubscribed)
 			calls.push(
-				new SubscribeTXs(null),
-				new SubscribeBalanceProofs(null));
+				new SubscribeTXs(),
+				new SubscribeBalanceProofs());
 
 		this.individuallySubscribed.forEach(addr => calls.push(
-			new SubscribeTXs(addr),
-			new SubscribeBalanceProofs(addr)));
+			new SubscribeTXs(Address.fromString(addr)),
+			new SubscribeBalanceProofs(Address.fromString(addr))));
 
 		if(this.phaseShiftSubscribed)
 			calls.push(new SubscribePhaseShifts());
