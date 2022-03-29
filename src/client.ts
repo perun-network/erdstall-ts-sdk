@@ -24,8 +24,6 @@ import { OnChainQuerier } from "./ledger/onChainQuerier";
 import { EthereumOnChainQuerier } from "./ledger/backend/ethereumOnChainQuerier";
 import { Session } from "#erdstall";
 
-
-
 export class Client implements ErdstallClient {
 	readonly tokenProvider: TokenProvider;
 	readonly onChainQuerier: OnChainQuerier;
@@ -41,7 +39,8 @@ export class Client implements ErdstallClient {
 	) {
 		this.provider = provider;
 		if (encConn! instanceof URL)
-			this.enclaveConn = Enclave.dial(encConn as URL) as EnclaveReader & InternalEnclaveWatcher;
+			this.enclaveConn = Enclave.dial(encConn as URL) as EnclaveReader &
+				InternalEnclaveWatcher;
 		else this.enclaveConn = encConn;
 		this.erdstallEventHandlerCache = new EventCache<LedgerEvent>();
 		this.erdstallOneShotHandlerCache = new OneShotEventCache<LedgerEvent>();
@@ -64,14 +63,20 @@ export class Client implements ErdstallClient {
 		return this.erdstallConn.getNftMetadata(token, id, useCache);
 	}
 
-	protected on_internal<T extends EnclaveEvent>(ev: T, cb: ErdstallEventHandler<T>): void {
+	protected on_internal<T extends EnclaveEvent>(
+		ev: T,
+		cb: ErdstallEventHandler<T>,
+	): void {
 		return this.enclaveConn.on_internal(
 			ev,
 			cb as ErdstallEventHandler<typeof ev>,
 		);
 	}
 
-	protected off_internal<T extends EnclaveEvent>(ev: T, cb: ErdstallEventHandler<T>): void {
+	protected off_internal<T extends EnclaveEvent>(
+		ev: T,
+		cb: ErdstallEventHandler<T>,
+	): void {
 		return this.enclaveConn.off_internal(
 			ev,
 			cb as ErdstallEventHandler<typeof ev>,
@@ -99,7 +104,10 @@ export class Client implements ErdstallClient {
 		}
 	}
 
-	protected once_internal<T extends EnclaveEvent>(ev: T, cb: ErdstallEventHandler<T>): void {
+	protected once_internal<T extends EnclaveEvent>(
+		ev: T,
+		cb: ErdstallEventHandler<T>,
+	): void {
 		return this.enclaveConn.once_internal(
 			ev,
 			cb as ErdstallEventHandler<typeof ev>,

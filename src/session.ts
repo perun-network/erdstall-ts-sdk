@@ -39,7 +39,8 @@ export class Session extends Client implements ErdstallSession {
 		enclave: (EnclaveWriter & InternalEnclaveWatcher) | URL,
 	) {
 		super(signer, enclave);
-		this.enclaveWriter = this.enclaveConn as EnclaveWriter & InternalEnclaveWatcher;
+		this.enclaveWriter = this.enclaveConn as EnclaveWriter &
+			InternalEnclaveWatcher;
 		this.signer = signer;
 		this.address = address;
 		// Start with an invalid nonce, so that it will be queried anew

@@ -157,7 +157,7 @@ export class Enclave implements EnclaveWriter {
 
 	public async subscribe(who?: Address): Promise<void> {
 		this.phaseShiftSubscribed = true;
-		if(who) {
+		if (who) {
 			this.individuallySubscribed.add(who.key);
 		} else {
 			this.globallySubscribed = true;
@@ -358,21 +358,21 @@ export class Enclave implements EnclaveWriter {
 
 	private onOpen(_: Event) {
 		const calls = [];
-		if(this.globallySubscribed)
+		if (this.globallySubscribed)
+			calls.push(new SubscribeTXs(), new SubscribeBalanceProofs());
+
+		this.individuallySubscribed.forEach((addr) =>
 			calls.push(
-				new SubscribeTXs(),
-				new SubscribeBalanceProofs());
+				new SubscribeTXs(Address.fromString(addr)),
+				new SubscribeBalanceProofs(Address.fromString(addr)),
+			),
+		);
 
-		this.individuallySubscribed.forEach(addr => calls.push(
-			new SubscribeTXs(Address.fromString(addr)),
-			new SubscribeBalanceProofs(Address.fromString(addr))));
-
-		if(this.phaseShiftSubscribed)
-			calls.push(new SubscribePhaseShifts());
+		if (this.phaseShiftSubscribed) calls.push(new SubscribePhaseShifts());
 
 		this.callEvent("open", {} as any);
 
-		calls.forEach(c => this.sendCall(c));
+		calls.forEach((c) => this.sendCall(c));
 	}
 
 	private onClose(_: Event) {
