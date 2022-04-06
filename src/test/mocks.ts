@@ -12,6 +12,7 @@ import {
 	Transfer,
 	Burn,
 	ExitRequest,
+	TransactionOutput,
 } from "#erdstall/api/transactions";
 import {
 	TxReceipt,
@@ -22,7 +23,7 @@ import {
 	TxStatusCode,
 } from "#erdstall/api/responses";
 import { TypedJSON } from "#erdstall/export/typedjson";
-import { Result, Call, ErdstallObject } from "#erdstall/api";
+import { Result, Call, ErdstallObject, Signature } from "#erdstall/api";
 import {
 	SubscribeTXs,
 	SubscribeBalanceProofs,
@@ -105,7 +106,14 @@ export class MockWatcher implements Watcher {
 	): Promise<void> {
 		return Promise.resolve(
 			this.txReceiptHandler(
-				new TxReceipt(tx, deltas ?? new Map<string, Account>(), 1),
+				new TxReceipt(
+					tx,
+					deltas ?? new Map<string, Account>(),
+					1,
+					new TransactionOutput(new Uint8Array()),
+					new Signature(new Uint8Array()),
+					"",
+				),
 			),
 		);
 	}
@@ -218,7 +226,12 @@ export class EnclaveMockProvider implements EnclaveProvider {
 				const txc = tx as Transfer;
 				const acc = new Account(txc.nonce, txc.values, new Assets());
 
-				const res = newTxReceiptResult(id, tx, acc);
+				const res = newTxReceiptResult(
+					id,
+					tx,
+					new TransactionOutput(new Uint8Array()),
+					acc,
+				);
 				const msg = newErdstallMessageEvent(res);
 				return this.onmessage!(msg);
 			}
@@ -228,12 +241,21 @@ export class EnclaveMockProvider implements EnclaveProvider {
 				assets.addAsset(txc.token.toString(), new Tokens([txc.id]));
 				const acc = new Account(txc.nonce, assets, new Assets());
 
-				const res = newTxReceiptResult(id, tx, acc);
+				const res = newTxReceiptResult(
+					id,
+					tx,
+					new TransactionOutput(new Uint8Array()),
+					acc,
+				);
 				const msg = newErdstallMessageEvent(res);
 				return this.onmessage!(msg);
 			}
 			case ExitRequest: {
-				const res = newTxReceiptResult(id, tx);
+				const res = newTxReceiptResult(
+					id,
+					tx,
+					new TransactionOutput(new Uint8Array()),
+				);
 				const msg = newErdstallMessageEvent(res);
 				return this.onmessage!(msg);
 			}
@@ -261,12 +283,20 @@ function newErdstallMessageEvent(res: Result): MessageEvent {
 function newTxReceiptResult(
 	id: string,
 	tx: Transaction,
+	output: TransactionOutput,
 	acc?: Account,
 	status: TxStatusCode = 1,
 ): Result {
 	const _acc = acc ? acc : new Account(tx.nonce, new Assets(), new Assets());
 	const delta = new Map<string, Account>([[tx.sender.key, _acc]]);
-	const txr = new TxReceipt(tx, delta, status);
+	const txr = new TxReceipt(
+		tx,
+		delta,
+		status,
+		output,
+		new Signature(new Uint8Array()),
+		"",
+	);
 	return new Result(id, txr);
 }
 

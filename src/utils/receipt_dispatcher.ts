@@ -23,7 +23,7 @@ export class ReceiptDispatcher {
 
 	watch(receipt: TxReceipt): void {
 		if (!this.erdstallConn) return;
-		const hash = receipt.tx.hash(this.erdstallConn.erdstall());
+		const hash = receipt.tx.hash();
 		const dispatch = this.pendingReceiptDispatchers.get(hash);
 		if (dispatch) {
 			dispatch(receipt);

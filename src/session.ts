@@ -95,7 +95,7 @@ export class Session extends Client implements ErdstallSession {
 		const nonce = await this.nextNonce();
 		const tx = new Transfer(this.address, nonce, to, assets);
 		await tx.sign(this.erdstallConn!.erdstall(), this.signer);
-		const hash = tx.hash(this.erdstallConn!.erdstall());
+		const hash = tx.hash();
 		const receipt = this.receiptDispatcher.register(hash);
 		const accepted = this.enclaveWriter.transfer(tx);
 		return { receipt, accepted };
@@ -108,7 +108,7 @@ export class Session extends Client implements ErdstallSession {
 		const nonce = await this.nextNonce();
 		const tx = new Mint(this.address, nonce, token, id);
 		await tx.sign(this.erdstallConn!.erdstall(), this.signer);
-		const hash = tx.hash(this.erdstallConn!.erdstall());
+		const hash = tx.hash();
 		const receipt = this.receiptDispatcher.register(hash);
 		const accepted = this.enclaveWriter.mint(tx);
 		return { receipt, accepted };
@@ -121,7 +121,7 @@ export class Session extends Client implements ErdstallSession {
 		const nonce = await this.nextNonce();
 		const tx = new Burn(this.address, nonce, assets);
 		await tx.sign(this.erdstallConn!.erdstall(), this.signer);
-		const hash = tx.hash(this.erdstallConn!.erdstall());
+		const hash = tx.hash();
 		const receipt = this.receiptDispatcher.register(hash);
 		const accepted = this.enclaveWriter.burn(tx);
 		return { receipt, accepted };
@@ -186,7 +186,7 @@ export class Session extends Client implements ErdstallSession {
 		const nonce = await this.nextNonce();
 		const tx = new Trade(this.address, nonce, offer);
 		await tx.sign(this.erdstallConn!.erdstall(), this.signer);
-		const hash = tx.hash(this.erdstallConn!.erdstall());
+		const hash = tx.hash();
 		const receipt = this.receiptDispatcher.register(hash);
 		const accepted = this.enclaveWriter.trade(tx);
 		return { receipt, accepted };

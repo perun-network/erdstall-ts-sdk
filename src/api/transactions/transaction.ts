@@ -13,6 +13,7 @@ import {
 	jsonBigIntMember,
 } from "#erdstall/export/typedjson";
 import { utils, Signer } from "ethers";
+import { ETHZERO } from "#erdstall/ledger/assets";
 
 const transactionImpls = new Map<string, Serializable<Transaction>>();
 const transactionTypeName = "Transaction";
@@ -73,8 +74,8 @@ export abstract class Transaction extends ErdstallObject {
 		return enc.pack(this.encodeABI(enc, contract), contract);
 	}
 
-	hash(contract: Address): string {
-		const toHash = this.packTagged(contract);
+	hash(): string {
+		const toHash = this.packTagged(Address.fromString(ETHZERO));
 		return utils.keccak256(
 			new Uint8Array([...toHash.bytes, ...this.sig!.value]),
 		);
@@ -101,3 +102,21 @@ export abstract class Transaction extends ErdstallObject {
 
 registerErdstallType(transactionTypeName, Transaction);
 customJSON(Transaction);
+
+TypedJSON.mapType(Uint8Array, {
+	deserializer: (json: string) => {
+		if (!json) {
+			return new Uint8Array();
+		}
+		return utils.arrayify(json);
+	},
+	serializer: (value) => (value == null ? value : utils.hexlify(value)),
+});
+@jsonObject
+export class TransactionOutput {
+	@jsonMember(Uint8Array) payload: Uint8Array;
+
+	constructor(payload: Uint8Array) {
+		this.payload = payload;
+	}
+}
