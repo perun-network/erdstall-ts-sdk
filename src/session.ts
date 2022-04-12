@@ -50,7 +50,7 @@ export class Session extends Client implements ErdstallSession {
 			this.nonce = 0n;
 		});
 		this.receiptDispatcher = new ReceiptDispatcher(this.erdstallConn);
-		this.on(
+		this.on_internal(
 			"receipt",
 			this.receiptDispatcher.watch.bind(this.receiptDispatcher),
 		);
@@ -166,10 +166,10 @@ export class Session extends Client implements ErdstallSession {
 					accept();
 				}
 			};
-			this.on("phaseshift", cb);
+			this.on_internal("phaseshift", cb);
 		});
 		const exitProof = await this.exit();
-		await p.then(() => this.off("phaseshift", cb));
+		await p.then(() => this.off_internal("phaseshift", cb));
 
 		return this.withdraw(exitProof);
 	}
@@ -190,13 +190,5 @@ export class Session extends Client implements ErdstallSession {
 		const receipt = this.receiptDispatcher.register(hash);
 		const accepted = this.enclaveWriter.trade(tx);
 		return { receipt, accepted };
-	}
-
-	removeAllListeners(): void {
-		super.removeAllListeners();
-		this.on(
-			"receipt",
-			this.receiptDispatcher.watch.bind(this.receiptDispatcher),
-		);
 	}
 }

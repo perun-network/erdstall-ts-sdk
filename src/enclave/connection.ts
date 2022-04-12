@@ -102,7 +102,9 @@ export interface EnclaveWriter extends EnclaveReader, Connector {
 export class Enclave implements EnclaveWriter {
 	private provider: EnclaveProvider;
 	private handlers: EventCache<EnclaveEvent>;
+	private internalHandlers: EventCache<EnclaveEvent>;
 	private oneShotHandlers: OneShotEventCache<EnclaveEvent>;
+	private internalOneShotHandlers: OneShotEventCache<EnclaveEvent>;
 	private calls: Map<string, [Function, Function]>;
 	private id: number;
 
@@ -171,7 +173,7 @@ export class Enclave implements EnclaveWriter {
 
 	public async exit(exitRequest: ExitRequest): Promise<BalanceProof> {
 		const p = new Promise<BalanceProof>((resolve, reject) => {
-			this.once("exitproof", resolve);
+			this.once_internal("exitproof", resolve);
 			this.sendCall(exitRequest).catch(reject);
 		});
 
@@ -215,6 +217,27 @@ export class Enclave implements EnclaveWriter {
 		cb: ErdstallEventHandler<T>,
 	) {
 		this.handlers.delete(eventType, cb);
+	}
+
+	public on_internal<T extends EnclaveEvent>(
+		eventType: T,
+		cb: ErdstallEventHandler<T>,
+	): void {
+		this.internalHandlers.set(eventType, cb);
+	}
+
+	public once_internal<T extends EnclaveEvent>(
+		eventType: T,
+		cb: ErdstallEventHandler<T>,
+	): void {
+		this.internalOneShotHandlers.set(eventType, cb);
+	}
+
+	public off_internal<T extends EnclaveEvent>(
+		eventType: T,
+		cb: ErdstallEventHandler<T>,
+	) {
+		this.internalHandlers.delete(eventType, cb);
 	}
 
 	public removeAllListeners() {
@@ -283,7 +306,12 @@ export class Enclave implements EnclaveWriter {
 	}
 
 	private callEvent(ev: EnclaveEvent, payload: any) {
-		[this.handlers.get(ev), this.oneShotHandlers.get(ev)].forEach((cbs) => {
+		[
+			this.handlers.get(ev),
+			this.oneShotHandlers.get(ev),
+			this.internalHandlers.get(ev),
+			this.internalOneShotHandlers.get(ev),
+		].forEach((cbs) => {
 			if (!cbs) {
 				return;
 			}

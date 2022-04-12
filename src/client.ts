@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { ErdstallEvent, ErdstallEventHandler } from "event";
+import { ErdstallEvent, ErdstallEventHandler, EnclaveEvent } from "event";
 import { ErdstallClient } from "erdstall";
 import { Erdstall__factory } from "#erdstall/ledger/backend/contracts";
 import { ClientConfig } from "#erdstall/api/responses";
@@ -61,6 +61,20 @@ export class Client implements ErdstallClient {
 		return this.erdstallConn.getNftMetadata(token, id, useCache);
 	}
 
+	protected on_internal<T extends EnclaveEvent>(ev: T, cb: ErdstallEventHandler<T>): void {
+		return this.enclaveConn.on_internal(
+			ev,
+			cb as ErdstallEventHandler<typeof ev>,
+		);
+	}
+
+	protected off_internal<T extends EnclaveEvent>(ev: T, cb: ErdstallEventHandler<T>): void {
+		return this.enclaveConn.off_internal(
+			ev,
+			cb as ErdstallEventHandler<typeof ev>,
+		);
+	}
+
 	on<T extends ErdstallEvent>(ev: T, cb: ErdstallEventHandler<T>): void {
 		if (isLedgerEvent(ev)) {
 			if (this.erdstallConn) {
@@ -80,6 +94,13 @@ export class Client implements ErdstallClient {
 			const exhaustiveCheck: never = ev;
 			throw new Error(`unhandled eventtype: ${exhaustiveCheck}`);
 		}
+	}
+
+	protected once_internal<T extends EnclaveEvent>(ev: T, cb: ErdstallEventHandler<T>): void {
+		return this.enclaveConn.once_internal(
+			ev,
+			cb as ErdstallEventHandler<typeof ev>,
+		);
 	}
 
 	once<T extends ErdstallEvent>(ev: T, cb: ErdstallEventHandler<T>): void {
