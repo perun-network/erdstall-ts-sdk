@@ -5,6 +5,13 @@ import { expect } from "chai";
 import { Enclave } from "./connection";
 import { EnclaveEvent } from "./event";
 import { EnclaveMockProvider } from "#erdstall/test/mocks";
+import { ErdstallObject, Call } from "#erdstall/api";
+import { TypedJSON } from "#erdstall/export/typedjson";
+import {
+	SubscribeTXs,
+	SubscribeBalanceProofs,
+	SubscribePhaseShifts,
+} from "#erdstall/api/calls";
 
 import * as pkgtest from "#erdstall/test";
 import { logSeedOnFailure } from "#erdstall/test";
@@ -92,6 +99,50 @@ describe("EnclaveConnection", () => {
 				"the returned exitproof should be a valid exitproof",
 			).to.be.true;
 		}
+	});
+
+	it("re-establishes subscriptions on reconnect", async () => {
+		const conn = new Enclave(provider);
+		conn.connect();
+
+		const addr = pkgtest.newRandomAddress(rng);
+		await conn.subscribe();
+		await conn.subscribe(addr);
+
+		const calls: Call[] = [];
+		provider.oncall = (c) => calls.push(c);
+
+		let reset = new Promise((resolve, reject) => {
+			const timeout = setTimeout(
+				() => reject(new Error('did not emit "open" event')),
+				2000,
+			);
+			conn.once("open", () => {
+				clearTimeout(timeout);
+				setTimeout(resolve, 100);
+			});
+		});
+
+		// simulate reset.
+		provider.onerror!({} as Event);
+		await reset;
+
+		expect(
+			calls.map((c) =>
+				TypedJSON.stringify(c.data as ErdstallObject, ErdstallObject),
+			),
+			"re-subscribe calls after reset",
+		).to.have.ordered.members(
+			[
+				new SubscribeTXs(),
+				new SubscribeBalanceProofs(),
+				new SubscribeTXs(addr),
+				new SubscribeBalanceProofs(addr),
+				new SubscribePhaseShifts(),
+			].map((c) =>
+				TypedJSON.stringify(c as ErdstallObject, ErdstallObject),
+			),
+		);
 	});
 
 	afterEach(function () {

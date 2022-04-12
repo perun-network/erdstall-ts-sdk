@@ -12,6 +12,7 @@ import {
 	Trade,
 	Burn,
 } from "#erdstall/api/transactions";
+import { InternalEnclaveWatcher } from "./internalenclavewatcher";
 import { EnclaveWriter } from "#erdstall/enclave";
 import { Address, Account, LedgerWriter } from "#erdstall/ledger";
 import { Assets } from "#erdstall/ledger/assets";
@@ -28,17 +29,18 @@ export const ErrUnitialisedClient = new Error("client unitialised");
 export class Session extends Client implements ErdstallSession {
 	readonly address: Address;
 	private nonce: bigint;
-	private readonly enclaveWriter: EnclaveWriter;
+	private readonly enclaveWriter: EnclaveWriter & InternalEnclaveWatcher;
 	private readonly signer: Signer;
 	readonly receiptDispatcher: ReceiptDispatcher;
 
 	constructor(
 		address: Address,
 		signer: Signer,
-		enclave: EnclaveWriter | URL,
+		enclave: (EnclaveWriter & InternalEnclaveWatcher) | URL,
 	) {
 		super(signer, enclave);
-		this.enclaveWriter = this.enclaveConn as EnclaveWriter;
+		this.enclaveWriter = this.enclaveConn as EnclaveWriter &
+			InternalEnclaveWatcher;
 		this.signer = signer;
 		this.address = address;
 		// Start with an invalid nonce, so that it will be queried anew
@@ -50,7 +52,7 @@ export class Session extends Client implements ErdstallSession {
 			this.nonce = 0n;
 		});
 		this.receiptDispatcher = new ReceiptDispatcher(this.erdstallConn);
-		this.on(
+		this.on_internal(
 			"receipt",
 			this.receiptDispatcher.watch.bind(this.receiptDispatcher),
 		);
@@ -166,10 +168,10 @@ export class Session extends Client implements ErdstallSession {
 					accept();
 				}
 			};
-			this.on("phaseshift", cb);
+			this.on_internal("phaseshift", cb);
 		});
 		const exitProof = await this.exit();
-		await p.then(() => this.off("phaseshift", cb));
+		await p.then(() => this.off_internal("phaseshift", cb));
 
 		return this.withdraw(exitProof);
 	}
@@ -190,13 +192,5 @@ export class Session extends Client implements ErdstallSession {
 		const receipt = this.receiptDispatcher.register(hash);
 		const accepted = this.enclaveWriter.trade(tx);
 		return { receipt, accepted };
-	}
-
-	removeAllListeners(): void {
-		super.removeAllListeners();
-		this.on(
-			"receipt",
-			this.receiptDispatcher.watch.bind(this.receiptDispatcher),
-		);
 	}
 }

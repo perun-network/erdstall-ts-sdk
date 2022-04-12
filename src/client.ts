@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { ErdstallEvent, ErdstallEventHandler } from "event";
-import { ErdstallClient } from "erdstall";
+import { InternalEnclaveWatcher } from "./internalenclavewatcher";
+import { ErdstallEvent, ErdstallEventHandler, EnclaveEvent } from "./event";
+import { ErdstallClient } from "./erdstall";
 import { Erdstall__factory } from "#erdstall/ledger/backend/contracts";
 import { ClientConfig } from "#erdstall/api/responses";
 import { Enclave, isEnclaveEvent, EnclaveReader } from "#erdstall/enclave";
@@ -26,7 +27,7 @@ import { Session } from "#erdstall";
 export class Client implements ErdstallClient {
 	readonly tokenProvider: TokenProvider;
 	readonly onChainQuerier: OnChainQuerier;
-	protected enclaveConn: EnclaveReader;
+	protected enclaveConn: EnclaveReader & InternalEnclaveWatcher;
 	protected provider: ethers.providers.Provider | Signer;
 	protected erdstallConn?: LedgerReader | LedgerWriter;
 	private erdstallEventHandlerCache: EventCache<LedgerEvent>;
@@ -34,12 +35,13 @@ export class Client implements ErdstallClient {
 
 	constructor(
 		provider: ethers.providers.Provider | Signer,
-		encConn: EnclaveReader | URL,
+		encConn: (EnclaveReader & InternalEnclaveWatcher) | URL,
 	) {
 		this.provider = provider;
 		if (encConn! instanceof URL)
-			this.enclaveConn = Enclave.dial(encConn as URL);
-		else this.enclaveConn = encConn as EnclaveReader;
+			this.enclaveConn = Enclave.dial(encConn as URL) as EnclaveReader &
+				InternalEnclaveWatcher;
+		else this.enclaveConn = encConn;
 		this.erdstallEventHandlerCache = new EventCache<LedgerEvent>();
 		this.erdstallOneShotHandlerCache = new OneShotEventCache<LedgerEvent>();
 		this.tokenProvider = new TokenFetcher();
@@ -61,6 +63,26 @@ export class Client implements ErdstallClient {
 		return this.erdstallConn.getNftMetadata(token, id, useCache);
 	}
 
+	protected on_internal<T extends EnclaveEvent>(
+		ev: T,
+		cb: ErdstallEventHandler<T>,
+	): void {
+		return this.enclaveConn.on_internal(
+			ev,
+			cb as ErdstallEventHandler<typeof ev>,
+		);
+	}
+
+	protected off_internal<T extends EnclaveEvent>(
+		ev: T,
+		cb: ErdstallEventHandler<T>,
+	): void {
+		return this.enclaveConn.off_internal(
+			ev,
+			cb as ErdstallEventHandler<typeof ev>,
+		);
+	}
+
 	on<T extends ErdstallEvent>(ev: T, cb: ErdstallEventHandler<T>): void {
 		if (isLedgerEvent(ev)) {
 			if (this.erdstallConn) {
@@ -80,6 +102,16 @@ export class Client implements ErdstallClient {
 			const exhaustiveCheck: never = ev;
 			throw new Error(`unhandled eventtype: ${exhaustiveCheck}`);
 		}
+	}
+
+	protected once_internal<T extends EnclaveEvent>(
+		ev: T,
+		cb: ErdstallEventHandler<T>,
+	): void {
+		return this.enclaveConn.once_internal(
+			ev,
+			cb as ErdstallEventHandler<typeof ev>,
+		);
 	}
 
 	once<T extends ErdstallEvent>(ev: T, cb: ErdstallEventHandler<T>): void {
