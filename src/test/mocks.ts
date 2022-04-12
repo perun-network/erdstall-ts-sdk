@@ -173,6 +173,7 @@ export class EnclaveMockProvider implements EnclaveProvider {
 	public onclose: ((ev: CloseEvent) => any) | null;
 	public onerror: ((ev: Event) => any) | null;
 	public onmessage: ((ev: MessageEvent) => any) | null;
+	public oncall: ((ev: Call) => any) | null;
 	private config?: ClientConfig;
 
 	constructor(config?: ClientConfig) {
@@ -180,10 +181,12 @@ export class EnclaveMockProvider implements EnclaveProvider {
 		this.onclose = null;
 		this.onerror = null;
 		this.onmessage = null;
+		this.oncall = null;
 		this.config = config;
 	}
 
 	public connect() {
+		this.onopen!({} as Event);
 		if (!this.config) return;
 
 		const msg = newErdstallMessageEvent(new Result(undefined, this.config));
@@ -192,6 +195,7 @@ export class EnclaveMockProvider implements EnclaveProvider {
 
 	public send(data: string | ArrayBufferLike | Blob | ArrayBufferView) {
 		const call = TypedJSON.parse(data, Call)!;
+		this.oncall?.(call);
 
 		switch (call.data.objectType()) {
 			case SubscribeTXs: {
