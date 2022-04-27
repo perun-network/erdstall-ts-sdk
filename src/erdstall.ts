@@ -230,7 +230,9 @@ export interface Leaver extends Exiter, Withdrawer {
 	 * Check out the documentation for `Withdrawer.withdraw` and `Stages` for
 	 * more information about theh return type.
 	 */
-	leave(): Promise<TransactionGenerator>;
+	leave(
+		notify?: (message: string, stage: number, maxStages: number) => void,
+	): Promise<TransactionGenerator>;
 }
 
 /**
