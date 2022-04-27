@@ -155,9 +155,13 @@ export class Session extends Client implements ErdstallSession {
 		return (this.erdstallConn as LedgerWriter).withdraw(exitProof);
 	}
 
-	async leave(): Promise<TransactionGenerator> {
+	async leave(
+		notify?: (message: string, stage: number, maxStages: number) => void,
+	): Promise<TransactionGenerator> {
 		let skipped = 0;
 		let cb: ErdstallEventHandler<"phaseshift">;
+		let atStage = 1;
+		let maxStages = 3;
 		const p = new Promise<void>((accept) => {
 			cb = () => {
 				// One Epoch when the current epoch ends for which we receive the ExitProof.
@@ -170,9 +174,11 @@ export class Session extends Client implements ErdstallSession {
 			};
 			this.on_internal("phaseshift", cb);
 		});
+		notify?.("awaiting exit proof", atStage++, maxStages);
 		const exitProof = await this.exit();
+		notify?.("awaiting epoch sealing", atStage++, maxStages);
 		await p.then(() => this.off_internal("phaseshift", cb));
-
+		notify?.("withdrawing", atStage++, maxStages);
 		return this.withdraw(exitProof);
 	}
 
