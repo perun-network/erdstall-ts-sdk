@@ -49,12 +49,12 @@ export class TradeOffer {
 		this.expiry = (1n << 64n) - 1n; // For now, never expire.
 	}
 
-	async sign(contract: Address, signer: Signer): Promise<this> {
+	async sign(contract: Address, signer: Signer): Promise<SignedTradeOffer> {
 		const sig = await signer.signMessage(
 			this.packTagged(contract).keccak256(),
 		);
 		this.sig = new Signature(sig);
-		return this;
+		return this as SignedTradeOffer;
 	}
 
 	verify(contract: Address): boolean {
@@ -82,6 +82,8 @@ export class TradeOffer {
 			.pack("ErdstallTradeOffer", contract);
 	}
 }
+
+export type SignedTradeOffer = TradeOffer & { sig: Signature };
 
 @jsonObject
 export class Trade extends Transaction {
