@@ -11,7 +11,7 @@ import { Trade } from "./trade";
 import { Address } from "#erdstall/ledger";
 import { utils } from "ethers";
 import { Transfer } from "./transfer";
-import { TxReceipt } from "../responses";
+import { TxReceipt, AttestationResult } from "../responses";
 
 describe("Wiremessages", () => {
 	it("de-/encodes subscriptions", () => {
@@ -103,6 +103,10 @@ describe("Wiremessages", () => {
 			"0x4cc6db6207731e54b26e2b2bc3d55b916a37a70cbe19b2924a0b8e1c01b9a8f0",
 		);
 	});
+
+	it("de-/encodes attestation reports", () => {
+		genericJSONTest(testAttestResponse, ErdstallObject);
+	});
 });
 
 function genericJSONTest(data: string, type: any) {
@@ -151,3 +155,6 @@ const testSubscribePhaseShifts =
 
 const testHashing =
 	'{"sig":"0xb6fe6caae7123c3e1ce2640cfb914bfacb4f41b6fc2f84f406969ca668a7ebd4079c0de067ee5d323b620cc5d46d5f9fe0e12ef18feb0811b6af44af4188fd8a2d","sender":"0xe53508e4594eefa2d03a463e7d66ac640964989d","nonce":"6922120226907108202","recipient":"0xb3fd33b30f9e224d0521b79c73194150648dd300","values":{"0x6b5e665ab94af885657f1edc7674bf3a79beb68b":{"idset":["0x769765eb4327c5f82609a2ea89edc797439d3108930ec6a0ce5277d33c324f47","0xbb970d21666b218bc7efde58be7cf8c7a5ae5bad6ebef77094dcb4740e9449b0"]},"0xc6bde651b4fa5458546df0f4661d230d75ba4970":{"uint":"0xe278f34bbdb943bf627b77ba83ccb16bffef1cbbf29c2d535389776aa9d6fc7d"},"0xbe003d31ef714e903c4f8aa3785f53df1da201ac":{"idset":["0x6d222983926317836b7ae73c70e3f03b78f75356cc09da100acb5b8e712f75b2","0xbaa4daba158d05694898d7a86cf0489defa383166dd0ac3ad096d1d14ef935da","0xd1fadbdbc0f03e4d2acbe2cdda23f1acd968873571b1534ac41b8e9624703b27"]}}}';
+
+const testAttestResponse =
+	'{"type":"AttestResponse","data":{"attestation":{"data":{"powDepth":"8961477016931286689","epochDuration":"13554322102892192608","initBlock":"17616681194690307865","tee":"0xdf53528b279758face743687acddb778b405320f","contract":"0x2ed520bb70b2fcca4ac9523c560ab09e5a67823e","tokenHolders":{"ERC20":"0x637923a7b8fc93da8b46b0d110601110268af855","ERC721":"0x4609e699adba3b6c024659f508bca2b89bd273a7","ETH":"0x04a69aa6d41e3b819e9131cd4696357c025228e8"},"network":"Mainnet","nonce":"9247378883234864641","trustedBlockHash":"0x1e43ae3ddcf63a5c7a205f76c0c75e109a11a0f3f670291c1a91b602d1099e8e","trustedBlockNum":"12640263537321728458"},"report":"bVtPvr7Mfi5gswreGE0+fYtFTANkZToi8fs5Cwe6TsLXii//XGAnmpmzMOAR1XnW1NOqZEUR3EkvkTUtPH3VQQ=="}}}';
