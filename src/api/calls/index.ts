@@ -4,3 +4,4 @@
 export * from "./getaccount";
 export * from "./subscribe";
 export * from "./onboarding";
+export * from "./attest";
