@@ -56,6 +56,7 @@ export function endToEndTestHarness(sdkActions: SDKActions) {
 					NodeReqTimeout: 10,
 					WaitMinedTimeout: 60,
 					NFTokenBaseURI: "http://127.0.0.1:8440/metadata/",
+					Network: "ganache",
 				}),
 			);
 
