@@ -5,10 +5,7 @@ import { InternalEnclaveWatcher } from "./internalenclavewatcher";
 import { ErdstallEvent, ErdstallEventHandler, EnclaveEvent } from "./event";
 import { ErdstallClient } from "./erdstall";
 import { Erdstall__factory } from "#erdstall/ledger/backend/contracts";
-import {
-	ClientConfig,
-	AttestationResult,
-} from "#erdstall/api/responses";
+import { ClientConfig, AttestationResult } from "#erdstall/api/responses";
 import { Enclave, isEnclaveEvent, EnclaveReader } from "#erdstall/enclave";
 import {
 	LedgerWriteConn,

@@ -6,10 +6,7 @@
 
 import { PendingTransaction } from "#erdstall/api/util/pending_transaction";
 import { TradeOffer } from "#erdstall/api/transactions";
-import {
-	BalanceProof,
-	AttestationResult,
-} from "#erdstall/api/responses";
+import { BalanceProof, AttestationResult } from "#erdstall/api/responses";
 import { Address, Account, LedgerEvent } from "#erdstall/ledger";
 import { TokenProvider } from "#erdstall/ledger/backend";
 import { Assets } from "#erdstall/ledger/assets";

@@ -23,7 +23,7 @@ export class Parameters {
 
 	@jsonMapMember(String, () => ledger.Address, { shape: MapShape.OBJECT })
 	tokenHolders: Map<string, ledger.Address>;
-	
+
 	@jsonMember(String) network: string;
 
 	constructor(
@@ -33,7 +33,7 @@ export class Parameters {
 		tee: ledger.Address,
 		contract: ledger.Address,
 		tokenHolders: Map<string, ledger.Address>,
-		network: string
+		network: string,
 	) {
 		this.powDepth = powDepth;
 		this.epochDuration = epochDuration;
@@ -55,7 +55,7 @@ export class AttestationReportData extends Parameters {
 		p: Parameters,
 		nonce: bigint,
 		trustedBlockHash: string,
-		trustedBlockNum: bigint
+		trustedBlockNum: bigint,
 	) {
 		super(
 			p?.powDepth,
@@ -64,7 +64,8 @@ export class AttestationReportData extends Parameters {
 			p?.tee,
 			p?.contract,
 			p?.tokenHolders,
-			p?.network);
+			p?.network,
+		);
 
 		this.nonce = nonce;
 		this.trustedBlockHash = trustedBlockHash;
@@ -77,10 +78,7 @@ export class AttestationResult {
 	@jsonMember(AttestationReportData) data: AttestationReportData;
 	@jsonMember(String) report: string;
 
-	constructor(
-		data: AttestationReportData,
-		report: string
-	) {
+	constructor(data: AttestationReportData, report: string) {
 		this.data = data;
 		this.report = report;
 	}

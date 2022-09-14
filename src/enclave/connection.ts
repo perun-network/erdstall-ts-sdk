@@ -184,11 +184,9 @@ export class Enclave implements EnclaveWriter {
 
 	public async attest(): Promise<AttestationResult> {
 		let call = new Attest();
-		let res = await this.sendCall(call) as AttestResponse;
-		if(res.attestation)
-			return res.attestation;
-		else
-			throw new Error("attestation not yet issued");
+		let res = (await this.sendCall(call)) as AttestResponse;
+		if (res.attestation) return res.attestation;
+		else throw new Error("attestation not yet issued");
 	}
 
 	public async transfer(tx: Transfer): Promise<TxAccepted> {
