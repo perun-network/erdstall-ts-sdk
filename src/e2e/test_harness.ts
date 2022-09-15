@@ -146,7 +146,7 @@ export function endToEndTestHarness(sdkActions: SDKActions) {
 
 			// Prevent race: wait for phase shift to finalize deposits.
 			return withTimeout(
-				2000,
+				15000,
 				new Promise<void>((resolve) => {
 					sessions[ALICE].once("phaseshift", () => {
 						resolve();
@@ -325,7 +325,7 @@ export function endToEndTestHarness(sdkActions: SDKActions) {
 			sdkActions.burn(sessions[DAGOBERT], nfts[CHARLIE]);
 
 			return withTimeout(
-				5000,
+				15000,
 				new Promise<void>((resolve) => {
 					sessions[DAGOBERT].once("receipt", (rec) => {
 						expect(
