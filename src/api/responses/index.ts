@@ -7,3 +7,4 @@ export * from "./clientconfig";
 export * from "./txreceipt";
 export * from "./phaseshift";
 export * from "./txaccepted";
+export * from "./attestationresult";

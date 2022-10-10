@@ -56,6 +56,7 @@ export function endToEndTestHarness(sdkActions: SDKActions) {
 					NodeReqTimeout: 10,
 					WaitMinedTimeout: 60,
 					NFTokenBaseURI: "http://127.0.0.1:8440/metadata/",
+					Network: "ganache",
 				}),
 			);
 
@@ -145,7 +146,7 @@ export function endToEndTestHarness(sdkActions: SDKActions) {
 
 			// Prevent race: wait for phase shift to finalize deposits.
 			return withTimeout(
-				2000,
+				15000,
 				new Promise<void>((resolve) => {
 					sessions[ALICE].once("phaseshift", () => {
 						resolve();
@@ -324,7 +325,7 @@ export function endToEndTestHarness(sdkActions: SDKActions) {
 			sdkActions.burn(sessions[DAGOBERT], nfts[CHARLIE]);
 
 			return withTimeout(
-				5000,
+				15000,
 				new Promise<void>((resolve) => {
 					sessions[DAGOBERT].once("receipt", (rec) => {
 						expect(

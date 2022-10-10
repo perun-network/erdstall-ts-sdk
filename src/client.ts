@@ -5,7 +5,7 @@ import { InternalEnclaveWatcher } from "./internalenclavewatcher";
 import { ErdstallEvent, ErdstallEventHandler, EnclaveEvent } from "./event";
 import { ErdstallClient } from "./erdstall";
 import { Erdstall__factory } from "#erdstall/ledger/backend/contracts";
-import { ClientConfig } from "#erdstall/api/responses";
+import { ClientConfig, AttestationResult } from "#erdstall/api/responses";
 import { Enclave, isEnclaveEvent, EnclaveReader } from "#erdstall/enclave";
 import {
 	LedgerWriteConn,
@@ -170,6 +170,10 @@ export class Client implements ErdstallClient {
 
 	async getAccount(who: Address): Promise<Account> {
 		return (await this.enclaveConn.getAccount(who)).account;
+	}
+
+	async attest(): Promise<AttestationResult> {
+		return await this.enclaveConn.attest();
 	}
 
 	initialize(timeout?: number): Promise<void> {

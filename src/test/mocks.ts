@@ -21,6 +21,7 @@ import {
 	ClientConfig,
 	Account as RAccount,
 	TxStatusCode,
+	AttestationResult,
 } from "#erdstall/api/responses";
 import { TypedJSON } from "#erdstall/export/typedjson";
 import { Result, Call, ErdstallObject, Signature } from "#erdstall/api";
@@ -147,6 +148,9 @@ export class MockClient extends MockWatcher implements ErdstallClient {
 	async subscribe(_who?: Address): Promise<void> {}
 	async getAccount(_who: Address): Promise<Account> {
 		throw new Error("cannot query accounts on mock clients");
+	}
+	async attest(): Promise<AttestationResult> {
+		throw new Error("cannot query attestation on mock clients");
 	}
 
 	setMetadata(token: Address, id: bigint, metadata: NFTMetadata): void {
