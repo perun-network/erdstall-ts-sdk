@@ -30,6 +30,44 @@ await erdClient.subscribe(); // subscribes to all receipts and balance proofs
 myDApp.run(client);
 ```
 
+A client will only be able to perform read-only operations in Erdstall.
+If you want to use your existing wallet to transact on Erdstall, use a session instead of a client; you can do so as follows:
+
+```ts
+import { ethers } from "ethers";
+import { Session } from "@polycrypt/erdstall";
+import { Address } from "@polycrypt/erdstall/ledger";
+
+const erdOperatorUrl = new URL("ws://127.0.0.1:8401/ws"); // local Erdstall Operator
+
+await window.ethereum.enable()
+const signer = new ethers.providers.Web3Provider(window.ethereum).getSigner();
+const address = Address.fromString(await signer.getAddress());
+
+const session = new Session(address, signer, erdOperatorUrl);
+await session.initialize();
+await session.subscribe(); // subscribes to all receipts and balance proofs
+```
+
+Additionally, you can set up a custodial wallet session (locally managed keys without an external signer) using the following code:
+
+```ts
+import { Session } from "@polycrypt/erdstall";
+
+const ethRpcUrl = new URL("ws://127.0.0.1:8545/"); // local Ganache
+const erdOperatorUrl = new URL("ws://127.0.0.1:8401/ws"); // local Erdstall Operator
+const { session, privateKey } = Session.generateCustodial(ethRpcUrl, erdOperatorUrl)
+
+await db.save(privateKey); // Save the private key for re-use.
+await session.initialize();
+await session.subscribe(); // subscribes to all receipts and balance proofs
+
+// Start your dApp with the Erdstall client
+myDApp.run(session);
+```
+
+This may be useful for running Erdstall in a setting where no external wallet provider (such as MetaMask) exists, e.g. in a node.js server or when using custodial or throwaway wallets in a website.
+
 ### More documentation
 
 [This repository's Github Wiki](https://github.com/perun-network/erdstall-ts-sdk/wiki/Erdstall-SDK) contains a description of the CI end-to-end test, whose sources act as a **full tutorial for the SDK**.
