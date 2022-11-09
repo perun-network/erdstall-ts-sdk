@@ -88,7 +88,7 @@ export class LedgerWriteConn extends LedgerReadConn implements LedgerWriter {
 				try {
 					const ctx = await call({ nonce: nonce++ });
 					return [name, ctx];
-				} catch (e) {
+				} catch (e: any) {
 					throw "message" in e ? new Error(e.message) : new Error(e);
 				}
 			})();
