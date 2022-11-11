@@ -38,11 +38,7 @@
       "#erdstall/*": ["*"],
       "#erdstall": [""]
     },
-    "plugins": [
-      {
-        "transform": "@zerollup/ts-transform-paths"
-      }
-    ]
+    "plugins": []
   },
   "include": [
       "src/**/*"
