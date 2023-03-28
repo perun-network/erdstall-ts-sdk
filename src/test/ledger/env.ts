@@ -42,7 +42,7 @@ export interface Environment {
 const PERUNART_NAME = "PerunArt";
 const PERUNART_SYMBOL = "PART";
 export const PERUNART_URI = "https://nifty.erdstall.dev/";
-const PERUN_FUNDS = utils.parseEther("100000").toBigInt();
+const PERUN_FUNDS = ethers.parseEther("100000").toBigInt();
 const OP = 0,
 	TEE = 1;
 

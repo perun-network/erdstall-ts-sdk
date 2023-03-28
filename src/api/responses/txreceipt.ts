@@ -11,7 +11,7 @@ import {
 	MapShape,
 } from "#erdstall/export/typedjson";
 import { Signature } from "../signature";
-import { utils } from "ethers";
+import { ethers } from "ethers";
 import { ABIEncoder, ABIPacked } from "../util";
 import { ETHZERO } from "#erdstall/ledger/assets";
 
@@ -68,22 +68,21 @@ export class TxReceipt extends ErdstallObject {
 	}
 	protected encodeABI(e: ABIEncoder, _: Address): string {
 		e.encode(
-			["bytes", utils.arrayify(this.hash as utils.BytesLike)],
+			["bytes", ethers.getBytes(this.hash as ethers.BytesLike)],
 			["bytes", this.output.payload],
 		);
 		return "ErdstallTransactionOutput";
 	}
 	verify(contract: Address): boolean {
 		console.log(
-			utils.hexlify(this.packTagged(Address.fromString(ETHZERO)).bytes),
+			ethers.hexlify(this.packTagged(Address.fromString(ETHZERO)).bytes),
 		);
 		if (!this.sig) {
 			return false;
 		}
-		const rec = utils.verifyMessage(
+		const rec = ethers.SigningKey.recoverPublicKey(
 			this.packTagged(contract).keccak256(),
-			this.sig!.toString(),
-		);
+			this.sig!.toString());
 		console.log(rec);
 		console.log(this.tx.sender.toString());
 		return rec === this.tx.sender.toString();

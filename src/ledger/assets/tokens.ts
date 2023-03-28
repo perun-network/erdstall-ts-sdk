@@ -38,7 +38,7 @@ export class Tokens extends Asset {
 
 	toJSON() {
 		return this.value.map((val) => {
-			const arr = utils.arrayify(BigNumber.from(val));
+			const arr = ethers.getBytes(BigNumber.from(val));
 			const offset = 32 - arr.length;
 			const abi = new Uint8Array(32);
 			abi.set(arr, offset);
@@ -200,9 +200,9 @@ export function mapNFTs<T>(
 export function decodePackedIds(ids: string): bigint[] {
 	let idArr: Uint8Array;
 	if (!ids.startsWith("0x")) {
-		idArr = utils.arrayify(`0x${ids}`);
+		idArr = ethers.getBytes(`0x${ids}`);
 	} else {
-		idArr = utils.arrayify(ids);
+		idArr = ethers.getBytes(ids);
 	}
 
 	if (idArr.length % 32 !== 0)
@@ -215,5 +215,5 @@ export function decodePackedIds(ids: string): bigint[] {
 }
 
 export function encodePackedIds(ids: bigint[]): string {
-	return utils.hexlify(utils.concat(ids.map(encodePackedAmount)));
+	return ethers.hexlify(utils.concat(ids.map(encodePackedAmount)));
 }

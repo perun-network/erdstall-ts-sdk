@@ -2,7 +2,7 @@
 
 import chai, { expect } from "chai";
 import { solidity } from "ethereum-waffle";
-import { utils } from "ethers";
+import { ethers } from "ethers";
 
 import { Address } from "#erdstall/ledger";
 import {
@@ -32,7 +32,7 @@ describe("BalanceProofs", function () {
 	it("should be correctly encoded", async function () {
 		const bp = test.newRandomBalance(rng, 3);
 		const bpEnc = bp.packTagged(erdAddr).bytes;
-		const bpContractEnc = utils.arrayify(
+		const bpContractEnc = ethers.getBytes(
 			await erd.encodeBalanceProof(bp.asABI()),
 		);
 		expect(equalArray(bpEnc, bpContractEnc)).to.be.true;

@@ -9,7 +9,7 @@ import { expect } from "chai";
 import { Transaction } from "./transaction";
 import { Trade } from "./trade";
 import { Address } from "#erdstall/ledger";
-import { utils } from "ethers";
+import { ethers } from "ethers";
 import { Transfer } from "./transfer";
 import { TxReceipt, AttestationResult } from "../responses";
 
@@ -52,11 +52,11 @@ describe("Wiremessages", () => {
 		};
 		const offer = testCase.tradeTX.offer;
 		expect(offer.fees).to.exist;
-		expect(utils.hexlify(offer.packTagged(testCase.contract).bytes)).eql(
+		expect(ethers.hexlify(offer.packTagged(testCase.contract).bytes)).eql(
 			testCase.tradeOfferABI,
 		);
 		expect(
-			utils.hexlify(testCase.tradeTX.packTagged(testCase.contract).bytes),
+			ethers.hexlify(testCase.tradeTX.packTagged(testCase.contract).bytes),
 		).eql(testCase.tradeTXABI);
 	});
 
@@ -77,11 +77,11 @@ describe("Wiremessages", () => {
 		};
 		const offer = testCase.tradeTX.offer;
 		expect(offer.fees).to.be.undefined;
-		expect(utils.hexlify(offer.packTagged(testCase.contract).bytes)).eql(
+		expect(ethers.hexlify(offer.packTagged(testCase.contract).bytes)).eql(
 			testCase.tradeOfferABI,
 		);
 		expect(
-			utils.hexlify(testCase.tradeTX.packTagged(testCase.contract).bytes),
+			ethers.hexlify(testCase.tradeTX.packTagged(testCase.contract).bytes),
 		).eql(testCase.tradeTXABI);
 	});
 	it("de-/encodes receipts", () => {

@@ -17,7 +17,7 @@ import {
 	ExitRequest,
 } from "#erdstall/api/transactions";
 
-import { ethers, utils } from "ethers";
+import { ethers } from "ethers";
 import { PERUN_ADDR, PART_ADDR } from "./parameters";
 
 export type SDKActions = typeof sdkActions;
@@ -43,7 +43,7 @@ export const sdkActions = {
 		// underlying ledger. In the case of creating an `ErdstallClient` simply
 		// creating the provider or querying it from the environment (e.g. MetaMask
 		// in a browser-setting) is enough.
-		const provider = new ethers.providers.JsonRpcProvider(nodeUrl);
+		const provider = new ethers.JsonRpcProvider(nodeUrl);
 
 		// Using the provider and the URL for the operator allows creating an
 		// `ErdstallClient`.
@@ -338,7 +338,7 @@ export const sdkActions = {
 
 	leavingAndSeeFundsOnchain: async function (
 		session: Session,
-		provider: ethers.providers.Provider,
+		provider: ethers.Provider,
 	) {
 		const { stages } = await session.leave();
 		for await (const [, stage] of stages) {
@@ -389,11 +389,11 @@ export const sdkActions = {
 		const eth = await provider.getBalance(session.address.toString());
 
 		// In the case of Alice we would see the following output:
-		utils.formatEther(prn); // "499.0"
-		utils.formatEther(eth); // Between "99.0" and "100.0".
+		ethers.formatEther(prn); // "499.0"
+		ethers.formatEther(eth); // Between "99.0" and "100.0".
 		part.toString(); // "1"
 
-		// NOTE: We can use `utils.formatEther` on the PRN amount because just like
+		// NOTE: We can use `ethers.formatEther` on the PRN amount because just like
 		// ETH and most default ERC20 tokens the default number of decimals is 18.
 	},
 

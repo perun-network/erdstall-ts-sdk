@@ -28,13 +28,13 @@ export class Client implements ErdstallClient {
 	readonly tokenProvider: TokenProvider;
 	readonly onChainQuerier: OnChainQuerier;
 	protected enclaveConn: EnclaveReader & InternalEnclaveWatcher;
-	protected provider: ethers.providers.Provider | Signer;
+	protected provider: ethers.Provider | Signer;
 	protected erdstallConn?: LedgerReader | LedgerWriter;
 	private erdstallEventHandlerCache: EventCache<LedgerEvent>;
 	private erdstallOneShotHandlerCache: OneShotEventCache<LedgerEvent>;
 
 	constructor(
-		provider: ethers.providers.Provider | Signer,
+		provider: ethers.Provider | Signer,
 		encConn: (EnclaveReader & InternalEnclaveWatcher) | URL,
 	) {
 		this.provider = provider;

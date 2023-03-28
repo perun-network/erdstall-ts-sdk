@@ -36,7 +36,7 @@ export class Amount extends Asset {
 	}
 
 	asABI(): Uint8Array {
-		const arr = utils.arrayify(BigNumber.from(this.value));
+		const arr = ethers.getBytes(BigNumber.from(this.value));
 		const abi = new Uint8Array(32);
 		abi.set(arr, 32 - arr.length);
 		return abi;
@@ -104,9 +104,9 @@ export function encodePackedAmount(value: bigint): string {
 export function decodePackedAmount(data: string): Amount {
 	let idArr: Uint8Array;
 	if (!data.startsWith("0x")) {
-		idArr = utils.arrayify(`0x${data}`);
+		idArr = ethers.getBytes(`0x${data}`);
 	} else {
-		idArr = utils.arrayify(data);
+		idArr = ethers.getBytes(data);
 	}
 	return new Amount(mkBigInt(idArr.values(), 256, 8));
 }

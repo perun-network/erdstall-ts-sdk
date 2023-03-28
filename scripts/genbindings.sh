@@ -41,20 +41,20 @@ function compileTo() {
   # Clean up existing bindings.
   rm -rf "${2}"/contracts
   mkdir -p "${2}"/contracts/abi
-  yarn hardhat compile && cp -rl ./typechain/* "${2}"/contracts/ \
-    && find ./artifacts/contracts/*.sol/ \
+  npx hardhat compile && cp -rl ../typechain/* "${2}"/contracts/ \
+    && find ../artifacts/contracts/*.sol/ \
     | grep -v ".dbg" | grep ".json" | xargs cp -l -t "${2}"/contracts/abi/
   # Clean up typechain generated files.
   rm -rf ./artifacts ./cache ./typechain
   cd "${CWD}"
 }
 
-if [ "$#" -ne 1 ]; then
-  echo USAGE: $0 [path_to_contracts]
-  exit 1
-fi
+#if [ "$#" -ne 1 ]; then
+#  echo USAGE: $0 [path_to_contracts]
+#  exit 1
+#fi
 
-CONTRACTSDIR="$1"
+CONTRACTSDIR="deps/erdstall-contracts/contracts"
 
 if [[ ! -d $CONTRACTSDIR ]]; then
   echo $CONTRACTSDIR is not a valid directory
@@ -68,9 +68,9 @@ ETHBACKEND_TEST="${SRCDIR}"/src/test/ledger/backend
 checkInstalled npm
 checkInstalledLocally typechain
 
-compileTo "${1}" "${ETHBACKEND}"
+compileTo "${CONTRACTSDIR}" "${ETHBACKEND}"
 
-if [ $? -ne 0 ]; then
+if [ "$?" -ne 0 ]; then
   echo ERROR: Unable to compile contracts and move abi.
   exit 1
 fi

@@ -11,7 +11,7 @@ import {
 } from "#erdstall/export/typedjson";
 import { ABIEncoder, ABIPacked } from "#erdstall/api/util";
 import { Signature } from "#erdstall/api";
-import { Signer, utils } from "ethers";
+import { Signer, ethers } from "ethers";
 
 @jsonObject
 export class TradeFees {
@@ -61,10 +61,9 @@ export class TradeOffer {
 		if (!this.sig) {
 			return false;
 		}
-		const rec = utils.verifyMessage(
+		const rec = ethers.SigningKey.recoverPublicKey(
 			this.packTagged(contract).keccak256(),
-			this.sig!.toString(),
-		);
+			this.sig!.toString());
 
 		return rec === this.owner.toString();
 	}

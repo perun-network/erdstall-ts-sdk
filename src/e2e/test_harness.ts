@@ -14,7 +14,7 @@ import {
 } from "#erdstall/ledger/backend/contracts";
 import { withTimeout } from "#erdstall/utils";
 
-import { ethers, utils } from "ethers";
+import { ethers } from "ethers";
 import * as fs from "fs";
 import { exec } from "child_process";
 import {
@@ -139,8 +139,8 @@ export function endToEndTestHarness(sdkActions: SDKActions) {
 			await forSessionsDo((c) =>
 				sdkActions.deposit(
 					c,
-					utils.parseEther("10").toBigInt(),
-					utils.parseEther("1000").toBigInt(),
+					ethers.parseEther("10").toBigInt(),
+					ethers.parseEther("1000").toBigInt(),
 				),
 			);
 
@@ -159,7 +159,7 @@ export function endToEndTestHarness(sdkActions: SDKActions) {
 			sdkActions.offchainTransfer(
 				sessions[ALICE],
 				sessions[BOB],
-				utils.parseEther("1").toBigInt(),
+				ethers.parseEther("1").toBigInt(),
 			);
 
 			return withTimeout(
@@ -187,7 +187,7 @@ export function endToEndTestHarness(sdkActions: SDKActions) {
 			for (let i = 0; i < txCount; i++) {
 				const amount = new Assets({
 					token: PERUN_ADDR,
-					asset: new assets.Amount(utils.parseEther("1").toBigInt()),
+					asset: new assets.Amount(ethers.parseEther("1").toBigInt()),
 				});
 				const begin = Date.now();
 
@@ -269,7 +269,7 @@ export function endToEndTestHarness(sdkActions: SDKActions) {
 
 		it("lets users trade", async function () {
 			const charlieNft = nfts[CHARLIE];
-			const requestedPrn = utils.parseEther("10").toBigInt();
+			const requestedPrn = ethers.parseEther("10").toBigInt();
 
 			sdkActions.trade(
 				sessions[CHARLIE],
@@ -406,8 +406,8 @@ export function endToEndTestHarness(sdkActions: SDKActions) {
 	};
 }
 
-function makeProvider(): ethers.providers.JsonRpcProvider {
-	return new ethers.providers.JsonRpcProvider(NODE_ENDPOINT);
+function makeProvider(): ethers.JsonRpcProvider {
+	return new ethers.JsonRpcProvider(NODE_ENDPOINT);
 }
 
 function getGanacheSigner(index: number): ethers.Signer {
@@ -437,8 +437,8 @@ async function listOnchainBalances(address: Address): Promise<balances> {
 	).balanceOf(address.toString());
 
 	return {
-		eth: utils.formatEther(eth),
-		prn: utils.formatEther(prn),
+		eth: ethers.formatEther(eth),
+		prn: ethers.formatEther(prn),
 		part: part.toString(),
 	};
 }

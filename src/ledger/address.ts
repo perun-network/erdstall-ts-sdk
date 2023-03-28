@@ -18,11 +18,11 @@ export class Address implements ABIValue {
 	}
 
 	static fromJSON(val: any): Address {
-		return new Address(utils.arrayify(val));
+		return new Address(ethers.getBytes(val));
 	}
 
 	static toJSON(me: Address) {
-		return utils.hexlify(me.value);
+		return ethers.hexlify(me.value);
 	}
 
 	static fromString(addr: string): Address {
@@ -36,7 +36,7 @@ export class Address implements ABIValue {
 	}
 
 	toString(): string {
-		return utils.getAddress(utils.hexlify(this.value));
+		return utils.getAddress(ethers.hexlify(this.value));
 	}
 
 	get key(): string {

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { utils, BytesLike } from "ethers";
+import { ethers, BytesLike } from "ethers";
 import { jsonObject } from "#erdstall/export/typedjson";
 import { ABIValue, customJSON } from "./util";
 
@@ -9,14 +9,14 @@ import { ABIValue, customJSON } from "./util";
 export class Signature implements ABIValue {
 	value: Uint8Array;
 	constructor(value: Uint8Array | BytesLike) {
-		this.value = utils.arrayify(value);
+		this.value = ethers.getBytes(value);
 	}
 
 	toString(): string {
-		return utils.hexlify(this.value);
+		return ethers.hexlify(this.value);
 	}
 	static toJSON(me: Signature) {
-		return utils.hexlify(me.value);
+		return ethers.hexlify(me.value);
 	}
 	static fromJSON(val: any): Signature {
 		return new Signature(val);
