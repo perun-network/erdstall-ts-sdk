@@ -8,10 +8,12 @@ import {
 	jsonObject,
 	jsonMember,
 	jsonBigIntMember,
+	TypedJSON
 } from "#erdstall/export/typedjson";
 import { ABIEncoder, ABIPacked } from "#erdstall/api/util";
 import { Signature } from "#erdstall/api";
 import { Signer, utils } from "ethers";
+import { canonicalize } from "json-canonicalize";
 
 @jsonObject
 export class TradeFees {
@@ -21,13 +23,6 @@ export class TradeFees {
 	constructor(market: Address, fee: assets.Assets) {
 		this.market = market;
 		this.fee = fee;
-	}
-
-	packTagged(contract: Address): ABIPacked {
-		return new ABIEncoder(this.market, this.fee).pack(
-			"ErdstallTradeFees",
-			contract,
-		);
 	}
 }
 
@@ -70,16 +65,13 @@ export class TradeOffer {
 	}
 
 	packTagged(contract: Address): ABIPacked {
-		return new ABIEncoder()
-			.encodeTagged(
-				contract,
-				this.owner,
-				this.offer,
-				["uint64", this.expiry],
-				this.request,
-				this.fees ? this.fees! : new Uint8Array(),
-			)
-			.pack("ErdstallTradeOffer", contract);
+		const json = {
+			type: "TradeOffer",
+			value: JSON.parse(TypedJSON.stringify(this, TradeOffer))
+		};
+		delete(json.value.sig);
+		return new ABIPacked(
+			utils.toUtf8Bytes(canonicalize({contract: Address.toJSON(contract), value: json})));
 	}
 }
 
