@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
-
 import { ErdstallObject, registerErdstallType } from "#erdstall/api";
 import { Signature } from "#erdstall/api";
 import { Address } from "#erdstall/ledger";
@@ -14,6 +13,7 @@ import {
 } from "#erdstall/export/typedjson";
 import { utils, Signer } from "ethers";
 import { ETHZERO } from "#erdstall/ledger/assets";
+import { canonicalize } from "json-canonicalize";
 
 const transactionImpls = new Map<string, Serializable<Transaction>>();
 const transactionTypeName = "Transaction";
@@ -58,6 +58,13 @@ export abstract class Transaction extends ErdstallObject {
 		return rec === this.sender.toString();
 	}
 
+	packTagged(contract: Address): ABIPacked {
+		const txJson = Transaction.toJSON(this);
+		delete(txJson.data.sig);
+		return new ABIPacked(
+			utils.toUtf8Bytes(canonicalize({contract: Address.toJSON(contract), value: txJson})));
+	}
+
 	static fromJSON(js: any): Transaction {
 		let data = JSON.stringify(js.data);
 
@@ -67,11 +74,6 @@ export abstract class Transaction extends ErdstallObject {
 
 		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 		return TypedJSON.parse(data, transactionImpls.get(js.type)!)!;
-	}
-
-	packTagged(contract: Address): ABIPacked {
-		const enc = new ABIEncoder(this.sender, ["uint64", this.nonce]);
-		return enc.pack(this.encodeABI(enc, contract), contract);
 	}
 
 	hash(): string {
@@ -97,7 +99,6 @@ export abstract class Transaction extends ErdstallObject {
 
 	public abstract txType(): Serializable<Transaction>;
 	protected abstract txTypeName(): string;
-	protected abstract encodeABI(_: ABIEncoder, contract: Address): string;
 }
 
 registerErdstallType(transactionTypeName, Transaction);

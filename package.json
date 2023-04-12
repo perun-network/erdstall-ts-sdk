@@ -93,6 +93,7 @@
 		"ethereum-waffle": "^3.4.0",
 		"ethers": "^5.4.1",
 		"isomorphic-ws": "^4.0.1",
+		"json-canonicalize": "^1.0.4",
 		"number-generator": "^4.0.5",
 		"reflect-metadata": "^0.1.13",
 		"typedjson": "^1.8.0",
