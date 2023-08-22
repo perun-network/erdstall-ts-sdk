@@ -11,7 +11,7 @@ import * as test from "#erdstall/test";
 import {
 	PerunArt__factory,
 	PerunToken__factory,
-} from "#erdstall/ledger/backend/contracts";
+} from "#erdstall/ledger/backend/ethereum/contracts";
 import { withTimeout } from "#erdstall/utils";
 
 import { ethers, utils } from "ethers";
@@ -91,9 +91,9 @@ export function endToEndTestHarness(sdkActions: SDKActions) {
 		});
 		after(async () => erdstallProcessTerminate);
 
-		const sessions: Session[] = [];
+		const sessions: Session<["ethereum", "substrate"]>[] = [];
 		const forSessionsDo = async <R>(
-			action: (client: Session) => Promise<R>,
+			action: (client: Session<["ethereum", "substrate"]>) => Promise<R>,
 			range: { from?: number; upto?: number } = {},
 		) => {
 			return Promise.all(

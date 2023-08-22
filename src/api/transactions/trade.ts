@@ -11,7 +11,8 @@ import {
 } from "#erdstall/export/typedjson";
 import { ABIEncoder, ABIPacked } from "#erdstall/api/util";
 import { Signature } from "#erdstall/api";
-import { Signer, utils } from "ethers";
+import { utils } from "ethers";
+import { Signer } from "#erdstall/ledger/backend";
 
 @jsonObject
 export class TradeFees {

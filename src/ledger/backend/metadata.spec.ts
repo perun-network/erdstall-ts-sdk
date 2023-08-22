@@ -6,7 +6,7 @@ import { Client, ErdstallClient } from "#erdstall";
 import { ClientConfig } from "#erdstall/api/responses";
 import { Enclave } from "#erdstall/enclave";
 import { Address } from "#erdstall/ledger";
-import { PerunArt__factory } from "#erdstall/ledger/backend/contracts";
+import { PerunArt__factory } from "#erdstall/ledger/backend/ethereum/contracts";
 import * as test from "#erdstall/test";
 import { Environment, setupEnv, PERUNART_URI } from "#erdstall/test/ledger";
 import nock from "nock";

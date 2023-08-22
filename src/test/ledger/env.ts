@@ -9,15 +9,17 @@ import { deployContract, MockProvider } from "ethereum-waffle";
 import {
 	Erdstall__factory,
 	PerunArt__factory,
-} from "#erdstall/ledger/backend/contracts";
+} from "#erdstall/ledger/backend/ethereum/contracts";
 import { ETHZERO } from "#erdstall/ledger/assets";
 
-import peruntokenABI from "../../ledger/backend/contracts/abi/PerunToken.json";
-import erdstallABI from "../../ledger/backend/contracts/abi/Erdstall.json";
-import erc20holderABI from "../../ledger/backend/contracts/abi/ERC20Holder.json";
-import erc721holderABI from "../../ledger/backend/contracts/abi/ERC721Holder.json";
-import ethholderABI from "../../ledger/backend/contracts/abi/ETHHolder.json";
-import perunArtABI from "../../ledger/backend/contracts/abi/PerunArt.json";
+import peruntokenABI from "../../ledger/backend/ethereum/contracts/abi/PerunToken.json";
+import erdstallABI from "../../ledger/backend/ethereum/contracts/abi/Erdstall.json";
+import erc20holderABI from "../../ledger/backend/ethereum/contracts/abi/ERC20Holder.json";
+import erc721holderABI from "../../ledger/backend/ethereum/contracts/abi/ERC721Holder.json";
+import ethholderABI from "../../ledger/backend/ethereum/contracts/abi/ETHHolder.json";
+import perunArtABI from "../../ledger/backend/ethereum/contracts/abi/PerunArt.json";
+
+import {} from "#erdstall/ledger/backend";
 
 // ethereum-waffle does not expose this type...
 type _params = ConstructorParameters<typeof MockProvider>;

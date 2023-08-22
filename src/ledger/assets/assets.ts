@@ -8,7 +8,7 @@ import { ABIValue, customJSON } from "#erdstall/api/util";
 import { ErdstallToken } from "#erdstall/api/responses";
 import { Address, addressKey } from "#erdstall/ledger";
 import { TokenProvider } from "#erdstall/ledger/backend";
-import { Erdstall } from "#erdstall/ledger/backend/contracts";
+import { Erdstall } from "#erdstall/ledger/backend/ethereum/contracts";
 import { decodePackedAmount } from "./amount";
 import { Tokens, decodePackedIds } from "./tokens";
 import { TokenType } from "./asset";
@@ -160,7 +160,7 @@ function isProperSubset(
 
 export async function decodePackedAssets(
 	erdstall: Erdstall,
-	tokenProvider: Pick<TokenProvider, "tokenTypeOf">,
+	tokenProvider: Pick<TokenProvider<"ethereum">, "tokenTypeOf">,
 	values: [string, string][],
 ): Promise<Assets> {
 	const assets = new Assets();

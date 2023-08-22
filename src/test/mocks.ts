@@ -33,44 +33,61 @@ import {
 } from "#erdstall/api/calls";
 import { Transaction } from "#erdstall/api/transactions";
 import { Address, Account, OnChainQuerier } from "#erdstall/ledger";
-import {
-	NFTMetadata,
-	TokenFetcher,
-	TokenProvider,
-} from "#erdstall/ledger/backend";
+import { NFTMetadata, TokenProvider } from "#erdstall/ledger/backend";
+import { TokenFetcher } from "#erdstall/ledger/backend/ethereum";
 import { Assets, Tokens } from "#erdstall/ledger/assets";
 import { EnclaveProvider } from "#erdstall/enclave";
 
-export class MockWatcher implements Watcher {
-	private txReceiptHandler!: ErdstallEventHandler<"receipt">;
-	private exitProofHandler!: ErdstallEventHandler<"exitproof">;
-	private balanceProofHandler!: ErdstallEventHandler<"proof">;
-	private phaseShiftHandler!: ErdstallEventHandler<"phaseshift">;
+export class MockWatcher implements Watcher<["ethereum"]> {
+	private txReceiptHandler!: ErdstallEventHandler<"receipt", "ethereum">;
+	private exitProofHandler!: ErdstallEventHandler<"exitproof", "ethereum">;
+	private balanceProofHandler!: ErdstallEventHandler<"proof", "ethereum">;
+	private phaseShiftHandler!: ErdstallEventHandler<"phaseshift", "ethereum">;
 
-	on<T extends ErdstallEvent>(ev: T, cb: ErdstallEventHandler<T>): void {
+	on<T extends ErdstallEvent>(
+		ev: T,
+		cb: ErdstallEventHandler<T, "ethereum">,
+	): void {
 		switch (ev) {
 			case "receipt":
-				this.txReceiptHandler = cb as ErdstallEventHandler<"receipt">;
+				this.txReceiptHandler = cb as ErdstallEventHandler<
+					"receipt",
+					"ethereum"
+				>;
 				break;
 			case "proof":
-				this.balanceProofHandler = cb as ErdstallEventHandler<"proof">;
+				this.balanceProofHandler = cb as ErdstallEventHandler<
+					"proof",
+					"ethereum"
+				>;
 				break;
 			case "exitproof":
-				this.exitProofHandler = cb as ErdstallEventHandler<"exitproof">;
+				this.exitProofHandler = cb as ErdstallEventHandler<
+					"exitproof",
+					"ethereum"
+				>;
 				break;
 			case "phaseshift":
-				this.phaseShiftHandler =
-					cb as ErdstallEventHandler<"phaseshift">;
+				this.phaseShiftHandler = cb as ErdstallEventHandler<
+					"phaseshift",
+					"ethereum"
+				>;
 				break;
 			default:
 				throw new Error(`MockWatcher: unsupported event "${ev}"`);
 		}
 	}
 
-	once<T extends ErdstallEvent>(_ev: T, _cb: ErdstallEventHandler<T>): void {
+	once<T extends ErdstallEvent>(
+		_ev: T,
+		_cb: ErdstallEventHandler<T, "ethereum">,
+	): void {
 		throw new Error("not implemented");
 	}
-	off<T extends ErdstallEvent>(_ev: T, _cb: ErdstallEventHandler<T>): void {
+	off<T extends ErdstallEvent>(
+		_ev: T,
+		_cb: ErdstallEventHandler<T, "ethereum">,
+	): void {
 		throw new Error("not implemented");
 	}
 	removeAllListeners(): void {
@@ -130,9 +147,12 @@ export class MockWatcher implements Watcher {
 	}
 }
 
-export class MockClient extends MockWatcher implements ErdstallClient {
-	readonly tokenProvider: TokenProvider;
-	readonly onChainQuerier: OnChainQuerier;
+export class MockClient
+	extends MockWatcher
+	implements ErdstallClient<["ethereum"]>
+{
+	readonly tokenProvider: TokenProvider<"ethereum">;
+	readonly onChainQuerier: OnChainQuerier<["ethereum"]>;
 	private readonly contract: Address;
 	private metadata: Map<string, NFTMetadata>;
 
@@ -157,7 +177,11 @@ export class MockClient extends MockWatcher implements ErdstallClient {
 		this.metadata.set(`${token.key}:${id}`, metadata);
 	}
 
-	async getNftMetadata(token: Address, id: bigint): Promise<NFTMetadata> {
+	async getNftMetadata(
+		_backend: "ethereum",
+		token: Address,
+		id: bigint,
+	): Promise<NFTMetadata> {
 		const res = this.metadata.get(`${token.key}:${id}`);
 		if (!res) {
 			return Promise.reject(
@@ -167,8 +191,9 @@ export class MockClient extends MockWatcher implements ErdstallClient {
 		return res;
 	}
 
-	erdstall(): Address {
-		return this.contract;
+	erdstall(): { chain: "ethereum"; address: Address } {
+		throw new Error("not implemented");
+		//		return this.contract;
 	}
 }
 
@@ -308,9 +333,10 @@ function newTxReceiptResult(
 	return new Result(id, txr);
 }
 
-class MockOnChainQuerier implements OnChainQuerier {
+class MockOnChainQuerier implements OnChainQuerier<["ethereum"]> {
 	constructor() {}
 	async queryTokensOwnedByAddress(
+		_backend: "ethereum" | "ethereum"[],
 		_token: string,
 		_address: string,
 	): Promise<Tokens> {

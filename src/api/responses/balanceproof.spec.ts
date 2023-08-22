@@ -8,7 +8,7 @@ import { Address } from "#erdstall/ledger";
 import {
 	Erdstall,
 	Erdstall__factory,
-} from "#erdstall/ledger/backend/contracts";
+} from "#erdstall/ledger/backend/ethereum/contracts";
 
 import * as test from "#erdstall/test";
 import { Environment, setupEnv } from "#erdstall/test/ledger";

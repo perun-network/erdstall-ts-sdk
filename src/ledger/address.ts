@@ -6,6 +6,14 @@ import { jsonObject } from "#erdstall/export/typedjson";
 import { equalArray } from "#erdstall/utils/arrays";
 import { ABIValue, customJSON } from "#erdstall/api/util";
 
+// // Map key
+// TODO: Substrate uses Pallets, we do not have an address for each pallet?
+// type AddrKey struct {
+// 	Type string `json:"type"` // addr.Type()
+// 	Key  string `json:"key"`  // addr.Key()
+// }
+// TODO: Switch over type, parse key as expected by backends.
+
 /**
  * This class implements an address representation and is used within the SDK
  * wherever an address is required.

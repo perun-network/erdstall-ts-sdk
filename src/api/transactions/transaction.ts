@@ -12,8 +12,9 @@ import {
 	Serializable,
 	jsonBigIntMember,
 } from "#erdstall/export/typedjson";
-import { utils, Signer } from "ethers";
+import { utils } from "ethers";
 import { ETHZERO } from "#erdstall/ledger/assets";
+import { Signer } from "#erdstall/ledger/backend";
 
 const transactionImpls = new Map<string, Serializable<Transaction>>();
 const transactionTypeName = "Transaction";
