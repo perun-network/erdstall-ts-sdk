@@ -5,6 +5,7 @@
 import { Signature } from "#erdstall/api";
 import { Address } from "./address";
 import { Assets, TokenType } from "./assets";
+import { Backend } from "#erdstall/ledger/backend";
 
 const event = [
 	"Frozen",
@@ -20,7 +21,7 @@ const event = [
  * All event names which can be listened for and are emitted by the Erdstall
  * contract.
  */
-export type LedgerEvent = typeof event[number];
+export type LedgerEvent = (typeof event)[number];
 
 export function isLedgerEvent(v: any): v is LedgerEvent {
 	return event.includes(v);
@@ -29,7 +30,8 @@ export function isLedgerEvent(v: any): v is LedgerEvent {
 /**
  * Deposited event struct emitted by the Erdstall contract.
  */
-export interface Deposited {
+export interface Deposited<Bs extends Backend[][number]> {
+	source: Bs;
 	epoch: bigint;
 	address: Address;
 	assets: Assets;
@@ -38,7 +40,8 @@ export interface Deposited {
 /**
  * TokenRegistered event struct emitted by the Erdstall contract.
  */
-export interface TokenRegistered {
+export interface TokenRegistered<Bs extends Backend[][number]> {
+	source: Bs;
 	token: Address;
 	tokenType: TokenType;
 	tokenHolder: Address;
@@ -47,7 +50,8 @@ export interface TokenRegistered {
 /**
  * TokenTypeRegistered event struct emitted by the Erdstall contract.
  */
-export interface TokenTypeRegistered {
+export interface TokenTypeRegistered<Bs extends Backend[][number]> {
+	source: Bs;
 	tokenType: TokenType;
 	tokenHolder: Address;
 }
@@ -55,14 +59,16 @@ export interface TokenTypeRegistered {
 /**
  * Frozen event struct emitted by the Erdstall contract.
  */
-export interface Frozen {
+export interface Frozen<Bs extends Backend[][number]> {
+	source: Bs;
 	epoch: bigint;
 }
 
 /**
  * OwnershipTransferrerd event struct emitted by the Erdstall contract.
  */
-export interface OwnershipTransferrerd {
+export interface OwnershipTransferrerd<Bs extends Backend[][number]> {
+	source: Bs;
 	previousOwner: Address;
 	newOwner: Address;
 }
@@ -70,7 +76,8 @@ export interface OwnershipTransferrerd {
 /**
  * WithdrawalException event struct emitted by the Erdstall contract.
  */
-export interface WithdrawalException {
+export interface WithdrawalException<Bs extends Backend[][number]> {
+	source: Bs;
 	epoch: bigint;
 	address: Address;
 	token: Address;
@@ -81,7 +88,8 @@ export interface WithdrawalException {
 /**
  * Withdrawn event struct emitted by the Erdstall contract.
  */
-export interface Withdrawn {
+export interface Withdrawn<Bs extends Backend[][number]> {
+	source: Bs;
 	epoch: bigint;
 	address: Address;
 	tokens: Assets;
@@ -90,7 +98,8 @@ export interface Withdrawn {
 /**
  * Challenged event struct emitted by the Erdstall contract.
  */
-export interface Challenged {
+export interface Challenged<Bs extends Backend[][number]> {
+	source: Bs;
 	epoch: bigint;
 	address: Address;
 }
@@ -98,7 +107,8 @@ export interface Challenged {
 /**
  * ChallengeResponded event struct emitted by the Erdstall contract.
  */
-export interface ChallengeResponded {
+export interface ChallengeResponded<Bs extends Backend[][number]> {
+	source: Bs;
 	epoch: bigint;
 	address: Address;
 	tokens: Assets;

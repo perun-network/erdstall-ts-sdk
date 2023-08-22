@@ -2,16 +2,17 @@
 "use strict";
 
 import { ErdstallEvent, ErdstallEventHandler } from "#erdstall";
+import { Backend } from "#erdstall/ledger/backend";
 
-export class OneShotEventCache<T extends ErdstallEvent>
-	implements Iterable<[T, ErdstallEventHandler<T>[]]>
+export class OneShotEventCache<T extends ErdstallEvent, B extends Backend>
+	implements Iterable<[T, ErdstallEventHandler<T, B>[]]>
 {
-	m: Map<T, ErdstallEventHandler<T>[]>;
+	m: Map<T, ErdstallEventHandler<T, B>[]>;
 	constructor() {
-		this.m = new Map<T, ErdstallEventHandler<T>[]>();
+		this.m = new Map<T, ErdstallEventHandler<T, B>[]>();
 	}
 
-	set(key: T, cb: ErdstallEventHandler<T>): OneShotEventCache<T> {
+	set(key: T, cb: ErdstallEventHandler<T, B>): OneShotEventCache<T, B> {
 		if (!this.m.has(key)) {
 			this.m.set(key, [cb]);
 			return this;
@@ -21,7 +22,7 @@ export class OneShotEventCache<T extends ErdstallEvent>
 		return this;
 	}
 
-	has(key: T, val?: ErdstallEventHandler<T>): boolean {
+	has(key: T, val?: ErdstallEventHandler<T, B>): boolean {
 		const events = this.m.get(key);
 		if (events === undefined || !val) {
 			return !!events;
@@ -30,7 +31,7 @@ export class OneShotEventCache<T extends ErdstallEvent>
 		return !!events.find((other) => other === val);
 	}
 
-	delete(key: T, val?: ErdstallEventHandler<T>): boolean {
+	delete(key: T, val?: ErdstallEventHandler<T, B>): boolean {
 		const events = this.m.get(key);
 		if (events === undefined) {
 			return false;
@@ -49,7 +50,7 @@ export class OneShotEventCache<T extends ErdstallEvent>
 		return true;
 	}
 
-	get(key: T): ErdstallEventHandler<T>[] | undefined {
+	get(key: T): ErdstallEventHandler<T, B>[] | undefined {
 		if (!this.m.has(key)) {
 			return undefined;
 		}
@@ -59,7 +60,7 @@ export class OneShotEventCache<T extends ErdstallEvent>
 		return cbs;
 	}
 
-	*[Symbol.iterator](): Iterator<[T, ErdstallEventHandler<T>[]]> {
+	*[Symbol.iterator](): Iterator<[T, ErdstallEventHandler<T, B>[]]> {
 		for (const [key, cbs] of this.m) {
 			yield [key, cbs];
 		}
@@ -70,12 +71,15 @@ export class OneShotEventCache<T extends ErdstallEvent>
 	}
 }
 
-export class EventCache<T extends ErdstallEvent> extends OneShotEventCache<T> {
+export class EventCache<
+	T extends ErdstallEvent,
+	Bs extends Backend,
+> extends OneShotEventCache<T, Bs> {
 	constructor() {
 		super();
 	}
 
-	get(key: T): ErdstallEventHandler<T>[] | undefined {
+	get(key: T): ErdstallEventHandler<T, Bs>[] | undefined {
 		return this.m.get(key);
 	}
 }

@@ -2,6 +2,7 @@
 "use strict";
 
 import { Address } from "#erdstall/ledger";
+import { Backend } from "#erdstall/ledger/backend";
 
 export interface NFTMetadata {
 	image?: string;
@@ -23,7 +24,7 @@ export const displayTypes = [
 	"date",
 ] as const;
 
-export type DisplayType = typeof displayTypes[number];
+export type DisplayType = (typeof displayTypes)[number];
 
 export interface Attribute {
 	trait_type?: string;
@@ -32,8 +33,9 @@ export interface Attribute {
 	display_type?: DisplayType;
 }
 
-export interface NFTMetadataProvider {
+export interface NFTMetadataProvider<Bs extends Backend[]> {
 	getNftMetadata(
+		backend: Bs[number],
 		token: Address,
 		id: bigint,
 		useCache?: boolean,

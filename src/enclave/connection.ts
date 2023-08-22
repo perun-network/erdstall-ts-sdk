@@ -111,10 +111,10 @@ export interface EnclaveWriter extends EnclaveReader, Connector {
 
 export class Enclave implements EnclaveWriter {
 	private provider: EnclaveProvider;
-	private handlers: EventCache<EnclaveEvent>;
-	private internalHandlers: EventCache<EnclaveEvent>;
-	private oneShotHandlers: OneShotEventCache<EnclaveEvent>;
-	private internalOneShotHandlers: OneShotEventCache<EnclaveEvent>;
+	private handlers: EventCache<EnclaveEvent, never>;
+	private internalHandlers: EventCache<EnclaveEvent, never>;
+	private oneShotHandlers: OneShotEventCache<EnclaveEvent, never>;
+	private internalOneShotHandlers: OneShotEventCache<EnclaveEvent, never>;
 	private calls: Map<string, [Function, Function]>;
 	private id: number;
 
@@ -128,10 +128,13 @@ export class Enclave implements EnclaveWriter {
 
 	constructor(provider: EnclaveProvider) {
 		this.provider = provider;
-		this.handlers = new EventCache<EnclaveEvent>();
-		this.internalHandlers = new EventCache<EnclaveEvent>();
-		this.oneShotHandlers = new OneShotEventCache<EnclaveEvent>();
-		this.internalOneShotHandlers = new OneShotEventCache<EnclaveEvent>();
+		this.handlers = new EventCache<EnclaveEvent, never>();
+		this.internalHandlers = new EventCache<EnclaveEvent, never>();
+		this.oneShotHandlers = new OneShotEventCache<EnclaveEvent, never>();
+		this.internalOneShotHandlers = new OneShotEventCache<
+			EnclaveEvent,
+			never
+		>();
 
 		this.calls = new Map<
 			string,
@@ -234,42 +237,42 @@ export class Enclave implements EnclaveWriter {
 
 	public on<T extends EnclaveEvent>(
 		eventType: T,
-		cb: ErdstallEventHandler<T>,
+		cb: ErdstallEventHandler<T, never>,
 	): void {
 		this.handlers.set(eventType, cb);
 	}
 
 	public once<T extends EnclaveEvent>(
 		eventType: T,
-		cb: ErdstallEventHandler<T>,
+		cb: ErdstallEventHandler<T, never>,
 	): void {
 		this.oneShotHandlers.set(eventType, cb);
 	}
 
 	public off<T extends EnclaveEvent>(
 		eventType: T,
-		cb: ErdstallEventHandler<T>,
+		cb: ErdstallEventHandler<T, never>,
 	) {
 		this.handlers.delete(eventType, cb);
 	}
 
 	public on_internal<T extends EnclaveEvent>(
 		eventType: T,
-		cb: ErdstallEventHandler<T>,
+		cb: ErdstallEventHandler<T, never>,
 	): void {
 		this.internalHandlers.set(eventType, cb);
 	}
 
 	public once_internal<T extends EnclaveEvent>(
 		eventType: T,
-		cb: ErdstallEventHandler<T>,
+		cb: ErdstallEventHandler<T, never>,
 	): void {
 		this.internalOneShotHandlers.set(eventType, cb);
 	}
 
 	public off_internal<T extends EnclaveEvent>(
 		eventType: T,
-		cb: ErdstallEventHandler<T>,
+		cb: ErdstallEventHandler<T, never>,
 	) {
 		this.internalHandlers.delete(eventType, cb);
 	}
