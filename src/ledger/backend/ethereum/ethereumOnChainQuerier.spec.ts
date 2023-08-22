@@ -1,14 +1,14 @@
 "use strict";
 
 import { expect } from "chai";
-import { EthereumOnChainQuerier } from "./ethereumOnChainQuerier";
-import { OnChainQuerier } from "../onChainQuerier";
+import { OnChainQuerier } from "./ethereumOnChainQuerier";
+import { OnChainQuerier } from "#erdstall/ledger";
+import { Tokens } from "#erdstall/ledger/assets";
 
 import * as test from "#erdstall/test";
 import { Environment, setupEnv } from "test/ledger";
 import { Wallet } from "@ethersproject/wallet";
 import { IERC721Minter__factory, IERC721__factory } from ".";
-import { Tokens } from "../assets";
 import PRNG, { logSeedOnFailure } from "#erdstall/test/random";
 import { afterEach } from "mocha";
 
@@ -89,7 +89,7 @@ describe("EthereumOnChainQuerier", function () {
 		testenv = await setupEnv(2, undefined, { blockTime: 1 });
 		alice = await initEntity(testenv.users[0]);
 		bob = await initEntity(testenv.users[1]);
-		onChainQueryA = new EthereumOnChainQuerier(alice.wallet);
+		onChainQueryA = new OnChainQuerier(alice.wallet);
 	});
 
 	const transferTest = async (mineEachTX: boolean): Promise<void> => {

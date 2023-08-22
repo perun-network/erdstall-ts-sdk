@@ -1,12 +1,11 @@
-import { providers, Signer, BigNumber } from "ethers";
+import { providers, Signer } from "ethers";
 
 import { IERC721__factory } from ".";
-import { Tokens } from "../assets";
+import { Tokens } from "#erdstall/ledger/assets";
 
-import { OnChainQuerier } from "../onChainQuerier";
-import { TypedEvent } from "./contracts/commons";
+import { OnChainQuerier } from "#erdstall/ledger";
 
-export class EthereumOnChainQuerier implements OnChainQuerier {
+export class EthereumOnChainQuerier implements OnChainQuerier<["ethereum"]> {
 	readonly provider: providers.Provider | Signer;
 
 	constructor(provider: providers.Provider | Signer) {
@@ -14,6 +13,7 @@ export class EthereumOnChainQuerier implements OnChainQuerier {
 	}
 
 	async queryTokensOwnedByAddress(
+		_backend: "ethereum" | "ethereum"[],
 		token: string,
 		address: string,
 	): Promise<Tokens> {

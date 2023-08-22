@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { ErdstallWatcher, Contracter, ErdstallEventHandler } from "#erdstall";
+import { ErdstallEventHandler } from "#erdstall";
 import { Address, LedgerEvent } from "#erdstall/ledger";
-import { TokenProvider } from "./tokencache";
+import { TokenProvider, NFTMetadata } from "#erdstall/ledger/backend";
 import { Erdstall } from "./contracts/Erdstall";
-import { NFTMetadata, NFTMetadataProvider } from "./metadata";
 import { IERC721Metadata__factory } from "./contracts";
 import { ethCallbackShim, Listener } from "./ethwrapper";
+import { LedgerReader } from "#erdstall/ledger/backend";
 import axios from "axios";
 
 export const ErrUnsupportedLedgerEvent = new Error(
@@ -17,38 +17,45 @@ export const ErrErdstallContractNotConnected = new Error(
 	"erdstall contract not connected",
 );
 
-export interface LedgerReader
-	extends NFTMetadataProvider,
-		ErdstallWatcher,
-		Contracter {}
-
-export class LedgerReadConn implements LedgerReader {
+export class LedgerReadConn implements LedgerReader<["ethereum"]> {
 	readonly contract: Erdstall;
-	private eventCache: Map<ErdstallEventHandler<LedgerEvent>, Listener>;
+	private eventCache: Map<
+		ErdstallEventHandler<LedgerEvent, "ethereum">,
+		Listener
+	>;
 	private metadataCache: Map<string, NFTMetadata>;
-	readonly tokenCache: TokenProvider;
+	readonly tokenCache: TokenProvider<"ethereum">;
 
-	constructor(contract: Erdstall, tokenCache: TokenProvider) {
+	constructor(contract: Erdstall, tokenCache: TokenProvider<"ethereum">) {
 		this.contract = contract;
 		this.eventCache = new Map();
 		this.metadataCache = new Map();
 		this.tokenCache = tokenCache;
 	}
 
-	on<T extends LedgerEvent>(ev: T, cb: ErdstallEventHandler<T>): void {
+	on<T extends LedgerEvent>(
+		ev: T,
+		cb: ErdstallEventHandler<T, "ethereum">,
+	): void {
 		const wcb = ethCallbackShim(this.contract, this.tokenCache, ev, cb);
 		this.eventCache.set(cb, wcb);
 		this.contract.on(ev, wcb);
 	}
 
-	once<T extends LedgerEvent>(ev: T, cb: ErdstallEventHandler<T>): void {
+	once<T extends LedgerEvent>(
+		ev: T,
+		cb: ErdstallEventHandler<T, "ethereum">,
+	): void {
 		this.contract.once(
 			ev,
 			ethCallbackShim(this.contract, this.tokenCache, ev, cb),
 		);
 	}
 
-	off<T extends LedgerEvent>(ev: T, cb: ErdstallEventHandler<T>): void {
+	off<T extends LedgerEvent>(
+		ev: T,
+		cb: ErdstallEventHandler<T, "ethereum">,
+	): void {
 		if (!this.eventCache.has(cb)) {
 			return;
 		}
@@ -62,11 +69,13 @@ export class LedgerReadConn implements LedgerReader {
 		this.contract.removeAllListeners();
 	}
 
-	erdstall(): Address {
-		return Address.fromString(this.contract.address);
+	erdstall(): { chain: "ethereum"; address: Address } {
+		throw new Error("not implemented");
+		//		return Address.fromString(this.contract.address);
 	}
 
 	async getNftMetadata(
+		_backend: "ethereum",
 		token: Address,
 		id: bigint,
 		useCache?: boolean,

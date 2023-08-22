@@ -2,32 +2,32 @@
 "use strict";
 
 import { ethers, Signer } from "ethers";
-import { Depositor, Withdrawer } from "#erdstall";
 import { Assets } from "#erdstall/ledger/assets";
 import { Address } from "#erdstall/ledger";
 import { TransactionName } from "#erdstall/utils";
 import { BalanceProof } from "#erdstall/api/responses";
 import { Erdstall } from "./contracts/Erdstall";
-import { LedgerReader, LedgerReadConn } from "./readconn";
+import { LedgerWriter } from "#erdstall/ledger/backend";
+import { LedgerReadConn } from "./readconn";
 import { depositors, Calls } from "./tokenmanager";
-import { TokenProvider } from "./tokencache";
+import { TokenProvider } from "#erdstall/ledger/backend";
 import { TransactionGenerator } from "#erdstall/utils";
 
-// LedgerConnection describes the connection a client can have to the on-chain
-// part of Erdstall.
-export interface LedgerWriter extends LedgerReader, Depositor, Withdrawer {
-	erdstall(): Address;
-}
-
-export class LedgerWriteConn extends LedgerReadConn implements LedgerWriter {
+export class LedgerWriteConn
+	extends LedgerReadConn
+	implements LedgerWriter<["ethereum"]>
+{
 	readonly signer: Signer;
 
-	constructor(contract: Erdstall, tokenCache: TokenProvider) {
+	constructor(contract: Erdstall, tokenCache: TokenProvider<"ethereum">) {
 		super(contract, tokenCache);
 		this.signer = contract.signer;
 	}
 
-	async withdraw(exitProof: BalanceProof): Promise<TransactionGenerator> {
+	async withdraw(
+		_backend: "ethereum",
+		exitProof: BalanceProof,
+	): Promise<TransactionGenerator> {
 		return {
 			stages: this.call([
 				[
@@ -44,7 +44,10 @@ export class LedgerWriteConn extends LedgerReadConn implements LedgerWriter {
 		};
 	}
 
-	async deposit(assets: Assets): Promise<TransactionGenerator> {
+	async deposit(
+		_backend: "ethereum",
+		assets: Assets,
+	): Promise<TransactionGenerator> {
 		const calls: Calls = [];
 
 		if (!assets.values.size)

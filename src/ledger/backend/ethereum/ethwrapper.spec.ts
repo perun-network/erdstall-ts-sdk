@@ -18,7 +18,7 @@ import { Signature } from "#erdstall/api";
 
 import { Erdstall__factory, Erdstall } from "./contracts";
 import { LedgerWriteConn, LedgerWriter } from "./writeconn";
-import { TokenFetcher, TokenProvider } from "./tokencache";
+import { EthereumTokenProvider, TokenProvider } from "./tokencache";
 import { Environment, setupEnv } from "#erdstall/test/ledger";
 import { ethCallbackShim, Listener } from "./ethwrapper";
 
@@ -72,7 +72,7 @@ describe("ErdstallEventWrapping", function () {
 
 		opContract = Erdstall__factory.connect(testenv.erdstall, testenv.op);
 		bobContract = Erdstall__factory.connect(testenv.erdstall, bob);
-		conn = new LedgerWriteConn(bobContract, new TokenFetcher());
+		conn = new LedgerWriteConn(bobContract, new EthereumTokenProvider());
 		tokenProvider = {
 			tokenTypeOf: async (
 				_erdstall: Erdstall,

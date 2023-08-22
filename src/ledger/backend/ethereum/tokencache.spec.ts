@@ -6,7 +6,7 @@ import { Wallet } from "ethers";
 
 import { Erdstall__factory } from "./contracts";
 import { TokenType, ETHZERO } from "#erdstall/ledger/assets";
-import { TokenFetcher } from "./tokencache";
+import { EthereumTokenProvider } from "./tokencache";
 
 import { Environment, setupEnv } from "#erdstall/test/ledger";
 
@@ -21,7 +21,7 @@ describe("Tokencache", () => {
 
 	it("fetches registered tokens and tokenholders from erdstall", async () => {
 		const erdstall = Erdstall__factory.connect(testenv.erdstall, bob);
-		const cache = new TokenFetcher();
+		const cache = new EthereumTokenProvider();
 
 		const testInputHolders = [
 			["ETH", testenv.ethHolder],
