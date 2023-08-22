@@ -9,11 +9,135 @@ import { ErdstallToken } from "#erdstall/api/responses";
 import { Address, addressKey } from "#erdstall/ledger";
 import { TokenProvider } from "#erdstall/ledger/backend";
 import { Erdstall } from "#erdstall/ledger/backend/ethereum/contracts";
-import { decodePackedAmount } from "./amount";
+import { Amount, decodePackedAmount } from "./amount";
 import { Tokens, decodePackedIds } from "./tokens";
 import { TokenType } from "./asset";
+import { Chain } from "../chain";
 
 export const ETHZERO = "0x0000000000000000000000000000000000000000";
+
+@jsonObject
+export class ChainAssets {
+	public assets: Map<Chain, LocalAssets>;
+	constructor(assets: Map<Chain, LocalAssets>) {
+		this.assets = assets;
+	}
+
+	static fromJSON(data: any): ChainAssets {
+		const vs = new Map<Chain, LocalAssets>();
+		for (const k of Object.keys(data)) {
+			vs.set(parseInt(k), LocalAssets.fromJSON(data[k]));
+		}
+		return new ChainAssets(vs);
+	}
+
+	static toJSON(me: ChainAssets) {
+		var obj: any = {};
+		me.assets.forEach((v, k) => {
+			obj[k] = LocalAssets.toJSON(v);
+		});
+		return obj;
+	}
+}
+
+@jsonObject
+export class LocalAssets {
+	public fungibles: LocalFungibles;
+	public nfts: LocalNonFungibles;
+	constructor(fungibles: LocalFungibles, nfts: LocalNonFungibles) {
+		this.fungibles = fungibles;
+		this.nfts = nfts;
+	}
+
+	static fromJSON(data: any): LocalAssets {
+		let fungibles = new LocalFungibles(new Map());
+		let nfts = new LocalNonFungibles(new Map());
+		if (data.fungibles) {
+			fungibles = LocalFungibles.fromJSON(data.fungibles);
+		}
+		if (data.nfts) {
+			nfts = LocalNonFungibles.fromJSON(data.nfts);
+		}
+		return new LocalAssets(fungibles, nfts);
+	}
+
+	static toJSON(me: LocalAssets) {
+		let obj: { fungibles?: any; nfts?: any } = {};
+		if (me.fungibles.assets.size > 0) {
+			obj.fungibles = LocalFungibles.toJSON(me.fungibles);
+		}
+		if (me.nfts.assets.size > 0) {
+			obj.nfts = LocalNonFungibles.toJSON(me.nfts);
+		}
+		return obj;
+	}
+}
+
+@jsonObject
+export class LocalFungibles {
+	public assets: Map<string, Amount>;
+	constructor(assets: Map<string, Amount>) {
+		this.assets = assets;
+	}
+
+	static fromJSON(data: any): LocalFungibles {
+		const assets = new Map<string, Amount>();
+		for (const k of Object.keys(data)) {
+			assets.set(k, Amount.fromJSON(data[k]));
+		}
+		return new LocalFungibles(assets);
+	}
+
+	static toJSON(me: LocalFungibles) {
+		var obj: any = {};
+		me.assets.forEach((v, k) => {
+			obj[k] = v.toJSON();
+		});
+		return obj;
+	}
+}
+
+@jsonObject
+export class LocalNonFungibles {
+	public assets: Map<string, Tokens>;
+	constructor(assets: Map<string, Tokens>) {
+		this.assets = assets;
+	}
+
+	static fromJSON(data: any): LocalNonFungibles {
+		const assets = new Map<string, Tokens>();
+		for (const k of Object.keys(data)) {
+			assets.set(k, Tokens.fromJSON(data[k]));
+		}
+		return new LocalNonFungibles(assets);
+	}
+
+	static toJSON(me: LocalNonFungibles) {
+		var obj: any = {};
+		me.assets.forEach((v, k) => {
+			obj[k] = v.toJSON();
+		});
+		return obj;
+	}
+}
+
+@jsonObject
+export class LocalAsset {
+	public id: Uint8Array;
+	constructor(id: Uint8Array) {
+		this.id = id;
+	}
+
+	get key(): string {
+		return this.id.toString();
+	}
+}
+
+customJSON(ChainAssets);
+customJSON(LocalFungibles);
+customJSON(LocalNonFungibles);
+customJSON(LocalAssets);
+customJSON(LocalAsset);
 
 @jsonObject
 export class Assets implements ABIValue {
