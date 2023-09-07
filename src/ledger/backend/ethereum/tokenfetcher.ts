@@ -2,9 +2,10 @@
 "use strict";
 
 import { Signer } from "ethers";
-import { Address, addressKey } from "#erdstall/ledger/address";
+import { Address } from "#erdstall/ledger/address";
+import { addressKey, EthereumAddress } from "#erdstall/ledger/backend/ethereum";
 import { ETHZERO, requireTokenType, TokenType } from "#erdstall/ledger/assets";
-import { TokenProvider } from "#erdstall/ledger/backend";
+import { Backend, TokenProvider } from "#erdstall/ledger/backend";
 import { TokenRegistered, TokenTypeRegistered } from "#erdstall/ledger/event";
 import { ERC20__factory, ERC721__factory } from "./contracts";
 import { Erdstall } from "./contracts/Erdstall";
@@ -82,7 +83,7 @@ export class TokenFetcher implements TokenProvider<"ethereum"> {
 		erdstall: Erdstall,
 		symbol: string,
 		fromBlock?: number,
-	): Promise<Address | undefined> {
+	): Promise<Address<"ethereum"> | undefined> {
 		const from = fromBlock
 			? fromBlock
 			: (await erdstall.bigBang()).toNumber();
@@ -131,7 +132,7 @@ export class TokenFetcher implements TokenProvider<"ethereum"> {
 				return {
 					source: "ethereum",
 					tokenType: ttype,
-					tokenHolder: Address.fromString(tokenHolder),
+					tokenHolder: EthereumAddress.fromString(tokenHolder),
 				};
 			});
 		});
@@ -164,9 +165,9 @@ export class TokenFetcher implements TokenProvider<"ethereum"> {
 
 				return {
 					source: "ethereum",
-					token: Address.fromString(token),
+					token: EthereumAddress.fromString(token),
 					tokenType: ttype,
-					tokenHolder: Address.fromString(tokenHolder),
+					tokenHolder: EthereumAddress.fromString(tokenHolder),
 				};
 			});
 		});
@@ -175,7 +176,7 @@ export class TokenFetcher implements TokenProvider<"ethereum"> {
 	resolveTokenType(
 		signer: Signer,
 		ttype: TokenType,
-		token: string | Address,
+		token: string | Address<Backend>,
 	): Responder {
 		token = addressKey(token);
 		switch (ttype) {

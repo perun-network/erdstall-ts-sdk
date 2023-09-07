@@ -3,7 +3,7 @@
 
 import { ErdstallEventHandler } from "#erdstall";
 import { Address, LedgerEvent } from "#erdstall/ledger";
-import { TokenProvider, NFTMetadata } from "#erdstall/ledger/backend";
+import { TokenProvider, NFTMetadata, Backend } from "#erdstall/ledger/backend";
 import { Erdstall } from "./contracts/Erdstall";
 import { IERC721Metadata__factory } from "./contracts";
 import { ethCallbackShim, Listener } from "./ethwrapper";
@@ -69,14 +69,14 @@ export class LedgerReadConn implements LedgerReader<["ethereum"]> {
 		this.contract.removeAllListeners();
 	}
 
-	erdstall(): { chain: "ethereum"; address: Address } {
+	erdstall(): { chain: "ethereum"; address: Address<Backend> } {
 		throw new Error("not implemented");
 		//		return Address.fromString(this.contract.address);
 	}
 
 	async getNftMetadata(
 		_backend: "ethereum",
-		token: Address,
+		token: Address<Backend>,
 		id: bigint,
 		useCache?: boolean,
 	): Promise<NFTMetadata> {

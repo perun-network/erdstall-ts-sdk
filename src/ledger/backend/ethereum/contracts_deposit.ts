@@ -13,11 +13,12 @@ import { Asset } from "#erdstall/ledger/assets";
 import { Amount } from "#erdstall/ledger/assets";
 import { Tokens } from "#erdstall/ledger/assets";
 import { Calls } from "./tokenmanager";
+import { Backend } from "#erdstall/ledger/backend/backends";
 
 export function makeETHDepositCalls(
 	signer: Signer,
-	holderAddr: Address,
-	_: Address,
+	holderAddr: Address<Backend>,
+	_: Address<Backend>,
 	amount: Asset,
 ): Calls {
 	if (!(amount instanceof Amount)) {
@@ -44,8 +45,8 @@ export function makeETHDepositCalls(
 
 export function makeERC20DepositCalls(
 	signer: Signer,
-	holderAddr: Address,
-	tokenAddr: Address,
+	holderAddr: Address<Backend>,
+	tokenAddr: Address<Backend>,
 	amount: Asset,
 ): Calls {
 	if (!(amount instanceof Amount)) {
@@ -85,8 +86,8 @@ export function makeERC20DepositCalls(
 
 export function makeERC721DepositCalls(
 	signer: Signer,
-	holderAddr: Address,
-	tokenAddr: Address,
+	holderAddr: Address<Backend>,
+	tokenAddr: Address<Backend>,
 	amount: Asset,
 ): Calls {
 	if (!(amount instanceof Tokens)) {

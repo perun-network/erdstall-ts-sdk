@@ -11,3 +11,5 @@ export * from "./tokenmanager";
 export * from "./ethereumOnChainQuerier";
 export * from "./client";
 export * from "./session";
+export * from "./address";
+export * from "./signature";

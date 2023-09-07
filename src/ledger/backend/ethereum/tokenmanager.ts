@@ -12,6 +12,7 @@ import {
 	makeERC20DepositCalls,
 	makeERC721DepositCalls,
 } from "./contracts_deposit";
+import { Backend } from "#erdstall/ledger/backend/backends";
 
 export type DepositCall = (
 	obj?: ethers.PayableOverrides,
@@ -20,8 +21,8 @@ export type Calls = [TransactionName, DepositCall][];
 
 export type DepositerCallsFactory = (
 	signer: Signer,
-	holderAddr: Address,
-	tokenAddr: Address,
+	holderAddr: Address<Backend>,
+	tokenAddr: Address<Backend>,
 	amount: Asset,
 ) => Calls;
 

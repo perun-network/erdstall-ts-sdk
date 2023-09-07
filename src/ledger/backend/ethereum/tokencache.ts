@@ -10,7 +10,8 @@ import {
 	ERC20__factory,
 	ERC721__factory,
 } from "#erdstall/ledger/backend/ethereum/contracts";
-import { TokenProvider } from "#erdstall/ledger/backend";
+import { Backend, TokenProvider } from "#erdstall/ledger/backend";
+import { EthereumAddress } from "#erdstall/ledger/backend/ethereum";
 
 interface Responder {
 	symbol(): Promise<string>;
@@ -85,7 +86,7 @@ export class EthereumTokenProvider implements TokenProvider<"ethereum"> {
 		erdstall: Erdstall,
 		symbol: string,
 		fromBlock?: number,
-	): Promise<Address | undefined> {
+	): Promise<Address<Backend> | undefined> {
 		const from = fromBlock
 			? fromBlock
 			: (await erdstall.bigBang()).toNumber();
@@ -134,7 +135,7 @@ export class EthereumTokenProvider implements TokenProvider<"ethereum"> {
 				return {
 					source: "ethereum",
 					tokenType: ttype,
-					tokenHolder: Address.fromString(tokenHolder),
+					tokenHolder: EthereumAddress.fromString(tokenHolder),
 				};
 			});
 		});
@@ -167,9 +168,9 @@ export class EthereumTokenProvider implements TokenProvider<"ethereum"> {
 
 				return {
 					source: "ethereum",
-					token: Address.fromString(token),
+					token: EthereumAddress.fromString(token),
 					tokenType: ttype,
-					tokenHolder: Address.fromString(tokenHolder),
+					tokenHolder: EthereumAddress.fromString(tokenHolder),
 				};
 			});
 		});
@@ -178,7 +179,7 @@ export class EthereumTokenProvider implements TokenProvider<"ethereum"> {
 	resolveTokenType(
 		signer: Signer,
 		ttype: TokenType,
-		token: string | Address,
+		token: string | Address<Backend>,
 	): Responder {
 		token = addressKey(token);
 		switch (ttype) {

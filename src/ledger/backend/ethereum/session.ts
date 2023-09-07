@@ -3,11 +3,16 @@
 
 import { ethers, Signer } from "ethers";
 
-import { BalanceProof, ClientConfig } from "#erdstall/api/responses";
+import {
+	BalanceProof,
+	ChainConfig,
+	ClientConfig,
+} from "#erdstall/api/responses";
 import { Address } from "#erdstall/ledger";
 import { Assets } from "#erdstall/ledger/assets";
 import {
 	Erdstall__factory,
+	EthereumAddress,
 	EthereumClient,
 	LedgerReadConn,
 	LedgerWriteConn,
@@ -15,6 +20,7 @@ import {
 } from "#erdstall/ledger/backend/ethereum";
 import { ErdstallBackendSession } from "#erdstall";
 import { TransactionGenerator } from "#erdstall/utils";
+import { Backend } from "#erdstall/ledger/backend/backends";
 
 export const ErrUnitialisedClient = new Error("client unitialised");
 
@@ -37,13 +43,13 @@ export class EthereumSession
 	// `restoreCustodial()`.
 	static generateCustodialAccount(): {
 		signer: Signer;
-		address: Address;
+		address: Address<Backend>;
 		privateKey: string;
 	} {
 		let wallet = ethers.Wallet.createRandom();
 		return {
 			signer: wallet,
-			address: Address.fromString(wallet.address),
+			address: EthereumAddress.fromString(wallet.address),
 			privateKey: wallet.privateKey,
 		};
 	}
@@ -53,10 +59,10 @@ export class EthereumSession
 	// and the associated account's address.
 	static restoreCustodialAccount(privateKey: string): {
 		signer: Signer;
-		address: Address;
+		address: Address<Backend>;
 	} {
 		let signer = new ethers.Wallet(privateKey);
-		return { signer, address: Address.fromString(signer.address) };
+		return { signer, address: EthereumAddress.fromString(signer.address) };
 	}
 
 	// Generates a unique random custodial wallet (the keys are held by the
@@ -70,7 +76,7 @@ export class EthereumSession
 	): {
 		session: EthereumSession;
 		privateKey: string;
-		address: Address;
+		address: Address<Backend>;
 	} {
 		if (provider instanceof URL)
 			provider = new ethers.providers.JsonRpcProvider(`${provider}`);
@@ -94,7 +100,7 @@ export class EthereumSession
 		privateKey: string,
 	): {
 		session: EthereumSession;
-		address: Address;
+		address: Address<Backend>;
 	} {
 		if (provider instanceof URL)
 			provider = new ethers.providers.JsonRpcProvider(`${provider}`);
@@ -129,7 +135,7 @@ export function defaultEthereumSessionInitializer(
 	signer: Signer,
 ): EthereumSession {
 	const erdstall = Erdstall__factory.connect(
-		config.contract.toString(),
+		(config.chains[0] as ChainConfig<"ethereum">).data.contract.toString(),
 		signer,
 	);
 	const ledgerWriter = new LedgerWriteConn(erdstall, new TokenFetcher());

@@ -4,14 +4,18 @@
 // typechain generated events types, which are rather cumbersome to use anyway.
 "use strict";
 
+import { utils } from "ethers";
 import { TypedListener, TypedEventFilter } from "./contracts/commons";
 import { ErdstallEventHandler } from "#erdstall";
-import { Signature } from "#erdstall/api";
-import { Address, LedgerEvent } from "#erdstall/ledger";
+import { LedgerEvent } from "#erdstall/ledger";
 import { requireTokenType, decodePackedAssets } from "#erdstall/ledger/assets";
 
 import { Erdstall } from "./contracts";
 import { TokenProvider } from "#erdstall/ledger/backend/tokenprovider";
+import {
+	EthereumAddress,
+	EthereumSignature as Signature,
+} from "#erdstall/ledger/backend/ethereum";
 
 // Listener is used internally by Typechain but is not exposed.
 export type Listener = (...args: Array<any>) => void;
@@ -79,7 +83,7 @@ function wrapDeposited(
 		return cb({
 			source: "ethereum",
 			epoch: epoch.toBigInt(),
-			address: Address.fromString(account),
+			address: EthereumAddress.fromString(account),
 			assets: assets,
 		});
 	};
@@ -101,7 +105,7 @@ function wrapWithdrawn(
 		return cb({
 			source: "ethereum",
 			epoch: epoch.toBigInt(),
-			address: Address.fromString(account),
+			address: EthereumAddress.fromString(account),
 			tokens: assets,
 		});
 	};
@@ -120,8 +124,8 @@ function wrapTokenRegistered(
 	) => {
 		return cb({
 			source: "ethereum",
-			token: Address.fromString(token),
-			tokenHolder: Address.fromString(tokenHolder),
+			token: EthereumAddress.fromString(token),
+			tokenHolder: EthereumAddress.fromString(tokenHolder),
 			tokenType: requireTokenType(tokenType),
 		});
 	};
@@ -136,7 +140,7 @@ function wrapTokenTypeRegistered(
 	const wcb: TypedListener<tp[0], tp[1]> = async (tokenType, tokenHolder) => {
 		return cb({
 			source: "ethereum",
-			tokenHolder: Address.fromString(tokenHolder),
+			tokenHolder: EthereumAddress.fromString(tokenHolder),
 			// TODO: How do we cope with newly registered tokentypes?
 			tokenType: tokenType as any,
 		});
@@ -153,7 +157,7 @@ function wrapChallenged(
 		return cb({
 			source: "ethereum",
 			epoch: epoch.toBigInt(),
-			address: Address.fromString(account),
+			address: EthereumAddress.fromString(account),
 		});
 	};
 	return wcb;
@@ -176,12 +180,14 @@ function wrapChallengeResponded(
 			tokenProvider,
 			tokens,
 		);
+		const address = EthereumAddress.fromString(account);
+		const sigBytes = utils.arrayify(sig);
 		return cb({
 			source: "ethereum",
 			epoch: epoch.toBigInt(),
-			address: Address.fromString(account),
+			address: address,
 			tokens: assets,
-			sig: new Signature(sig),
+			sig: new Signature(sigBytes, address),
 		});
 	};
 	return wcb;

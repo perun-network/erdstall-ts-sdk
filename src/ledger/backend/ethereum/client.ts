@@ -4,7 +4,7 @@
 import { ErdstallBackendClient, ErdstallEventHandler } from "#erdstall";
 import { Address, LedgerEvent } from "#erdstall/ledger";
 import { ethers, Signer } from "ethers";
-import { NFTMetadata } from "#erdstall/ledger/backend";
+import { Backend, NFTMetadata } from "#erdstall/ledger/backend";
 import { OnChainQuerier } from "#erdstall/ledger/onChainQuerier";
 import {
 	Erdstall__factory,
@@ -12,7 +12,8 @@ import {
 	LedgerReadConn,
 	TokenFetcher,
 } from "#erdstall/ledger/backend/ethereum";
-import { ClientConfig } from "#erdstall/api/responses";
+import { ChainConfig, ClientConfig } from "#erdstall/api/responses";
+import { EthereumChainConfig } from "./chainconfig";
 
 export class EthereumClient implements ErdstallBackendClient<"ethereum"> {
 	readonly onChainQuerier: OnChainQuerier<["ethereum"]>;
@@ -28,13 +29,13 @@ export class EthereumClient implements ErdstallBackendClient<"ethereum"> {
 		this.onChainQuerier = new EthereumOnChainQuerier(this.provider);
 	}
 
-	erdstall(): { chain: "ethereum"; address: Address } {
+	erdstall() {
 		return this.erdstallConn.erdstall();
 	}
 
 	getNftMetadata(
 		backend: "ethereum",
-		token: Address,
+		token: Address<Backend>,
 		id: bigint,
 		useCache?: boolean,
 	): Promise<NFTMetadata> {
@@ -71,8 +72,9 @@ export function defaultEthereumClientInitializer(
 	config: ClientConfig,
 	provider: ethers.providers.Provider | Signer,
 ): EthereumClient {
+	// TODO: Temporary hack.
 	const erdstall = Erdstall__factory.connect(
-		config.contract.toString(),
+		(config.chains[0] as ChainConfig<"ethereum">).data.contract.toString(),
 		provider,
 	);
 	const ledgerReader = new LedgerReadConn(erdstall, new TokenFetcher());

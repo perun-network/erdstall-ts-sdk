@@ -3,7 +3,7 @@
 
 import { ethers, Signer } from "ethers";
 import { Assets } from "#erdstall/ledger/assets";
-import { Address } from "#erdstall/ledger";
+import { EthereumAddress as Address } from "#erdstall/ledger/backend/ethereum";
 import { TransactionName } from "#erdstall/utils";
 import { BalanceProof } from "#erdstall/api/responses";
 import { Erdstall } from "./contracts/Erdstall";

@@ -5,33 +5,32 @@ import { utils } from "ethers";
 import { jsonObject } from "#erdstall/export/typedjson";
 import { equalArray } from "#erdstall/utils/arrays";
 import { ABIValue, customJSON } from "#erdstall/api/util";
-import { Address } from "#erdstall/ledger/address";
-
-// // Map key
-// TODO: Substrate uses Pallets, we do not have an address for each pallet?
-// type AddrKey struct {
-// 	Type string `json:"type"` // addr.Type()
-// 	Key  string `json:"key"`  // addr.Key()
-// }
-// TODO: Switch over type, parse key as expected by backends.
+import { Address, registerAddressType } from "#erdstall/ledger/address";
 
 /**
  * This class implements an address representation and is used within the SDK
  * wherever an address is required.
  */
 @jsonObject
-export class EthereumAddress implements ABIValue, Address {
+export class EthereumAddress extends Address<"ethereum"> implements ABIValue {
 	private value: Uint8Array;
 	constructor(value: Uint8Array) {
+		super();
 		this.value = value;
 	}
 
 	static fromJSON(val: any): EthereumAddress {
-		return new EthereumAddress(utils.arrayify(val));
+		return new EthereumAddress(
+			utils.arrayify(val, { allowMissingPrefix: true }),
+		);
 	}
 
-	static toJSON(me: EthereumAddress) {
-		return utils.hexlify(me.value);
+	static toJSON(me: EthereumAddress): any {
+		return me.toJSON();
+	}
+
+	public toJSON(): any {
+		return utils.hexlify(this.value);
 	}
 
 	static fromString(addr: string): EthereumAddress {
@@ -44,7 +43,7 @@ export class EthereumAddress implements ABIValue, Address {
 		return EthereumAddress.fromString(addr);
 	}
 
-	typ(): "ethereum" {
+	type(): "ethereum" {
 		return "ethereum";
 	}
 
@@ -53,7 +52,7 @@ export class EthereumAddress implements ABIValue, Address {
 	}
 
 	get key(): string {
-		return EthereumAddress.toJSON(this);
+		return this.toJSON();
 	}
 
 	asABI(): any {
@@ -73,8 +72,9 @@ export class EthereumAddress implements ABIValue, Address {
 	}
 }
 
+registerAddressType("ethereum", EthereumAddress);
 customJSON(EthereumAddress);
 
-export function addressKey(addr: EthereumAddress | string): string {
-	return addr instanceof EthereumAddress ? addr.key : addr.toLowerCase();
+export function addressKey(addr: Address<"ethereum"> | string): string {
+	return addr instanceof Address<"ethereum"> ? addr.key : addr.toLowerCase();
 }
