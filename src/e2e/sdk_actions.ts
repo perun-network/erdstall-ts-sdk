@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { Address } from "#erdstall/ledger";
 import { Assets } from "#erdstall/ledger/assets";
 import * as assets from "#erdstall/ledger/assets";
 import { Session, Client } from "#erdstall";
@@ -20,10 +19,14 @@ import {
 import { ethers, utils } from "ethers";
 import { PERUN_ADDR, PART_ADDR } from "./parameters";
 import {
+	EthereumAddress,
 	mkDefaultEthereumClientConstructor,
 	mkDefaultEthereumSessionConstructor,
 } from "#erdstall/ledger/backend/ethereum";
-import { SubstrateClient } from "#erdstall/ledger/backend/substrate";
+import {
+	mkDefaultSubstrateClientConstructor,
+	SubstrateClient,
+} from "#erdstall/ledger/backend/substrate";
 
 export type SDKActions = typeof sdkActions;
 
@@ -59,11 +62,7 @@ export const sdkActions = {
 		const client = new Client<TestBackends>(
 			operatorUrl,
 			mkDefaultEthereumClientConstructor(provider),
-			{
-				backend: "substrate",
-				arg: 42,
-				initializer: (_c) => new SubstrateClient(42),
-			},
+			mkDefaultSubstrateClientConstructor(),
 		);
 		// One could use this readonly client to listen for various events within
 		// Erdstall by registering callbacks before issuing the
@@ -77,7 +76,7 @@ export const sdkActions = {
 		// to be created. This signer can be obtained in a browser-setting by
 		// calling the `provider.getSigner()` method (if the user has granted
 		// access to your app using his account).
-		const userAddr = Address.fromString(await signer.getAddress());
+		const userAddr = EthereumAddress.fromString(await signer.getAddress());
 		// const session = new Session(userAddr, signer, operatorUrl);
 		const session = new Session<TestBackends>(
 			userAddr,

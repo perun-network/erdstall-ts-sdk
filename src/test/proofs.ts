@@ -2,18 +2,18 @@
 "use strict";
 
 import PRNG, { newRandomUint8Array } from "./random";
-import { Signature } from "#erdstall/api";
 import { Balance, BalanceProof, BalanceProofs } from "#erdstall/api/responses";
 import { newRandomUint64 } from "./bigint";
 import { newRandomAddress } from "./address";
-import { newRandomAssets } from "./assets";
+import { newRandomChainAssets } from "./assets";
+import { EthereumSignature } from "#erdstall/ledger/backend/ethereum";
 
 export function newRandomBalance(rng: PRNG, size: number): Balance {
 	return new Balance(
 		newRandomUint64(rng),
 		newRandomAddress(rng),
 		false,
-		newRandomAssets(rng, size),
+		newRandomChainAssets(rng, size),
 	);
 }
 
@@ -52,7 +52,10 @@ function newRandomProofs(
 export function newRandomBalanceProof(rng: PRNG, size: number): BalanceProof {
 	return new BalanceProof(
 		newRandomBalance(rng, size),
-		new Signature(newRandomUint8Array(rng, 32)),
+		new EthereumSignature(
+			newRandomUint8Array(rng, 32),
+			newRandomAddress(rng),
+		),
 	);
 }
 

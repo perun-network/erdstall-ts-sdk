@@ -24,7 +24,7 @@ import {
 	AttestationResult,
 } from "#erdstall/api/responses";
 import { TypedJSON } from "#erdstall/export/typedjson";
-import { Result, Call, ErdstallObject, Signature } from "#erdstall/api";
+import { Result, Call, ErdstallObject } from "#erdstall/api";
 import {
 	SubscribeTXs,
 	SubscribeBalanceProofs,
@@ -34,8 +34,12 @@ import {
 import { Transaction } from "#erdstall/api/transactions";
 import { Address, Account, OnChainQuerier } from "#erdstall/ledger";
 import { NFTMetadata, TokenProvider } from "#erdstall/ledger/backend";
-import { TokenFetcher } from "#erdstall/ledger/backend/ethereum";
-import { Assets, Tokens } from "#erdstall/ledger/assets";
+import {
+	EthereumAddress,
+	EthereumSignature,
+	TokenFetcher,
+} from "#erdstall/ledger/backend/ethereum";
+import { ChainAssets, Tokens } from "#erdstall/ledger/assets";
 import { EnclaveProvider } from "#erdstall/enclave";
 
 export class MockWatcher implements Watcher<["ethereum"]> {
@@ -96,9 +100,9 @@ export class MockWatcher implements Watcher<["ethereum"]> {
 
 	async mint(
 		nft: {
-			token: Address;
+			token: Uint8Array;
 			id: bigint;
-			owner: Address;
+			owner: Address<"ethereum">;
 		},
 		deltas?: Map<string, Account>,
 	): Promise<void> {
@@ -129,7 +133,10 @@ export class MockWatcher implements Watcher<["ethereum"]> {
 					deltas ?? new Map<string, Account>(),
 					1,
 					new TransactionOutput(new Uint8Array()),
-					new Signature(new Uint8Array()),
+					new EthereumSignature(
+						new Uint8Array(),
+						new EthereumAddress(new Uint8Array()),
+					),
 					"",
 				),
 			),
@@ -153,33 +160,35 @@ export class MockClient
 {
 	readonly tokenProvider: TokenProvider<"ethereum">;
 	readonly onChainQuerier: OnChainQuerier<["ethereum"]>;
-	private readonly contract: Address;
 	private metadata: Map<string, NFTMetadata>;
 
-	constructor(contract: Address) {
+	constructor() {
 		super();
-		this.contract = contract;
 		this.metadata = new Map();
 		this.tokenProvider = new TokenFetcher();
 		this.onChainQuerier = new MockOnChainQuerier();
 	}
 
 	async initialize(): Promise<void> {}
-	async subscribe(_who?: Address): Promise<void> {}
-	async getAccount(_who: Address): Promise<Account> {
+	async subscribe(_who?: Address<"ethereum">): Promise<void> {}
+	async getAccount(_who: Address<"ethereum">): Promise<Account> {
 		throw new Error("cannot query accounts on mock clients");
 	}
 	async attest(): Promise<AttestationResult> {
 		throw new Error("cannot query attestation on mock clients");
 	}
 
-	setMetadata(token: Address, id: bigint, metadata: NFTMetadata): void {
+	setMetadata(
+		token: Address<"ethereum">,
+		id: bigint,
+		metadata: NFTMetadata,
+	): void {
 		this.metadata.set(`${token.key}:${id}`, metadata);
 	}
 
 	async getNftMetadata(
 		_backend: "ethereum",
-		token: Address,
+		token: Address<"ethereum">,
 		id: bigint,
 	): Promise<NFTMetadata> {
 		const res = this.metadata.get(`${token.key}:${id}`);
@@ -191,7 +200,7 @@ export class MockClient
 		return res;
 	}
 
-	erdstall(): { chain: "ethereum"; address: Address } {
+	erdstall(): { chain: "ethereum"; address: Address<"ethereum"> } {
 		throw new Error("not implemented");
 		//		return this.contract;
 	}
@@ -240,7 +249,11 @@ export class EnclaveMockProvider implements EnclaveProvider {
 				return this.onmessage!(msg);
 			}
 			case GetAccount: {
-				const acc = new Account(0n, new Assets(), new Assets());
+				const acc = new Account(
+					0n,
+					new ChainAssets(new Map()),
+					new ChainAssets(new Map()),
+				);
 				const racc = new RAccount(acc, 0n);
 				const msg = newErdstallMessageEvent(new Result(call.id, racc));
 				return this.onmessage!(msg);
@@ -257,7 +270,7 @@ export class EnclaveMockProvider implements EnclaveProvider {
 		switch (tx.txType()) {
 			case Transfer: {
 				const txc = tx as Transfer;
-				const acc = new Account(txc.nonce, txc.values, new Assets());
+				const acc = new Account(txc.nonce, txc.values);
 
 				const res = newTxReceiptResult(
 					id,
@@ -270,9 +283,15 @@ export class EnclaveMockProvider implements EnclaveProvider {
 			}
 			case Mint: {
 				const txc = tx as Mint;
-				const assets = new Assets();
-				assets.addAsset(txc.token.toString(), new Tokens([txc.id]));
-				const acc = new Account(txc.nonce, assets, new Assets());
+				const assets = new ChainAssets(new Map());
+				throw new Error("IMPLEMENT REST");
+				// TODO: add asset to assets
+				// assets.addAsset(txc.token.toString(), new Tokens([txc.id]));
+				const acc = new Account(
+					txc.nonce,
+					assets,
+					new ChainAssets(new Map()),
+				);
 
 				const res = newTxReceiptResult(
 					id,
@@ -320,14 +339,23 @@ function newTxReceiptResult(
 	acc?: Account,
 	status: TxStatusCode = 1,
 ): Result {
-	const _acc = acc ? acc : new Account(tx.nonce, new Assets(), new Assets());
+	const _acc = acc
+		? acc
+		: new Account(
+				tx.nonce,
+				new ChainAssets(new Map()),
+				new ChainAssets(new Map()),
+		  );
 	const delta = new Map<string, Account>([[tx.sender.key, _acc]]);
 	const txr = new TxReceipt(
 		tx,
 		delta,
 		status,
 		output,
-		new Signature(new Uint8Array()),
+		new EthereumSignature(
+			new Uint8Array(),
+			new EthereumAddress(new Uint8Array()),
+		),
 		"",
 	);
 	return new Result(id, txr);

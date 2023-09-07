@@ -27,6 +27,8 @@ import {
 	NODE_PORT,
 } from "./parameters";
 import { SDKActions } from "./sdk_actions";
+import { Backend, BackendChainConfig } from "#erdstall/ledger/backend";
+import { EthereumAddress } from "#erdstall/ledger/backend/ethereum";
 
 export const ALICE = 0;
 export const BOB = 1;
@@ -40,7 +42,7 @@ export function endToEndTestHarness(sdkActions: SDKActions) {
 		const numOfAccs = 10;
 		const fundingAmountETH = 1000;
 		let erdstallProcessTerminate: Promise<void>;
-		let teeAddress: Address;
+		let teeAddress: Address<Backend>;
 
 		before(async function () {
 			fs.writeFileSync(
@@ -114,7 +116,15 @@ export function endToEndTestHarness(sdkActions: SDKActions) {
 
 			sessions[ALICE].once(
 				"config",
-				(config) => (teeAddress = config.contract),
+				// TODO: Workaround:
+				(config) =>
+					// TODO: Another workaround?
+					(teeAddress = EthereumAddress.fromString(
+						(
+							config.chains[0]
+								.data as BackendChainConfig<"ethereum">
+						).contract,
+					)),
 			);
 
 			return Promise.all(sessions.map(sdkActions.initialize));
@@ -287,7 +297,7 @@ export function endToEndTestHarness(sdkActions: SDKActions) {
 						const tx = tradeRec.tx as Trade;
 						expect(tx.sender.equals(sessions[DAGOBERT].address)).to
 							.be.true;
-						expect(tx.verify(teeAddress)).to.be.true;
+						expect(tx.verify()).to.be.true;
 						expect(tx.offer.owner.equals(sessions[CHARLIE].address))
 							.to.be.true;
 						expect(tx.offer.offer.hasAsset(PART_ADDR)).to.be.true;
@@ -423,7 +433,9 @@ interface balances {
 	part: string;
 }
 
-async function listOnchainBalances(address: Address): Promise<balances> {
+async function listOnchainBalances(
+	address: Address<Backend>,
+): Promise<balances> {
 	const provider = makeProvider();
 
 	const eth = await provider.getBalance(address.toString());
