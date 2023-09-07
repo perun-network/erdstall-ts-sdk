@@ -36,7 +36,7 @@ export interface Attribute {
 export interface NFTMetadataProvider<Bs extends Backend[]> {
 	getNftMetadata(
 		backend: Bs[number],
-		token: Address,
+		token: Address<Backend>,
 		id: bigint,
 		useCache?: boolean,
 	): Promise<NFTMetadata>;

@@ -71,7 +71,7 @@ export interface TokenProvider<B extends Backend> {
 		erdstall: ErdstallConnector<B>,
 		symbol: string,
 		fromBlock?: number,
-	): Promise<Address | undefined>;
+	): Promise<Address<Backend> | undefined>;
 	/**
 	 * Queries the registered token types on the given Erdstall contract.
 	 *
