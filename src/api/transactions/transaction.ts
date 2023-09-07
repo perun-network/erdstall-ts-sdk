@@ -13,6 +13,7 @@ import {
 } from "#erdstall/export/typedjson";
 import { utils } from "ethers";
 import { Backend, Signer } from "#erdstall/ledger/backend";
+import canonicalize from "canonicalize";
 
 const transactionImpls = new Map<string, Serializable<Transaction>>();
 const transactionTypeName = "Transaction";
@@ -38,7 +39,12 @@ export abstract class Transaction extends ErdstallObject {
 	}
 
 	async sign(signer: Signer<Backend>): Promise<this> {
-		this.sig = await signer.signMessage(this.packTagged().keccak256());
+		const msg = canonicalize(Transaction.toJSON(this));
+		if (msg === undefined) {
+			throw new Error("failed to canonicalize transaction");
+		} else {
+			this.sig = await signer.signMessage(utils.arrayify(msg));
+		}
 		return this;
 	}
 
