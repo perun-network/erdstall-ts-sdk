@@ -99,9 +99,7 @@ export class Client<Bs extends Backend[]> implements ErdstallClient<Bs> {
 		>();
 	}
 
-	erdstall(): Bs extends [infer BID]
-		? { chain: BID; address: Address }
-		: { chain: Bs[number]; address: Address }[] {
+	erdstall() {
 		const res = Array.from(this.clients.entries()).map(([_chain, client]) =>
 			client.erdstall(),
 		);
@@ -114,7 +112,7 @@ export class Client<Bs extends Backend[]> implements ErdstallClient<Bs> {
 
 	getNftMetadata(
 		backend: Bs[number],
-		token: Address,
+		token: Address<Backend>,
 		id: bigint,
 		useCache?: boolean,
 	): Promise<NFTMetadata> {
@@ -233,11 +231,11 @@ export class Client<Bs extends Backend[]> implements ErdstallClient<Bs> {
 		this.erdstallOneShotHandlerCache.clear();
 	}
 
-	async subscribe(who?: Address): Promise<void> {
+	async subscribe(who?: Address<Backend>): Promise<void> {
 		return this.enclaveConn.subscribe(who);
 	}
 
-	async getAccount(who: Address): Promise<Account> {
+	async getAccount(who: Address<Backend>): Promise<Account> {
 		return (await this.enclaveConn.getAccount(who)).account;
 	}
 

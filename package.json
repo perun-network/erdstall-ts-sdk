@@ -31,6 +31,7 @@
 		"bindings": "./scripts/genbindings.sh",
 		"test:e2e": "env TS_NODE_PROJECT=\"tsconfig.e2e.json\" mocha -b --timeout 120000 -r jsdom-global/register -r ts-node/register -r tsconfig-paths/register 'src/e2e/**/*.spec.ts'",
 		"test": "env TS_NODE_PROJECT=\"tsconfig.test.json\" mocha --timeout 15000 -r jsdom-global/register -r ts-node/register -r tsconfig-paths/register 'src/{,!(e2e)/**}/*.spec.ts'",
+		"test-file": "env TS_NODE_PROJECT=\"tsconfig.test.json\" mocha --timeout 15000 -r jsdom-global/register -r ts-node/register -r tsconfig-paths/register",
 		"prepack": "yarn build && tsc-alias -p tsconfig.json && ts-node ./scripts/prepack.ts ./package.json ./dist/package.json",
 		"devpub": "yarn prepack",
 		"doc": "typedoc ./src ./src/api ./src/enclave ./src/ledger ./src/ledger/backend ./src/test ./src/utils"
@@ -92,6 +93,7 @@
 		"@polkadot/api": "^10.9.1",
 		"@polkadot/api-contract": "^10.9.1",
 		"axios": "^0.21.4",
+		"canonicalize": "^2.0.0",
 		"ethereum-waffle": "^3.4.0",
 		"ethers": "^5.4.1",
 		"isomorphic-ws": "^4.0.1",

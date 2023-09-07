@@ -1,75 +1,57 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { utils } from "ethers";
-import { jsonObject } from "#erdstall/export/typedjson";
-import { equalArray } from "#erdstall/utils/arrays";
 import { ABIValue, customJSON } from "#erdstall/api/util";
+import { Backend } from "#erdstall/ledger/backend";
+import {
+	jsonObject,
+	Serializable,
+	TypedJSON,
+} from "#erdstall/export/typedjson";
 
-// // Map key
-// TODO: Substrate uses Pallets, we do not have an address for each pallet?
-// type AddrKey struct {
-// 	Type string `json:"type"` // addr.Type()
-// 	Key  string `json:"key"`  // addr.Key()
-// }
-// TODO: Switch over type, parse key as expected by backends.
+const addressImpls = new Map<string, Serializable<Address<Backend>>>();
 
-/**
- * This class implements an address representation and is used within the SDK
- * wherever an address is required.
- */
-@jsonObject
-export class Address implements ABIValue {
-	private value: Uint8Array;
-	constructor(value: Uint8Array) {
-		this.value = value;
-	}
+export function registerAddressType(
+	typeName: string,
+	typeClass: Serializable<Address<Backend>>,
+) {
+	addressImpls.set(typeName, typeClass);
+}
 
-	static fromJSON(val: any): Address {
-		return new Address(utils.arrayify(val));
-	}
+export abstract class Address<B extends Backend> implements ABIValue {
+	abstract ABIType(): string;
+	abstract type(): Backend;
+	abstract get key(): string;
+	abstract equals(other: Address<Backend>): boolean;
+	abstract toString(): string;
+	abstract toJSON(): string;
 
-	static toJSON(me: Address) {
-		return utils.hexlify(me.value);
-	}
-
-	static fromString(addr: string): Address {
+	static ensure(addr: string | Address<Backend>): Address<Backend> {
+		if (addr === undefined) return addr;
+		if (addr instanceof Address) return addr;
+		// TODO: This might fail if the address is not in proper JSON format.
 		return Address.fromJSON(addr);
 	}
 
-	static ensure(addr: string | Address): Address {
-		if (addr === undefined) return addr;
-		if (addr instanceof Address) return addr;
-		return Address.fromString(addr);
+	static fromJSON(js: any): Address<Backend> {
+		let data = JSON.stringify(js.data);
+		if (!addressImpls.has(js.type)) {
+			throw new Error(`unknown address type ${js.type}`);
+		}
+
+		return TypedJSON.parse(data, addressImpls.get(js.type)!)!;
 	}
 
-	toString(): string {
-		return utils.getAddress(utils.hexlify(this.value));
-	}
-
-	get key(): string {
-		return Address.toJSON(this);
-	}
-
-	asABI(): any {
-		return this.toString();
-	}
-
-	ABIType(): string {
-		return "address";
-	}
-
-	isZero(): boolean {
-		return this.value.every((x) => x === 0);
-	}
-
-	equals(other: Address): boolean {
-		return equalArray(this.value, other.value);
+	static toJSON(me: Address<Backend>): any {
+		return {
+			type: me.type(),
+			data: me.toJSON(),
+		};
 	}
 }
 
 customJSON(Address);
 
-export function addressKey(addr: Address | string): string {
-	return addr instanceof Address ? addr.key : addr.toLowerCase();
+export function addressKey(_addr: Address<Backend> | string): string {
+	throw new Error("not implemented");
 }

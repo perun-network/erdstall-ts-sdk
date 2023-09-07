@@ -6,7 +6,7 @@ import {
 	jsonMember,
 	jsonBigIntMember,
 } from "#erdstall/export/typedjson";
-import { Assets } from "#erdstall/ledger/assets";
+import { ChainAssets } from "#erdstall/ledger/assets";
 
 /**
  * Account is the state of a user within Erdstall, including the last nonce and
@@ -15,14 +15,14 @@ import { Assets } from "#erdstall/ledger/assets";
 @jsonObject
 export class Account {
 	@jsonBigIntMember() nonce: bigint;
-	@jsonMember(() => Assets) values: Assets;
-	@jsonMember(() => Assets) locked: Assets;
+	@jsonMember(() => ChainAssets) values: ChainAssets;
+	@jsonMember(() => ChainAssets) locked: ChainAssets;
 
-	constructor(nonce: bigint, values: Assets, locked?: Assets) {
+	constructor(nonce: bigint, values: ChainAssets, locked?: ChainAssets) {
 		this.nonce = nonce;
 		this.values = values;
 		if (locked === undefined) {
-			locked = new Assets();
+			locked = new ChainAssets(new Map());
 		}
 		this.locked = locked;
 	}

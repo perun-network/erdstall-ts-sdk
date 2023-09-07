@@ -3,6 +3,7 @@
 
 export * from "./account";
 export * from "./address";
+export * from "./signature";
 export * from "./event";
 export * from "./onChainQuerier";
 export * from "./backend/writer";

@@ -35,6 +35,7 @@ import { TypedJSON } from "#erdstall/export/typedjson";
 import { EventCache, OneShotEventCache } from "#erdstall/utils";
 import { EnclaveEvent } from "./event";
 import { EnclaveProvider, EnclaveWSProvider } from "./provider";
+import { Backend } from "#erdstall/ledger/backend";
 
 /**
  * Describes an entity which can build and cut its connection to some target.
@@ -54,7 +55,7 @@ export interface EnclaveReader extends EnclaveWatcher, Connector {
 	 * @param acc - The address of interest.
 	 * @returns A promise containing the state of the account in Erdstall.
 	 */
-	getAccount(acc: Address): Promise<Account>;
+	getAccount(acc: Address<Backend>): Promise<Account>;
 
 	/**
 	 * Queries the enclave's remote attestation.
@@ -68,7 +69,7 @@ export interface EnclaveWriter extends EnclaveReader, Connector {
 	/**
 	 * Enters Erdstall with the given address.
 	 */
-	onboard(who: Address): Promise<void>;
+	onboard(who: Address<Backend>): Promise<void>;
 	/**
 	 * Sends the given transfer transaction to the enclave.
 	 *
@@ -100,7 +101,7 @@ export interface EnclaveWriter extends EnclaveReader, Connector {
 	/**
 	 * Sends the given exit request to the enclave.
 	 *
-	 * @param tx - The exit request to send.
+	 * @param exitRequest - The exit request to send.
 	 * @returns A promise containing the balance proof with its exit flag set.
 	 */
 	exit(exitRequest: ExitRequest): Promise<BalanceProof>;
@@ -119,7 +120,7 @@ export class Enclave implements EnclaveWriter {
 	private id: number;
 
 	private globallySubscribed: boolean;
-	private individuallySubscribed: Set<string>;
+	private individuallySubscribed: Set<Address<Backend>>;
 	private phaseShiftSubscribed: boolean;
 
 	static dial(operator: URL): Enclave {
@@ -144,7 +145,7 @@ export class Enclave implements EnclaveWriter {
 		this.id = 0;
 
 		this.globallySubscribed = false;
-		this.individuallySubscribed = new Set<string>();
+		this.individuallySubscribed = new Set();
 		this.phaseShiftSubscribed = false;
 	}
 
@@ -162,16 +163,16 @@ export class Enclave implements EnclaveWriter {
 		this.provider.close();
 	}
 
-	public async onboard(who: Address): Promise<void> {
+	public async onboard(who: Address<Backend>): Promise<void> {
 		const onboard = new Onboarding(who);
 		await this.sendCall(onboard);
 		return;
 	}
 
-	public async subscribe(who?: Address): Promise<void> {
+	public async subscribe(who?: Address<Backend>): Promise<void> {
 		this.phaseShiftSubscribed = true;
 		if (who) {
-			this.individuallySubscribed.add(who.key);
+			this.individuallySubscribed.add(who);
 		} else {
 			this.globallySubscribed = true;
 		}
@@ -217,7 +218,7 @@ export class Enclave implements EnclaveWriter {
 		return p;
 	}
 
-	public async getAccount(acc: Address): Promise<Account> {
+	public async getAccount(acc: Address<Backend>): Promise<Account> {
 		return this.sendCall(new GetAccount(acc)) as Promise<Account>;
 	}
 
@@ -383,8 +384,8 @@ export class Enclave implements EnclaveWriter {
 
 		this.individuallySubscribed.forEach((addr) =>
 			calls.push(
-				new SubscribeTXs(Address.fromString(addr)),
-				new SubscribeBalanceProofs(Address.fromString(addr)),
+				new SubscribeTXs(addr),
+				new SubscribeBalanceProofs(addr),
 			),
 		);
 

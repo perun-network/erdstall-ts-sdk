@@ -2,7 +2,7 @@
 // by the ledger backends.
 "use strict";
 
-import { Signature } from "#erdstall/api";
+import { Signature } from "#erdstall/ledger";
 import { Address } from "./address";
 import { Assets, TokenType } from "./assets";
 import { Backend } from "#erdstall/ledger/backend";
@@ -33,7 +33,7 @@ export function isLedgerEvent(v: any): v is LedgerEvent {
 export interface Deposited<Bs extends Backend[][number]> {
 	source: Bs;
 	epoch: bigint;
-	address: Address;
+	address: Address<Backend>;
 	assets: Assets;
 }
 
@@ -42,9 +42,9 @@ export interface Deposited<Bs extends Backend[][number]> {
  */
 export interface TokenRegistered<Bs extends Backend[][number]> {
 	source: Bs;
-	token: Address;
+	token: Address<Bs>;
 	tokenType: TokenType;
-	tokenHolder: Address;
+	tokenHolder: Address<Bs>;
 }
 
 /**
@@ -53,7 +53,7 @@ export interface TokenRegistered<Bs extends Backend[][number]> {
 export interface TokenTypeRegistered<Bs extends Backend[][number]> {
 	source: Bs;
 	tokenType: TokenType;
-	tokenHolder: Address;
+	tokenHolder: Address<Backend>;
 }
 
 /**
@@ -69,8 +69,8 @@ export interface Frozen<Bs extends Backend[][number]> {
  */
 export interface OwnershipTransferrerd<Bs extends Backend[][number]> {
 	source: Bs;
-	previousOwner: Address;
-	newOwner: Address;
+	previousOwner: Address<Backend>;
+	newOwner: Address<Backend>;
 }
 
 /**
@@ -79,8 +79,8 @@ export interface OwnershipTransferrerd<Bs extends Backend[][number]> {
 export interface WithdrawalException<Bs extends Backend[][number]> {
 	source: Bs;
 	epoch: bigint;
-	address: Address;
-	token: Address;
+	address: Address<Backend>;
+	token: Address<Backend>;
 	value: Assets;
 	error: string;
 }
@@ -91,7 +91,7 @@ export interface WithdrawalException<Bs extends Backend[][number]> {
 export interface Withdrawn<Bs extends Backend[][number]> {
 	source: Bs;
 	epoch: bigint;
-	address: Address;
+	address: Address<Backend>;
 	tokens: Assets;
 }
 
@@ -101,7 +101,7 @@ export interface Withdrawn<Bs extends Backend[][number]> {
 export interface Challenged<Bs extends Backend[][number]> {
 	source: Bs;
 	epoch: bigint;
-	address: Address;
+	address: Address<Backend>;
 }
 
 /**
@@ -110,7 +110,7 @@ export interface Challenged<Bs extends Backend[][number]> {
 export interface ChallengeResponded<Bs extends Backend[][number]> {
 	source: Bs;
 	epoch: bigint;
-	address: Address;
+	address: Address<Backend>;
 	tokens: Assets;
-	sig: Signature;
+	sig: Signature<Backend>;
 }

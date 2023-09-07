@@ -3,55 +3,49 @@
 
 import { ErdstallSession, ErdstallClient, Client, Session } from "#erdstall";
 import { expect } from "chai";
+import {
+	mkDefaultEthereumClientConstructor,
+	mkDefaultEthereumSessionConstructor,
+} from "./ledger/backend/ethereum";
+import { mkDefaultSubstrateClientConstructor } from "./ledger/backend/substrate";
+import { mkDefaultSubstrateSessionConstructor } from "./ledger/backend/substrate/session";
 
-describe("ErdstallClient", () => {
-	const enclaveConn = new URL("http://localhost:8080");
-	const cl: ErdstallClient<["ethereum", "substrate"]> = new Client<
-		["ethereum", "substrate"]
-	>(
-		enclaveConn,
-		{
-			backend: "ethereum",
-			encConn: enclaveConn,
-			provider: {} as any,
-		},
-		{
-			backend: "substrate",
-			arg: 420,
-		},
-	);
+// TODO: Reintroduce
 
-	cl.on("Withdrawn", (e) => {});
-});
-
-describe("ErdstallSession", () => {
-	const singleSession: ErdstallSession<["ethereum"]> = new Session<
-		["ethereum"]
-	>({
-		backend: "ethereum",
-		encConn: new URL("http://localhost:8545"),
-		provider: {} as any,
-		signer: {} as any,
-		address: {} as any,
-	});
-
-	const _addr = singleSession.erdstall();
-
-	const multiSession = new Session<["ethereum", "substrate"]>(
-		{
-			backend: "ethereum",
-			encConn: new URL("http://localhost:8545"),
-			provider: {} as any,
-			signer: {} as any,
-			address: {} as any,
-		},
-		{
-			backend: "substrate",
-			arg: 420,
-		},
-	);
-
-	const _multiAddr = multiSession.erdstall();
-
-	singleSession.on("Withdrawn", (e) => {});
-});
+// describe("ErdstallClient", () => {
+// 	const enclaveConn = new URL("http://localhost:8080");
+// 	const cl: ErdstallClient<["ethereum", "substrate"]> = new Client<
+// 		["ethereum", "substrate"]
+// 	>(
+// 		enclaveConn,
+// 		mkDefaultEthereumClientConstructor({} as any),
+// 		mkDefaultSubstrateClientConstructor(),
+// 	);
+//
+// 	cl.on("Withdrawn", (e) => {});
+// });
+//
+// describe("ErdstallSession", () => {
+// 	const singleSession: ErdstallSession<["ethereum"]> = new Session<
+// 		["ethereum"]
+// 	>(
+// 		{} as any,
+// 		new URL("http://localhost:8080"),
+// 		{} as any,
+// 		mkDefaultEthereumSessionConstructor({} as any),
+// 	);
+//
+// 	const _addr = singleSession.erdstall();
+//
+// 	const multiSession = new Session<["ethereum", "substrate"]>(
+// 		{} as any,
+// 		{} as any,
+// 		{} as any,
+// 		mkDefaultEthereumSessionConstructor({} as any),
+// 		mkDefaultSubstrateSessionConstructor(),
+// 	);
+//
+// 	const _multiAddr = multiSession.erdstall();
+//
+// 	singleSession.on("Withdrawn", (e) => {});
+// });

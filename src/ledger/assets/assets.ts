@@ -2,12 +2,17 @@
 "use strict";
 
 import { utils } from "ethers";
-import { jsonObject } from "#erdstall/export/typedjson";
+import {
+	jsonMapMember,
+	jsonMember,
+	jsonObject,
+	MapShape,
+} from "#erdstall/export/typedjson";
 import { Asset } from "./asset";
 import { ABIValue, customJSON } from "#erdstall/api/util";
 import { ErdstallToken } from "#erdstall/api/responses";
 import { Address, addressKey } from "#erdstall/ledger";
-import { TokenProvider } from "#erdstall/ledger/backend";
+import { Backend, TokenProvider } from "#erdstall/ledger/backend";
 import { Erdstall } from "#erdstall/ledger/backend/ethereum/contracts";
 import { Amount, decodePackedAmount } from "./amount";
 import { Tokens, decodePackedIds } from "./tokens";
@@ -18,6 +23,7 @@ export const ETHZERO = "0x0000000000000000000000000000000000000000";
 
 @jsonObject
 export class ChainAssets {
+	@jsonMapMember(Number, () => LocalAssets, { shape: MapShape.OBJECT })
 	public assets: Map<Chain, LocalAssets>;
 	constructor(assets: Map<Chain, LocalAssets>) {
 		this.assets = assets;
@@ -41,8 +47,60 @@ export class ChainAssets {
 }
 
 @jsonObject
+export class LocalFungibles {
+	@jsonMapMember(String, () => Amount, { shape: MapShape.OBJECT })
+	public assets: Map<string, Amount>;
+	constructor(assets: Map<string, Amount>) {
+		this.assets = assets;
+	}
+
+	static fromJSON(data: any): LocalFungibles {
+		const assets = new Map<string, Amount>();
+		for (const k of Object.keys(data)) {
+			assets.set(k, Amount.fromJSON(data[k]));
+		}
+		return new LocalFungibles(assets);
+	}
+
+	static toJSON(me: LocalFungibles) {
+		var obj: any = {};
+		me.assets.forEach((v, k) => {
+			obj[k] = v.toJSON();
+		});
+		return obj;
+	}
+}
+
+@jsonObject
+export class LocalNonFungibles {
+	@jsonMapMember(String, () => Tokens, { shape: MapShape.OBJECT })
+	public assets: Map<string, Tokens>;
+	constructor(assets: Map<string, Tokens>) {
+		this.assets = assets;
+	}
+
+	static fromJSON(data: any): LocalNonFungibles {
+		const assets = new Map<string, Tokens>();
+		for (const k of Object.keys(data)) {
+			assets.set(k, Tokens.fromJSON(data[k]));
+		}
+		return new LocalNonFungibles(assets);
+	}
+
+	static toJSON(me: LocalNonFungibles) {
+		var obj: any = {};
+		me.assets.forEach((v, k) => {
+			obj[k] = v.toJSON();
+		});
+		return obj;
+	}
+}
+
+@jsonObject
 export class LocalAssets {
+	@jsonMember(LocalFungibles)
 	public fungibles: LocalFungibles;
+	@jsonMember(LocalNonFungibles)
 	public nfts: LocalNonFungibles;
 	constructor(fungibles: LocalFungibles, nfts: LocalNonFungibles) {
 		this.fungibles = fungibles;
@@ -74,55 +132,8 @@ export class LocalAssets {
 }
 
 @jsonObject
-export class LocalFungibles {
-	public assets: Map<string, Amount>;
-	constructor(assets: Map<string, Amount>) {
-		this.assets = assets;
-	}
-
-	static fromJSON(data: any): LocalFungibles {
-		const assets = new Map<string, Amount>();
-		for (const k of Object.keys(data)) {
-			assets.set(k, Amount.fromJSON(data[k]));
-		}
-		return new LocalFungibles(assets);
-	}
-
-	static toJSON(me: LocalFungibles) {
-		var obj: any = {};
-		me.assets.forEach((v, k) => {
-			obj[k] = v.toJSON();
-		});
-		return obj;
-	}
-}
-
-@jsonObject
-export class LocalNonFungibles {
-	public assets: Map<string, Tokens>;
-	constructor(assets: Map<string, Tokens>) {
-		this.assets = assets;
-	}
-
-	static fromJSON(data: any): LocalNonFungibles {
-		const assets = new Map<string, Tokens>();
-		for (const k of Object.keys(data)) {
-			assets.set(k, Tokens.fromJSON(data[k]));
-		}
-		return new LocalNonFungibles(assets);
-	}
-
-	static toJSON(me: LocalNonFungibles) {
-		var obj: any = {};
-		me.assets.forEach((v, k) => {
-			obj[k] = v.toJSON();
-		});
-		return obj;
-	}
-}
-
-@jsonObject
 export class LocalAsset {
+	@jsonMember(Uint8Array)
 	public id: Uint8Array;
 	constructor(id: Uint8Array) {
 		this.id = id;
@@ -143,7 +154,9 @@ customJSON(LocalAsset);
 export class Assets implements ABIValue {
 	public values: Map<string, Asset>;
 
-	constructor(...assets: { token: string | Address; asset: Asset }[]) {
+	constructor(
+		...assets: { token: string | Address<Backend>; asset: Asset }[]
+	) {
 		this.values = new Map<string, Asset>();
 		assets.forEach(({ token, asset }) => this.addAsset(token, asset));
 	}
@@ -198,7 +211,7 @@ export class Assets implements ABIValue {
 		);
 	}
 
-	hasAsset(addr: string | Address): boolean {
+	hasAsset(addr: string | Address<Backend>): boolean {
 		return this.values.has(addressKey(addr));
 	}
 
@@ -210,7 +223,7 @@ export class Assets implements ABIValue {
 		}
 	}
 
-	addAsset(addr: string | Address, asset: Asset): void {
+	addAsset(addr: string | Address<Backend>, asset: Asset): void {
 		addr = addressKey(addr);
 		if (asset.zero()) {
 			return;

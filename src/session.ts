@@ -110,8 +110,8 @@ export class Session<Bs extends Backend[]>
 	extends Client<Bs>
 	implements ErdstallSession<Bs>
 {
-	readonly address: Address;
-	readonly signer: Signer;
+	readonly address: Address<Bs[number]>;
+	readonly signer: Signer<Bs[number]>;
 	private nonce: bigint;
 	private readonly enclaveWriter: EnclaveWriter & InternalEnclaveWatcher;
 	readonly receiptDispatcher: ReceiptDispatcher;
@@ -120,9 +120,9 @@ export class Session<Bs extends Backend[]>
 	private sessionArgs: ConstructorArgs<Bs>;
 
 	constructor(
-		address: Address,
+		address: Address<Bs[number]>,
 		enclaveConn: (EnclaveWriter & InternalEnclaveWatcher) | URL,
-		signer: Signer,
+		signer: Signer<Bs[number]>,
 		...args: ConstructorArgs<Bs>
 	) {
 		// NOTE: It is safe to pass no arguments to the super constructor for the
@@ -184,36 +184,32 @@ export class Session<Bs extends Backend[]>
 		return this.getAccount(this.address);
 	}
 
-	async transferTo(assets: Assets, to: Address): Promise<PendingTransaction> {
+	async transferTo(
+		assets: Assets,
+		to: Address<Backend>,
+	): Promise<PendingTransaction> {
 		if (!this.initialized) {
 			throw ErrUnitialisedClient;
 		}
 		const nonce = await this.nextNonce();
 		const tx = new Transfer(this.address, nonce, to, assets);
-		await tx.sign(
-			{
-				/* TODO: how are TXs signed now? */
-			} as any,
-			this.signer,
-		);
+		await tx.sign(this.signer);
 		const hash = tx.hash();
 		const receipt = this.receiptDispatcher.register(hash);
 		const accepted = this.enclaveWriter.transfer(tx);
 		return { receipt, accepted };
 	}
 
-	async mint(token: Address, id: Uint256): Promise<PendingTransaction> {
+	async mint(
+		token: Address<Backend>,
+		id: Uint256,
+	): Promise<PendingTransaction> {
 		if (!this.initialized) {
 			throw ErrUnitialisedClient;
 		}
 		const nonce = await this.nextNonce();
 		const tx = new Mint(this.address, nonce, token, id);
-		await tx.sign(
-			{
-				/* TODO: how are TXs signed now? */
-			} as any,
-			this.signer,
-		);
+		await tx.sign(this.signer);
 		const hash = tx.hash();
 		const receipt = this.receiptDispatcher.register(hash);
 		const accepted = this.enclaveWriter.mint(tx);
@@ -227,12 +223,7 @@ export class Session<Bs extends Backend[]>
 
 		const nonce = await this.nextNonce();
 		const tx = new Burn(this.address, nonce, assets);
-		await tx.sign(
-			{
-				/* TODO: how are TXs signed now? */
-			} as any,
-			this.signer,
-		);
+		await tx.sign(this.signer);
 		const hash = tx.hash();
 		const receipt = this.receiptDispatcher.register(hash);
 		const accepted = this.enclaveWriter.burn(tx);
@@ -245,12 +236,7 @@ export class Session<Bs extends Backend[]>
 		}
 
 		const exittx = new ExitRequest(this.address, await this.nextNonce());
-		await exittx.sign(
-			{
-				/* TODO: how are TXs signed now? */
-			} as any,
-			this.signer,
-		);
+		await exittx.sign(this.signer);
 		return this.enclaveWriter.exit(exittx);
 	}
 
@@ -298,12 +284,7 @@ export class Session<Bs extends Backend[]>
 
 	async createOffer(offer: Assets, expect: Assets): Promise<TradeOffer> {
 		const o = new TradeOffer(this.address, offer, expect);
-		return o.sign(
-			{
-				/* TODO: how are TXs signed now? */
-			} as any,
-			this.signer,
-		);
+		return o.sign(this.signer);
 	}
 
 	async acceptTrade(offer: TradeOffer): Promise<PendingTransaction> {
@@ -312,12 +293,7 @@ export class Session<Bs extends Backend[]>
 		}
 		const nonce = await this.nextNonce();
 		const tx = new Trade(this.address, nonce, offer);
-		await tx.sign(
-			{
-				/* TODO: how are TXs signed now? */
-			} as any,
-			this.signer,
-		);
+		await tx.sign(this.signer);
 		const hash = tx.hash();
 		const receipt = this.receiptDispatcher.register(hash);
 		const accepted = this.enclaveWriter.trade(tx);

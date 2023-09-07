@@ -100,8 +100,9 @@ export interface Contracter<Bs extends Backend[]> {
 	 * backend.
 	 */
 	erdstall(): Bs extends [infer BID]
-		? { chain: BID; address: Address }
-		: { chain: Bs[number]; address: Address }[];
+		? // TODO: The `Address<Backend>` should really be `Address<BID>`.
+		  { chain: BID; address: Address<Backend> }
+		: { chain: Bs[number]; address: Address<Bs[number]> }[];
 }
 
 /**
@@ -116,7 +117,10 @@ export interface Transactor {
 	 * @param to - The recipient of this transfer action.
 	 * @returns A promise containing the pending transaction for this transfer.
 	 */
-	transferTo(assets: Assets, to: Address): Promise<PendingTransaction>;
+	transferTo(
+		assets: Assets,
+		to: Address<Backend>,
+	): Promise<PendingTransaction>;
 }
 
 /**
@@ -130,7 +134,7 @@ export interface Minter {
 	 * @param id - The id of the token within the specified token contract.
 	 * @returns A promise containing the pending transaction for this mint.
 	 */
-	mint(token: Address, id: Uint256): Promise<PendingTransaction>;
+	mint(token: Address<Backend>, id: Uint256): Promise<PendingTransaction>;
 }
 
 /**
@@ -281,7 +285,7 @@ export interface Subscriber {
 	 * TxReceipts.
 	 * @returns An empty promise which can be awaited.
 	 */
-	subscribe(who?: Address): Promise<void>;
+	subscribe(who?: Address<Backend>): Promise<void>;
 }
 
 /**
@@ -308,7 +312,7 @@ export interface AccountGetter {
 	 * @returns A promise containing the current account state of the specified
 	 * address.
 	 */
-	getAccount(who: Address): Promise<Account>;
+	getAccount(who: Address<Backend>): Promise<Account>;
 }
 
 export interface Attester {
@@ -400,7 +404,7 @@ export interface ErdstallSession<Bs extends Backend[]>
 	/**
 	 * The address connected to this session.
 	 */
-	readonly address: Address;
+	readonly address: Address<Backend>;
 }
 
 export interface ErdstallBackendSession<B extends Backend>

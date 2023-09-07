@@ -2,7 +2,6 @@
 "use strict";
 
 import { utils } from "ethers";
-import { Address } from "#erdstall/ledger";
 
 export interface ABIEncodable {
 	asABI(): any;
@@ -25,7 +24,7 @@ export class ABIPacked {
 }
 
 export interface ABITaggedPackable {
-	packTagged(contract: Address): ABIPacked;
+	packTagged(): ABIPacked;
 }
 
 export interface ABIValue {
@@ -56,10 +55,11 @@ export class ABIEncoder {
 	}
 
 	encode(...fields: EncoderArg[]): this {
-		return this.encodeTagged(undefined, ...fields);
+		return this.encodeTagged(...fields);
 	}
 
-	encodeTagged(contract?: Address, ...fields: EncoderArg[]): this {
+	// TODO: Clean this up.
+	encodeTagged(...fields: EncoderArg[]): this {
 		this.types = this.types.concat(
 			fields.map((f): string => {
 				if ((f as ABITaggedPackable).packTagged !== undefined)
@@ -78,7 +78,7 @@ export class ABIEncoder {
 		this.values = this.values.concat(
 			fields.map((f): any => {
 				if ((f as ABITaggedPackable).packTagged !== undefined)
-					return (f as ABITaggedPackable).packTagged(contract!).bytes;
+					return (f as ABITaggedPackable).packTagged().bytes;
 				if ((f as ABIEncodable).asABI !== undefined)
 					return (f as ABIEncodable).asABI();
 
@@ -102,8 +102,8 @@ export class ABIEncoder {
 		);
 	}
 
-	pack(tag: string, contract: Address): ABIPacked {
-		const enc = new ABIEncoder(tag, contract);
+	pack(tag: string): ABIPacked {
+		const enc = new ABIEncoder(tag);
 		return new ABIPacked(
 			utils.defaultAbiCoder.encode(
 				enc.types.concat(this.types),
