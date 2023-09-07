@@ -2,9 +2,9 @@
 "use strict";
 
 import {
-	jsonObject,
 	TypedJSON,
 	Serializable,
+	jsonObject,
 } from "#erdstall/export/typedjson";
 import { customJSON } from "./util";
 

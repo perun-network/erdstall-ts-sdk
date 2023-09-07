@@ -8,11 +8,11 @@ import {
 	jsonMember,
 	jsonBigIntMember,
 } from "#erdstall/export/typedjson";
-import { customJSON, ABIPacked, ABIEncoder } from "#erdstall/api/util";
-import { Assets } from "#erdstall/ledger/assets";
-import { Address } from "#erdstall/ledger";
-import { Signature } from "#erdstall/api";
+import { customJSON, ABIPacked } from "#erdstall/api/util";
+import { ChainAssets } from "#erdstall/ledger/assets";
+import { Address, Signature } from "#erdstall/ledger";
 import { ErdstallObject, registerErdstallType } from "#erdstall/api";
+import { Backend } from "#erdstall/ledger/backend";
 
 const balanceProofsTypeName = "BalanceProofs";
 
@@ -20,15 +20,15 @@ const balanceProofsTypeName = "BalanceProofs";
 @jsonObject
 export class Balance {
 	@jsonBigIntMember() epoch: bigint;
-	@jsonMember(Address) account: Address;
+	@jsonMember(Address) account: Address<Backend>;
 	@jsonMember(Boolean) exit: boolean;
-	@jsonMember(() => Assets) values: Assets;
+	@jsonMember(() => ChainAssets) values: ChainAssets;
 
 	constructor(
 		epoch: bigint,
-		account: Address | string,
+		account: Address<Backend> | string,
 		exit: boolean,
-		values: Assets,
+		values: ChainAssets,
 	) {
 		this.epoch = epoch;
 		this.account = Address.ensure(account);
@@ -38,28 +38,29 @@ export class Balance {
 
 	// (uint64,address,bool,tuple(address,bytes)[])
 	asABI(): ErdstallBalance {
-		return {
-			epoch: this.epoch.valueOf(),
-			account: this.account.toString(),
-			exit: this.exit,
-			tokens: this.values.asABI(),
-		};
+		throw new Error("not implemented");
+		// return {
+		// 	epoch: this.epoch.valueOf(),
+		// 	account: this.account.toString(),
+		// 	exit: this.exit,
+		// 	tokens: this.values.asABI(),
+		// };
 	}
 
-	packTagged(contract: Address): ABIPacked {
-		return new ABIEncoder(
-			["uint64", this.epoch],
-			this.account,
-			this.exit,
-			this.values,
-		).pack("ErdstallBalance", contract);
+	packTagged(): ABIPacked {
+		throw new Error("not implemented");
+		// return new ABIEncoder(
+		// 	["uint64", this.epoch],
+		// 	this.account,
+		// 	this.exit,
+		// 	this.values,
+		// ).pack("ErdstallBalance");
 	}
 
-	async sign(contract: Address, signer: Signer): Promise<BalanceProof> {
-		const sig = await signer.signMessage(
-			this.packTagged(contract).keccak256(),
-		);
-		return new BalanceProof(this, new Signature(sig));
+	async sign(signer: Signer): Promise<BalanceProof> {
+		throw new Error("not implemented");
+		// const sig = await signer.signMessage(this.packTagged().keccak256());
+		// return new BalanceProof(this, new Signature(sig));
 	}
 }
 
@@ -84,20 +85,20 @@ export class BalanceProof {
 	@jsonMember(Balance)
 	readonly balance: Balance;
 	@jsonMember(Signature)
-	readonly sig: Signature;
+	readonly sig: Signature<Backend>;
 
-	constructor(balance: Balance, signature: Signature) {
+	constructor(balance: Balance, signature: Signature<Backend>) {
 		this.balance = balance;
 		this.sig = signature;
 	}
 
 	toEthProof(): [ErdstallBalance, ErdstallSignature] {
-		return [this.balance.asABI(), this.sig.value];
+		return [this.balance.asABI(), this.sig.asABI()];
 	}
 
-	verify(contract: Address, tee: Address): boolean {
+	verify(tee: Address<Backend>): boolean {
 		const signer = utils.verifyMessage(
-			this.balance.packTagged(contract).keccak256(),
+			this.balance.packTagged().keccak256(),
 			this.sig.toString(),
 		);
 		return signer === tee.toString();

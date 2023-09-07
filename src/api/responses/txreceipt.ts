@@ -10,10 +10,12 @@ import {
 	jsonMapMember,
 	MapShape,
 } from "#erdstall/export/typedjson";
-import { Signature } from "../signature";
+import { Signature } from "#erdstall/ledger";
 import { utils } from "ethers";
 import { ABIEncoder, ABIPacked } from "../util";
 import { ETHZERO } from "#erdstall/ledger/assets";
+import { Backend } from "#erdstall/ledger/backend";
+import { EthereumAddress } from "#erdstall/ledger/backend/ethereum";
 
 const txReceiptTypeName = "TxReceipt";
 
@@ -26,7 +28,7 @@ export enum TxStatusCode {
 export class TxReceipt extends ErdstallObject {
 	@jsonMember(() => Transaction) tx: Transaction;
 	@jsonMember(TransactionOutput) output: TransactionOutput;
-	@jsonMember(() => Signature) sig: Signature;
+	@jsonMember(() => Signature) sig: Signature<Backend>;
 	@jsonMember(String) hash: String;
 
 	@jsonMapMember(String, () => Account, { shape: MapShape.OBJECT })
@@ -42,7 +44,7 @@ export class TxReceipt extends ErdstallObject {
 		delta: Map<string, Account>,
 		status: Number,
 		output: TransactionOutput,
-		sig: Signature,
+		sig: Signature<Backend>,
 		hash: string,
 		error?: string,
 	) {
@@ -62,20 +64,22 @@ export class TxReceipt extends ErdstallObject {
 	protected objectTypeName(): string {
 		return txReceiptTypeName;
 	}
-	packTagged(_: Address): ABIPacked {
+	packTagged(_: Address<Backend>): ABIPacked {
 		const enc = new ABIEncoder();
-		return enc.pack(this.encodeABI(enc, _), Address.fromString(ETHZERO));
+		return enc.pack(this.encodeABI(enc));
 	}
-	protected encodeABI(e: ABIEncoder, _: Address): string {
+	protected encodeABI(e: ABIEncoder): string {
 		e.encode(
 			["bytes", utils.arrayify(this.hash as utils.BytesLike)],
 			["bytes", this.output.payload],
 		);
 		return "ErdstallTransactionOutput";
 	}
-	verify(contract: Address): boolean {
+	verify(contract: Address<Backend>): boolean {
 		console.log(
-			utils.hexlify(this.packTagged(Address.fromString(ETHZERO)).bytes),
+			utils.hexlify(
+				this.packTagged(EthereumAddress.fromString(ETHZERO)).bytes,
+			),
 		);
 		if (!this.sig) {
 			return false;

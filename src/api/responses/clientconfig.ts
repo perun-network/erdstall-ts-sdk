@@ -26,7 +26,6 @@ export class ChainConfig<B extends Backend> {
 					blockStreamLAddr: d.data.blockStreamLAddr,
 				});
 			case "ethereum":
-				console.log(d.data);
 				return new ChainConfig(d.id, "ethereum", {
 					contract: d.data.contract,
 					networkID: d.data.networkID,

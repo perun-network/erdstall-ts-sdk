@@ -10,6 +10,7 @@ import {
 } from "#erdstall/export/typedjson";
 import { ErdstallObject, registerErdstallType } from "#erdstall/api";
 import * as ledger from "#erdstall/ledger";
+import { Backend } from "#erdstall/ledger/backend";
 
 const typeName = "AttestResponse";
 
@@ -18,11 +19,11 @@ export class Parameters {
 	@jsonBigIntMember() powDepth: bigint;
 	@jsonBigIntMember() epochDuration: bigint;
 	@jsonBigIntMember() initBlock: bigint;
-	@jsonMember(ledger.Address) tee: ledger.Address;
-	@jsonMember(ledger.Address) contract: ledger.Address;
+	@jsonMember(ledger.Address) tee: ledger.Address<Backend>;
+	@jsonMember(ledger.Address) contract: ledger.Address<Backend>;
 
 	@jsonMapMember(String, () => ledger.Address, { shape: MapShape.OBJECT })
-	tokenHolders: Map<string, ledger.Address>;
+	tokenHolders: Map<string, ledger.Address<Backend>>;
 
 	@jsonMember(String) network: string;
 
@@ -30,9 +31,9 @@ export class Parameters {
 		powDepth: bigint,
 		epochDuration: bigint,
 		initBlock: bigint,
-		tee: ledger.Address,
-		contract: ledger.Address,
-		tokenHolders: Map<string, ledger.Address>,
+		tee: ledger.Address<Backend>,
+		contract: ledger.Address<Backend>,
+		tokenHolders: Map<string, ledger.Address<Backend>>,
 		network: string,
 	) {
 		this.powDepth = powDepth;
