@@ -3,3 +3,5 @@
 
 export * from "./readconn";
 export * from "./client";
+export * from "./address";
+export * from "./signature";

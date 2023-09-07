@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { BalanceProof } from "#erdstall/api/responses";
+import { BalanceProof, ClientConfig } from "#erdstall/api/responses";
 import { ErdstallBackendSession } from "#erdstall/erdstall";
 import { Assets } from "#erdstall/ledger/assets";
 import { TransactionGenerator } from "#erdstall/utils";
@@ -23,4 +23,17 @@ export class SubstrateSession
 	): Promise<TransactionGenerator> {
 		throw new Error("Method not implemented.");
 	}
+}
+
+export function mkDefaultSubstrateSessionConstructor(): {
+	backend: "substrate";
+	arg: number;
+	initializer: (c: ClientConfig) => SubstrateSession;
+} {
+	const arg = 420;
+	return {
+		backend: "substrate",
+		arg: arg,
+		initializer: (_c: ClientConfig) => new SubstrateSession(arg),
+	};
 }
