@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import PRNG from "#erdstall/test/random";
+import PRNG, { newRandomUint8Array } from "#erdstall/test/random";
 import {
 	newRandomAddress,
 	newRandomAssets,
+	newRandomChainAssets,
 	newRandomUint64,
 } from "#erdstall/test";
 import {
@@ -21,7 +22,7 @@ export function newRandomMint(rng: PRNG): Mint {
 	return new Mint(
 		newRandomAddress(rng),
 		newRandomUint64(rng),
-		newRandomAddress(rng),
+		newRandomUint8Array(rng, 32),
 		newRandomUint64(rng),
 	);
 }
@@ -31,20 +32,24 @@ export function newRandomTransfer(rng: PRNG, size: number = 1): Transfer {
 		newRandomAddress(rng),
 		newRandomUint64(rng),
 		newRandomAddress(rng),
-		newRandomAssets(rng, size),
+		newRandomChainAssets(rng, size),
 	);
 }
 
 export function newRandomExitRequest(rng: PRNG): ExitRequest {
-	return new ExitRequest(newRandomAddress(rng), newRandomUint64(rng));
+	return new ExitRequest(
+		newRandomAddress(rng),
+		newRandomUint64(rng),
+		rng.uInt32() % 2 === 0,
+	);
 }
 
 // Returns an unsigned random TradeOffer.
 export function newRandomTradeOffer(rng: PRNG, size: number = 1): TradeOffer {
 	return new TradeOffer(
 		newRandomAddress(rng),
-		newRandomAssets(rng, size),
-		newRandomAssets(rng, size),
+		newRandomChainAssets(rng, size),
+		newRandomChainAssets(rng, size),
 	);
 }
 

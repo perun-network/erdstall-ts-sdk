@@ -2,8 +2,7 @@
 "use strict";
 
 import { ErdstallObject, registerErdstallType } from "#erdstall/api";
-import { Signature } from "#erdstall/api";
-import { Address } from "#erdstall/ledger";
+import { Address, Signature } from "#erdstall/ledger";
 import { customJSON, ABIEncoder, ABIPacked } from "#erdstall/api/util";
 import {
 	jsonObject,
@@ -13,8 +12,7 @@ import {
 	jsonBigIntMember,
 } from "#erdstall/export/typedjson";
 import { utils } from "ethers";
-import { ETHZERO } from "#erdstall/ledger/assets";
-import { Signer } from "#erdstall/ledger/backend";
+import { Backend, Signer } from "#erdstall/ledger/backend";
 
 const transactionImpls = new Map<string, Serializable<Transaction>>();
 const transactionTypeName = "Transaction";
@@ -29,30 +27,27 @@ export function registerTransactionType(
 /** Transaction is the base class for all transactions. */
 @jsonObject
 export abstract class Transaction extends ErdstallObject {
-	@jsonMember(Address) sender: Address;
+	@jsonMember(Address) sender: Address<Backend>;
 	@jsonBigIntMember() nonce: bigint;
-	@jsonMember(Signature) sig?: Signature;
+	@jsonMember(Signature) sig?: Signature<Backend>;
 
-	constructor(sender: Address, nonce: bigint) {
+	constructor(sender: Address<Backend>, nonce: bigint) {
 		super();
 		this.sender = sender;
 		this.nonce = nonce;
 	}
 
-	async sign(contract: Address, signer: Signer): Promise<this> {
-		const sig = await signer.signMessage(
-			this.packTagged(contract).keccak256(),
-		);
-		this.sig = new Signature(sig);
+	async sign(signer: Signer<Backend>): Promise<this> {
+		this.sig = await signer.signMessage(this.packTagged().keccak256());
 		return this;
 	}
 
-	verify(contract: Address): boolean {
+	verify(): boolean {
 		if (!this.sig) {
 			return false;
 		}
 		const rec = utils.verifyMessage(
-			this.packTagged(contract).keccak256(),
+			this.packTagged().keccak256(),
 			this.sig!.toString(),
 		);
 
@@ -70,16 +65,18 @@ export abstract class Transaction extends ErdstallObject {
 		return TypedJSON.parse(data, transactionImpls.get(js.type)!)!;
 	}
 
-	packTagged(contract: Address): ABIPacked {
-		const enc = new ABIEncoder(this.sender, ["uint64", this.nonce]);
-		return enc.pack(this.encodeABI(enc, contract), contract);
+	packTagged(): ABIPacked {
+		// TODO: This should use the canonicalized JSON representation of the
+		// transaction.
+		throw new Error("not implemented");
 	}
 
 	hash(): string {
-		const toHash = this.packTagged(Address.fromString(ETHZERO));
-		return utils.keccak256(
-			new Uint8Array([...toHash.bytes, ...this.sig!.value]),
-		);
+		const toHash = this.packTagged();
+		throw new Error("not implemented");
+		// return utils.keccak256(
+		// 	new Uint8Array([...toHash.bytes, ...this.sig!.value]),
+		// );
 	}
 
 	static toJSON(me: Transaction) {
@@ -98,7 +95,7 @@ export abstract class Transaction extends ErdstallObject {
 
 	public abstract txType(): Serializable<Transaction>;
 	protected abstract txTypeName(): string;
-	protected abstract encodeABI(_: ABIEncoder, contract: Address): string;
+	protected abstract encodeABI(_: ABIEncoder): string;
 }
 
 registerErdstallType(transactionTypeName, Transaction);
@@ -109,7 +106,7 @@ TypedJSON.mapType(Uint8Array, {
 		if (!json) {
 			return new Uint8Array();
 		}
-		return utils.arrayify(json);
+		return utils.arrayify(json, { allowMissingPrefix: true });
 	},
 	serializer: (value) => (value == null ? value : utils.hexlify(value)),
 });

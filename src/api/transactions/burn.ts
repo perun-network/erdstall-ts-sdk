@@ -6,6 +6,7 @@ import { Address } from "#erdstall/ledger";
 import { Assets } from "#erdstall/ledger/assets";
 import { jsonObject, jsonMember } from "#erdstall/export/typedjson";
 import { ABIEncoder } from "#erdstall/api/util";
+import { Backend } from "#erdstall/ledger/backend";
 
 const burnTypeName = "Burn";
 
@@ -13,7 +14,7 @@ const burnTypeName = "Burn";
 export class Burn extends Transaction {
 	@jsonMember(() => Assets) values: Assets;
 
-	constructor(sender: Address, nonce: bigint, values: Assets) {
+	constructor(sender: Address<Backend>, nonce: bigint, values: Assets) {
 		super(sender, nonce);
 		this.values = values;
 	}
@@ -24,7 +25,7 @@ export class Burn extends Transaction {
 	protected txTypeName(): string {
 		return burnTypeName;
 	}
-	protected encodeABI(e: ABIEncoder, _: Address): string {
+	protected encodeABI(e: ABIEncoder): string {
 		e.encode(this.values);
 		return "ErdstallBurn";
 	}

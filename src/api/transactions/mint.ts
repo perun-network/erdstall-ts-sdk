@@ -9,18 +9,19 @@ import {
 	jsonBigIntMember,
 } from "#erdstall/export/typedjson";
 import { ABIEncoder } from "#erdstall/api/util";
+import { Backend } from "#erdstall/ledger/backend";
 
 const mintTypeName = "Mint";
 
 @jsonObject
 export class Mint extends Transaction {
-	@jsonMember(Address) token: Address;
+	@jsonMember(Uint8Array) token: Uint8Array;
 	@jsonBigIntMember() id: bigint;
 
 	constructor(
-		sender: Address,
+		sender: Address<Backend>,
 		nonce: bigint,
-		tokenType: Address,
+		tokenType: Uint8Array,
 		id: bigint,
 	) {
 		super(sender, nonce);
@@ -34,7 +35,7 @@ export class Mint extends Transaction {
 	protected txTypeName(): string {
 		return mintTypeName;
 	}
-	protected encodeABI(e: ABIEncoder, _: Address): string {
+	protected encodeABI(e: ABIEncoder): string {
 		e.encode(this.token, ["uint256", this.id]);
 		return "ErdstallMint";
 	}
