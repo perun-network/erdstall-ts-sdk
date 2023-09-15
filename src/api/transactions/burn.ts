@@ -3,7 +3,7 @@
 
 import { Transaction, registerTransactionType } from "./transaction";
 import { Address } from "#erdstall/ledger";
-import { Assets } from "#erdstall/ledger/assets";
+import { ChainAssets } from "#erdstall/ledger/assets";
 import { jsonObject, jsonMember } from "#erdstall/export/typedjson";
 import { ABIEncoder } from "#erdstall/api/util";
 import { Backend } from "#erdstall/ledger/backend";
@@ -12,9 +12,9 @@ const burnTypeName = "Burn";
 
 @jsonObject
 export class Burn extends Transaction {
-	@jsonMember(() => Assets) values: Assets;
+	@jsonMember(() => ChainAssets) values: ChainAssets;
 
-	constructor(sender: Address<Backend>, nonce: bigint, values: Assets) {
+	constructor(sender: Address<Backend>, nonce: bigint, values: ChainAssets) {
 		super(sender, nonce);
 		this.values = values;
 	}

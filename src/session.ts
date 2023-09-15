@@ -10,11 +10,12 @@ import {
 	TradeOffer,
 	Trade,
 	Burn,
+	FullExit,
 } from "#erdstall/api/transactions";
 import { InternalEnclaveWatcher } from "./internalenclavewatcher";
 import { EnclaveWriter } from "#erdstall/enclave";
 import { Address, Account } from "#erdstall/ledger";
-import { Assets } from "#erdstall/ledger/assets";
+import { Assets, ChainAssets } from "#erdstall/ledger/assets";
 import { Uint256 } from "#erdstall/api/util";
 import { ErdstallBackendSession, ErdstallSession } from "#erdstall";
 import { ErdstallEventHandler } from "./event";
@@ -185,7 +186,7 @@ export class Session<Bs extends Backend[]>
 	}
 
 	async transferTo(
-		assets: Assets,
+		assets: ChainAssets,
 		to: Address<Backend>,
 	): Promise<PendingTransaction> {
 		if (!this.initialized) {
@@ -200,10 +201,7 @@ export class Session<Bs extends Backend[]>
 		return { receipt, accepted };
 	}
 
-	async mint(
-		token: Address<Backend>,
-		id: Uint256,
-	): Promise<PendingTransaction> {
+	async mint(token: Uint8Array, id: Uint256): Promise<PendingTransaction> {
 		if (!this.initialized) {
 			throw ErrUnitialisedClient;
 		}
@@ -216,7 +214,7 @@ export class Session<Bs extends Backend[]>
 		return { receipt, accepted };
 	}
 
-	async burn(assets: Assets): Promise<PendingTransaction> {
+	async burn(assets: ChainAssets): Promise<PendingTransaction> {
 		if (!this.initialized) {
 			throw ErrUnitialisedClient;
 		}
@@ -235,7 +233,11 @@ export class Session<Bs extends Backend[]>
 			return Promise.reject(ErrUnitialisedClient);
 		}
 
-		const exittx = new ExitRequest(this.address, await this.nextNonce());
+		const exittx = new ExitRequest(
+			this.address,
+			await this.nextNonce(),
+			true,
+		);
 		await exittx.sign(this.signer);
 		return this.enclaveWriter.exit(exittx);
 	}
@@ -277,12 +279,15 @@ export class Session<Bs extends Backend[]>
 
 	async deposit<B extends RequestedBackends<Bs>>(
 		_backend: B,
-		_asset: Assets,
+		_asset: ChainAssets,
 	): Promise<TransactionGenerator> {
 		throw new Error("not implemented");
 	}
 
-	async createOffer(offer: Assets, expect: Assets): Promise<TradeOffer> {
+	async createOffer(
+		offer: ChainAssets,
+		expect: ChainAssets,
+	): Promise<TradeOffer> {
 		const o = new TradeOffer(this.address, offer, expect);
 		return o.sign(this.signer);
 	}

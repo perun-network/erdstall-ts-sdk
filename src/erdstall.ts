@@ -8,18 +8,12 @@ import { PendingTransaction } from "#erdstall/api/util/pending_transaction";
 import { TradeOffer } from "#erdstall/api/transactions";
 import { BalanceProof, AttestationResult } from "#erdstall/api/responses";
 import { Address, Account, LedgerEvent } from "#erdstall/ledger";
-import {
-	Backend,
-	RequestedBackends,
-	TokenProvider,
-} from "#erdstall/ledger/backend";
-import { Assets } from "#erdstall/ledger/assets";
+import { Backend, RequestedBackends } from "#erdstall/ledger/backend";
+import { ChainAssets } from "#erdstall/ledger/assets";
 import { Uint256 } from "#erdstall/api/util";
 import { TransactionGenerator } from "#erdstall/utils";
 import { EnclaveEvent } from "#erdstall/enclave";
 import { NFTMetadataProvider } from "#erdstall/ledger/backend";
-import { OnChainQuerier } from "./ledger";
-
 import { ErdstallEvent, ErdstallEventHandler } from "./event";
 export * from "./client";
 export * from "./session";
@@ -118,7 +112,7 @@ export interface Transactor {
 	 * @returns A promise containing the pending transaction for this transfer.
 	 */
 	transferTo(
-		assets: Assets,
+		assets: ChainAssets,
 		to: Address<Backend>,
 	): Promise<PendingTransaction>;
 }
@@ -134,7 +128,7 @@ export interface Minter {
 	 * @param id - The id of the token within the specified token contract.
 	 * @returns A promise containing the pending transaction for this mint.
 	 */
-	mint(token: Address<Backend>, id: Uint256): Promise<PendingTransaction>;
+	mint(token: Uint8Array, id: Uint256): Promise<PendingTransaction>;
 }
 
 /**
@@ -147,7 +141,7 @@ export interface Burner {
 	 * @param assets - The assets to be burned by this transaction.
 	 * @returns A promise containing the pending transaction for this burn.
 	 */
-	burn(assets: Assets): Promise<PendingTransaction>;
+	burn(assets: ChainAssets): Promise<PendingTransaction>;
 }
 
 /**
@@ -161,7 +155,7 @@ export interface Trader {
 	 * @param expect - The assets which are expected in return.
 	 * @returns A promise containing the assembled and signed trade offer.
 	 */
-	createOffer(offer: Assets, expect: Assets): Promise<TradeOffer>;
+	createOffer(offer: ChainAssets, expect: ChainAssets): Promise<TradeOffer>;
 
 	/**
 	 * Accepts the given trade offer and submits this trade to Erdstall.
@@ -190,7 +184,7 @@ export interface Depositor<Bs extends Backend[]> {
 	 */
 	deposit(
 		backend: RequestedBackends<Bs>,
-		assets: Assets,
+		assets: ChainAssets,
 	): Promise<TransactionGenerator>;
 }
 
