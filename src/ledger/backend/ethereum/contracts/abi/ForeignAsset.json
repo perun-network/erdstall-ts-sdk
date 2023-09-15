@@ -1,0 +1,29 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "ForeignAsset",
+  "sourceName": "contracts/ForeignAsset.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [],
+      "name": "holder",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x6080604052348015600f57600080fd5b506000805460ff1916600117905560b08061002b6000396000f3fe6080604052348015600f57600080fd5b506004361060285760003560e01c8063e534155d14602d575b600080fd5b600054605190610100900473ffffffffffffffffffffffffffffffffffffffff1681565b60405173ffffffffffffffffffffffffffffffffffffffff909116815260200160405180910390f3fea2646970667358221220bdbc8684b7828bbce98903b45e706918db85380a4937f7befea5f39ef16a274664736f6c63430008060033",
+  "deployedBytecode": "0x6080604052348015600f57600080fd5b506004361060285760003560e01c8063e534155d14602d575b600080fd5b600054605190610100900473ffffffffffffffffffffffffffffffffffffffff1681565b60405173ffffffffffffffffffffffffffffffffffffffff909116815260200160405180910390f3fea2646970667358221220bdbc8684b7828bbce98903b45e706918db85380a4937f7befea5f39ef16a274664736f6c63430008060033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

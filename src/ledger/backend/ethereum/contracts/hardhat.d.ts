@@ -61,14 +61,6 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ERC721Holder__factory>;
     getContractFactory(
-      name: "ERC721MintableHolder",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ERC721MintableHolder__factory>;
-    getContractFactory(
-      name: "IERC721Minter",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IERC721Minter__factory>;
-    getContractFactory(
       name: "Erdstall",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Erdstall__factory>;
@@ -77,21 +69,193 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ETHHolder__factory>;
     getContractFactory(
-      name: "PerunArt",
+      name: "ForeignAsset",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.PerunArt__factory>;
+    ): Promise<Contracts.ForeignAsset__factory>;
+    getContractFactory(
+      name: "ForeignAssetHolder",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ForeignAssetHolder__factory>;
+    getContractFactory(
+      name: "ERC20Clonable",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ERC20Clonable__factory>;
+    getContractFactory(
+      name: "ForeignERC20",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ForeignERC20__factory>;
+    getContractFactory(
+      name: "ERC721Clonable",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ERC721Clonable__factory>;
+    getContractFactory(
+      name: "ForeignERC721",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ForeignERC721__factory>;
     getContractFactory(
       name: "PerunToken",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.PerunToken__factory>;
     getContractFactory(
-      name: "RevertToken",
+      name: "BehaviorSelect",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.RevertToken__factory>;
+    ): Promise<Contracts.BehaviorSelect__factory>;
+    getContractFactory(
+      name: "ContractBasedUser",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ContractBasedUser__factory>;
+    getContractFactory(
+      name: "ERC20TestToken",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ERC20TestToken__factory>;
+    getContractFactory(
+      name: "ERC721TestToken",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ERC721TestToken__factory>;
+    getContractFactory(
+      name: "MockErdstall",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.MockErdstall__factory>;
     getContractFactory(
       name: "TokenHolder",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.TokenHolder__factory>;
+
+    getContractAt(
+      name: "Ownable",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.Ownable>;
+    getContractAt(
+      name: "ERC20",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ERC20>;
+    getContractAt(
+      name: "IERC20Metadata",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IERC20Metadata>;
+    getContractAt(
+      name: "IERC20",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IERC20>;
+    getContractAt(
+      name: "ERC721",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ERC721>;
+    getContractAt(
+      name: "IERC721Metadata",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IERC721Metadata>;
+    getContractAt(
+      name: "IERC721",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IERC721>;
+    getContractAt(
+      name: "IERC721Receiver",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IERC721Receiver>;
+    getContractAt(
+      name: "ERC165",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ERC165>;
+    getContractAt(
+      name: "IERC165",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IERC165>;
+    getContractAt(
+      name: "ERC20Holder",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ERC20Holder>;
+    getContractAt(
+      name: "ERC721Holder",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ERC721Holder>;
+    getContractAt(
+      name: "Erdstall",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.Erdstall>;
+    getContractAt(
+      name: "ETHHolder",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ETHHolder>;
+    getContractAt(
+      name: "ForeignAsset",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ForeignAsset>;
+    getContractAt(
+      name: "ForeignAssetHolder",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ForeignAssetHolder>;
+    getContractAt(
+      name: "ERC20Clonable",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ERC20Clonable>;
+    getContractAt(
+      name: "ForeignERC20",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ForeignERC20>;
+    getContractAt(
+      name: "ERC721Clonable",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ERC721Clonable>;
+    getContractAt(
+      name: "ForeignERC721",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ForeignERC721>;
+    getContractAt(
+      name: "PerunToken",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.PerunToken>;
+    getContractAt(
+      name: "BehaviorSelect",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.BehaviorSelect>;
+    getContractAt(
+      name: "ContractBasedUser",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ContractBasedUser>;
+    getContractAt(
+      name: "ERC20TestToken",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ERC20TestToken>;
+    getContractAt(
+      name: "ERC721TestToken",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ERC721TestToken>;
+    getContractAt(
+      name: "MockErdstall",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.MockErdstall>;
+    getContractAt(
+      name: "TokenHolder",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.TokenHolder>;
 
     // default types
     getContractFactory(
@@ -103,5 +267,10 @@ declare module "hardhat/types/runtime" {
       bytecode: ethers.utils.BytesLike,
       signer?: ethers.Signer
     ): Promise<ethers.ContractFactory>;
+    getContractAt(
+      nameOrAbi: string | any[],
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<ethers.Contract>;
   }
 }

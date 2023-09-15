@@ -5,6 +5,16 @@
   "abi": [
     {
       "inputs": [],
+      "name": "CallerIsNotErdstall",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "EmptyDeposit",
+      "type": "error"
+    },
+    {
+      "inputs": [],
       "name": "erdstall",
       "outputs": [
         {
@@ -19,9 +29,14 @@
     {
       "inputs": [
         {
-          "internalType": "address",
-          "name": "token",
-          "type": "address"
+          "internalType": "uint16",
+          "name": "origin",
+          "type": "uint16"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "localID",
+          "type": "bytes32"
         },
         {
           "internalType": "address",
@@ -29,9 +44,9 @@
           "type": "address"
         },
         {
-          "internalType": "bytes",
+          "internalType": "uint256[]",
           "name": "value",
-          "type": "bytes"
+          "type": "uint256[]"
         }
       ],
       "name": "transfer",
