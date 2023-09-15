@@ -9,8 +9,7 @@ import {
 	MapShape,
 } from "#erdstall/export/typedjson";
 import { Asset } from "./asset";
-import { ABIValue, customJSON } from "#erdstall/api/util";
-import { ErdstallToken } from "#erdstall/api/responses";
+import { customJSON } from "#erdstall/api/util";
 import { Address, addressKey } from "#erdstall/ledger";
 import { Backend, TokenProvider } from "#erdstall/ledger/backend";
 import { Erdstall } from "#erdstall/ledger/backend/ethereum/contracts";
@@ -151,7 +150,7 @@ customJSON(LocalAssets);
 customJSON(LocalAsset);
 
 @jsonObject
-export class Assets implements ABIValue {
+export class Assets {
 	public values: Map<string, Asset>;
 
 	constructor(
@@ -181,19 +180,6 @@ export class Assets implements ABIValue {
 			vs.values.set(addressKey(k), Asset.fromJSON(data[k]));
 		}
 		return vs;
-	}
-
-	ABIType(): string {
-		return "tuple(address token,bytes value)[]";
-	}
-
-	asABI(): ErdstallToken[] {
-		return this.orderedAssets().map(([addr, asset]) => {
-			return {
-				token: addr,
-				value: asset.asABI(),
-			};
-		});
 	}
 
 	private orderedAssets(): [string, Asset][] {
