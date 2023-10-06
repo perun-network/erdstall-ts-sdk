@@ -9,13 +9,19 @@ import { SubstrateChainConfig } from "./substrate/chainconfig";
 // The list of all supported backends. It defines the type of contract
 // connector used to access the Erdstall contract on each chain.
 type _supportedBackendConnectors = {
-	ethereum: [ErdstallEthereum, EthereumChainConfig];
+	ethereum: [
+		// Handle to interface with the on-chain contract.
+		ErdstallEthereum,
+		// Specialized chain-configuration.
+		EthereumChainConfig,
+		// Supported cryptos.
+		"ethereum",
+	];
 
-	// If also supports Kusama, call it Substrate. @JW
-	substrate: [ContractPromise, SubstrateChainConfig];
+	substrate: [ContractPromise, SubstrateChainConfig, "substrate"];
 
 	// TODO: Might be removable.
-	test: [null, null];
+	test: [null, null, "test"];
 };
 
 export type Backend = keyof _supportedBackendConnectors;
@@ -30,5 +36,8 @@ export type ErdstallConnector<B extends Backend> =
 
 export type BackendChainConfig<B extends Backend> =
 	_supportedBackendConnectors[B][1];
+
+export type BackendCrypto<B extends Backend> =
+	_supportedBackendConnectors[B][2];
 
 export type RequestedBackends<Bs extends Backend[]> = Bs[number];

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { Address } from "#erdstall/ledger";
+import { Address, Crypto } from "#erdstall/crypto";
 import { Call, Result } from "#erdstall/api";
 import { EnclaveWatcher, ErdstallEventHandler } from "#erdstall";
 import { ErdstallObject } from "#erdstall/api";
@@ -23,7 +23,6 @@ import {
 import {
 	ClientConfig,
 	TxReceipt,
-	BalanceProof,
 	BalanceProofs,
 	Account,
 	PhaseShift,
@@ -35,7 +34,6 @@ import { TypedJSON } from "#erdstall/export/typedjson";
 import { EventCache, OneShotEventCache } from "#erdstall/utils";
 import { EnclaveEvent } from "./event";
 import { EnclaveProvider, EnclaveWSProvider } from "./provider";
-import { Backend } from "#erdstall/ledger/backend";
 
 /**
  * Describes an entity which can build and cut its connection to some target.
@@ -55,7 +53,7 @@ export interface EnclaveReader extends EnclaveWatcher, Connector {
 	 * @param acc - The address of interest.
 	 * @returns A promise containing the state of the account in Erdstall.
 	 */
-	getAccount(acc: Address<Backend>): Promise<Account>;
+	getAccount(acc: Address<Crypto>): Promise<Account>;
 
 	/**
 	 * Queries the enclave's remote attestation.
@@ -69,7 +67,7 @@ export interface EnclaveWriter extends EnclaveReader, Connector {
 	/**
 	 * Enters Erdstall with the given address.
 	 */
-	onboard(who: Address<Backend>): Promise<void>;
+	onboard(who: Address<Crypto>): Promise<void>;
 	/**
 	 * Sends the given transfer transaction to the enclave.
 	 *
@@ -104,7 +102,7 @@ export interface EnclaveWriter extends EnclaveReader, Connector {
 	 * @param exitRequest - The exit request to send.
 	 * @returns A promise containing the balance proof with its exit flag set.
 	 */
-	exit(exitRequest: ExitRequest): Promise<BalanceProof>;
+	exit(exitRequest: ExitRequest): Promise<BalanceProofs>;
 
 	// needed to allow interface checking.
 	isEnclaveWriter(): void;
@@ -120,7 +118,7 @@ export class Enclave implements EnclaveWriter {
 	private id: number;
 
 	private globallySubscribed: boolean;
-	private individuallySubscribed: Set<Address<Backend>>;
+	private individuallySubscribed: Set<Address<Crypto>>;
 	private phaseShiftSubscribed: boolean;
 
 	static dial(operator: URL): Enclave {
@@ -163,13 +161,13 @@ export class Enclave implements EnclaveWriter {
 		this.provider.close();
 	}
 
-	public async onboard(who: Address<Backend>): Promise<void> {
+	public async onboard(who: Address<Crypto>): Promise<void> {
 		const onboard = new Onboarding(who);
 		await this.sendCall(onboard);
 		return;
 	}
 
-	public async subscribe(who?: Address<Backend>): Promise<void> {
+	public async subscribe(who?: Address<Crypto>): Promise<void> {
 		this.phaseShiftSubscribed = true;
 		if (who) {
 			this.individuallySubscribed.add(who);
@@ -209,8 +207,8 @@ export class Enclave implements EnclaveWriter {
 		return this.sendCall(tx) as Promise<TxAccepted>;
 	}
 
-	public async exit(exitRequest: ExitRequest): Promise<BalanceProof> {
-		const p = new Promise<BalanceProof>((resolve, reject) => {
+	public async exit(exitRequest: ExitRequest): Promise<BalanceProofs> {
+		const p = new Promise<BalanceProofs>((resolve, reject) => {
 			this.once_internal("exitproof", resolve);
 			this.sendCall(exitRequest).catch(reject);
 		});
@@ -218,7 +216,7 @@ export class Enclave implements EnclaveWriter {
 		return p;
 	}
 
-	public async getAccount(acc: Address<Backend>): Promise<Account> {
+	public async getAccount(acc: Address<Crypto>): Promise<Account> {
 		return this.sendCall(new GetAccount(acc)) as Promise<Account>;
 	}
 
@@ -323,15 +321,17 @@ export class Enclave implements EnclaveWriter {
 			case TxReceipt:
 				return this.callEvent("receipt", obj);
 			case BalanceProofs: {
-				const bps = obj as BalanceProofs;
-				for (const [_, bp] of bps.map) {
-					if (bp.balance.exit) {
-						this.callEvent("exitproof", bp);
-					} else {
-						this.callEvent("proof", bp);
-					}
-				}
-				break;
+				// TODO: Handle.
+				throw new Error("not implemented");
+				// const bps = obj as BalanceProofs;
+				// for (const [_, bp] of bps.map) {
+				// 	if (bp.balance.exit) {
+				// 		this.callEvent("exitproof", bp);
+				// 	} else {
+				// 		this.callEvent("proof", bp);
+				// 	}
+				// }
+				// break;
 			}
 			case PhaseShift: {
 				const ps = obj as PhaseShift;

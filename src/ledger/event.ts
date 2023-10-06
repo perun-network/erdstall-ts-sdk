@@ -2,9 +2,8 @@
 // by the ledger backends.
 "use strict";
 
-import { Signature } from "#erdstall/ledger";
-import { Address } from "./address";
-import { Assets, TokenType } from "./assets";
+import { BackendAddress, BackendSignature } from "#erdstall/erdstall";
+import { ChainAssets, TokenType } from "./assets";
 import { Backend } from "#erdstall/ledger/backend";
 
 const event = [
@@ -14,7 +13,6 @@ const event = [
 	"Challenged",
 	"ChallengeResponded",
 	"TokenTypeRegistered",
-	"TokenRegistered",
 ] as const;
 
 /**
@@ -33,18 +31,8 @@ export function isLedgerEvent(v: any): v is LedgerEvent {
 export interface Deposited<Bs extends Backend[][number]> {
 	source: Bs;
 	epoch: bigint;
-	address: Address<Backend>;
-	assets: Assets;
-}
-
-/**
- * TokenRegistered event struct emitted by the Erdstall contract.
- */
-export interface TokenRegistered<Bs extends Backend[][number]> {
-	source: Bs;
-	token: Address<Bs>;
-	tokenType: TokenType;
-	tokenHolder: Address<Bs>;
+	address: BackendAddress<Bs>;
+	assets: ChainAssets;
 }
 
 /**
@@ -53,7 +41,7 @@ export interface TokenRegistered<Bs extends Backend[][number]> {
 export interface TokenTypeRegistered<Bs extends Backend[][number]> {
 	source: Bs;
 	tokenType: TokenType;
-	tokenHolder: Address<Backend>;
+	tokenHolder: BackendAddress<Bs>;
 }
 
 /**
@@ -69,8 +57,8 @@ export interface Frozen<Bs extends Backend[][number]> {
  */
 export interface OwnershipTransferrerd<Bs extends Backend[][number]> {
 	source: Bs;
-	previousOwner: Address<Backend>;
-	newOwner: Address<Backend>;
+	previousOwner: BackendAddress<Bs>;
+	newOwner: BackendAddress<Bs>;
 }
 
 /**
@@ -79,9 +67,9 @@ export interface OwnershipTransferrerd<Bs extends Backend[][number]> {
 export interface WithdrawalException<Bs extends Backend[][number]> {
 	source: Bs;
 	epoch: bigint;
-	address: Address<Backend>;
-	token: Address<Backend>;
-	value: Assets;
+	address: BackendAddress<Bs>;
+	token: BackendAddress<Bs>;
+	value: ChainAssets;
 	error: string;
 }
 
@@ -91,8 +79,8 @@ export interface WithdrawalException<Bs extends Backend[][number]> {
 export interface Withdrawn<Bs extends Backend[][number]> {
 	source: Bs;
 	epoch: bigint;
-	address: Address<Backend>;
-	tokens: Assets;
+	address: BackendAddress<Bs>;
+	tokens: ChainAssets;
 }
 
 /**
@@ -101,7 +89,7 @@ export interface Withdrawn<Bs extends Backend[][number]> {
 export interface Challenged<Bs extends Backend[][number]> {
 	source: Bs;
 	epoch: bigint;
-	address: Address<Backend>;
+	address: BackendAddress<Bs>;
 }
 
 /**
@@ -110,7 +98,7 @@ export interface Challenged<Bs extends Backend[][number]> {
 export interface ChallengeResponded<Bs extends Backend[][number]> {
 	source: Bs;
 	epoch: bigint;
-	address: Address<Backend>;
-	tokens: Assets;
-	sig: Signature<Backend>;
+	address: BackendAddress<Bs>;
+	tokens: ChainAssets;
+	sig: BackendSignature<Bs>;
 }

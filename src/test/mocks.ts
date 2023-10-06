@@ -32,13 +32,11 @@ import {
 	GetAccount,
 } from "#erdstall/api/calls";
 import { Transaction } from "#erdstall/api/transactions";
-import { Address, Account, OnChainQuerier } from "#erdstall/ledger";
+import { Address } from "#erdstall/crypto";
+import { EthereumSignature, EthereumAddress } from "#erdstall/crypto/ethereum";
+import { Account, OnChainQuerier } from "#erdstall/ledger";
 import { NFTMetadata, TokenProvider } from "#erdstall/ledger/backend";
-import {
-	EthereumAddress,
-	EthereumSignature,
-	TokenFetcher,
-} from "#erdstall/ledger/backend/ethereum";
+import { TokenFetcher } from "#erdstall/ledger/backend/ethereum";
 import { ChainAssets, Tokens } from "#erdstall/ledger/assets";
 import { EnclaveProvider } from "#erdstall/enclave";
 
@@ -144,13 +142,14 @@ export class MockWatcher implements Watcher<["ethereum"]> {
 	}
 
 	async phaseshift(bps: BalanceProofs, ps: PhaseShift): Promise<void> {
-		return Promise.all(
-			Array.from(bps.map, ([_acc, bp]) => {
-				return bp.balance.exit
-					? this.exitProofHandler(bp)
-					: this.balanceProofHandler(bp);
-			}),
-		).then(() => this.phaseShiftHandler(ps));
+		throw new Error("not implemented");
+		// return Promise.all(
+		// 	Array.from(bps.map, ([_acc, bp]) => {
+		// 		return bp.balance.exit
+		// 			? this.exitProofHandler(bp)
+		// 			: this.balanceProofHandler(bp);
+		// 	}),
+		// ).then(() => this.phaseShiftHandler(ps));
 	}
 }
 
@@ -159,7 +158,7 @@ export class MockClient
 	implements ErdstallClient<["ethereum"]>
 {
 	readonly tokenProvider: TokenProvider<"ethereum">;
-	readonly onChainQuerier: OnChainQuerier<["ethereum"]>;
+	readonly onChainQuerier: OnChainQuerier<"ethereum">;
 	private metadata: Map<string, NFTMetadata>;
 
 	constructor() {
@@ -200,7 +199,10 @@ export class MockClient
 		return res;
 	}
 
-	erdstall(): { chain: "ethereum"; address: Address<"ethereum"> } {
+	erdstall(): {
+		chain: "ethereum";
+		address: Address<"ethereum">;
+	}[] {
 		throw new Error("not implemented");
 		//		return this.contract;
 	}
@@ -361,10 +363,10 @@ function newTxReceiptResult(
 	return new Result(id, txr);
 }
 
-class MockOnChainQuerier implements OnChainQuerier<["ethereum"]> {
+class MockOnChainQuerier implements OnChainQuerier<"ethereum"> {
 	constructor() {}
 	async queryTokensOwnedByAddress(
-		_backend: "ethereum" | "ethereum"[],
+		_backend: "ethereum",
 		_token: string,
 		_address: string,
 	): Promise<Tokens> {

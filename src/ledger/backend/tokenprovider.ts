@@ -1,12 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { TokenType } from "#erdstall/ledger/assets";
-import {
-	Address,
-	TokenRegistered,
-	TokenTypeRegistered,
-} from "#erdstall/ledger";
+import { TokenType } from "#erdstall/ledger/backend/tokentype";
+import { BackendAddress } from "#erdstall";
+import { TokenTypeRegistered } from "#erdstall/ledger";
 import { Backend, ErdstallConnector } from "#erdstall/ledger/backend";
 
 /**
@@ -20,7 +17,7 @@ export interface TokenProvider<B extends Backend> {
 	 * @param tokenAddr - The address of the token to update.
 	 * @param ttype - The token type.
 	 */
-	setType(tokenAddr: string, ttype: TokenType): void;
+	setType(tokenAddr: string, ttype: TokenType<B>): void;
 	/**
 	 * Retrieves the address of the token holder contract for the given token
 	 * type related to the given Erdstall contract.
@@ -34,7 +31,7 @@ export interface TokenProvider<B extends Backend> {
 	 */
 	tokenHolderFor(
 		erdstall: ErdstallConnector<B>,
-		ttype: TokenType,
+		ttype: TokenType<B>,
 	): Promise<string>;
 	/**
 	 * Retrieves the token type for a given token address related to the given
@@ -50,7 +47,7 @@ export interface TokenProvider<B extends Backend> {
 	tokenTypeOf(
 		erdstall: ErdstallConnector<B>,
 		tokenAddr: string,
-	): Promise<TokenType>;
+	): Promise<TokenType<B>>;
 	/**
 	 * Finds the address of the first registered token contract in Erdstall,
 	 * which has the given symbol as its symbol according to the ERC20Detailed
@@ -71,7 +68,7 @@ export interface TokenProvider<B extends Backend> {
 		erdstall: ErdstallConnector<B>,
 		symbol: string,
 		fromBlock?: number,
-	): Promise<Address<Backend> | undefined>;
+	): Promise<BackendAddress<Backend> | undefined>;
 	/**
 	 * Queries the registered token types on the given Erdstall contract.
 	 *
@@ -86,18 +83,4 @@ export interface TokenProvider<B extends Backend> {
 		erdstall: ErdstallConnector<B>,
 		fromBlock?: number,
 	): Promise<TokenTypeRegistered<B>[]>;
-	/**
-	 * Queries the registered tokens on the given Erdstall contract.
-	 *
-	 * @param erdstall - The Erdstall contract connector, which is dependent on
-	 * the backend the TokenProvider is called with.
-	 * @param fromBlock - When omitted the starting block from when the Erdstall
-	 * contract was deployed will be used.
-	 * @returns A list of TokenRegistered events, which might be empty if no
-	 * tokens were registered.
-	 */
-	queryRegisteredTokens(
-		erdstall: ErdstallConnector<B>,
-		fromBlock?: number,
-	): Promise<TokenRegistered<B>[]>;
 }

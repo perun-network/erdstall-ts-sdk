@@ -3,10 +3,15 @@
 
 import { InternalEnclaveWatcher } from "./internalenclavewatcher";
 import { ErdstallEvent, ErdstallEventHandler, EnclaveEvent } from "./event";
-import { ErdstallClient, ErdstallBackendClient } from "./erdstall";
+import {
+	ErdstallClient,
+	ErdstallBackendClient,
+	BackendAddress,
+} from "./erdstall";
+import * as crypto from "#erdstall/crypto";
 import { AttestationResult, ClientConfig } from "#erdstall/api/responses";
 import { Enclave, isEnclaveEvent, EnclaveReader } from "#erdstall/enclave";
-import { Address, Account, isLedgerEvent, LedgerEvent } from "#erdstall/ledger";
+import { Account, isLedgerEvent, LedgerEvent } from "#erdstall/ledger";
 import { Backend } from "#erdstall/ledger/backend";
 import { EthereumClient } from "#erdstall/ledger/backend/ethereum";
 import { SubstrateClient } from "#erdstall/ledger/backend/substrate";
@@ -27,6 +32,9 @@ export type BackendClientConstructors = {
 		backend: "substrate";
 		arg: number;
 		initializer: (config: ClientConfig) => SubstrateClient;
+	};
+	test: {
+		backend: "test";
 	};
 };
 
@@ -53,6 +61,8 @@ function createClient<Bs extends Backend[]>(
 			return backendCtor.initializer(config, backendCtor.provider);
 		case "substrate":
 			return new SubstrateClient(backendCtor.arg);
+		case "test":
+			throw new Error("test backend not implemented");
 	}
 }
 
@@ -112,7 +122,7 @@ export class Client<Bs extends Backend[]> implements ErdstallClient<Bs> {
 
 	getNftMetadata(
 		backend: Bs[number],
-		token: Address<Backend>,
+		token: BackendAddress<Backend>,
 		id: bigint,
 		useCache?: boolean,
 	): Promise<NFTMetadata> {
@@ -231,11 +241,11 @@ export class Client<Bs extends Backend[]> implements ErdstallClient<Bs> {
 		this.erdstallOneShotHandlerCache.clear();
 	}
 
-	async subscribe(who?: Address<Backend>): Promise<void> {
+	async subscribe(who?: crypto.Address<crypto.Crypto>): Promise<void> {
 		return this.enclaveConn.subscribe(who);
 	}
 
-	async getAccount(who: Address<Backend>): Promise<Account> {
+	async getAccount(who: BackendAddress<Backend>): Promise<Account> {
 		return (await this.enclaveConn.getAccount(who)).account;
 	}
 

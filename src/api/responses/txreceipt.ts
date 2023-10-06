@@ -2,7 +2,9 @@
 "use strict";
 
 import { ErdstallObject, registerErdstallType } from "#erdstall/api";
-import { Account, Address } from "#erdstall/ledger";
+import { Account } from "#erdstall/ledger";
+import { Address, Signature, Crypto } from "#erdstall/crypto";
+import { EthereumAddress } from "#erdstall/crypto/ethereum";
 import { Transaction, TransactionOutput } from "#erdstall/api/transactions";
 import {
 	jsonObject,
@@ -10,12 +12,9 @@ import {
 	jsonMapMember,
 	MapShape,
 } from "#erdstall/export/typedjson";
-import { Signature } from "#erdstall/ledger";
 import { utils } from "ethers";
 import { ABIEncoder, ABIPacked } from "../util";
 import { ETHZERO } from "#erdstall/ledger/assets";
-import { Backend } from "#erdstall/ledger/backend";
-import { EthereumAddress } from "#erdstall/ledger/backend/ethereum";
 
 const txReceiptTypeName = "TxReceipt";
 
@@ -28,7 +27,8 @@ export enum TxStatusCode {
 export class TxReceipt extends ErdstallObject {
 	@jsonMember(() => Transaction) tx: Transaction;
 	@jsonMember(TransactionOutput) output: TransactionOutput;
-	@jsonMember(() => Signature) sig: Signature<Backend>;
+	// TODO: Receipts should also be signed with the ErdstallSignature.
+	@jsonMember(() => Signature) sig: Signature<Crypto>;
 	@jsonMember(String) hash: String;
 
 	@jsonMapMember(String, () => Account, { shape: MapShape.OBJECT })
@@ -44,7 +44,7 @@ export class TxReceipt extends ErdstallObject {
 		delta: Map<string, Account>,
 		status: Number,
 		output: TransactionOutput,
-		sig: Signature<Backend>,
+		sig: Signature<Crypto>,
 		hash: string,
 		error?: string,
 	) {
@@ -64,7 +64,7 @@ export class TxReceipt extends ErdstallObject {
 	protected objectTypeName(): string {
 		return txReceiptTypeName;
 	}
-	packTagged(_: Address<Backend>): ABIPacked {
+	packTagged(_: Address<Crypto>): ABIPacked {
 		const enc = new ABIEncoder();
 		return enc.pack(this.encodeABI(enc));
 	}
@@ -75,7 +75,7 @@ export class TxReceipt extends ErdstallObject {
 		);
 		return "ErdstallTransactionOutput";
 	}
-	verify(contract: Address<Backend>): boolean {
+	verify(contract: Address<Crypto>): boolean {
 		console.log(
 			utils.hexlify(
 				this.packTagged(EthereumAddress.fromString(ETHZERO)).bytes,

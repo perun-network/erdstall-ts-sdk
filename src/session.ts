@@ -2,7 +2,12 @@
 "use strict";
 
 import { Signer as EthereumSigner } from "ethers";
-import { BalanceProof, ClientConfig } from "#erdstall/api/responses";
+import {
+	BalanceProofs,
+	ChainProof,
+	ChainProofChunk,
+	ClientConfig,
+} from "#erdstall/api/responses";
 import {
 	Transfer,
 	Mint,
@@ -10,14 +15,18 @@ import {
 	TradeOffer,
 	Trade,
 	Burn,
-	FullExit,
 } from "#erdstall/api/transactions";
 import { InternalEnclaveWatcher } from "./internalenclavewatcher";
 import { EnclaveWriter } from "#erdstall/enclave";
-import { Address, Account } from "#erdstall/ledger";
-import { Assets, ChainAssets } from "#erdstall/ledger/assets";
+import { Account } from "#erdstall/ledger";
+import { ChainAssets } from "#erdstall/ledger/assets";
 import { Uint256 } from "#erdstall/api/util";
-import { ErdstallBackendSession, ErdstallSession } from "#erdstall";
+import * as crypto from "#erdstall/crypto";
+import {
+	BackendAddress,
+	ErdstallBackendSession,
+	ErdstallSession,
+} from "#erdstall";
 import { ErdstallEventHandler } from "./event";
 import {
 	Client,
@@ -61,6 +70,7 @@ type BackendSessionConstructorOverloads = {
 		) => EthereumSession;
 	};
 	substrate: {};
+	test: {};
 };
 
 // UnifyTypes creates a type-level union of the types of two objects. If keys
@@ -95,15 +105,21 @@ type ConstructorArgs<Bs extends Backend[]> = Bs extends [
 		: never
 	: [];
 
-function createSession<Bs extends Backend[]>(
+function createSession(
 	config: ClientConfig,
 	backendCtor: BackendSessionConstructors[keyof BackendSessionConstructors],
-): ErdstallBackendSession<Bs[number]> {
+): ErdstallBackendSession<Backend> {
 	switch (backendCtor.backend) {
 		case "ethereum":
-			return backendCtor.initializer(config, backendCtor.signer);
+			const ethSess: ErdstallBackendSession<"ethereum"> =
+				backendCtor.initializer(config, backendCtor.signer);
+			return ethSess;
 		case "substrate":
-			return new SubstrateSession(420);
+			const subSess: ErdstallBackendSession<"substrate"> =
+				new SubstrateSession(420);
+			return subSess;
+		case "test":
+			throw new Error("test backend not implemented");
 	}
 }
 
@@ -111,7 +127,7 @@ export class Session<Bs extends Backend[]>
 	extends Client<Bs>
 	implements ErdstallSession<Bs>
 {
-	readonly address: Address<Bs[number]>;
+	readonly address: crypto.Address<crypto.Crypto>;
 	readonly signer: Signer<Bs[number]>;
 	private nonce: bigint;
 	private readonly enclaveWriter: EnclaveWriter & InternalEnclaveWatcher;
@@ -121,7 +137,7 @@ export class Session<Bs extends Backend[]>
 	private sessionArgs: ConstructorArgs<Bs>;
 
 	constructor(
-		address: Address<Bs[number]>,
+		address: crypto.Address<crypto.Crypto>,
 		enclaveConn: (EnclaveWriter & InternalEnclaveWatcher) | URL,
 		signer: Signer<Bs[number]>,
 		...args: ConstructorArgs<Bs>
@@ -187,7 +203,7 @@ export class Session<Bs extends Backend[]>
 
 	async transferTo(
 		assets: ChainAssets,
-		to: Address<Backend>,
+		to: BackendAddress<Backend>,
 	): Promise<PendingTransaction> {
 		if (!this.initialized) {
 			throw ErrUnitialisedClient;
@@ -228,7 +244,7 @@ export class Session<Bs extends Backend[]>
 		return { receipt, accepted };
 	}
 
-	async exit(): Promise<BalanceProof> {
+	async exit(): Promise<BalanceProofs> {
 		if (!this.initialized) {
 			return Promise.reject(ErrUnitialisedClient);
 		}
@@ -245,7 +261,7 @@ export class Session<Bs extends Backend[]>
 	async leave<B extends RequestedBackends<Bs>>(
 		backend: B,
 		notify?: (message: string, stage: number, maxStages: number) => void,
-	): Promise<TransactionGenerator> {
+	): Promise<TransactionGenerator<B>> {
 		let skipped = 0;
 		let cb: ErdstallEventHandler<"phaseshift", never>;
 		let atStage = 1;
@@ -267,21 +283,24 @@ export class Session<Bs extends Backend[]>
 		notify?.("awaiting epoch sealing", atStage++, maxStages);
 		await p.then(() => this.off_internal("phaseshift", cb));
 		notify?.("withdrawing", atStage++, maxStages);
-		return this.withdraw(backend, exitProof);
+
+		// TODO: FIXME
+		// return this.withdraw(backend, exitProof);
+		throw new Error("not implemented");
 	}
 
 	async withdraw<B extends RequestedBackends<Bs>>(
-		_backend: B,
-		_exitProof: BalanceProof,
-	): Promise<TransactionGenerator> {
-		throw new Error("not implemented");
+		backend: B,
+		exitProof: ChainProofChunk[],
+	): Promise<TransactionGenerator<B>> {
+		return this.clients.get(backend)!.withdraw(backend, exitProof);
 	}
 
 	async deposit<B extends RequestedBackends<Bs>>(
-		_backend: B,
-		_asset: ChainAssets,
-	): Promise<TransactionGenerator> {
-		throw new Error("not implemented");
+		backend: B,
+		asset: ChainAssets,
+	): Promise<TransactionGenerator<B>> {
+		return this.clients.get(backend)!.deposit(backend, asset);
 	}
 
 	async createOffer(

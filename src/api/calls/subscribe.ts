@@ -2,9 +2,8 @@
 "use strict";
 
 import { ErdstallObject, registerErdstallType } from "#erdstall/api";
-import { Address } from "#erdstall/ledger";
+import { Address, Crypto } from "#erdstall/crypto";
 import { jsonObject, jsonMember } from "#erdstall/export/typedjson";
-import { Backend } from "#erdstall/ledger/backend";
 
 const subBPsTypeName = "SubscribeBalanceProofs";
 const subTXsTypeName = "SubscribeTXs";
@@ -12,10 +11,10 @@ const subPhaseShiftName = "SubscribePhaseShifts";
 
 @jsonObject
 export class SubscribeBalanceProofs extends ErdstallObject {
-	@jsonMember(Address) who?: Address<Backend>;
+	@jsonMember(Address) who?: Address<Crypto>;
 	@jsonMember(Boolean) cancel?: boolean;
 
-	constructor(who?: Address<Backend>, cancel?: boolean) {
+	constructor(who?: Address<Crypto>, cancel?: boolean) {
 		super();
 		this.who = who;
 		this.cancel = cancel;
@@ -47,10 +46,10 @@ export class SubscribeBalanceProofs extends ErdstallObject {
 
 @jsonObject
 export class SubscribeTXs extends ErdstallObject {
-	@jsonMember who?: Address<Backend>;
+	@jsonMember who?: Address<Crypto>;
 	@jsonMember(Boolean) cancel?: boolean;
 
-	constructor(who?: Address<Backend>, cancel?: boolean) {
+	constructor(who?: Address<Crypto>, cancel?: boolean) {
 		super();
 		this.who = who;
 		this.cancel = cancel;

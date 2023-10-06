@@ -10,7 +10,7 @@ import {
 } from "#erdstall/export/typedjson";
 import { Asset } from "./asset";
 import { customJSON } from "#erdstall/api/util";
-import { Address, addressKey } from "#erdstall/ledger";
+import { Address, addressKey, Crypto } from "#erdstall/crypto";
 import { Backend, TokenProvider } from "#erdstall/ledger/backend";
 import { Erdstall } from "#erdstall/ledger/backend/ethereum/contracts";
 import { Amount, decodePackedAmount } from "./amount";
@@ -22,8 +22,21 @@ export const ETHZERO = "0x0000000000000000000000000000000000000000";
 
 @jsonObject
 export class ChainAssets {
+	// Asset origin -> asset.
+	//
+	// eNFT auf ETH
+	// Tokens auf Substrate
+	//
+	// eNFT origin: Ethereum
+	// eNFT was bridged -> eNFT an meinen Account
+	//
+	// Steht jetzt aber in den ChainAssets, die unterschrieben für substrate.
+	//
+	// Obwohl immernoch ein NFT auf Ethereum, kann das gegenüber substrate
+	// contract bewiesen werden.
 	@jsonMapMember(Number, () => LocalAssets, { shape: MapShape.OBJECT })
 	public assets: Map<Chain, LocalAssets>;
+
 	constructor(assets: Map<Chain, LocalAssets>) {
 		this.assets = assets;
 	}
@@ -42,6 +55,16 @@ export class ChainAssets {
 			obj[k] = LocalAssets.toJSON(v);
 		});
 		return obj;
+	}
+
+	addAsset(chain: Chain, token: string, asset: Asset) {
+		if (asset instanceof Amount) {
+			this.assets.get(chain)?.fungibles.addAsset(token, asset);
+		}
+	}
+
+	cmp(other: ChainAssets): boolean {
+		throw new Error("Method not implemented.");
 	}
 }
 
@@ -67,6 +90,15 @@ export class LocalFungibles {
 			obj[k] = v.toJSON();
 		});
 		return obj;
+	}
+
+	addAsset(token: string, asset: Amount) {
+		const a = this.assets.get(token);
+		if (a !== undefined) {
+			a.add(asset);
+		}
+
+		this.assets.set(token, asset);
 	}
 }
 
@@ -154,7 +186,7 @@ export class Assets {
 	public values: Map<string, Asset>;
 
 	constructor(
-		...assets: { token: string | Address<Backend>; asset: Asset }[]
+		...assets: { token: string | Address<Crypto>; asset: Asset }[]
 	) {
 		this.values = new Map<string, Asset>();
 		assets.forEach(({ token, asset }) => this.addAsset(token, asset));
@@ -197,7 +229,7 @@ export class Assets {
 		);
 	}
 
-	hasAsset(addr: string | Address<Backend>): boolean {
+	hasAsset(addr: string | Address<Crypto>): boolean {
 		return this.values.has(addressKey(addr));
 	}
 
@@ -209,7 +241,7 @@ export class Assets {
 		}
 	}
 
-	addAsset(addr: string | Address<Backend>, asset: Asset): void {
+	addAsset(addr: string | Address<Crypto>, asset: Asset): void {
 		addr = addressKey(addr);
 		if (asset.zero()) {
 			return;
@@ -283,15 +315,17 @@ function isProperSubset(
 
 export async function decodePackedAssets(
 	erdstall: Erdstall,
-	tokenProvider: Pick<TokenProvider<"ethereum">, "tokenTypeOf">,
-	values: [string, string][],
-): Promise<Assets> {
-	const assets = new Assets();
-	for (const [t, v] of values) {
-		const ttype = await tokenProvider.tokenTypeOf(erdstall, t);
-		assets.addAsset(t, decodePackedAsset(v, ttype));
-	}
-	return assets;
+	tokenProvider: Pick<TokenProvider<Backend>, "tokenTypeOf">,
+	values: Erdstall.TokenValueStructOutput[],
+): Promise<ChainAssets> {
+	// TODO: Implement me.
+	throw new Error("not implemented");
+	// const assets = new Assets();
+	// for (const [t, v] of values) {
+	// 	const ttype = await tokenProvider.tokenTypeOf(erdstall, t);
+	// 	assets.addAsset(t, decodePackedAsset(v, ttype));
+	// }
+	// return assets;
 }
 
 function decodePackedAsset(data: string, ttype: TokenType): Asset {
@@ -303,10 +337,6 @@ function decodePackedAsset(data: string, ttype: TokenType): Asset {
 			return decodePackedAmount(data);
 		}
 		case "ERC721": {
-			const res = decodePackedIds(data);
-			return new Tokens(res);
-		}
-		case "ERC721Mintable": {
 			const res = decodePackedIds(data);
 			return new Tokens(res);
 		}

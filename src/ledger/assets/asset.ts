@@ -3,9 +3,10 @@
 
 import { isUint256 } from "#erdstall/api/util";
 
-const _tokenTypes = ["ETH", "ERC20", "ERC721", "ERC721Mintable"] as const;
+const _tokenTypes = ["ETH", "ERC20", "ERC721"] as const;
+
 // TokenType resolves TokenType -> Deposit-Routine.
-export type TokenType = typeof _tokenTypes[number];
+export type TokenType = (typeof _tokenTypes)[number];
 
 export function isTokenType(maybeToken: any): maybeToken is TokenType {
 	return _tokenTypes.includes(maybeToken);
@@ -64,7 +65,6 @@ export abstract class Asset {
 	}
 
 	abstract typeTag(): TypeTagName;
-	abstract asABI(): Uint8Array;
 
 	// isCompatible returns whether the assets are of the same type and are thus
 	// compatible in Add, Sub and Cmp.
