@@ -9,6 +9,7 @@ import {
 	jsonMapMember,
 	MapShape,
 	MapT,
+	TypedJSON,
 } from "#erdstall/export/typedjson";
 import { ChainAssets } from "#erdstall/ledger/assets";
 import * as crypto from "#erdstall/crypto";
@@ -16,6 +17,8 @@ import { ErdstallObject, registerErdstallType } from "#erdstall/api";
 import { Backend } from "#erdstall/ledger/backend";
 import { Chain } from "#erdstall/ledger/chain";
 import { BackendSignature, ErdstallSignature } from "#erdstall/erdstall";
+import canonicalize from "canonicalize";
+import { utils } from "ethers";
 
 const balanceProofsTypeName = "BalanceProofs";
 
@@ -88,6 +91,21 @@ export class BalanceProofs extends ErdstallObject {
 	}
 	protected objectTypeName() {
 		return balanceProofsTypeName;
+	}
+
+	public verify(address: crypto.Address<crypto.Crypto>): boolean {
+		const rec = utils.verifyMessage(
+			this.encodePayload(),
+			this.sig.toString(),
+		);
+		return address.toString() === rec;
+	}
+
+	public encodePayload(): Uint8Array {
+		const toEncode = TypedJSON.toPlainJson(this, BalanceProofs);
+		const msg = canonicalize(toEncode);
+		const enc = new TextEncoder();
+		return enc.encode(msg);
 	}
 }
 
