@@ -5,7 +5,7 @@ import { Tokens } from "#erdstall/ledger/assets";
 
 import { OnChainQuerier } from "#erdstall/ledger";
 
-export class EthereumOnChainQuerier implements OnChainQuerier<["ethereum"]> {
+export class EthereumOnChainQuerier implements OnChainQuerier<"ethereum"> {
 	readonly provider: providers.Provider | Signer;
 
 	constructor(provider: providers.Provider | Signer) {
@@ -13,7 +13,7 @@ export class EthereumOnChainQuerier implements OnChainQuerier<["ethereum"]> {
 	}
 
 	async queryTokensOwnedByAddress(
-		_backend: "ethereum" | "ethereum"[],
+		_backend: "ethereum",
 		token: string,
 		address: string,
 	): Promise<Tokens> {

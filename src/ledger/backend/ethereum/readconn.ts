@@ -2,9 +2,10 @@
 "use strict";
 
 import { ErdstallEventHandler } from "#erdstall";
-import { Address, LedgerEvent } from "#erdstall/ledger";
-import { TokenProvider, NFTMetadata, Backend } from "#erdstall/ledger/backend";
-import { Erdstall } from "./contracts/Erdstall";
+import { Address } from "#erdstall/crypto";
+import { LedgerEvent } from "#erdstall/ledger";
+import { TokenProvider, NFTMetadata } from "#erdstall/ledger/backend";
+import { Erdstall } from "./contracts/contracts/Erdstall";
 import { IERC721Metadata__factory } from "./contracts";
 import { ethCallbackShim, Listener } from "./ethwrapper";
 import { LedgerReader } from "#erdstall/ledger/backend";
@@ -17,7 +18,7 @@ export const ErrErdstallContractNotConnected = new Error(
 	"erdstall contract not connected",
 );
 
-export class LedgerReadConn implements LedgerReader<["ethereum"]> {
+export class LedgerReadConn implements LedgerReader<"ethereum"> {
 	readonly contract: Erdstall;
 	private eventCache: Map<
 		ErdstallEventHandler<LedgerEvent, "ethereum">,
@@ -69,14 +70,14 @@ export class LedgerReadConn implements LedgerReader<["ethereum"]> {
 		this.contract.removeAllListeners();
 	}
 
-	erdstall(): { chain: "ethereum"; address: Address<Backend> } {
+	erdstall(): { chain: "ethereum"; address: Address<"ethereum"> }[] {
 		throw new Error("not implemented");
 		//		return Address.fromString(this.contract.address);
 	}
 
 	async getNftMetadata(
 		_backend: "ethereum",
-		token: Address<Backend>,
+		token: Address<"ethereum">,
 		id: bigint,
 		useCache?: boolean,
 	): Promise<NFTMetadata> {

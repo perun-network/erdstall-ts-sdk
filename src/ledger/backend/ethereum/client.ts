@@ -2,9 +2,10 @@
 "use strict";
 
 import { ErdstallBackendClient, ErdstallEventHandler } from "#erdstall";
-import { Address, LedgerEvent } from "#erdstall/ledger";
+import { LedgerEvent } from "#erdstall/ledger";
+import { Address } from "#erdstall/crypto";
 import { ethers, Signer } from "ethers";
-import { Backend, NFTMetadata } from "#erdstall/ledger/backend";
+import { NFTMetadata } from "#erdstall/ledger/backend";
 import { OnChainQuerier } from "#erdstall/ledger/onChainQuerier";
 import {
 	Erdstall__factory,
@@ -13,10 +14,9 @@ import {
 	TokenFetcher,
 } from "#erdstall/ledger/backend/ethereum";
 import { ChainConfig, ClientConfig } from "#erdstall/api/responses";
-import { EthereumChainConfig } from "./chainconfig";
 
 export class EthereumClient implements ErdstallBackendClient<"ethereum"> {
-	readonly onChainQuerier: OnChainQuerier<["ethereum"]>;
+	readonly onChainQuerier: OnChainQuerier<"ethereum">;
 	protected provider: ethers.providers.Provider | Signer;
 	protected erdstallConn: LedgerReadConn;
 
@@ -35,7 +35,7 @@ export class EthereumClient implements ErdstallBackendClient<"ethereum"> {
 
 	getNftMetadata(
 		backend: "ethereum",
-		token: Address<Backend>,
+		token: Address<"ethereum">,
 		id: bigint,
 		useCache?: boolean,
 	): Promise<NFTMetadata> {

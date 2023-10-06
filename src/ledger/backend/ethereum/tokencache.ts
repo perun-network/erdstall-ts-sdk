@@ -2,16 +2,15 @@
 "use strict";
 
 import { Signer } from "ethers";
-import { Address, addressKey } from "#erdstall/ledger";
-import { TokenRegistered, TokenTypeRegistered } from "#erdstall/ledger";
-import { TokenType, requireTokenType, ETHZERO } from "#erdstall/ledger/assets";
+import { Address, addressKey } from "#erdstall/crypto";
+import { TokenTypeRegistered } from "#erdstall/ledger";
+import { TokenType, ETHZERO } from "#erdstall/ledger/assets";
 import {
 	Erdstall,
 	ERC20__factory,
 	ERC721__factory,
 } from "#erdstall/ledger/backend/ethereum/contracts";
-import { Backend, TokenProvider } from "#erdstall/ledger/backend";
-import { EthereumAddress } from "#erdstall/ledger/backend/ethereum";
+import { TokenProvider } from "#erdstall/ledger/backend";
 
 interface Responder {
 	symbol(): Promise<string>;
@@ -78,7 +77,8 @@ export class EthereumTokenProvider implements TokenProvider<"ethereum"> {
 		tokenAddr: string,
 	): Promise<TokenType | undefined> {
 		tokenAddr = addressKey(tokenAddr);
-		await this.queryRegisteredTokens(erdstall, this.bigbang);
+		// TODO: Fixme.
+		// await this.queryRegisteredTokens(erdstall, this.bigbang);
 		return this.typeCache.get(tokenAddr);
 	}
 
@@ -86,31 +86,33 @@ export class EthereumTokenProvider implements TokenProvider<"ethereum"> {
 		erdstall: Erdstall,
 		symbol: string,
 		fromBlock?: number,
-	): Promise<Address<Backend> | undefined> {
+	): Promise<Address<"ethereum"> | undefined> {
 		const from = fromBlock
 			? fromBlock
-			: (await erdstall.bigBang()).toNumber();
+			: (await erdstall.bigBangTime()).toNumber();
 
-		const registeredTokens = await this.queryRegisteredTokens(
-			erdstall,
-			from,
-		);
+		// TODO: Fixme.
+		throw Error("not implemented");
+		// const registeredTokens = await this.queryRegisteredTokens(
+		// 	erdstall,
+		// 	from,
+		// );
 
-		for (const ev of registeredTokens) {
-			try {
-				const token = this.resolveTokenType(
-					erdstall.signer,
-					requireTokenType(ev.tokenType),
-					ev.token,
-				);
-				const sym = await token.symbol();
-				if (sym === symbol) {
-					return ev.token;
-				}
-			} catch {
-				return;
-			}
-		}
+		// for (const ev of registeredTokens) {
+		// 	try {
+		// 		const token = this.resolveTokenType(
+		// 			erdstall.signer,
+		// 			requireTokenType(ev.tokenType),
+		// 			ev.token,
+		// 		);
+		// 		const sym = await token.symbol();
+		// 		if (sym === symbol) {
+		// 			return ev.token;
+		// 		}
+		// 	} catch {
+		// 		return;
+		// 	}
+		// }
 		return;
 	}
 
@@ -120,58 +122,25 @@ export class EthereumTokenProvider implements TokenProvider<"ethereum"> {
 	): Promise<TokenTypeRegistered<"ethereum">[]> {
 		const from = fromBlock
 			? fromBlock
-			: (await erdstall.bigBang()).toNumber();
+			: (await erdstall.bigBangTime()).toNumber();
 
 		const filter = erdstall.filters.TokenTypeRegistered(null, null);
 		return erdstall.queryFilter(filter, from).then((ev) => {
 			return ev.map((entry) => {
-				const ttype = requireTokenType(entry.args.tokenType);
-				const tokenHolder = entry.args.tokenHolder;
+				// TODO: Fixme.
+				throw Error("not implemented");
+				// const ttype = requireTokenType(entry.args.tokenType);
+				// const tokenHolder = entry.args.tokenHolder;
 
-				if (!this.holderCache.has(ttype)) {
-					this.holderCache.set(ttype, tokenHolder);
-				}
+				// if (!this.holderCache.has(ttype)) {
+				// 	this.holderCache.set(ttype, tokenHolder);
+				// }
 
-				return {
-					source: "ethereum",
-					tokenType: ttype,
-					tokenHolder: EthereumAddress.fromString(tokenHolder),
-				};
-			});
-		});
-	}
-
-	// queryRegisteredTokens queries the registered tokens from the
-	// erdstall-contract. It also updates the tokentype cache accordingly.
-	async queryRegisteredTokens(
-		erdstall: Erdstall,
-		fromBlock?: number,
-	): Promise<TokenRegistered<"ethereum">[]> {
-		const from = fromBlock
-			? fromBlock
-			: (await erdstall.bigBang()).toNumber();
-
-		const filter = erdstall.filters.TokenRegistered(null, null, null);
-		return erdstall.queryFilter(filter, from).then((ev) => {
-			return ev.map((entry) => {
-				const token = addressKey(entry.args.token);
-				const ttype = requireTokenType(entry.args.tokenType);
-				const tokenHolder = entry.args.tokenHolder;
-
-				if (!this.typeCache.has(token)) {
-					this.setType(token, ttype);
-				}
-
-				if (!this.holderCache.has(ttype)) {
-					this.holderCache.set(ttype, tokenHolder);
-				}
-
-				return {
-					source: "ethereum",
-					token: EthereumAddress.fromString(token),
-					tokenType: ttype,
-					tokenHolder: EthereumAddress.fromString(tokenHolder),
-				};
+				// return {
+				// 	source: "ethereum",
+				// 	tokenType: ttype,
+				// 	tokenHolder: EthereumAddress.fromString(tokenHolder),
+				// };
 			});
 		});
 	}
@@ -179,15 +148,13 @@ export class EthereumTokenProvider implements TokenProvider<"ethereum"> {
 	resolveTokenType(
 		signer: Signer,
 		ttype: TokenType,
-		token: string | Address<Backend>,
+		token: string | Address<"ethereum">,
 	): Responder {
 		token = addressKey(token);
 		switch (ttype) {
 			case "ERC20":
 				return ERC20__factory.connect(token, signer);
 			case "ERC721":
-				return ERC721__factory.connect(token, signer);
-			case "ERC721Mintable":
 				return ERC721__factory.connect(token, signer);
 			case "ETH":
 				return {

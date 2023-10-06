@@ -3,26 +3,26 @@
 
 import { ethers, Signer } from "ethers";
 
-import { Address } from "#erdstall/ledger";
+import { Address } from "#erdstall/crypto";
 import { Asset } from "#erdstall/ledger/assets";
 import { TokenType } from "#erdstall/ledger/assets";
-import { TransactionName } from "#erdstall/utils";
 import {
 	makeETHDepositCalls,
 	makeERC20DepositCalls,
 	makeERC721DepositCalls,
 } from "./contracts_deposit";
-import { Backend } from "#erdstall/ledger/backend/backends";
+import { TransactionName } from "./transactionname";
 
 export type DepositCall = (
 	obj?: ethers.PayableOverrides,
 ) => Promise<ethers.ContractTransaction>;
+
 export type Calls = [TransactionName, DepositCall][];
 
 export type DepositerCallsFactory = (
 	signer: Signer,
-	holderAddr: Address<Backend>,
-	tokenAddr: Address<Backend>,
+	holderAddr: Address<"ethereum">,
+	tokenAddr: Address<"ethereum">,
 	amount: Asset,
 ) => Calls;
 
@@ -30,5 +30,4 @@ export const depositors = new Map<TokenType, DepositerCallsFactory>([
 	["ETH", makeETHDepositCalls],
 	["ERC20", makeERC20DepositCalls],
 	["ERC721", makeERC721DepositCalls],
-	["ERC721Mintable", makeERC721DepositCalls],
 ]);

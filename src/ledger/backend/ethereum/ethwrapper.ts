@@ -5,17 +5,21 @@
 "use strict";
 
 import { utils } from "ethers";
-import { TypedListener, TypedEventFilter } from "./contracts/commons";
+import {
+	TypedListener,
+	TypedEventFilter,
+	TypedEvent,
+} from "./contracts/common";
 import { ErdstallEventHandler } from "#erdstall";
 import { LedgerEvent } from "#erdstall/ledger";
-import { requireTokenType, decodePackedAssets } from "#erdstall/ledger/assets";
+import { decodePackedAssets } from "#erdstall/ledger/assets";
 
 import { Erdstall } from "./contracts";
 import { TokenProvider } from "#erdstall/ledger/backend/tokenprovider";
 import {
 	EthereumAddress,
 	EthereumSignature as Signature,
-} from "#erdstall/ledger/backend/ethereum";
+} from "#erdstall/crypto/ethereum";
 
 // Listener is used internally by Typechain but is not exposed.
 export type Listener = (...args: Array<any>) => void;
@@ -39,8 +43,6 @@ export function ethCallbackShim(
 			return wrapDeposited(erdstall, tokenProvider, cb as EEH<typeof ev>);
 		case "Withdrawn":
 			return wrapWithdrawn(erdstall, tokenProvider, cb as EEH<typeof ev>);
-		case "TokenRegistered":
-			return wrapTokenRegistered(erdstall, cb as EEH<typeof ev>);
 		case "TokenTypeRegistered":
 			return wrapTokenTypeRegistered(erdstall, cb as EEH<typeof ev>);
 		case "Challenged":
@@ -59,7 +61,7 @@ function wrapFrozen(
 	cb: ErdstallEventHandler<"Frozen", "ethereum">,
 ): Listener {
 	type tp = InstanceTypes<typeof erdstall.filters.Frozen>;
-	const wcb: TypedListener<tp[0], tp[1]> = async (epoch) => {
+	const wcb: TypedListener<TypedEvent<tp[0], tp[1]>> = async (epoch) => {
 		return cb({ source: "ethereum", epoch: epoch.toBigInt() });
 	};
 	return wcb;
@@ -71,14 +73,13 @@ function wrapDeposited(
 	cb: ErdstallEventHandler<"Deposited", "ethereum">,
 ): Listener {
 	type tp = InstanceTypes<typeof erdstall.filters.Deposited>;
-	const wcb: TypedListener<tp[0], tp[1]> = async (
+	const wcb: TypedListener<TypedEvent<tp[0], tp[1]>> = async (
 		epoch,
 		account,
-		token,
-		value,
+		tokenValue,
 	) => {
 		const assets = await decodePackedAssets(erdstall, tokenProvider, [
-			[token, value],
+			tokenValue,
 		]);
 		return cb({
 			source: "ethereum",
@@ -96,11 +97,15 @@ function wrapWithdrawn(
 	cb: ErdstallEventHandler<"Withdrawn", "ethereum">,
 ): Listener {
 	type tp = InstanceTypes<typeof erdstall.filters.Withdrawn>;
-	const wcb: TypedListener<tp[0], tp[1]> = async (epoch, account, values) => {
+	const wcb: TypedListener<TypedEvent<tp[0], tp[1]>> = async (
+		epoch,
+		account,
+		tokenValues,
+	) => {
 		const assets = await decodePackedAssets(
 			erdstall,
 			tokenProvider,
-			values,
+			tokenValues,
 		);
 		return cb({
 			source: "ethereum",
@@ -112,32 +117,15 @@ function wrapWithdrawn(
 	return wcb;
 }
 
-function wrapTokenRegistered(
-	erdstall: Erdstall,
-	cb: ErdstallEventHandler<"TokenRegistered", "ethereum">,
-): Listener {
-	type tp = InstanceTypes<typeof erdstall.filters.TokenRegistered>;
-	const wcb: TypedListener<tp[0], tp[1]> = async (
-		token,
-		tokenType,
-		tokenHolder,
-	) => {
-		return cb({
-			source: "ethereum",
-			token: EthereumAddress.fromString(token),
-			tokenHolder: EthereumAddress.fromString(tokenHolder),
-			tokenType: requireTokenType(tokenType),
-		});
-	};
-	return wcb;
-}
-
 function wrapTokenTypeRegistered(
 	erdstall: Erdstall,
 	cb: ErdstallEventHandler<"TokenTypeRegistered", "ethereum">,
 ): Listener {
 	type tp = InstanceTypes<typeof erdstall.filters.TokenTypeRegistered>;
-	const wcb: TypedListener<tp[0], tp[1]> = async (tokenType, tokenHolder) => {
+	const wcb: TypedListener<TypedEvent<tp[0], tp[1]>> = async (
+		tokenType,
+		tokenHolder,
+	) => {
 		return cb({
 			source: "ethereum",
 			tokenHolder: EthereumAddress.fromString(tokenHolder),
@@ -153,7 +141,10 @@ function wrapChallenged(
 	cb: ErdstallEventHandler<"Challenged", "ethereum">,
 ): Listener {
 	type tp = InstanceTypes<typeof erdstall.filters.Challenged>;
-	const wcb: TypedListener<tp[0], tp[1]> = async (epoch, account) => {
+	const wcb: TypedListener<TypedEvent<tp[0], tp[1]>> = async (
+		epoch,
+		account,
+	) => {
 		return cb({
 			source: "ethereum",
 			epoch: epoch.toBigInt(),
@@ -169,16 +160,19 @@ function wrapChallengeResponded(
 	cb: ErdstallEventHandler<"ChallengeResponded", "ethereum">,
 ): Listener {
 	type tp = InstanceTypes<typeof erdstall.filters.ChallengeResponded>;
-	const wcb: TypedListener<tp[0], tp[1]> = async (
+	const wcb: TypedListener<TypedEvent<tp[0], tp[1]>> = async (
 		epoch,
 		account,
-		tokens,
+		id,
+		count,
+		tokenValues,
+		exit,
 		sig,
 	) => {
 		const assets = await decodePackedAssets(
 			erdstall,
 			tokenProvider,
-			tokens,
+			tokenValues,
 		);
 		const address = EthereumAddress.fromString(account);
 		const sigBytes = utils.arrayify(sig);
@@ -201,7 +195,9 @@ function wrapChallengeResponded(
 
 // Infer the concrete typeparameters for a given concrete `TypedEventFilter`
 // and return them as a tuple type [X, Y].
-type PolymorphicTypeParameters<T> = T extends TypedEventFilter<infer X, infer Y>
+type PolymorphicTypeParameters<T> = T extends TypedEventFilter<
+	TypedEvent<infer X, infer Y>
+>
 	? [X, Y]
 	: never;
 

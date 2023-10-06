@@ -2,20 +2,22 @@
 "use strict";
 
 import { ethers, Signer } from "ethers";
-import { Assets } from "#erdstall/ledger/assets";
-import { EthereumAddress as Address } from "#erdstall/ledger/backend/ethereum";
-import { TransactionName } from "#erdstall/utils";
-import { BalanceProof } from "#erdstall/api/responses";
-import { Erdstall } from "./contracts/Erdstall";
+import { Asset, ChainAssets } from "#erdstall/ledger/assets";
+import { EthereumAddress as Address } from "#erdstall/crypto/ethereum";
+import { ChainProofChunk } from "#erdstall/api/responses";
+import { Erdstall } from "./contracts";
 import { LedgerWriter } from "#erdstall/ledger/backend";
 import { LedgerReadConn } from "./readconn";
 import { depositors, Calls } from "./tokenmanager";
 import { TokenProvider } from "#erdstall/ledger/backend";
 import { TransactionGenerator } from "#erdstall/utils";
+import { Chain } from "#erdstall/ledger/chain";
+
+type TransactionName = "approve" | "deposit" | "withdraw";
 
 export class LedgerWriteConn
 	extends LedgerReadConn
-	implements LedgerWriter<["ethereum"]>
+	implements LedgerWriter<"ethereum">
 {
 	readonly signer: Signer;
 
@@ -24,10 +26,10 @@ export class LedgerWriteConn
 		this.signer = contract.signer;
 	}
 
-	async withdraw(
-		_backend: "ethereum",
-		exitProof: BalanceProof,
-	): Promise<TransactionGenerator> {
+	async withdraw<B extends "ethereum">(
+		_backend: B,
+		exitProofs: ChainProofChunk[],
+	): Promise<TransactionGenerator<B>> {
 		return {
 			stages: this.call([
 				[
@@ -35,8 +37,10 @@ export class LedgerWriteConn
 					(
 						_?: ethers.PayableOverrides,
 					): Promise<ethers.ContractTransaction> => {
-						const [balance, sig] = exitProof.toEthProof();
-						return this.contract.withdraw(balance, sig);
+						// TODO: Reintroduce.
+						throw new Error("Method not implemented.");
+						// const [balance, sig] = exitProof.toEthProof();
+						// return this.contract.withdraw(balance, sig);
 					},
 				],
 			]),
@@ -44,16 +48,27 @@ export class LedgerWriteConn
 		};
 	}
 
-	async deposit(
-		_backend: "ethereum",
-		assets: Assets,
-	): Promise<TransactionGenerator> {
+	async deposit<B extends "ethereum">(
+		_backend: B,
+		assets: ChainAssets,
+	): Promise<TransactionGenerator<B>> {
 		const calls: Calls = [];
 
-		if (!assets.values.size)
+		if (!assets.assets.size)
 			throw new Error("attempting to deposit nothing");
 
-		for (const [tokenAddr, asset] of assets.values) {
+		// TODO: It might be nice if we would ignore other assets for other chains
+		// and instead only require that the correct backend has entries here.
+		// Observe user experience.
+		//
+		// TODO: We do not only support `Chain.EthereumMainnet`.
+		if (
+			assets.assets.size !== 1 ||
+			!assets.assets.has(Chain.EthereumMainnet)
+		)
+			throw new Error("attempting to deposit non-ethereum assets");
+
+		const addStage = async (tokenAddr: string, amount: Asset) => {
 			const ttype = await this.tokenCache.tokenTypeOf(
 				this.contract,
 				tokenAddr,
@@ -62,13 +77,23 @@ export class LedgerWriteConn
 				this.contract,
 				ttype,
 			);
+
 			const depositCalls = depositors.get(ttype)!(
 				this.signer,
 				Address.fromString(holder),
 				Address.fromString(tokenAddr),
-				asset,
+				amount,
 			);
 			calls.push(...depositCalls);
+		};
+
+		for (const [_chain, asset] of assets.assets) {
+			for (const [tokenAddr, amount] of asset.fungibles.assets) {
+				await addStage(tokenAddr, amount);
+			}
+			for (const [tokenAddr, nfts] of asset.nfts.assets) {
+				await addStage(tokenAddr, nfts);
+			}
 		}
 
 		return { stages: this.call(calls), numStages: calls.length };

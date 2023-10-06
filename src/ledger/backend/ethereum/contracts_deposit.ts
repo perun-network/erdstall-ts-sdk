@@ -3,22 +3,23 @@
 
 import { ethers, Signer, BigNumber } from "ethers";
 
-import { ETHHolder__factory } from "./contracts/factories/ETHHolder__factory";
-import { IERC20__factory } from "./contracts/factories/IERC20__factory";
-import { IERC721__factory } from "./contracts/factories/IERC721__factory";
-import { ERC20Holder__factory } from "./contracts/factories/ERC20Holder__factory";
-import { ERC721Holder__factory } from "./contracts/factories/ERC721Holder__factory";
-import { Address } from "#erdstall/ledger";
+import {
+	ERC721Holder__factory,
+	ERC20Holder__factory,
+	IERC721__factory,
+	ETHHolder__factory,
+	IERC20__factory,
+} from "./contracts";
+import { Address } from "#erdstall/crypto";
 import { Asset } from "#erdstall/ledger/assets";
 import { Amount } from "#erdstall/ledger/assets";
 import { Tokens } from "#erdstall/ledger/assets";
 import { Calls } from "./tokenmanager";
-import { Backend } from "#erdstall/ledger/backend/backends";
 
 export function makeETHDepositCalls(
 	signer: Signer,
-	holderAddr: Address<Backend>,
-	_: Address<Backend>,
+	holderAddr: Address<"ethereum">,
+	_: Address<"ethereum">,
 	amount: Asset,
 ): Calls {
 	if (!(amount instanceof Amount)) {
@@ -45,10 +46,11 @@ export function makeETHDepositCalls(
 
 export function makeERC20DepositCalls(
 	signer: Signer,
-	holderAddr: Address<Backend>,
-	tokenAddr: Address<Backend>,
+	holderAddr: Address<"ethereum">,
+	tokenAddr: Address<"ethereum">,
 	amount: Asset,
 ): Calls {
+	// TODO: This is wrong, fix this thanks.
 	if (!(amount instanceof Amount)) {
 		throw new Error("given value is not of type Amount");
 	}
@@ -86,8 +88,8 @@ export function makeERC20DepositCalls(
 
 export function makeERC721DepositCalls(
 	signer: Signer,
-	holderAddr: Address<Backend>,
-	tokenAddr: Address<Backend>,
+	holderAddr: Address<"ethereum">,
+	tokenAddr: Address<"ethereum">,
 	amount: Asset,
 ): Calls {
 	if (!(amount instanceof Tokens)) {

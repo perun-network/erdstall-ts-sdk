@@ -4,17 +4,16 @@
 import { ethers, Signer } from "ethers";
 
 import {
-	BalanceProof,
 	ChainConfig,
+	ChainProofChunk,
 	ClientConfig,
 } from "#erdstall/api/responses";
-import { Address } from "#erdstall/ledger";
-import { Assets } from "#erdstall/ledger/assets";
+import { Address } from "#erdstall/crypto";
+import { EthereumAddress } from "#erdstall/crypto/ethereum";
+import { ChainAssets } from "#erdstall/ledger/assets";
 import {
 	Erdstall__factory,
-	EthereumAddress,
 	EthereumClient,
-	LedgerReadConn,
 	LedgerWriteConn,
 	TokenFetcher,
 } from "#erdstall/ledger/backend/ethereum";
@@ -43,7 +42,7 @@ export class EthereumSession
 	// `restoreCustodial()`.
 	static generateCustodialAccount(): {
 		signer: Signer;
-		address: Address<Backend>;
+		address: Address<"ethereum">;
 		privateKey: string;
 	} {
 		let wallet = ethers.Wallet.createRandom();
@@ -59,7 +58,7 @@ export class EthereumSession
 	// and the associated account's address.
 	static restoreCustodialAccount(privateKey: string): {
 		signer: Signer;
-		address: Address<Backend>;
+		address: Address<"ethereum">;
 	} {
 		let signer = new ethers.Wallet(privateKey);
 		return { signer, address: EthereumAddress.fromString(signer.address) };
@@ -76,7 +75,7 @@ export class EthereumSession
 	): {
 		session: EthereumSession;
 		privateKey: string;
-		address: Address<Backend>;
+		address: Address<"ethereum">;
 	} {
 		if (provider instanceof URL)
 			provider = new ethers.providers.JsonRpcProvider(`${provider}`);
@@ -100,7 +99,7 @@ export class EthereumSession
 		privateKey: string,
 	): {
 		session: EthereumSession;
-		address: Address<Backend>;
+		address: Address<"ethereum">;
 	} {
 		if (provider instanceof URL)
 			provider = new ethers.providers.JsonRpcProvider(`${provider}`);
@@ -115,17 +114,17 @@ export class EthereumSession
 		return { session, address };
 	}
 
-	async deposit(
-		backend: "ethereum",
-		assets: Assets,
-	): Promise<TransactionGenerator> {
+	async deposit<B extends "ethereum">(
+		backend: B,
+		assets: ChainAssets,
+	): Promise<TransactionGenerator<B>> {
 		return this.erdstallConn.deposit(backend, assets);
 	}
 
-	async withdraw(
-		backend: "ethereum",
-		exitProof: BalanceProof,
-	): Promise<TransactionGenerator> {
+	async withdraw<B extends "ethereum">(
+		backend: B,
+		exitProof: ChainProofChunk[],
+	): Promise<TransactionGenerator<B>> {
 		return this.erdstallConn.withdraw(backend, exitProof);
 	}
 }

@@ -2,7 +2,6 @@
 
 import { expect } from "chai";
 import { OnChainQuerier } from "./ethereumOnChainQuerier";
-import { OnChainQuerier } from "#erdstall/ledger";
 import { Tokens } from "#erdstall/ledger/assets";
 
 import * as test from "#erdstall/test";
