@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { BalanceProof, ClientConfig } from "#erdstall/api/responses";
+import { ChainProofChunk, ClientConfig } from "#erdstall/api/responses";
 import { ErdstallBackendSession } from "#erdstall/erdstall";
-import { Assets } from "#erdstall/ledger/assets";
+import { Assets, ChainAssets } from "#erdstall/ledger/assets";
 import { TransactionGenerator } from "#erdstall/utils";
 import { SubstrateClient } from "./client";
 
@@ -13,14 +13,14 @@ export class SubstrateSession
 {
 	deposit<B extends "substrate">(
 		backend: B,
-		assets: Assets,
-	): Promise<TransactionGenerator> {
+		assets: ChainAssets,
+	): Promise<TransactionGenerator<B>> {
 		throw new Error("Method not implemented.");
 	}
 	withdraw<B extends "substrate">(
 		backend: B,
-		exitProof: BalanceProof,
-	): Promise<TransactionGenerator> {
+		exitProof: ChainProofChunk[],
+	): Promise<TransactionGenerator<B>> {
 		throw new Error("Method not implemented.");
 	}
 }

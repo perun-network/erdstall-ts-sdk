@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { ErdstallClient } from "#erdstall";
+import { ErdstallBackendClient } from "#erdstall";
 import { AttestationResult, ClientConfig } from "#erdstall/api/responses";
 import { ErdstallEvent, ErdstallEventHandler } from "#erdstall/event";
 import { Account } from "#erdstall/ledger/account";
-import { Address } from "#erdstall/ledger/address";
+import { Address } from "#erdstall/crypto";
 import { OnChainQuerier } from "#erdstall/ledger/onChainQuerier";
 import { Backend } from "#erdstall/ledger/backend/backends";
 import { NFTMetadata } from "#erdstall/ledger/backend/metadata";
 import { TokenProvider } from "#erdstall/ledger/backend/tokenprovider";
 
-export class SubstrateClient implements ErdstallClient<["substrate"]> {
+export class SubstrateClient implements ErdstallBackendClient<"substrate"> {
 	readonly tokenProvider: TokenProvider<"substrate">;
-	readonly onChainQuerier: OnChainQuerier<["substrate"]>;
+	readonly onChainQuerier: OnChainQuerier<"substrate">;
 
 	constructor(arg: number) {
 		console.log("SUBSTRATECONSTRUCTOR: {}", arg);
@@ -33,24 +33,24 @@ export class SubstrateClient implements ErdstallClient<["substrate"]> {
 		cb: ErdstallEventHandler<EV, "substrate">,
 	): void {}
 	removeAllListeners(): void {}
-	erdstall(): { chain: "substrate"; address: Address<Backend> } {
+	erdstall(): { chain: "substrate"; address: Address<"substrate"> }[] {
 		throw new Error("Method not implemented.");
 	}
 	initialize(): Promise<void> {
 		throw new Error("Method not implemented.");
 	}
-	subscribe(who?: Address<Backend> | undefined): Promise<void> {
+	subscribe(who?: Address<"substrate"> | undefined): Promise<void> {
 		throw new Error("Method not implemented.");
 	}
 	getNftMetadata(
 		backend: "substrate",
-		token: Address<Backend>,
+		token: Address<"substrate">,
 		id: bigint,
 		useCache?: boolean | undefined,
 	): Promise<NFTMetadata> {
 		throw new Error("Method not implemented.");
 	}
-	getAccount(who: Address<Backend>): Promise<Account> {
+	getAccount(who: Address<"substrate">): Promise<Account> {
 		throw new Error("Method not implemented.");
 	}
 	attest(): Promise<AttestationResult> {
