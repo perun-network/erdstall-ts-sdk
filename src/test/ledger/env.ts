@@ -6,10 +6,7 @@ import { ethers } from "ethers";
 import { Wallet } from "ethers";
 import { providers } from "ethers";
 import { deployContract, MockProvider } from "ethereum-waffle";
-import {
-	Erdstall__factory,
-	PerunArt__factory,
-} from "#erdstall/ledger/backend/ethereum/contracts";
+import { Erdstall__factory } from "#erdstall/ledger/backend/ethereum/contracts";
 import { ETHZERO } from "#erdstall/ledger/assets";
 
 import peruntokenABI from "../../ledger/backend/ethereum/contracts/abi/PerunToken.json";
@@ -17,7 +14,6 @@ import erdstallABI from "../../ledger/backend/ethereum/contracts/abi/Erdstall.js
 import erc20holderABI from "../../ledger/backend/ethereum/contracts/abi/ERC20Holder.json";
 import erc721holderABI from "../../ledger/backend/ethereum/contracts/abi/ERC721Holder.json";
 import ethholderABI from "../../ledger/backend/ethereum/contracts/abi/ETHHolder.json";
-import perunArtABI from "../../ledger/backend/ethereum/contracts/abi/PerunArt.json";
 
 import {} from "#erdstall/ledger/backend";
 

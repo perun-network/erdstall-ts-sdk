@@ -52,7 +52,7 @@ export abstract class Transaction extends ErdstallObject {
 			return false;
 		}
 		const rec = utils.verifyMessage(
-			this.packTagged().keccak256(),
+			this.encodePayload(),
 			this.sig!.toString(),
 		);
 
@@ -79,12 +79,6 @@ export abstract class Transaction extends ErdstallObject {
 		}
 		const enc = new TextEncoder();
 		return enc.encode(msg);
-	}
-
-	packTagged(): ABIPacked {
-		// TODO: This should use the canonicalized JSON representation of the
-		// transaction.
-		throw new Error("not implemented");
 	}
 
 	hash(): string {
