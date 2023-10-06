@@ -1,10 +1,10 @@
 import { Tokens } from "./assets";
-import { Backend, RequestedBackends } from "#erdstall/ledger/backend/backends";
+import { Backend } from "#erdstall/ledger/backend/backends";
 
-export interface OnChainQuerier<Bs extends Backend[]> {
+export interface OnChainQuerier<B extends Backend> {
 	// Query the tokens owned by an address on the given backends.
-	queryTokensOwnedByAddress<B extends RequestedBackends<Bs>>(
-		backend: B | B[],
+	queryTokensOwnedByAddress<CB extends B>(
+		backend: CB,
 		token: string,
 		address: string,
 	): Promise<Tokens>;

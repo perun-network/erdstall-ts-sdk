@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { Address } from "#erdstall/ledger";
+import { BackendAddress } from "#erdstall";
 import { Backend } from "#erdstall/ledger/backend";
 
 export interface NFTMetadata {
@@ -33,10 +33,10 @@ export interface Attribute {
 	display_type?: DisplayType;
 }
 
-export interface NFTMetadataProvider<Bs extends Backend[]> {
+export interface NFTMetadataProvider<B extends Backend> {
 	getNftMetadata(
-		backend: Bs[number],
-		token: Address<Backend>,
+		backend: B,
+		token: BackendAddress<Backend>,
 		id: bigint,
 		useCache?: boolean,
 	): Promise<NFTMetadata>;

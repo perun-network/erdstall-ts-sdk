@@ -2,8 +2,7 @@
 "use strict";
 
 import { ErdstallObject, registerErdstallType } from "#erdstall/api";
-import { jsonObject, jsonMember } from "#erdstall/export/typedjson";
-import { Address } from "#erdstall/ledger";
+import { jsonObject } from "#erdstall/export/typedjson";
 import { Backend, BackendChainConfig } from "#erdstall/ledger/backend";
 import { customJSON } from "../util";
 

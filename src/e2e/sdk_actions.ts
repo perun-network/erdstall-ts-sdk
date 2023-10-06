@@ -3,11 +3,8 @@
 
 import { Assets } from "#erdstall/ledger/assets";
 import * as assets from "#erdstall/ledger/assets";
-import { Session, Client } from "#erdstall";
-import {
-	PerunArt__factory,
-	PerunToken__factory,
-} from "#erdstall/ledger/backend/ethereum/contracts";
+import { Session, Client, ErdstallSession } from "#erdstall";
+import { PerunToken__factory } from "#erdstall/ledger/backend/ethereum/contracts";
 import {
 	Transfer,
 	Mint,
@@ -18,8 +15,8 @@ import {
 
 import { ethers, utils } from "ethers";
 import { PERUN_ADDR, PART_ADDR } from "./parameters";
+import { EthereumAddress } from "#erdstall/crypto/ethereum";
 import {
-	EthereumAddress,
 	mkDefaultEthereumClientConstructor,
 	mkDefaultEthereumSessionConstructor,
 } from "#erdstall/ledger/backend/ethereum";
@@ -129,9 +126,6 @@ export const sdkActions = {
 			// A new token type with its token holder contract was registered on the
 			// Erdstall smart contract.
 		});
-		session.on("TokenRegistered", (_tokenRegisteredEvent) => {
-			// A new token was registered on Erdstall.
-		});
 		session.on("Deposited", (_depositEvent) => {
 			// A deposit was registered on Erdstall.
 		});
@@ -182,6 +176,7 @@ export const sdkActions = {
 		// Here we are creating `Assets` containing some ETH and PRN which will be
 		// used for depositing in the next step.
 		const depositBal = new Assets(
+			// TODO: Make this ChainAssets.
 			{
 				token: assets.ETHZERO, // ETH is represented by the zero address 0x00..
 				asset: new assets.Amount(ethAmount),
@@ -192,31 +187,40 @@ export const sdkActions = {
 			},
 		);
 
-		const { stages, numStages: _numStages } = await session.deposit(
-			"ethereum",
-			depositBal,
-		);
-		// Depositing is a multi-stage process. ERC20 tokens like PRN have to be
-		// approved first, before being transferred. Here this results in the
-		// following stages:
-		//
-		// ETH => One transfer stage.
-		// PRN => One approve stage + One transfer stage.
-		//
-		// console.info("Number of stages: ", _numStages); // > Number of stages: 3
+		{
+			const { stages, numStages: _numStages } = await session.deposit(
+				"ethereum",
+				depositBal as any,
+			);
+			// Depositing is a multi-stage process. ERC20 tokens like PRN have to be
+			// approved first, before being transferred. Here this results in the
+			// following stages:
+			//
+			// ETH => One transfer stage.
+			// PRN => One approve stage + One transfer stage.
+			//
+			// console.info("Number of stages: ", _numStages); // > Number of stages: 3
 
-		// One can use this information to update users on the current progress of
-		// onchain transactions since they tend to take up quite some time in the
-		// real world.
-		for await (const [_name, stage] of stages) {
-			// Each stage of a transaction comes with a name which also can be used
-			// for improved UX or logging.
-			const ctx = await stage.wait();
-			// Also it is always advisable to assert the contract transactions status
-			// to be a success.
-			if (ctx.status !== 0x1) {
-				// handle contract error.
+			// One can use this information to update users on the current progress of
+			// onchain transactions since they tend to take up quite some time in the
+			// real world.
+			for await (const [_name, stage] of stages) {
+				// Each stage of a transaction comes with a name which also can be used
+				// for improved UX or logging.
+				const ctx = await stage.wait();
+				// Also it is always advisable to assert the contract transactions status
+				// to be a success.
+				if (ctx.status !== 0x1) {
+					// handle contract error.
+				}
 			}
+		}
+
+		{
+			const { stages, numStages: _numStages } = await session.deposit(
+				"substrate",
+				{} as any,
+			);
 		}
 	},
 
@@ -421,10 +425,8 @@ export const sdkActions = {
 			PERUN_ADDR.toString(),
 			provider,
 		).balanceOf(session.address.toString());
-		const part = await PerunArt__factory.connect(
-			PART_ADDR.toString(),
-			provider,
-		).balanceOf(session.address.toString());
+		// TODO: Hack.
+		const part = {} as any;
 		const eth = await provider.getBalance(session.address.toString());
 
 		// In the case of Alice we would see the following output:

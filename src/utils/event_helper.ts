@@ -3,11 +3,12 @@
 
 import { EnclaveWatcher, ErdstallWatcher, ErdstallEvent } from "#erdstall";
 import { isEnclaveEvent } from "#erdstall/enclave";
+import { Backend } from "#erdstall/ledger/backend";
 
 export const EventHelper = {
-	within(
+	within<B extends Backend>(
 		ms: number,
-		eventEmitter: EnclaveWatcher | ErdstallWatcher<["ethereum"]>,
+		eventEmitter: EnclaveWatcher | ErdstallWatcher<B>,
 		event: ErdstallEvent,
 	): Promise<boolean> {
 		let timeout: NodeJS.Timeout;
@@ -18,7 +19,7 @@ export const EventHelper = {
 			if (isEnclaveEvent(event)) {
 				(eventEmitter as EnclaveWatcher).on(event, cb);
 			} else {
-				(eventEmitter as ErdstallWatcher<["ethereum"]>).on(event, cb);
+				(eventEmitter as ErdstallWatcher<B>).on(event, cb);
 			}
 		});
 
@@ -27,7 +28,7 @@ export const EventHelper = {
 			if (isEnclaveEvent(event)) {
 				(eventEmitter as EnclaveWatcher).off(event, cb);
 			} else {
-				(eventEmitter as ErdstallWatcher<["ethereum"]>).off(event, cb);
+				(eventEmitter as ErdstallWatcher<B>).off(event, cb);
 			}
 		});
 	},

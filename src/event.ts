@@ -11,13 +11,12 @@ import {
 	Challenged,
 	ChallengeResponded,
 	TokenTypeRegistered,
-	TokenRegistered,
 } from "./ledger";
 import { EnclaveEvent } from "./enclave/event";
 import {
 	ClientConfig,
 	TxReceipt,
-	BalanceProof,
+	BalanceProofs,
 	PhaseShift,
 } from "./api/responses";
 import { Backend } from "./ledger/backend";
@@ -38,15 +37,14 @@ type _eventHandlers<B extends Backend> = {
 	Challenged: (ev: Challenged<B>) => void;
 	ChallengeResponded: (ev: ChallengeResponded<B>) => void;
 	TokenTypeRegistered: (ev: TokenTypeRegistered<B>) => void;
-	TokenRegistered: (ev: TokenRegistered<B>) => void;
 
 	open: () => void;
 	close: () => void;
 	config: (config: ClientConfig) => void;
 	receipt: (receipt: TxReceipt) => void;
 	phaseshift: (phaseShift: PhaseShift) => void;
-	proof: (proof: BalanceProof) => void;
-	exitproof: (exitProof: BalanceProof) => void;
+	proof: (proof: BalanceProofs) => void;
+	exitproof: (exitProof: BalanceProofs) => void;
 	error: (error: string | Error) => void;
 };
 
