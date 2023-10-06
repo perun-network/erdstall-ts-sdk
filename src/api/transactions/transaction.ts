@@ -2,8 +2,8 @@
 "use strict";
 
 import { ErdstallObject, registerErdstallType } from "#erdstall/api";
-import { Address, Signature } from "#erdstall/ledger";
-import { customJSON, ABIEncoder, ABIPacked } from "#erdstall/api/util";
+import { Address, Signature, Crypto } from "#erdstall/crypto";
+import { customJSON, ABIPacked } from "#erdstall/api/util";
 import {
 	jsonObject,
 	jsonMember,
@@ -12,7 +12,7 @@ import {
 	jsonBigIntMember,
 } from "#erdstall/export/typedjson";
 import { utils } from "ethers";
-import { Backend, Signer } from "#erdstall/ledger/backend";
+import { Signer } from "#erdstall/ledger/backend";
 import canonicalize from "canonicalize";
 
 const transactionImpls = new Map<string, Serializable<Transaction>>();
@@ -28,23 +28,22 @@ export function registerTransactionType(
 /** Transaction is the base class for all transactions. */
 @jsonObject
 export abstract class Transaction extends ErdstallObject {
-	@jsonMember(Address) sender: Address<Backend>;
+	@jsonMember(Address) sender: Address<Crypto>;
 	@jsonBigIntMember() nonce: bigint;
-	@jsonMember(Signature) sig?: Signature<Backend>;
+	@jsonMember(Signature) sig?: Signature<Crypto>;
 
-	constructor(sender: Address<Backend>, nonce: bigint) {
+	constructor(sender: Address<Crypto>, nonce: bigint) {
 		super();
 		this.sender = sender;
 		this.nonce = nonce;
 	}
 
-	async sign(signer: Signer<Backend>): Promise<this> {
-		const msg = canonicalize(Transaction.toJSON(this));
-		if (msg === undefined) {
-			throw new Error("failed to canonicalize transaction");
-		} else {
-			this.sig = await signer.signMessage(utils.arrayify(msg));
-		}
+	async sign(signer: Signer<Crypto>): Promise<this> {
+		// Make sure the signature is set to undefined, otherwise signing would not
+		// be idempotent.
+		this.sig = undefined;
+		const msg = this.encodePayload();
+		this.sig = await signer.signMessage(msg);
 		return this;
 	}
 
@@ -71,6 +70,17 @@ export abstract class Transaction extends ErdstallObject {
 		return TypedJSON.parse(data, transactionImpls.get(js.type)!)!;
 	}
 
+	encodePayload(): Uint8Array {
+		const msg = canonicalize(
+			JSON.stringify({ value: Transaction.toJSON(this) }),
+		);
+		if (msg === undefined) {
+			throw new Error("failed to canonicalize transaction");
+		}
+		const enc = new TextEncoder();
+		return enc.encode(msg);
+	}
+
 	packTagged(): ABIPacked {
 		// TODO: This should use the canonicalized JSON representation of the
 		// transaction.
@@ -78,11 +88,10 @@ export abstract class Transaction extends ErdstallObject {
 	}
 
 	hash(): string {
-		const toHash = this.packTagged();
-		throw new Error("not implemented");
-		// return utils.keccak256(
-		// 	new Uint8Array([...toHash.bytes, ...this.sig!.value]),
-		// );
+		const toHash = this.encodePayload();
+		return utils.keccak256(
+			new Uint8Array([...toHash, ...this.sig!.toBytes()]),
+		);
 	}
 
 	static toJSON(me: Transaction) {
@@ -101,7 +110,6 @@ export abstract class Transaction extends ErdstallObject {
 
 	public abstract txType(): Serializable<Transaction>;
 	protected abstract txTypeName(): string;
-	protected abstract encodeABI(_: ABIEncoder): string;
 }
 
 registerErdstallType(transactionTypeName, Transaction);

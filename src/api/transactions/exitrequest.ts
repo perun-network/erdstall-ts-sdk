@@ -6,10 +6,9 @@ import {
 	jsonObject,
 	Serializable,
 } from "#erdstall/export/typedjson";
-import { ABIEncoder, customJSON } from "#erdstall/api/util";
+import { customJSON } from "#erdstall/api/util";
 import { Transaction, registerTransactionType } from "./transaction";
-import { Address } from "#erdstall/ledger";
-import { Backend } from "#erdstall/ledger/backend";
+import { Address, Crypto } from "#erdstall/crypto";
 import { ErdstallObject, registerErdstallType } from "#erdstall/api";
 
 const exitTypeName = "ExitRequest";
@@ -72,7 +71,7 @@ export class ExitRequest extends Transaction {
 	override: boolean;
 
 	constructor(
-		sender: Address<Backend>,
+		sender: Address<Crypto>,
 		nonce: bigint,
 		override: boolean,
 		mode?: FullExit | PartialExit,
@@ -89,10 +88,6 @@ export class ExitRequest extends Transaction {
 
 	protected txTypeName(): string {
 		return exitTypeName;
-	}
-
-	protected encodeABI(_e: ABIEncoder): string {
-		return "ErdstallExitRequest";
 	}
 }
 

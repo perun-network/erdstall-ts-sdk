@@ -69,7 +69,7 @@ export function newRandomBurn(rng: PRNG, size: number = 1): Burn {
 	return new Burn(
 		newRandomAddress(rng),
 		newRandomUint64(rng),
-		newRandomAssets(rng, size),
+		newRandomChainAssets(rng, size),
 	);
 }
 

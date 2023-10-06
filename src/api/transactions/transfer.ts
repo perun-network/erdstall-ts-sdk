@@ -2,23 +2,21 @@
 "use strict";
 
 import { Transaction, registerTransactionType } from "./transaction";
-import { Address } from "#erdstall/ledger";
 import { ChainAssets } from "#erdstall/ledger/assets";
 import { jsonObject, jsonMember } from "#erdstall/export/typedjson";
-import { ABIEncoder } from "#erdstall/api/util";
-import { Backend } from "#erdstall/ledger/backend";
+import { Address, Crypto } from "#erdstall/crypto";
 
 const transferTypeName = "Transfer";
 
 @jsonObject
 export class Transfer extends Transaction {
-	@jsonMember(Address) recipient: Address<Backend>;
+	@jsonMember(Address) recipient: Address<Crypto>;
 	@jsonMember(() => ChainAssets) values: ChainAssets;
 
 	constructor(
-		sender: Address<Backend>,
+		sender: Address<Crypto>,
 		nonce: bigint,
-		recipient: Address<Backend>,
+		recipient: Address<Crypto>,
 		values: ChainAssets,
 	) {
 		super(sender, nonce);
@@ -31,12 +29,6 @@ export class Transfer extends Transaction {
 	}
 	protected txTypeName(): string {
 		return transferTypeName;
-	}
-	protected encodeABI(e: ABIEncoder): string {
-		// TODO: Implement
-		throw new Error("Method not implemented.");
-		// e.encode(this.recipient, this.values);
-		// return "ErdstallTransaction";
 	}
 }
 
