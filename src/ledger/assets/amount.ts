@@ -35,13 +35,6 @@ export class Amount extends Asset {
 		return TypeTags.Amount;
 	}
 
-	asABI(): Uint8Array {
-		const arr = utils.arrayify(BigNumber.from(this.value));
-		const abi = new Uint8Array(32);
-		abi.set(arr, 32 - arr.length);
-		return abi;
-	}
-
 	zero(): boolean {
 		return this.value === 0n;
 	}
@@ -109,6 +102,10 @@ export function decodePackedAmount(data: string): Amount {
 		idArr = utils.arrayify(data);
 	}
 	return new Amount(mkBigInt(idArr.values(), 256, 8));
+}
+
+export function packAmount(amount: Amount): bigint {
+	return amount.value;
 }
 
 registerAssetType(TypeTags.Amount, Amount.fromJSON);

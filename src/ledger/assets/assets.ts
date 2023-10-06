@@ -10,7 +10,7 @@ import {
 } from "#erdstall/export/typedjson";
 import { Asset } from "./asset";
 import { customJSON } from "#erdstall/api/util";
-import { Address, addressKey, Crypto } from "#erdstall/crypto";
+import { Address, addressKey, Crypto, AssetID } from "#erdstall/crypto";
 import { Backend, TokenProvider } from "#erdstall/ledger/backend";
 import { Erdstall } from "#erdstall/ledger/backend/ethereum/contracts";
 import { Amount, decodePackedAmount } from "./amount";
@@ -65,6 +65,31 @@ export class ChainAssets {
 
 	cmp(other: ChainAssets): boolean {
 		throw new Error("Method not implemented.");
+	}
+
+	ordered(): [AssetID, Asset][] {
+		const res = new Array<Array<[AssetID, Asset]>>();
+		for (const [chain, locals] of this.assets) {
+			const localList = new Array<[AssetID, Asset]>();
+			for (const [token, amount] of locals.fungibles.assets) {
+				localList.push([
+					AssetID.fromMetadata(chain, 0, utils.arrayify(token)),
+					amount,
+				]);
+			}
+			for (const [token, tokens] of locals.nfts.assets) {
+				localList.push([
+					AssetID.fromMetadata(chain, 1, utils.arrayify(token)),
+					tokens,
+				]);
+			}
+			localList.sort(([ida, _a], [idb, _b]) => ida.cmp(idb));
+			res.push(localList);
+		}
+
+		res.sort((a, b) => a[0][0].origin() - b[0][0].origin());
+
+		return res.flat();
 	}
 }
 
