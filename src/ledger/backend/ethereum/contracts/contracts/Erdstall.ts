@@ -50,26 +50,44 @@ export declare namespace Erdstall {
     BigNumber[]
   ] & { asset: Erdstall.AssetStructOutput; value: BigNumber[] };
 
-  export type BalanceStruct = {
+  export type BalanceChunkStruct = {
     epoch: PromiseOrValue<BigNumberish>;
+    id: PromiseOrValue<BigNumberish>;
+    count: PromiseOrValue<BigNumberish>;
     chain: PromiseOrValue<BigNumberish>;
     account: PromiseOrValue<string>;
     exit: PromiseOrValue<boolean>;
     tokens: Erdstall.TokenValueStruct[];
   };
 
-  export type BalanceStructOutput = [
+  export type BalanceChunkStructOutput = [
     BigNumber,
+    number,
+    number,
     number,
     string,
     boolean,
     Erdstall.TokenValueStructOutput[]
   ] & {
     epoch: BigNumber;
+    id: number;
+    count: number;
     chain: number;
     account: string;
     exit: boolean;
     tokens: Erdstall.TokenValueStructOutput[];
+  };
+
+  export type FreezeProofStruct = {
+    chain: PromiseOrValue<BigNumberish>;
+    block: PromiseOrValue<BigNumberish>;
+    epoch: PromiseOrValue<BigNumberish>;
+  };
+
+  export type FreezeProofStructOutput = [number, BigNumber, BigNumber] & {
+    chain: number;
+    block: BigNumber;
+    epoch: BigNumber;
   };
 }
 
@@ -77,28 +95,30 @@ export interface ErdstallInterface extends utils.Interface {
   functions: {
     "bigBangTime()": FunctionFragment;
     "chainID()": FunctionFragment;
-    "challenge((uint64,uint16,address,bool,((uint16,uint8,bytes32),uint256[])[]),bytes)": FunctionFragment;
-    "challengeDeposit()": FunctionFragment;
+    "challenge()": FunctionFragment;
     "challenges(uint64,address)": FunctionFragment;
     "deployBlockNum()": FunctionFragment;
     "deposit(address,uint8,uint16,bytes32,uint256[])": FunctionFragment;
     "deposits(uint64,address,uint256)": FunctionFragment;
-    "encodeBalanceProof((uint64,uint16,address,bool,((uint16,uint8,bytes32),uint256[])[]))": FunctionFragment;
+    "encodeBalanceProof((uint64,uint32,uint32,uint16,address,bool,((uint16,uint8,bytes32),uint256[])[]))": FunctionFragment;
     "ensureFrozen()": FunctionFragment;
     "epochDuration()": FunctionFragment;
     "frozenEpoch()": FunctionFragment;
     "holderTypes(address)": FunctionFragment;
+    "metadataWasHandled(address)": FunctionFragment;
     "numChallenges(uint64)": FunctionFragment;
     "owner()": FunctionFragment;
     "registerTokenType(address,uint8)": FunctionFragment;
     "renounceOwnership()": FunctionFragment;
-    "respondChallenge((uint64,uint16,address,bool,((uint16,uint8,bytes32),uint256[])[]),bytes)": FunctionFragment;
+    "respondChallenge((uint64,uint32,uint32,uint16,address,bool,((uint16,uint8,bytes32),uint256[])[]),bytes)": FunctionFragment;
+    "submitFreezeProof((uint16,uint64,uint64),bytes,bytes)": FunctionFragment;
     "tee()": FunctionFragment;
     "tokenHolders(uint8)": FunctionFragment;
     "transferOwnership(address)": FunctionFragment;
-    "verifyBalance((uint64,uint16,address,bool,((uint16,uint8,bytes32),uint256[])[]),bytes)": FunctionFragment;
-    "withdraw((uint64,uint16,address,bool,((uint16,uint8,bytes32),uint256[])[]),bytes)": FunctionFragment;
-    "withdrawFrozen((uint64,uint16,address,bool,((uint16,uint8,bytes32),uint256[])[]),bytes)": FunctionFragment;
+    "verifyBalance((uint64,uint32,uint32,uint16,address,bool,((uint16,uint8,bytes32),uint256[])[]),bytes)": FunctionFragment;
+    "verifyTeeSig(bytes,bytes)": FunctionFragment;
+    "withdraw((uint64,uint32,uint32,uint16,address,bool,((uint16,uint8,bytes32),uint256[])[]),bytes)": FunctionFragment;
+    "withdrawFrozen((uint64,uint32,uint32,uint16,address,bool,((uint16,uint8,bytes32),uint256[])[]),bytes)": FunctionFragment;
     "withdrawFrozenDeposit()": FunctionFragment;
     "withdrawn(uint64,address)": FunctionFragment;
   };
@@ -108,7 +128,6 @@ export interface ErdstallInterface extends utils.Interface {
       | "bigBangTime"
       | "chainID"
       | "challenge"
-      | "challengeDeposit"
       | "challenges"
       | "deployBlockNum"
       | "deposit"
@@ -118,15 +137,18 @@ export interface ErdstallInterface extends utils.Interface {
       | "epochDuration"
       | "frozenEpoch"
       | "holderTypes"
+      | "metadataWasHandled"
       | "numChallenges"
       | "owner"
       | "registerTokenType"
       | "renounceOwnership"
       | "respondChallenge"
+      | "submitFreezeProof"
       | "tee"
       | "tokenHolders"
       | "transferOwnership"
       | "verifyBalance"
+      | "verifyTeeSig"
       | "withdraw"
       | "withdrawFrozen"
       | "withdrawFrozenDeposit"
@@ -138,14 +160,7 @@ export interface ErdstallInterface extends utils.Interface {
     values?: undefined
   ): string;
   encodeFunctionData(functionFragment: "chainID", values?: undefined): string;
-  encodeFunctionData(
-    functionFragment: "challenge",
-    values: [Erdstall.BalanceStruct, PromiseOrValue<BytesLike>]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "challengeDeposit",
-    values?: undefined
-  ): string;
+  encodeFunctionData(functionFragment: "challenge", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "challenges",
     values: [PromiseOrValue<BigNumberish>, PromiseOrValue<string>]
@@ -174,7 +189,7 @@ export interface ErdstallInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "encodeBalanceProof",
-    values: [Erdstall.BalanceStruct]
+    values: [Erdstall.BalanceChunkStruct]
   ): string;
   encodeFunctionData(
     functionFragment: "ensureFrozen",
@@ -193,6 +208,10 @@ export interface ErdstallInterface extends utils.Interface {
     values: [PromiseOrValue<string>]
   ): string;
   encodeFunctionData(
+    functionFragment: "metadataWasHandled",
+    values: [PromiseOrValue<string>]
+  ): string;
+  encodeFunctionData(
     functionFragment: "numChallenges",
     values: [PromiseOrValue<BigNumberish>]
   ): string;
@@ -207,7 +226,15 @@ export interface ErdstallInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "respondChallenge",
-    values: [Erdstall.BalanceStruct, PromiseOrValue<BytesLike>]
+    values: [Erdstall.BalanceChunkStruct, PromiseOrValue<BytesLike>]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "submitFreezeProof",
+    values: [
+      Erdstall.FreezeProofStruct,
+      PromiseOrValue<BytesLike>,
+      PromiseOrValue<BytesLike>
+    ]
   ): string;
   encodeFunctionData(functionFragment: "tee", values?: undefined): string;
   encodeFunctionData(
@@ -220,15 +247,19 @@ export interface ErdstallInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "verifyBalance",
-    values: [Erdstall.BalanceStruct, PromiseOrValue<BytesLike>]
+    values: [Erdstall.BalanceChunkStruct, PromiseOrValue<BytesLike>]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "verifyTeeSig",
+    values: [PromiseOrValue<BytesLike>, PromiseOrValue<BytesLike>]
   ): string;
   encodeFunctionData(
     functionFragment: "withdraw",
-    values: [Erdstall.BalanceStruct, PromiseOrValue<BytesLike>]
+    values: [Erdstall.BalanceChunkStruct, PromiseOrValue<BytesLike>]
   ): string;
   encodeFunctionData(
     functionFragment: "withdrawFrozen",
-    values: [Erdstall.BalanceStruct, PromiseOrValue<BytesLike>]
+    values: [Erdstall.BalanceChunkStruct, PromiseOrValue<BytesLike>]
   ): string;
   encodeFunctionData(
     functionFragment: "withdrawFrozenDeposit",
@@ -245,10 +276,6 @@ export interface ErdstallInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "chainID", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "challenge", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "challengeDeposit",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(functionFragment: "challenges", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "deployBlockNum",
@@ -277,6 +304,10 @@ export interface ErdstallInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "metadataWasHandled",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "numChallenges",
     data: BytesLike
   ): Result;
@@ -293,6 +324,10 @@ export interface ErdstallInterface extends utils.Interface {
     functionFragment: "respondChallenge",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(
+    functionFragment: "submitFreezeProof",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "tee", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "tokenHolders",
@@ -304,6 +339,10 @@ export interface ErdstallInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "verifyBalance",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "verifyTeeSig",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "withdraw", data: BytesLike): Result;
@@ -318,9 +357,11 @@ export interface ErdstallInterface extends utils.Interface {
   decodeFunctionResult(functionFragment: "withdrawn", data: BytesLike): Result;
 
   events: {
-    "ChallengeResponded(uint64,address,tuple[],bytes)": EventFragment;
+    "ChallengeResponded(uint64,address,uint32,uint32,tuple[],bool,bytes)": EventFragment;
     "Challenged(uint64,address)": EventFragment;
     "Deposited(uint64,address,tuple)": EventFragment;
+    "FirstTimeFungible(bytes32,string,string,uint8)": EventFragment;
+    "FirstTimeNFT(bytes32,string,string,string)": EventFragment;
     "Frozen(uint64)": EventFragment;
     "OwnershipTransferred(address,address)": EventFragment;
     "TokenTypeRegistered(uint8,address)": EventFragment;
@@ -331,6 +372,8 @@ export interface ErdstallInterface extends utils.Interface {
   getEvent(nameOrSignatureOrTopic: "ChallengeResponded"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Challenged"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Deposited"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "FirstTimeFungible"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "FirstTimeNFT"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Frozen"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "OwnershipTransferred"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "TokenTypeRegistered"): EventFragment;
@@ -341,11 +384,22 @@ export interface ErdstallInterface extends utils.Interface {
 export interface ChallengeRespondedEventObject {
   epoch: BigNumber;
   account: string;
+  id: number;
+  count: number;
   tokens: Erdstall.TokenValueStructOutput[];
+  exit: boolean;
   sig: string;
 }
 export type ChallengeRespondedEvent = TypedEvent<
-  [BigNumber, string, Erdstall.TokenValueStructOutput[], string],
+  [
+    BigNumber,
+    string,
+    number,
+    number,
+    Erdstall.TokenValueStructOutput[],
+    boolean,
+    string
+  ],
   ChallengeRespondedEventObject
 >;
 
@@ -374,6 +428,33 @@ export type DepositedEvent = TypedEvent<
 >;
 
 export type DepositedEventFilter = TypedEventFilter<DepositedEvent>;
+
+export interface FirstTimeFungibleEventObject {
+  localID: string;
+  name: string;
+  symbol: string;
+  decimals: number;
+}
+export type FirstTimeFungibleEvent = TypedEvent<
+  [string, string, string, number],
+  FirstTimeFungibleEventObject
+>;
+
+export type FirstTimeFungibleEventFilter =
+  TypedEventFilter<FirstTimeFungibleEvent>;
+
+export interface FirstTimeNFTEventObject {
+  localID: string;
+  name: string;
+  symbol: string;
+  sampleURI: string;
+}
+export type FirstTimeNFTEvent = TypedEvent<
+  [string, string, string, string],
+  FirstTimeNFTEventObject
+>;
+
+export type FirstTimeNFTEventFilter = TypedEventFilter<FirstTimeNFTEvent>;
 
 export interface FrozenEventObject {
   epoch: BigNumber;
@@ -464,12 +545,6 @@ export interface Erdstall extends BaseContract {
     chainID(overrides?: CallOverrides): Promise<[number]>;
 
     challenge(
-      balance: Erdstall.BalanceStruct,
-      sig: PromiseOrValue<BytesLike>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-
-    challengeDeposit(
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
@@ -477,7 +552,7 @@ export interface Erdstall extends BaseContract {
       arg0: PromiseOrValue<BigNumberish>,
       arg1: PromiseOrValue<string>,
       overrides?: CallOverrides
-    ): Promise<[boolean]>;
+    ): Promise<[number]>;
 
     deployBlockNum(overrides?: CallOverrides): Promise<[BigNumber]>;
 
@@ -500,7 +575,7 @@ export interface Erdstall extends BaseContract {
     >;
 
     encodeBalanceProof(
-      balance: Erdstall.BalanceStruct,
+      balance: Erdstall.BalanceChunkStruct,
       overrides?: CallOverrides
     ): Promise<[string]>;
 
@@ -516,6 +591,11 @@ export interface Erdstall extends BaseContract {
       arg0: PromiseOrValue<string>,
       overrides?: CallOverrides
     ): Promise<[number]>;
+
+    metadataWasHandled(
+      arg0: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<[boolean]>;
 
     numChallenges(
       arg0: PromiseOrValue<BigNumberish>,
@@ -535,8 +615,15 @@ export interface Erdstall extends BaseContract {
     ): Promise<ContractTransaction>;
 
     respondChallenge(
-      balance: Erdstall.BalanceStruct,
+      balance: Erdstall.BalanceChunkStruct,
       sig: PromiseOrValue<BytesLike>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<ContractTransaction>;
+
+    submitFreezeProof(
+      proof: Erdstall.FreezeProofStruct,
+      sig: PromiseOrValue<BytesLike>,
+      certificate: PromiseOrValue<BytesLike>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
@@ -553,19 +640,25 @@ export interface Erdstall extends BaseContract {
     ): Promise<ContractTransaction>;
 
     verifyBalance(
-      balance: Erdstall.BalanceStruct,
+      balance: Erdstall.BalanceChunkStruct,
       sig: PromiseOrValue<BytesLike>,
       overrides?: CallOverrides
     ): Promise<[void]>;
 
+    verifyTeeSig(
+      abiCode: PromiseOrValue<BytesLike>,
+      sig: PromiseOrValue<BytesLike>,
+      overrides?: CallOverrides
+    ): Promise<[boolean]>;
+
     withdraw(
-      balance: Erdstall.BalanceStruct,
+      balance: Erdstall.BalanceChunkStruct,
       sig: PromiseOrValue<BytesLike>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
     withdrawFrozen(
-      balance: Erdstall.BalanceStruct,
+      balance: Erdstall.BalanceChunkStruct,
       sig: PromiseOrValue<BytesLike>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
@@ -586,12 +679,6 @@ export interface Erdstall extends BaseContract {
   chainID(overrides?: CallOverrides): Promise<number>;
 
   challenge(
-    balance: Erdstall.BalanceStruct,
-    sig: PromiseOrValue<BytesLike>,
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
-  challengeDeposit(
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
@@ -599,7 +686,7 @@ export interface Erdstall extends BaseContract {
     arg0: PromiseOrValue<BigNumberish>,
     arg1: PromiseOrValue<string>,
     overrides?: CallOverrides
-  ): Promise<boolean>;
+  ): Promise<number>;
 
   deployBlockNum(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -620,7 +707,7 @@ export interface Erdstall extends BaseContract {
   ): Promise<Erdstall.AssetStructOutput>;
 
   encodeBalanceProof(
-    balance: Erdstall.BalanceStruct,
+    balance: Erdstall.BalanceChunkStruct,
     overrides?: CallOverrides
   ): Promise<string>;
 
@@ -636,6 +723,11 @@ export interface Erdstall extends BaseContract {
     arg0: PromiseOrValue<string>,
     overrides?: CallOverrides
   ): Promise<number>;
+
+  metadataWasHandled(
+    arg0: PromiseOrValue<string>,
+    overrides?: CallOverrides
+  ): Promise<boolean>;
 
   numChallenges(
     arg0: PromiseOrValue<BigNumberish>,
@@ -655,8 +747,15 @@ export interface Erdstall extends BaseContract {
   ): Promise<ContractTransaction>;
 
   respondChallenge(
-    balance: Erdstall.BalanceStruct,
+    balance: Erdstall.BalanceChunkStruct,
     sig: PromiseOrValue<BytesLike>,
+    overrides?: Overrides & { from?: PromiseOrValue<string> }
+  ): Promise<ContractTransaction>;
+
+  submitFreezeProof(
+    proof: Erdstall.FreezeProofStruct,
+    sig: PromiseOrValue<BytesLike>,
+    certificate: PromiseOrValue<BytesLike>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
@@ -673,19 +772,25 @@ export interface Erdstall extends BaseContract {
   ): Promise<ContractTransaction>;
 
   verifyBalance(
-    balance: Erdstall.BalanceStruct,
+    balance: Erdstall.BalanceChunkStruct,
     sig: PromiseOrValue<BytesLike>,
     overrides?: CallOverrides
   ): Promise<void>;
 
+  verifyTeeSig(
+    abiCode: PromiseOrValue<BytesLike>,
+    sig: PromiseOrValue<BytesLike>,
+    overrides?: CallOverrides
+  ): Promise<boolean>;
+
   withdraw(
-    balance: Erdstall.BalanceStruct,
+    balance: Erdstall.BalanceChunkStruct,
     sig: PromiseOrValue<BytesLike>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
   withdrawFrozen(
-    balance: Erdstall.BalanceStruct,
+    balance: Erdstall.BalanceChunkStruct,
     sig: PromiseOrValue<BytesLike>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
@@ -705,19 +810,13 @@ export interface Erdstall extends BaseContract {
 
     chainID(overrides?: CallOverrides): Promise<number>;
 
-    challenge(
-      balance: Erdstall.BalanceStruct,
-      sig: PromiseOrValue<BytesLike>,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    challengeDeposit(overrides?: CallOverrides): Promise<void>;
+    challenge(overrides?: CallOverrides): Promise<void>;
 
     challenges(
       arg0: PromiseOrValue<BigNumberish>,
       arg1: PromiseOrValue<string>,
       overrides?: CallOverrides
-    ): Promise<boolean>;
+    ): Promise<number>;
 
     deployBlockNum(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -738,7 +837,7 @@ export interface Erdstall extends BaseContract {
     ): Promise<Erdstall.AssetStructOutput>;
 
     encodeBalanceProof(
-      balance: Erdstall.BalanceStruct,
+      balance: Erdstall.BalanceChunkStruct,
       overrides?: CallOverrides
     ): Promise<string>;
 
@@ -752,6 +851,11 @@ export interface Erdstall extends BaseContract {
       arg0: PromiseOrValue<string>,
       overrides?: CallOverrides
     ): Promise<number>;
+
+    metadataWasHandled(
+      arg0: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<boolean>;
 
     numChallenges(
       arg0: PromiseOrValue<BigNumberish>,
@@ -769,8 +873,15 @@ export interface Erdstall extends BaseContract {
     renounceOwnership(overrides?: CallOverrides): Promise<void>;
 
     respondChallenge(
-      balance: Erdstall.BalanceStruct,
+      balance: Erdstall.BalanceChunkStruct,
       sig: PromiseOrValue<BytesLike>,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    submitFreezeProof(
+      proof: Erdstall.FreezeProofStruct,
+      sig: PromiseOrValue<BytesLike>,
+      certificate: PromiseOrValue<BytesLike>,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -787,19 +898,25 @@ export interface Erdstall extends BaseContract {
     ): Promise<void>;
 
     verifyBalance(
-      balance: Erdstall.BalanceStruct,
+      balance: Erdstall.BalanceChunkStruct,
       sig: PromiseOrValue<BytesLike>,
       overrides?: CallOverrides
     ): Promise<void>;
 
+    verifyTeeSig(
+      abiCode: PromiseOrValue<BytesLike>,
+      sig: PromiseOrValue<BytesLike>,
+      overrides?: CallOverrides
+    ): Promise<boolean>;
+
     withdraw(
-      balance: Erdstall.BalanceStruct,
+      balance: Erdstall.BalanceChunkStruct,
       sig: PromiseOrValue<BytesLike>,
       overrides?: CallOverrides
     ): Promise<void>;
 
     withdrawFrozen(
-      balance: Erdstall.BalanceStruct,
+      balance: Erdstall.BalanceChunkStruct,
       sig: PromiseOrValue<BytesLike>,
       overrides?: CallOverrides
     ): Promise<void>;
@@ -814,16 +931,22 @@ export interface Erdstall extends BaseContract {
   };
 
   filters: {
-    "ChallengeResponded(uint64,address,tuple[],bytes)"(
+    "ChallengeResponded(uint64,address,uint32,uint32,tuple[],bool,bytes)"(
       epoch?: PromiseOrValue<BigNumberish> | null,
       account?: PromiseOrValue<string> | null,
+      id?: null,
+      count?: null,
       tokens?: null,
+      exit?: null,
       sig?: null
     ): ChallengeRespondedEventFilter;
     ChallengeResponded(
       epoch?: PromiseOrValue<BigNumberish> | null,
       account?: PromiseOrValue<string> | null,
+      id?: null,
+      count?: null,
       tokens?: null,
+      exit?: null,
       sig?: null
     ): ChallengeRespondedEventFilter;
 
@@ -846,6 +969,32 @@ export interface Erdstall extends BaseContract {
       account?: PromiseOrValue<string> | null,
       value?: null
     ): DepositedEventFilter;
+
+    "FirstTimeFungible(bytes32,string,string,uint8)"(
+      localID?: null,
+      name?: null,
+      symbol?: null,
+      decimals?: null
+    ): FirstTimeFungibleEventFilter;
+    FirstTimeFungible(
+      localID?: null,
+      name?: null,
+      symbol?: null,
+      decimals?: null
+    ): FirstTimeFungibleEventFilter;
+
+    "FirstTimeNFT(bytes32,string,string,string)"(
+      localID?: null,
+      name?: null,
+      symbol?: null,
+      sampleURI?: null
+    ): FirstTimeNFTEventFilter;
+    FirstTimeNFT(
+      localID?: null,
+      name?: null,
+      symbol?: null,
+      sampleURI?: null
+    ): FirstTimeNFTEventFilter;
 
     "Frozen(uint64)"(
       epoch?: PromiseOrValue<BigNumberish> | null
@@ -901,12 +1050,6 @@ export interface Erdstall extends BaseContract {
     chainID(overrides?: CallOverrides): Promise<BigNumber>;
 
     challenge(
-      balance: Erdstall.BalanceStruct,
-      sig: PromiseOrValue<BytesLike>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    challengeDeposit(
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
@@ -935,7 +1078,7 @@ export interface Erdstall extends BaseContract {
     ): Promise<BigNumber>;
 
     encodeBalanceProof(
-      balance: Erdstall.BalanceStruct,
+      balance: Erdstall.BalanceChunkStruct,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
@@ -948,6 +1091,11 @@ export interface Erdstall extends BaseContract {
     frozenEpoch(overrides?: CallOverrides): Promise<BigNumber>;
 
     holderTypes(
+      arg0: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    metadataWasHandled(
       arg0: PromiseOrValue<string>,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
@@ -970,8 +1118,15 @@ export interface Erdstall extends BaseContract {
     ): Promise<BigNumber>;
 
     respondChallenge(
-      balance: Erdstall.BalanceStruct,
+      balance: Erdstall.BalanceChunkStruct,
       sig: PromiseOrValue<BytesLike>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<BigNumber>;
+
+    submitFreezeProof(
+      proof: Erdstall.FreezeProofStruct,
+      sig: PromiseOrValue<BytesLike>,
+      certificate: PromiseOrValue<BytesLike>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
@@ -988,19 +1143,25 @@ export interface Erdstall extends BaseContract {
     ): Promise<BigNumber>;
 
     verifyBalance(
-      balance: Erdstall.BalanceStruct,
+      balance: Erdstall.BalanceChunkStruct,
+      sig: PromiseOrValue<BytesLike>,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    verifyTeeSig(
+      abiCode: PromiseOrValue<BytesLike>,
       sig: PromiseOrValue<BytesLike>,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
     withdraw(
-      balance: Erdstall.BalanceStruct,
+      balance: Erdstall.BalanceChunkStruct,
       sig: PromiseOrValue<BytesLike>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
     withdrawFrozen(
-      balance: Erdstall.BalanceStruct,
+      balance: Erdstall.BalanceChunkStruct,
       sig: PromiseOrValue<BytesLike>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
@@ -1022,12 +1183,6 @@ export interface Erdstall extends BaseContract {
     chainID(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     challenge(
-      balance: Erdstall.BalanceStruct,
-      sig: PromiseOrValue<BytesLike>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    challengeDeposit(
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -1056,7 +1211,7 @@ export interface Erdstall extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     encodeBalanceProof(
-      balance: Erdstall.BalanceStruct,
+      balance: Erdstall.BalanceChunkStruct,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
@@ -1069,6 +1224,11 @@ export interface Erdstall extends BaseContract {
     frozenEpoch(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     holderTypes(
+      arg0: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    metadataWasHandled(
       arg0: PromiseOrValue<string>,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
@@ -1091,8 +1251,15 @@ export interface Erdstall extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     respondChallenge(
-      balance: Erdstall.BalanceStruct,
+      balance: Erdstall.BalanceChunkStruct,
       sig: PromiseOrValue<BytesLike>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<PopulatedTransaction>;
+
+    submitFreezeProof(
+      proof: Erdstall.FreezeProofStruct,
+      sig: PromiseOrValue<BytesLike>,
+      certificate: PromiseOrValue<BytesLike>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -1109,19 +1276,25 @@ export interface Erdstall extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     verifyBalance(
-      balance: Erdstall.BalanceStruct,
+      balance: Erdstall.BalanceChunkStruct,
+      sig: PromiseOrValue<BytesLike>,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    verifyTeeSig(
+      abiCode: PromiseOrValue<BytesLike>,
       sig: PromiseOrValue<BytesLike>,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
     withdraw(
-      balance: Erdstall.BalanceStruct,
+      balance: Erdstall.BalanceChunkStruct,
       sig: PromiseOrValue<BytesLike>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
     withdrawFrozen(
-      balance: Erdstall.BalanceStruct,
+      balance: Erdstall.BalanceChunkStruct,
       sig: PromiseOrValue<BytesLike>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;

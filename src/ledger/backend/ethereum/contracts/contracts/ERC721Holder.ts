@@ -33,6 +33,8 @@ export interface ERC721HolderInterface extends utils.Interface {
     "deposit(address,uint256[])": FunctionFragment;
     "erdstall()": FunctionFragment;
     "foreignAssets(address)": FunctionFragment;
+    "registerMetadata(bytes32,string,string,string,bytes)": FunctionFragment;
+    "template()": FunctionFragment;
     "transfer(uint16,bytes32,address,uint256[])": FunctionFragment;
   };
 
@@ -42,6 +44,8 @@ export interface ERC721HolderInterface extends utils.Interface {
       | "deposit"
       | "erdstall"
       | "foreignAssets"
+      | "registerMetadata"
+      | "template"
       | "transfer"
   ): FunctionFragment;
 
@@ -58,6 +62,17 @@ export interface ERC721HolderInterface extends utils.Interface {
     functionFragment: "foreignAssets",
     values: [PromiseOrValue<string>]
   ): string;
+  encodeFunctionData(
+    functionFragment: "registerMetadata",
+    values: [
+      PromiseOrValue<BytesLike>,
+      PromiseOrValue<string>,
+      PromiseOrValue<string>,
+      PromiseOrValue<string>,
+      PromiseOrValue<BytesLike>
+    ]
+  ): string;
+  encodeFunctionData(functionFragment: "template", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "transfer",
     values: [
@@ -78,6 +93,11 @@ export interface ERC721HolderInterface extends utils.Interface {
     functionFragment: "foreignAssets",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(
+    functionFragment: "registerMetadata",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "template", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "transfer", data: BytesLike): Result;
 
   events: {
@@ -148,6 +168,17 @@ export interface ERC721Holder extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[string, number] & { localID: string; origin: number }>;
 
+    registerMetadata(
+      assetHash: PromiseOrValue<BytesLike>,
+      name: PromiseOrValue<string>,
+      symbol: PromiseOrValue<string>,
+      baseURI: PromiseOrValue<string>,
+      sig: PromiseOrValue<BytesLike>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<ContractTransaction>;
+
+    template(overrides?: CallOverrides): Promise<[string]>;
+
     transfer(
       origin: PromiseOrValue<BigNumberish>,
       localID: PromiseOrValue<BytesLike>,
@@ -176,6 +207,17 @@ export interface ERC721Holder extends BaseContract {
     overrides?: CallOverrides
   ): Promise<[string, number] & { localID: string; origin: number }>;
 
+  registerMetadata(
+    assetHash: PromiseOrValue<BytesLike>,
+    name: PromiseOrValue<string>,
+    symbol: PromiseOrValue<string>,
+    baseURI: PromiseOrValue<string>,
+    sig: PromiseOrValue<BytesLike>,
+    overrides?: Overrides & { from?: PromiseOrValue<string> }
+  ): Promise<ContractTransaction>;
+
+  template(overrides?: CallOverrides): Promise<string>;
+
   transfer(
     origin: PromiseOrValue<BigNumberish>,
     localID: PromiseOrValue<BytesLike>,
@@ -203,6 +245,17 @@ export interface ERC721Holder extends BaseContract {
       arg0: PromiseOrValue<string>,
       overrides?: CallOverrides
     ): Promise<[string, number] & { localID: string; origin: number }>;
+
+    registerMetadata(
+      assetHash: PromiseOrValue<BytesLike>,
+      name: PromiseOrValue<string>,
+      symbol: PromiseOrValue<string>,
+      baseURI: PromiseOrValue<string>,
+      sig: PromiseOrValue<BytesLike>,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    template(overrides?: CallOverrides): Promise<string>;
 
     transfer(
       origin: PromiseOrValue<BigNumberish>,
@@ -246,6 +299,17 @@ export interface ERC721Holder extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
+    registerMetadata(
+      assetHash: PromiseOrValue<BytesLike>,
+      name: PromiseOrValue<string>,
+      symbol: PromiseOrValue<string>,
+      baseURI: PromiseOrValue<string>,
+      sig: PromiseOrValue<BytesLike>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<BigNumber>;
+
+    template(overrides?: CallOverrides): Promise<BigNumber>;
+
     transfer(
       origin: PromiseOrValue<BigNumberish>,
       localID: PromiseOrValue<BytesLike>,
@@ -274,6 +338,17 @@ export interface ERC721Holder extends BaseContract {
       arg0: PromiseOrValue<string>,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
+
+    registerMetadata(
+      assetHash: PromiseOrValue<BytesLike>,
+      name: PromiseOrValue<string>,
+      symbol: PromiseOrValue<string>,
+      baseURI: PromiseOrValue<string>,
+      sig: PromiseOrValue<BytesLike>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<PopulatedTransaction>;
+
+    template(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     transfer(
       origin: PromiseOrValue<BigNumberish>,

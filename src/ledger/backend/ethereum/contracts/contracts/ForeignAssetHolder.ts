@@ -32,6 +32,7 @@ export interface ForeignAssetHolderInterface extends utils.Interface {
     "deployedToken(uint16,bytes32)": FunctionFragment;
     "erdstall()": FunctionFragment;
     "foreignAssets(address)": FunctionFragment;
+    "template()": FunctionFragment;
     "transfer(uint16,bytes32,address,uint256[])": FunctionFragment;
   };
 
@@ -40,6 +41,7 @@ export interface ForeignAssetHolderInterface extends utils.Interface {
       | "deployedToken"
       | "erdstall"
       | "foreignAssets"
+      | "template"
       | "transfer"
   ): FunctionFragment;
 
@@ -52,6 +54,7 @@ export interface ForeignAssetHolderInterface extends utils.Interface {
     functionFragment: "foreignAssets",
     values: [PromiseOrValue<string>]
   ): string;
+  encodeFunctionData(functionFragment: "template", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "transfer",
     values: [
@@ -71,6 +74,7 @@ export interface ForeignAssetHolderInterface extends utils.Interface {
     functionFragment: "foreignAssets",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "template", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "transfer", data: BytesLike): Result;
 
   events: {
@@ -135,6 +139,8 @@ export interface ForeignAssetHolder extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[string, number] & { localID: string; origin: number }>;
 
+    template(overrides?: CallOverrides): Promise<[string]>;
+
     transfer(
       origin: PromiseOrValue<BigNumberish>,
       localID: PromiseOrValue<BytesLike>,
@@ -157,6 +163,8 @@ export interface ForeignAssetHolder extends BaseContract {
     overrides?: CallOverrides
   ): Promise<[string, number] & { localID: string; origin: number }>;
 
+  template(overrides?: CallOverrides): Promise<string>;
+
   transfer(
     origin: PromiseOrValue<BigNumberish>,
     localID: PromiseOrValue<BytesLike>,
@@ -178,6 +186,8 @@ export interface ForeignAssetHolder extends BaseContract {
       arg0: PromiseOrValue<string>,
       overrides?: CallOverrides
     ): Promise<[string, number] & { localID: string; origin: number }>;
+
+    template(overrides?: CallOverrides): Promise<string>;
 
     transfer(
       origin: PromiseOrValue<BigNumberish>,
@@ -215,6 +225,8 @@ export interface ForeignAssetHolder extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
+    template(overrides?: CallOverrides): Promise<BigNumber>;
+
     transfer(
       origin: PromiseOrValue<BigNumberish>,
       localID: PromiseOrValue<BytesLike>,
@@ -237,6 +249,8 @@ export interface ForeignAssetHolder extends BaseContract {
       arg0: PromiseOrValue<string>,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
+
+    template(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     transfer(
       origin: PromiseOrValue<BigNumberish>,
