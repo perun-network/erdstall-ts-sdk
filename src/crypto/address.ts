@@ -1,40 +1,40 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { ABIValue, customJSON } from "#erdstall/api/util";
-import { Backend } from "#erdstall/ledger/backend";
-import {
-	jsonObject,
-	Serializable,
-	TypedJSON,
-} from "#erdstall/export/typedjson";
+import { customJSON } from "#erdstall/api/util";
+import { Crypto } from "#erdstall/crypto";
+import { Serializable, TypedJSON } from "#erdstall/export/typedjson";
 
-const addressImpls = new Map<string, Serializable<Address<Backend>>>();
+const addressImpls = new Map<string, Serializable<Address<Crypto>>>();
 
 export function registerAddressType(
 	typeName: string,
-	typeClass: Serializable<Address<Backend>>,
+	typeClass: Serializable<Address<Crypto>>,
 ) {
 	addressImpls.set(typeName, typeClass);
 }
 
-export abstract class Address<B extends Backend> implements ABIValue {
+export abstract class Address<_C extends Crypto> {
 	abstract ABIType(): string;
-	abstract type(): Backend;
+	abstract type(): Crypto;
 	abstract get key(): string;
-	abstract equals(other: Address<Backend>): boolean;
+	abstract equals(other: Address<Crypto>): boolean;
 	abstract toString(): string;
 	abstract toJSON(): string;
 
-	static ensure(addr: string | Address<Backend>): Address<Backend> {
+	static ensure(addr: string | Address<Crypto>): Address<Crypto> {
 		if (addr === undefined) return addr;
 		if (addr instanceof Address) return addr;
 		// TODO: This might fail if the address is not in proper JSON format.
 		return Address.fromJSON(addr);
 	}
 
-	static fromJSON(js: any): Address<Backend> {
+	static fromJSON(js: any): Address<Crypto> {
+		if (typeof js === "string") {
+			js = JSON.parse(js);
+		}
 		let data = JSON.stringify(js.data);
+
 		if (!addressImpls.has(js.type)) {
 			throw new Error(`unknown address type ${js.type}`);
 		}
@@ -42,7 +42,7 @@ export abstract class Address<B extends Backend> implements ABIValue {
 		return TypedJSON.parse(data, addressImpls.get(js.type)!)!;
 	}
 
-	static toJSON(me: Address<Backend>): any {
+	static toJSON(me: Address<Crypto>): any {
 		return {
 			type: me.type(),
 			data: me.toJSON(),
@@ -52,6 +52,6 @@ export abstract class Address<B extends Backend> implements ABIValue {
 
 customJSON(Address);
 
-export function addressKey(_addr: Address<Backend> | string): string {
+export function addressKey(_addr: Address<Crypto> | string): string {
 	throw new Error("not implemented");
 }

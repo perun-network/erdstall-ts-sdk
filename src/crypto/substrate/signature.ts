@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { Signature } from "#erdstall/ledger/signature";
+import { Signature } from "#erdstall/crypto/signature";
 
 export class SubstrateSignature implements Signature<"substrate"> {
 	asABI(): Uint8Array {

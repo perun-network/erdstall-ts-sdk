@@ -3,7 +3,7 @@
 
 import { jsonObject } from "#erdstall/export/typedjson";
 import { ABIValue, customJSON } from "#erdstall/api/util";
-import { Address } from "#erdstall/ledger/address";
+import { Address } from "#erdstall/crypto/address";
 
 /**
  * This class implements an address representation and is used within the SDK

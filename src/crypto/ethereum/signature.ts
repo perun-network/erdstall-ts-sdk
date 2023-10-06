@@ -2,9 +2,9 @@
 "use strict";
 
 import { utils } from "ethers";
-import { registerSignatureType, Signature } from "#erdstall/ledger/signature";
+import { registerSignatureType, Signature } from "#erdstall/crypto/signature";
 import { EthereumAddress } from "./address";
-import { Address } from "#erdstall/ledger/address";
+import { Address } from "#erdstall/crypto/address";
 import { jsonMember, jsonObject } from "#erdstall/export/typedjson";
 
 @jsonObject
@@ -33,6 +33,10 @@ export class EthereumSignature extends Signature<"ethereum"> {
 
 	toString(): string {
 		return utils.hexlify(this.msg);
+	}
+
+	toBytes(): Uint8Array {
+		return this.msg;
 	}
 
 	asABI() {

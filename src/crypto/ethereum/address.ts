@@ -5,7 +5,7 @@ import { utils } from "ethers";
 import { jsonObject } from "#erdstall/export/typedjson";
 import { equalArray } from "#erdstall/utils/arrays";
 import { ABIValue, customJSON } from "#erdstall/api/util";
-import { Address, registerAddressType } from "#erdstall/ledger/address";
+import { Address, registerAddressType } from "#erdstall/crypto/address";
 
 /**
  * This class implements an address representation and is used within the SDK

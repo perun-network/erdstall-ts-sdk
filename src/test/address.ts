@@ -3,12 +3,9 @@
 
 import { utils } from "ethers";
 import { jsonObject } from "#erdstall/export/typedjson";
-import { Address, registerAddressType } from "#erdstall/ledger/address";
-import { Backend } from "#erdstall/ledger/backend";
-import { Erdstall, EthereumAddress } from "#erdstall/ledger/backend/ethereum";
-import { EthereumChainConfig } from "#erdstall/ledger/backend/ethereum/chainconfig";
-import { SubstrateChainConfig } from "#erdstall/ledger/backend/substrate/chainconfig";
-import { ContractPromise } from "@polkadot/api-contract";
+import { Address, registerAddressType } from "#erdstall/crypto";
+import { EthereumAddress } from "#erdstall/crypto/ethereum";
+import * as crypto from "#erdstall/crypto";
 import PRNG, { newRandomUint8Array } from "./random";
 import { customJSON } from "#erdstall/api/util";
 
@@ -33,7 +30,7 @@ export class TestAddress extends Address<"test"> {
 		throw new Error("Method not implemented.");
 	}
 
-	equals(other: Address<Backend>): boolean {
+	equals(_other: crypto.Address<crypto.Crypto>): boolean {
 		throw new Error("Method not implemented.");
 	}
 

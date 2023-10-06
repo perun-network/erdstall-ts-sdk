@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { utils } from "ethers";
-import { registerSignatureType, Signature } from "#erdstall/ledger/signature";
 import { TestAddress } from "./address";
-import { Address } from "#erdstall/ledger";
+import { Address, registerSignatureType, Signature } from "#erdstall/crypto";
 import { jsonMember, jsonObject } from "#erdstall/export/typedjson";
 
 @jsonObject
@@ -29,6 +27,9 @@ export class TestSignature extends Signature<"test"> {
 	}
 	toString(): string {
 		throw new Error("Method not implemented.");
+	}
+	toBytes(): Uint8Array {
+		return new TextEncoder().encode(this.msg);
 	}
 
 	static fromJSON(data: any): Signature<"test"> {

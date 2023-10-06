@@ -1,24 +1,20 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import {
-	jsonObject,
-	Serializable,
-	TypedJSON,
-} from "#erdstall/export/typedjson";
+import { Serializable, TypedJSON } from "#erdstall/export/typedjson";
 import { ABIValue, customJSON } from "#erdstall/api/util";
-import { Backend } from "#erdstall/ledger/backend";
+import { Crypto } from "#erdstall/crypto";
 
-const signatureImpls = new Map<string, Serializable<Signature<Backend>>>();
+const signatureImpls = new Map<string, Serializable<Signature<Crypto>>>();
 
 export function registerSignatureType(
 	typeName: string,
-	typeClass: Serializable<Signature<Backend>>,
+	typeClass: Serializable<Signature<Crypto>>,
 ) {
 	signatureImpls.set(typeName, typeClass);
 }
 
-export abstract class Signature<B extends Backend> implements ABIValue {
+export abstract class Signature<B extends Crypto> implements ABIValue {
 	abstract asABI(): Uint8Array;
 
 	abstract ABIType(): string;
@@ -27,16 +23,18 @@ export abstract class Signature<B extends Backend> implements ABIValue {
 
 	abstract toJSON(): any;
 
+	abstract toBytes(): Uint8Array;
+
 	abstract type(): B;
 
-	static toJSON(me: Signature<Backend>) {
+	static toJSON(me: Signature<Crypto>) {
 		return {
 			type: me.type(),
 			data: me.toJSON(),
 		};
 	}
 
-	static fromJSON(js: any): Signature<Backend> {
+	static fromJSON(js: any): Signature<Crypto> {
 		let data = JSON.stringify(js.data);
 		if (!signatureImpls.has(js.type)) {
 			throw new Error(`unknown signature type ${js.type}`);
