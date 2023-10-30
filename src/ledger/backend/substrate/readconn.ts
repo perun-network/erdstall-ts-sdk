@@ -2,10 +2,11 @@
 "use strict";
 
 import { ErdstallEventHandler } from "#erdstall/event";
-import { Address, LedgerEvent } from "#erdstall/ledger";
+import { LedgerEvent } from "#erdstall/ledger";
+import { Address } from "#erdstall/crypto";
 import { Backend, LedgerReader, NFTMetadata } from "#erdstall/ledger/backend";
 
-export class LedgerReadConn implements LedgerReader<["substrate"]> {
+export class LedgerReadConn implements LedgerReader<"substrate"> {
 	readonly pallet: any;
 
 	constructor() {}
@@ -37,14 +38,14 @@ export class LedgerReadConn implements LedgerReader<["substrate"]> {
 
 	getNftMetadata(
 		backend: "substrate",
-		token: Address<Backend>,
+		token: Address<"substrate">,
 		id: bigint,
 		useCache?: boolean | undefined,
 	): Promise<NFTMetadata> {
 		throw new Error("Method not implemented.");
 	}
 
-	erdstall(): { chain: "substrate"; address: Address<Backend> } {
+	erdstall(): { chain: "substrate"; address: Address<"substrate"> }[] {
 		throw new Error("Method not implemented.");
 	}
 }
