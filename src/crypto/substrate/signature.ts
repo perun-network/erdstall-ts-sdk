@@ -4,6 +4,9 @@
 import { Signature } from "#erdstall/crypto/signature";
 
 export class SubstrateSignature implements Signature<"substrate"> {
+	toBytes(): Uint8Array {
+		throw new Error("Method not implemented.");
+	}
 	asABI(): Uint8Array {
 		throw new Error("Method not implemented.");
 	}
