@@ -2,7 +2,7 @@
 "use strict";
 
 import { jsonObject } from "#erdstall/export/typedjson";
-import { ABIValue, customJSON } from "#erdstall/api/util";
+import { customJSON } from "#erdstall/api/util";
 import { Address } from "#erdstall/crypto/address";
 
 /**
@@ -10,7 +10,7 @@ import { Address } from "#erdstall/crypto/address";
  * wherever an address is required.
  */
 @jsonObject
-export class SubstrateAddress implements ABIValue, Address<"substrate"> {
+export class SubstrateAddress implements Address<"substrate"> {
 	private value: Uint8Array;
 	constructor(value: Uint8Array) {
 		this.value = value;
@@ -44,18 +44,6 @@ export class SubstrateAddress implements ABIValue, Address<"substrate"> {
 
 	get key(): string {
 		throw new Error("not implemented");
-	}
-
-	asABI(): any {
-		return this.toString();
-	}
-
-	ABIType(): string {
-		return "address";
-	}
-
-	isZero(): boolean {
-		return this.value.every((x) => x === 0);
 	}
 
 	equals(other: SubstrateAddress): boolean {

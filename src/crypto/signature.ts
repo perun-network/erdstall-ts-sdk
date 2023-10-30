@@ -2,7 +2,7 @@
 "use strict";
 
 import { Serializable, TypedJSON } from "#erdstall/export/typedjson";
-import { ABIValue, customJSON } from "#erdstall/api/util";
+import { customJSON } from "#erdstall/api/util";
 import { Crypto } from "#erdstall/crypto";
 
 const signatureImpls = new Map<string, Serializable<Signature<Crypto>>>();
@@ -14,11 +14,7 @@ export function registerSignatureType(
 	signatureImpls.set(typeName, typeClass);
 }
 
-export abstract class Signature<B extends Crypto> implements ABIValue {
-	abstract asABI(): Uint8Array;
-
-	abstract ABIType(): string;
-
+export abstract class Signature<B extends Crypto> {
 	abstract toString(): string;
 
 	abstract toJSON(): any;
