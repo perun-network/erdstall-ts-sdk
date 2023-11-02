@@ -2,18 +2,17 @@
 "use strict";
 
 import { Transaction, registerTransactionType } from "./transaction";
-import { Address } from "#erdstall/ledger";
-import { Assets } from "#erdstall/ledger/assets";
+import { Address, Crypto } from "#erdstall/crypto";
+import { ChainAssets } from "#erdstall/ledger/assets";
 import { jsonObject, jsonMember } from "#erdstall/export/typedjson";
-import { ABIEncoder } from "#erdstall/api/util";
 
 const burnTypeName = "Burn";
 
 @jsonObject
 export class Burn extends Transaction {
-	@jsonMember(() => Assets) values: Assets;
+	@jsonMember(() => ChainAssets) values: ChainAssets;
 
-	constructor(sender: Address, nonce: bigint, values: Assets) {
+	constructor(sender: Address<Crypto>, nonce: bigint, values: ChainAssets) {
 		super(sender, nonce);
 		this.values = values;
 	}
@@ -23,10 +22,6 @@ export class Burn extends Transaction {
 	}
 	protected txTypeName(): string {
 		return burnTypeName;
-	}
-	protected encodeABI(e: ABIEncoder, _: Address): string {
-		e.encode(this.values);
-		return "ErdstallBurn";
 	}
 }
 

@@ -4,7 +4,6 @@
 export * from "./object";
 export * from "./call";
 export * from "./result";
-export * from "./signature";
 
 export * as calls from "./calls";
 export * as responses from "./responses";

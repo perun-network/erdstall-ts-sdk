@@ -102,7 +102,3 @@ dist
 
 # TernJS port file
 .tern-port
-
-# Generated abi bindings
-src/ledger/backend/ethereum/abi
-src/ledger/backend/ethereum/contracts

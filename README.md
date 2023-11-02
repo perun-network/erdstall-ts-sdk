@@ -168,8 +168,6 @@ omitted after each event name in the following.
 -   **`"ChallengeResponded"`**: the Erdstall operator successfully responed with the correct balance proof.
 
 -   **`"TokenTypeRegistered"`**: a new token type (such as ETH, ERC20, ERC721, etc.) has been registered with Erdstall on-chain.
-
--   **`"TokenRegistered"`**: a specific token contract has been registered on-chain.
 </details>
 
 ## Development

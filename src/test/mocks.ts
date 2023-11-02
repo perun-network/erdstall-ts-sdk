@@ -24,7 +24,7 @@ import {
 	AttestationResult,
 } from "#erdstall/api/responses";
 import { TypedJSON } from "#erdstall/export/typedjson";
-import { Result, Call, ErdstallObject, Signature } from "#erdstall/api";
+import { Result, Call, ErdstallObject } from "#erdstall/api";
 import {
 	SubscribeTXs,
 	SubscribeBalanceProofs,
@@ -32,45 +32,64 @@ import {
 	GetAccount,
 } from "#erdstall/api/calls";
 import { Transaction } from "#erdstall/api/transactions";
-import { Address, Account, OnChainQuerier } from "#erdstall/ledger";
-import {
-	NFTMetadata,
-	TokenFetcher,
-	TokenProvider,
-} from "#erdstall/ledger/backend";
-import { Assets, Tokens } from "#erdstall/ledger/assets";
+import { Address } from "#erdstall/crypto";
+import { EthereumSignature, EthereumAddress } from "#erdstall/crypto/ethereum";
+import { Account, OnChainQuerier } from "#erdstall/ledger";
+import { NFTMetadata, TokenProvider } from "#erdstall/ledger/backend";
+import { TokenFetcher } from "#erdstall/ledger/backend/ethereum";
+import { ChainAssets, Tokens } from "#erdstall/ledger/assets";
 import { EnclaveProvider } from "#erdstall/enclave";
 
-export class MockWatcher implements Watcher {
-	private txReceiptHandler!: ErdstallEventHandler<"receipt">;
-	private exitProofHandler!: ErdstallEventHandler<"exitproof">;
-	private balanceProofHandler!: ErdstallEventHandler<"proof">;
-	private phaseShiftHandler!: ErdstallEventHandler<"phaseshift">;
+export class MockWatcher implements Watcher<["ethereum"]> {
+	private txReceiptHandler!: ErdstallEventHandler<"receipt", "ethereum">;
+	private exitProofHandler!: ErdstallEventHandler<"exitproof", "ethereum">;
+	private balanceProofHandler!: ErdstallEventHandler<"proof", "ethereum">;
+	private phaseShiftHandler!: ErdstallEventHandler<"phaseshift", "ethereum">;
 
-	on<T extends ErdstallEvent>(ev: T, cb: ErdstallEventHandler<T>): void {
+	on<T extends ErdstallEvent>(
+		ev: T,
+		cb: ErdstallEventHandler<T, "ethereum">,
+	): void {
 		switch (ev) {
 			case "receipt":
-				this.txReceiptHandler = cb as ErdstallEventHandler<"receipt">;
+				this.txReceiptHandler = cb as ErdstallEventHandler<
+					"receipt",
+					"ethereum"
+				>;
 				break;
 			case "proof":
-				this.balanceProofHandler = cb as ErdstallEventHandler<"proof">;
+				this.balanceProofHandler = cb as ErdstallEventHandler<
+					"proof",
+					"ethereum"
+				>;
 				break;
 			case "exitproof":
-				this.exitProofHandler = cb as ErdstallEventHandler<"exitproof">;
+				this.exitProofHandler = cb as ErdstallEventHandler<
+					"exitproof",
+					"ethereum"
+				>;
 				break;
 			case "phaseshift":
-				this.phaseShiftHandler =
-					cb as ErdstallEventHandler<"phaseshift">;
+				this.phaseShiftHandler = cb as ErdstallEventHandler<
+					"phaseshift",
+					"ethereum"
+				>;
 				break;
 			default:
 				throw new Error(`MockWatcher: unsupported event "${ev}"`);
 		}
 	}
 
-	once<T extends ErdstallEvent>(_ev: T, _cb: ErdstallEventHandler<T>): void {
+	once<T extends ErdstallEvent>(
+		_ev: T,
+		_cb: ErdstallEventHandler<T, "ethereum">,
+	): void {
 		throw new Error("not implemented");
 	}
-	off<T extends ErdstallEvent>(_ev: T, _cb: ErdstallEventHandler<T>): void {
+	off<T extends ErdstallEvent>(
+		_ev: T,
+		_cb: ErdstallEventHandler<T, "ethereum">,
+	): void {
 		throw new Error("not implemented");
 	}
 	removeAllListeners(): void {
@@ -79,9 +98,9 @@ export class MockWatcher implements Watcher {
 
 	async mint(
 		nft: {
-			token: Address;
+			token: Uint8Array;
 			id: bigint;
-			owner: Address;
+			owner: Address<"ethereum">;
 		},
 		deltas?: Map<string, Account>,
 	): Promise<void> {
@@ -112,7 +131,9 @@ export class MockWatcher implements Watcher {
 					deltas ?? new Map<string, Account>(),
 					1,
 					new TransactionOutput(new Uint8Array()),
-					new Signature(new Uint8Array()),
+					new EthereumSignature(
+						new Uint8Array(),
+					),
 					"",
 				),
 			),
@@ -120,44 +141,54 @@ export class MockWatcher implements Watcher {
 	}
 
 	async phaseshift(bps: BalanceProofs, ps: PhaseShift): Promise<void> {
-		return Promise.all(
-			Array.from(bps.map, ([_acc, bp]) => {
-				return bp.balance.exit
-					? this.exitProofHandler(bp)
-					: this.balanceProofHandler(bp);
-			}),
-		).then(() => this.phaseShiftHandler(ps));
+		throw new Error("not implemented");
+		// return Promise.all(
+		// 	Array.from(bps.map, ([_acc, bp]) => {
+		// 		return bp.balance.exit
+		// 			? this.exitProofHandler(bp)
+		// 			: this.balanceProofHandler(bp);
+		// 	}),
+		// ).then(() => this.phaseShiftHandler(ps));
 	}
 }
 
-export class MockClient extends MockWatcher implements ErdstallClient {
-	readonly tokenProvider: TokenProvider;
-	readonly onChainQuerier: OnChainQuerier;
-	private readonly contract: Address;
+export class MockClient
+	extends MockWatcher
+	implements ErdstallClient<["ethereum"]>
+{
+	readonly tokenProvider: TokenProvider<"ethereum">;
+	readonly onChainQuerier: OnChainQuerier<"ethereum">;
 	private metadata: Map<string, NFTMetadata>;
 
-	constructor(contract: Address) {
+	constructor() {
 		super();
-		this.contract = contract;
 		this.metadata = new Map();
 		this.tokenProvider = new TokenFetcher();
 		this.onChainQuerier = new MockOnChainQuerier();
 	}
 
 	async initialize(): Promise<void> {}
-	async subscribe(_who?: Address): Promise<void> {}
-	async getAccount(_who: Address): Promise<Account> {
+	async subscribe(_who?: Address<"ethereum">): Promise<void> {}
+	async getAccount(_who: Address<"ethereum">): Promise<Account> {
 		throw new Error("cannot query accounts on mock clients");
 	}
 	async attest(): Promise<AttestationResult> {
 		throw new Error("cannot query attestation on mock clients");
 	}
 
-	setMetadata(token: Address, id: bigint, metadata: NFTMetadata): void {
+	setMetadata(
+		token: Address<"ethereum">,
+		id: bigint,
+		metadata: NFTMetadata,
+	): void {
 		this.metadata.set(`${token.key}:${id}`, metadata);
 	}
 
-	async getNftMetadata(token: Address, id: bigint): Promise<NFTMetadata> {
+	async getNftMetadata(
+		_backend: "ethereum",
+		token: Address<"ethereum">,
+		id: bigint,
+	): Promise<NFTMetadata> {
 		const res = this.metadata.get(`${token.key}:${id}`);
 		if (!res) {
 			return Promise.reject(
@@ -167,8 +198,12 @@ export class MockClient extends MockWatcher implements ErdstallClient {
 		return res;
 	}
 
-	erdstall(): Address {
-		return this.contract;
+	erdstall(): {
+		chain: "ethereum";
+		address: Address<"ethereum">;
+	}[] {
+		throw new Error("not implemented");
+		//		return this.contract;
 	}
 }
 
@@ -215,7 +250,11 @@ export class EnclaveMockProvider implements EnclaveProvider {
 				return this.onmessage!(msg);
 			}
 			case GetAccount: {
-				const acc = new Account(0n, new Assets(), new Assets());
+				const acc = new Account(
+					0n,
+					new ChainAssets(new Map()),
+					new ChainAssets(new Map()),
+				);
 				const racc = new RAccount(acc, 0n);
 				const msg = newErdstallMessageEvent(new Result(call.id, racc));
 				return this.onmessage!(msg);
@@ -232,7 +271,7 @@ export class EnclaveMockProvider implements EnclaveProvider {
 		switch (tx.txType()) {
 			case Transfer: {
 				const txc = tx as Transfer;
-				const acc = new Account(txc.nonce, txc.values, new Assets());
+				const acc = new Account(txc.nonce, txc.values);
 
 				const res = newTxReceiptResult(
 					id,
@@ -245,9 +284,15 @@ export class EnclaveMockProvider implements EnclaveProvider {
 			}
 			case Mint: {
 				const txc = tx as Mint;
-				const assets = new Assets();
-				assets.addAsset(txc.token.toString(), new Tokens([txc.id]));
-				const acc = new Account(txc.nonce, assets, new Assets());
+				const assets = new ChainAssets(new Map());
+				throw new Error("IMPLEMENT REST");
+				// TODO: add asset to assets
+				// assets.addAsset(txc.token.toString(), new Tokens([txc.id]));
+				const acc = new Account(
+					txc.nonce,
+					assets,
+					new ChainAssets(new Map()),
+				);
 
 				const res = newTxReceiptResult(
 					id,
@@ -295,22 +340,31 @@ function newTxReceiptResult(
 	acc?: Account,
 	status: TxStatusCode = 1,
 ): Result {
-	const _acc = acc ? acc : new Account(tx.nonce, new Assets(), new Assets());
+	const _acc = acc
+		? acc
+		: new Account(
+				tx.nonce,
+				new ChainAssets(new Map()),
+				new ChainAssets(new Map()),
+		  );
 	const delta = new Map<string, Account>([[tx.sender.key, _acc]]);
 	const txr = new TxReceipt(
 		tx,
 		delta,
 		status,
 		output,
-		new Signature(new Uint8Array()),
+		new EthereumSignature(
+			new Uint8Array(),
+		),
 		"",
 	);
 	return new Result(id, txr);
 }
 
-class MockOnChainQuerier implements OnChainQuerier {
+class MockOnChainQuerier implements OnChainQuerier<"ethereum"> {
 	constructor() {}
 	async queryTokensOwnedByAddress(
+		_backend: "ethereum",
 		_token: string,
 		_address: string,
 	): Promise<Tokens> {

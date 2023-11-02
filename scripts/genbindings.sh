@@ -41,11 +41,11 @@ function compileTo() {
   # Clean up existing bindings.
   rm -rf "${2}"/contracts
   mkdir -p "${2}"/contracts/abi
-  yarn hardhat compile && cp -rl ./typechain/* "${2}"/contracts/ \
+  yarn hardhat compile && cp -rl ./typechain-types/* "${2}"/contracts/ \
     && find ./artifacts/contracts/*.sol/ \
     | grep -v ".dbg" | grep ".json" | xargs cp -l -t "${2}"/contracts/abi/
   # Clean up typechain generated files.
-  rm -rf ./artifacts ./cache ./typechain
+  rm -rf ./artifacts ./cache ./typechain-types
   cd "${CWD}"
 }
 
@@ -62,8 +62,7 @@ if [[ ! -d $CONTRACTSDIR ]]; then
 fi
 
 SRCDIR="${PWD}"
-ETHBACKEND="${SRCDIR}"/src/ledger/backend
-ETHBACKEND_TEST="${SRCDIR}"/src/test/ledger/backend
+ETHBACKEND="${SRCDIR}"/src/ledger/backend/ethereum
 
 checkInstalled npm
 checkInstalledLocally typechain

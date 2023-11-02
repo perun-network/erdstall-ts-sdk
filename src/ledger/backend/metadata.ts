@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { Address } from "#erdstall/ledger";
+import { BackendAddress } from "#erdstall";
+import { Backend } from "#erdstall/ledger/backend";
 
 export interface NFTMetadata {
 	image?: string;
@@ -23,7 +24,7 @@ export const displayTypes = [
 	"date",
 ] as const;
 
-export type DisplayType = typeof displayTypes[number];
+export type DisplayType = (typeof displayTypes)[number];
 
 export interface Attribute {
 	trait_type?: string;
@@ -32,9 +33,10 @@ export interface Attribute {
 	display_type?: DisplayType;
 }
 
-export interface NFTMetadataProvider {
+export interface NFTMetadataProvider<B extends Backend> {
 	getNftMetadata(
-		token: Address,
+		backend: B,
+		token: BackendAddress<Backend>,
 		id: bigint,
 		useCache?: boolean,
 	): Promise<NFTMetadata>;

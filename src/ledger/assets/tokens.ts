@@ -11,7 +11,7 @@ import {
 	registerAssetType,
 } from "./asset";
 import { mkBigInt } from "#erdstall/utils/bigint";
-import { Amount, encodePackedAmount } from "./amount";
+import { Amount, encodePackedAmount, packAmount } from "./amount";
 
 export const ErrIDAlreadyContained = new Error(
 	"given ID already contained in tokens",
@@ -56,10 +56,6 @@ export class Tokens extends Asset {
 
 	typeTag(): TypeTagName {
 		return TypeTags.Tokens;
-	}
-
-	asABI(): Uint8Array {
-		return utils.concat(this.value.map((v) => new Amount(v).asABI()));
 	}
 
 	zero(): boolean {
@@ -212,6 +208,10 @@ export function decodePackedIds(ids: string): bigint[] {
 		return mkBigInt(idArr.slice(i * 32, i * 32 + 32).values(), 256, 8);
 	});
 	return res;
+}
+
+export function packTokens(tokens: Tokens): bigint[] {
+	return tokens.value.map((v) => packAmount(new Amount(v)));
 }
 
 export function encodePackedIds(ids: bigint[]): string {

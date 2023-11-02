@@ -25,6 +25,7 @@ export class Account extends ErdstallObject {
 	public objectType(): any {
 		return Account;
 	}
+
 	protected objectTypeName(): string {
 		return accountTypeName;
 	}

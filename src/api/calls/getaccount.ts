@@ -3,15 +3,15 @@
 
 import { jsonObject, jsonMember } from "#erdstall/export/typedjson";
 import { ErdstallObject, registerErdstallType } from "#erdstall/api";
-import { Address } from "#erdstall/ledger";
+import { Address, Crypto } from "#erdstall/crypto";
 
 const getAccountTypeName = "GetAccount";
 
 @jsonObject
 export class GetAccount extends ErdstallObject {
-	@jsonMember(Address) who: Address;
+	@jsonMember(Address) who: Address<Crypto>;
 
-	constructor(who: Address) {
+	constructor(who: Address<Crypto>) {
 		super();
 		this.who = who;
 	}
