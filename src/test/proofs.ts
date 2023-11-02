@@ -60,10 +60,7 @@ export function newRandomBalanceProof(
 ): ChainProofChunk {
 	return new ChainProofChunk(
 		newRandomChainAssets(rng, size),
-		new EthereumSignature(
-			newRandomUint8Array(rng, 32),
-			newRandomAddress(rng),
-		),
+		new EthereumSignature(newRandomUint8Array(rng, 32)),
 	);
 }
 

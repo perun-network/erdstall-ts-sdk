@@ -1,14 +1,30 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { Signature } from "#erdstall/crypto/signature";
+import { Signature, Address } from "#erdstall/crypto";
+import { isHex, hexToU8a, u8aToHex } from "@polkadot/util";
+import { signatureVerify } from "@polkadot/util-crypto";
 
 export class SubstrateSignature implements Signature<"substrate"> {
+	private bytes: Uint8Array;
+
+	constructor(bytes: Uint8Array) {
+		this.bytes = bytes;
+	}
+
+	verify(msg: Uint8Array, addr: Address<"substrate">) {
+		return signatureVerify(
+			msg,
+			this.toBytes(),
+			addr.toString(),
+		).isValid;
+	}
+
 	toBytes(): Uint8Array {
-		throw new Error("Method not implemented.");
+		return this.bytes;
 	}
 	toString(): string {
-		throw new Error("Method not implemented.");
+		return this.toJSON()
 	}
 
 	type(): "substrate" {
@@ -16,12 +32,12 @@ export class SubstrateSignature implements Signature<"substrate"> {
 	}
 
 	static fromJSON(data: any): Signature<"substrate"> {
-		throw new Error("Method not implemented.");
+		if(typeof data !== "string") {
+			throw new Error("Expected to decode address from a string")
+		}
+		return new SubstrateSignature(hexToU8a(data));
 	}
 	toJSON() {
-		throw new Error("Method not implemented.");
-	}
-	ABIType(): string {
-		throw new Error("Method not implemented.");
+		return u8aToHex(this.bytes);
 	}
 }

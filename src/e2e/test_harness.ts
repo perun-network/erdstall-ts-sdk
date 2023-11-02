@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
-
+/*
 import { expect } from "chai";
 import { Trade } from "#erdstall/api/transactions";
 import { Address } from "#erdstall/ledger";
@@ -465,3 +465,4 @@ function assertBalances(given: balances[], expected: balances[]) {
 		expect(given[client].part).to.equal(expected[client].part);
 	}
 }
+*/

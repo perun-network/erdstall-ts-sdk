@@ -20,6 +20,9 @@ export class EthereumAddress extends Address<"ethereum"> implements ABIValue {
 	}
 
 	static fromJSON(val: any): EthereumAddress {
+		if (typeof val !== "string") {
+			throw new Error("Expected to decode address from a string");
+		}
 		return new EthereumAddress(
 			utils.arrayify(val, { allowMissingPrefix: true }),
 		);
@@ -75,6 +78,6 @@ export class EthereumAddress extends Address<"ethereum"> implements ABIValue {
 registerAddressType("ethereum", EthereumAddress);
 customJSON(EthereumAddress);
 
-export function addressKey(addr: Address<"ethereum"> | string): string {
-	return addr instanceof Address<"ethereum"> ? addr.key : addr.toLowerCase();
+export function addressKey(addr: EthereumAddress | string): string {
+	return EthereumAddress.ensure(addr).key;
 }

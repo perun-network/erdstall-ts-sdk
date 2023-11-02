@@ -181,7 +181,7 @@ function wrapChallengeResponded(
 			epoch: epoch.toBigInt(),
 			address: address,
 			tokens: assets,
-			sig: new Signature(sigBytes, address),
+			sig: new Signature(sigBytes),
 		});
 	};
 	return wcb;

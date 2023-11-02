@@ -7,11 +7,10 @@ import {
 	jsonObject,
 	jsonMember,
 	jsonBigIntMember,
+	TypedJSON,
 } from "#erdstall/export/typedjson";
-import { ABIPacked } from "#erdstall/api/util";
-import { Address, Signature, Crypto } from "#erdstall/crypto";
-import { utils } from "ethers";
-import { Signer } from "#erdstall/ledger/backend";
+import { Address, Signature, Crypto, Signer } from "#erdstall/crypto";
+import canonicalize from "canonicalize";
 
 @jsonObject
 export class TradeFees {
@@ -23,9 +22,12 @@ export class TradeFees {
 		this.fee = fee;
 	}
 
-	packTagged(): ABIPacked {
-		throw new Error("Method not implemented.");
-		// return new ABIEncoder(this.market, this.fee).pack("ErdstallTradeFees");
+	encodePayload(): Uint8Array {
+		const json = JSON.parse(TypedJSON.stringify(this, TradeFees));
+		const msg = canonicalize({
+			value: json
+		});
+		return new TextEncoder().encode(msg);
 	}
 }
 
@@ -52,33 +54,29 @@ export class TradeOffer {
 	}
 
 	async sign(signer: Signer<Crypto>): Promise<this> {
-		this.sig = await signer.signMessage(this.packTagged().keccak256());
+		this.owner = await signer.address();
+		this.sig = await signer.sign(this.encodePayload());
 		return this;
 	}
 
-	verify(): boolean {
+	verify(signer: Address<Crypto>): boolean {
 		if (!this.sig) {
 			return false;
 		}
-		const rec = utils.verifyMessage(
-			this.packTagged().keccak256(),
-			this.sig!.toString(),
+		return this.sig.verify(
+			this.encodePayload(),
+			signer
 		);
-
-		return rec === this.owner.toString();
 	}
 
-	packTagged(): ABIPacked {
-		throw new Error("Method not implemented.");
-		// return new ABIEncoder()
-		// 	.encodeTagged(
-		// 		this.owner,
-		// 		this.offer,
-		// 		["uint64", this.expiry],
-		// 		this.request,
-		// 		this.fees ? this.fees! : new Uint8Array(),
-		// 	)
-		// 	.pack("ErdstallTradeOffer");
+	encodePayload(): Uint8Array {
+		const json = JSON.parse(TypedJSON.stringify(this, TradeOffer));
+		delete json.sig;
+
+		const msg = canonicalize({
+			value: json,
+		});
+		return new TextEncoder().encode(msg);
 	}
 }
 

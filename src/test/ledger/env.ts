@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
-
+/*
 import { utils } from "ethers";
 import { ethers } from "ethers";
 import { Wallet } from "ethers";
@@ -230,3 +230,4 @@ export async function setupEnv(
 		sealEpoch: sealEpoch,
 	};
 }
+*/

@@ -22,10 +22,6 @@ export class TestAddress extends Address<"test"> {
 		this.value = value;
 	}
 
-	ABIType(): string {
-		throw new Error("Method not implemented.");
-	}
-
 	get key(): string {
 		throw new Error("Method not implemented.");
 	}

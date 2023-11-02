@@ -53,11 +53,11 @@ export class BalanceProofs extends ErdstallObject {
 	//
 	// E.g.: Polkadot can be compatible with Ethereum addresses. In that case
 	// we would have:
-	//											   .-> <PolkadotChain> -> <ChainProof>
-	//											  /
-	//		<EthereumAddress> -|
-	//												\
-	//												 '-> <EthereumChain> -> <ChainProof>
+	//                      .-> <PolkadotChain> -> <ChainProof>
+	//                     /
+	// <EthereumAddress> -|
+	//                     \
+	//                      '-> <EthereumChain> -> <ChainProof>
 	@jsonMapMember(
 		String,
 		() => MapT(String, ChainProof, { shape: MapShape.OBJECT }),
@@ -73,7 +73,7 @@ export class BalanceProofs extends ErdstallObject {
 	// Signature is issued on canonicalized json of BalanceProofs
 	// (w/o sig of course).
 	@jsonMember(crypto.Signature)
-	readonly sig: ErdstallSignature;
+	readonly sig: crypto.Signature<crypto.Crypto>;
 
 	constructor(
 		proofs: Map<string, Map<Chain, ChainProof>>,
@@ -94,11 +94,9 @@ export class BalanceProofs extends ErdstallObject {
 	}
 
 	public verify(address: crypto.Address<crypto.Crypto>): boolean {
-		const rec = utils.verifyMessage(
+		return this.sig.verify(
 			this.encodePayload(),
-			this.sig.toString(),
-		);
-		return address.toString() === rec;
+			address);
 	}
 
 	public encodePayload(): Uint8Array {

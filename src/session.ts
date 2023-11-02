@@ -128,6 +128,7 @@ export class Session<Bs extends Backend[]>
 	implements ErdstallSession<Bs>
 {
 	readonly address: crypto.Address<crypto.Crypto>;
+	readonly l2signer: crypto.Signer<crypto.Crypto>;
 	readonly signer: Signer<Bs[number]>;
 	private nonce: bigint;
 	private readonly enclaveWriter: EnclaveWriter & InternalEnclaveWatcher;
@@ -140,6 +141,7 @@ export class Session<Bs extends Backend[]>
 		address: crypto.Address<crypto.Crypto>,
 		enclaveConn: (EnclaveWriter & InternalEnclaveWatcher) | URL,
 		signer: Signer<Bs[number]>,
+		l2signer: crypto.Signer<crypto.Crypto>,
 		...args: ConstructorArgs<Bs>
 	) {
 		// NOTE: It is safe to pass no arguments to the super constructor for the
@@ -167,6 +169,7 @@ export class Session<Bs extends Backend[]>
 			this.receiptDispatcher.watch.bind(this.receiptDispatcher),
 		);
 		this.signer = signer;
+		this.l2signer = l2signer;
 	}
 
 	// Queries the next nonce and increases the counter. If the nonce has an
@@ -210,7 +213,7 @@ export class Session<Bs extends Backend[]>
 		}
 		const nonce = await this.nextNonce();
 		const tx = new Transfer(this.address, nonce, to, assets);
-		await tx.sign(this.signer);
+		await tx.sign(this.l2signer);
 		const hash = tx.hash();
 		const receipt = this.receiptDispatcher.register(hash);
 		const accepted = this.enclaveWriter.transfer(tx);
@@ -223,7 +226,7 @@ export class Session<Bs extends Backend[]>
 		}
 		const nonce = await this.nextNonce();
 		const tx = new Mint(this.address, nonce, token, id);
-		await tx.sign(this.signer);
+		await tx.sign(this.l2signer);
 		const hash = tx.hash();
 		const receipt = this.receiptDispatcher.register(hash);
 		const accepted = this.enclaveWriter.mint(tx);
@@ -237,7 +240,7 @@ export class Session<Bs extends Backend[]>
 
 		const nonce = await this.nextNonce();
 		const tx = new Burn(this.address, nonce, assets);
-		await tx.sign(this.signer);
+		await tx.sign(this.l2signer);
 		const hash = tx.hash();
 		const receipt = this.receiptDispatcher.register(hash);
 		const accepted = this.enclaveWriter.burn(tx);
@@ -254,7 +257,7 @@ export class Session<Bs extends Backend[]>
 			await this.nextNonce(),
 			true,
 		);
-		await exittx.sign(this.signer);
+		await exittx.sign(this.l2signer);
 		return this.enclaveWriter.exit(exittx);
 	}
 
@@ -308,7 +311,7 @@ export class Session<Bs extends Backend[]>
 		expect: ChainAssets,
 	): Promise<TradeOffer> {
 		const o = new TradeOffer(this.address, offer, expect);
-		return o.sign(this.signer);
+		return o.sign(this.l2signer);
 	}
 
 	async acceptTrade(offer: TradeOffer): Promise<PendingTransaction> {
@@ -317,7 +320,7 @@ export class Session<Bs extends Backend[]>
 		}
 		const nonce = await this.nextNonce();
 		const tx = new Trade(this.address, nonce, offer);
-		await tx.sign(this.signer);
+		await tx.sign(this.l2signer);
 		const hash = tx.hash();
 		const receipt = this.receiptDispatcher.register(hash);
 		const accepted = this.enclaveWriter.trade(tx);

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
-
+/*
 import { Assets } from "#erdstall/ledger/assets";
 import * as assets from "#erdstall/ledger/assets";
 import { Session, Client, ErdstallSession } from "#erdstall";
@@ -440,3 +440,5 @@ export const sdkActions = {
 
 	// This concludes the overview over the SDK.
 };
+
+*/

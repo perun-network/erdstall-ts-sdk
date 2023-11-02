@@ -2,7 +2,7 @@
 "use strict";
 
 import { ErdstallObject, registerErdstallType } from "#erdstall/api";
-import { Address, Signature, Crypto } from "#erdstall/crypto";
+import { Address, Signature, Signer, Crypto } from "#erdstall/crypto";
 import { customJSON, ABIPacked } from "#erdstall/api/util";
 import {
 	jsonObject,
@@ -11,9 +11,8 @@ import {
 	Serializable,
 	jsonBigIntMember,
 } from "#erdstall/export/typedjson";
-import { utils } from "ethers";
-import { Signer } from "#erdstall/ledger/backend";
 import canonicalize from "canonicalize";
+import { utils } from "ethers";
 
 const transactionImpls = new Map<string, Serializable<Transaction>>();
 const transactionTypeName = "Transaction";
@@ -42,8 +41,9 @@ export abstract class Transaction extends ErdstallObject {
 		// Make sure the signature is set to undefined, otherwise signing would not
 		// be idempotent.
 		this.sig = undefined;
+		this.sender = await signer.address();
 		const msg = this.encodePayload();
-		this.sig = await signer.signMessage(msg);
+		this.sig = await signer.sign(msg);
 		return this;
 	}
 
@@ -51,12 +51,10 @@ export abstract class Transaction extends ErdstallObject {
 		if (!this.sig) {
 			return false;
 		}
-		const rec = utils.verifyMessage(
+		return this.sig.verify(
 			this.encodePayload(),
-			this.sig!.toString(),
+			this.sender
 		);
-
-		return rec === this.sender.toString();
 	}
 
 	static fromJSON(js: any): Transaction {

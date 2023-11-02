@@ -15,9 +15,9 @@ export function registerAddressType(
 }
 
 export abstract class Address<_C extends Crypto> {
-	abstract type(): Crypto;
+	abstract type(): _C;
 	abstract get key(): string;
-	abstract equals(other: Address<Crypto>): boolean;
+	abstract equals(other: Address<_C>): boolean;
 	abstract toString(): string;
 	abstract toJSON(): string;
 

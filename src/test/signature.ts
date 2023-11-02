@@ -38,6 +38,11 @@ export class TestSignature extends Signature<"test"> {
 		return new TestSignature(value, address);
 	}
 
+	verify(msg: Uint8Array, addr: Address<"test">): boolean {
+		const enc = Array.from(msg).map(x => x.toString(16).padStart(2, "0")).join("");
+		return this.msg === enc && addr.equals(this.address);
+	}
+
 	toJSON() {
 		return {
 			address: Address.toJSON(this.address),

@@ -1,4 +1,4 @@
-import { EthereumAddress } from "#erdstall/ledger/backend/ethereum";
+import { EthereumAddress } from "#erdstall/crypto/ethereum";
 
 export const NODE_PORT = 1362;
 export const NODE_ENDPOINT = `http://localhost:${NODE_PORT}`;

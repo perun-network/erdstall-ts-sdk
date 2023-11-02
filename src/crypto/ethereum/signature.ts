@@ -9,38 +9,38 @@ import { jsonMember, jsonObject } from "#erdstall/export/typedjson";
 
 @jsonObject
 export class EthereumSignature extends Signature<"ethereum"> {
-	@jsonMember msg: Uint8Array;
-	@jsonMember address: Address<"ethereum">;
+	@jsonMember bytes: Uint8Array;
 
-	constructor(value: Uint8Array, address: Address<"ethereum">) {
+	constructor(value: Uint8Array) {
 		super();
-		this.msg = value;
-		this.address = address;
+		this.bytes = value;
 	}
 
 	static fromJSON(data: any): Signature<"ethereum"> {
-		const address = EthereumAddress.fromJSON(data.address);
-		const value = utils.arrayify(data.msg);
-		return new EthereumSignature(value, address);
+		if(typeof data !== "string") {
+			throw new Error("Expected to decode address from a string");
+		}
+		return new EthereumSignature(utils.arrayify(data));
+	}
+
+	verify(msg: Uint8Array, signer: Address<"ethereum">): boolean {
+		return utils.verifyMessage(msg, this.toString()) === signer.toString()
 	}
 
 	toJSON() {
-		return {
-			address: this.address,
-			msg: utils.hexlify(this.msg),
-		};
+		return utils.hexlify(this.bytes);
 	}
 
 	toString(): string {
-		return utils.hexlify(this.msg);
+		return utils.hexlify(this.bytes);
 	}
 
 	toBytes(): Uint8Array {
-		return this.msg;
+		return this.bytes;
 	}
 
 	asABI() {
-		return this.msg;
+		return this.bytes;
 	}
 
 	ABIType(): string {

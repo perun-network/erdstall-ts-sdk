@@ -4,17 +4,15 @@
 import { ErdstallObject, registerErdstallType } from "#erdstall/api";
 import { Account } from "#erdstall/ledger";
 import { Address, Signature, Crypto } from "#erdstall/crypto";
-import { EthereumAddress } from "#erdstall/crypto/ethereum";
 import { Transaction, TransactionOutput } from "#erdstall/api/transactions";
 import {
 	jsonObject,
 	jsonMember,
 	jsonMapMember,
+	TypedJSON,
 	MapShape,
 } from "#erdstall/export/typedjson";
-import { utils } from "ethers";
-import { ABIEncoder, ABIPacked } from "../util";
-import { ETHZERO } from "#erdstall/ledger/assets";
+import canonicalize from "canonicalize";
 
 const txReceiptTypeName = "TxReceipt";
 
@@ -64,33 +62,21 @@ export class TxReceipt extends ErdstallObject {
 	protected objectTypeName(): string {
 		return txReceiptTypeName;
 	}
-	packTagged(_: Address<Crypto>): ABIPacked {
-		const enc = new ABIEncoder();
-		return enc.pack(this.encodeABI(enc));
-	}
-	protected encodeABI(e: ABIEncoder): string {
-		e.encode(
-			["bytes", utils.arrayify(this.hash as utils.BytesLike)],
-			["bytes", this.output.payload],
+	protected encodePayload(): Uint8Array {
+		const json = JSON.parse(TypedJSON.stringify(this, TxReceipt));
+		delete json.sig;
+		const msg = canonicalize(
+			JSON.stringify({value: json }),
 		);
-		return "ErdstallTransactionOutput";
+		return new TextEncoder().encode(msg);
 	}
-	verify(contract: Address<Crypto>): boolean {
-		console.log(
-			utils.hexlify(
-				this.packTagged(EthereumAddress.fromString(ETHZERO)).bytes,
-			),
-		);
+	verify(enclaveNativeSigner: Address<Crypto>): boolean {
 		if (!this.sig) {
 			return false;
 		}
-		const rec = utils.verifyMessage(
-			this.packTagged(contract).keccak256(),
-			this.sig!.toString(),
-		);
-		console.log(rec);
-		console.log(this.tx.sender.toString());
-		return rec === this.tx.sender.toString();
+		return this.sig!.verify(
+			this.encodePayload(),
+			enclaveNativeSigner);
 	}
 }
 

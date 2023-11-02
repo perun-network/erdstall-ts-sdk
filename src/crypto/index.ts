@@ -4,4 +4,5 @@
 export * from "./crypto";
 export * from "./address";
 export * from "./signature";
+export * from "./signer";
 export * from "./asset";

@@ -3,7 +3,7 @@
 
 import { Serializable, TypedJSON } from "#erdstall/export/typedjson";
 import { customJSON } from "#erdstall/api/util";
-import { Crypto } from "#erdstall/crypto";
+import { Crypto, Address } from "#erdstall/crypto";
 
 const signatureImpls = new Map<string, Serializable<Signature<Crypto>>>();
 
@@ -22,6 +22,8 @@ export abstract class Signature<B extends Crypto> {
 	abstract toBytes(): Uint8Array;
 
 	abstract type(): B;
+
+	abstract verify(msg: Uint8Array, addr: Address<B>): boolean;
 
 	static toJSON(me: Signature<Crypto>) {
 		return {

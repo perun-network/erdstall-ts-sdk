@@ -4,7 +4,7 @@ all: ts
 
 ts:
 	@yarn install -s
-	@yarn run build -s
+	@yarn run build
 	@echo "Built erdstall-ts-sdk."
 
 bindings:

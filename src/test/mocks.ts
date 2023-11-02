@@ -133,7 +133,6 @@ export class MockWatcher implements Watcher<["ethereum"]> {
 					new TransactionOutput(new Uint8Array()),
 					new EthereumSignature(
 						new Uint8Array(),
-						new EthereumAddress(new Uint8Array()),
 					),
 					"",
 				),
@@ -356,7 +355,6 @@ function newTxReceiptResult(
 		output,
 		new EthereumSignature(
 			new Uint8Array(),
-			new EthereumAddress(new Uint8Array()),
 		),
 		"",
 	);

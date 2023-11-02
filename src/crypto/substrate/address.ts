@@ -4,6 +4,8 @@
 import { jsonObject } from "#erdstall/export/typedjson";
 import { customJSON } from "#erdstall/api/util";
 import { Address } from "#erdstall/crypto/address";
+import { decodeAddress, encodeAddress } from "@polkadot/util-crypto";
+import { hexToU8a, u8aToHex } from "@polkadot/util"
 
 /**
  * This class implements an address representation and is used within the SDK
@@ -17,15 +19,18 @@ export class SubstrateAddress implements Address<"substrate"> {
 	}
 
 	static fromJSON(val: any): SubstrateAddress {
-		throw new Error("not implemented");
+		if(typeof val !== "string") {
+			throw new Error("Expected to decode address from a string");
+		}
+		return new SubstrateAddress(decodeAddress(hexToU8a(val)));
 	}
 
 	toJSON(): string {
-		throw new Error("not implemented");
+		return u8aToHex(this.value);
 	}
 
 	static fromString(addr: string): SubstrateAddress {
-		return SubstrateAddress.fromJSON(addr);
+		return new SubstrateAddress(decodeAddress(addr));
 	}
 
 	static ensure(addr: string | SubstrateAddress): SubstrateAddress {
@@ -34,25 +39,25 @@ export class SubstrateAddress implements Address<"substrate"> {
 		return SubstrateAddress.fromString(addr);
 	}
 
-	type(): "ethereum" {
-		return "ethereum";
+	type(): "substrate" {
+		return "substrate";
 	}
 
 	toString(): string {
-		throw new Error("not implemented");
+		return encodeAddress(this.value);
 	}
 
 	get key(): string {
-		throw new Error("not implemented");
+		return this.toJSON()
 	}
 
 	equals(other: SubstrateAddress): boolean {
-		throw new Error("not implemented");
+		return this.key == other.key
 	}
 }
 
 customJSON(SubstrateAddress);
 
 export function addressKey(addr: SubstrateAddress | string): string {
-	return addr instanceof SubstrateAddress ? addr.key : addr.toLowerCase();
+	return SubstrateAddress.ensure(addr).key;
 }
