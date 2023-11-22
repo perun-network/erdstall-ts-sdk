@@ -22,6 +22,7 @@ import { EventCache, OneShotEventCache } from "#erdstall/utils";
 export type BackendClientConstructors = {
 	ethereum: {
 		backend: "ethereum";
+		chain: number;
 		provider: ethers.providers.Provider | Signer;
 		initializer: (
 			config: ClientConfig,
@@ -30,6 +31,7 @@ export type BackendClientConstructors = {
 	};
 	substrate: {
 		backend: "substrate";
+		chain: number;
 		arg: URL;
 		initializer: (config: ClientConfig) => SubstrateClient;
 	};
@@ -75,11 +77,11 @@ export class Client<Bs extends Backend[]> implements ErdstallClient<Bs> {
 		Bs[number]
 	>;
 
-	protected clients: Map<Bs[number], ErdstallBackendClient<Bs[number]>>;
+	protected clients: Map<number, ErdstallBackendClient<Bs[number]>>;
 	protected enclaveConn: EnclaveReader & InternalEnclaveWatcher;
 	protected initialized: boolean = false;
 
-	// TODO: Note that this has to be maintained with the Session
+	// NOTE: Note that this has to be maintained with the Session
 	// implementation. If possible, lift this to compile time.
 	private clientArgs: ConstructorArgs<Bs>;
 
@@ -121,14 +123,14 @@ export class Client<Bs extends Backend[]> implements ErdstallClient<Bs> {
 	}
 
 	getNftMetadata(
-		backend: Bs[number],
+		chain: number,
 		token: BackendAddress<Backend>,
 		id: bigint,
 		useCache?: boolean,
 	): Promise<NFTMetadata> {
 		return this.clients
-			.get(backend)!
-			.getNftMetadata(backend, token, id, useCache);
+			.get(chain)!
+			.getNftMetadata(token, id, useCache);
 	}
 
 	protected on_internal<T extends EnclaveEvent>(
@@ -258,8 +260,11 @@ export class Client<Bs extends Backend[]> implements ErdstallClient<Bs> {
 			// Construct all requested clients.
 			for (const backendCtor of this.clientArgs) {
 				const client = createClient(config, backendCtor);
-				let _backendCtor = backendCtor as { backend: Bs[number] };
-				this.clients.set(_backendCtor.backend, client);
+				let _backendCtor = backendCtor as {
+					backend: Bs[number];
+					chain: number
+				};
+				this.clients.set(_backendCtor.chain, client);
 			}
 
 			// Forward all cached events to respective clients.

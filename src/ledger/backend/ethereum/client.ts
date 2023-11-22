@@ -30,12 +30,11 @@ export class EthereumClient implements ErdstallBackendClient<"ethereum"> {
 	}
 
 	getNftMetadata(
-		backend: "ethereum",
 		token: Address<"ethereum">,
 		id: bigint,
 		useCache?: boolean,
 	): Promise<NFTMetadata> {
-		return this.erdstallConn.getNftMetadata(backend, token, id, useCache);
+		return this.erdstallConn.getNftMetadata(token, id, useCache);
 	}
 
 	on<T extends LedgerEvent>(

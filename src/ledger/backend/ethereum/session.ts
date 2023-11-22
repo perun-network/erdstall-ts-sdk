@@ -36,19 +36,17 @@ export class EthereumSession
 		this.erdstallConn = erdstallConn;
 	}
 
-	async deposit<B extends "ethereum">(
-		backend: B,
+	async deposit(
 		assets: ChainAssets,
-	): Promise<TransactionGenerator<B>> {
-		return this.erdstallConn.deposit(backend, assets);
+	): Promise<TransactionGenerator<"ethereum">> {
+		return this.erdstallConn.deposit(assets);
 	}
 
-	async withdraw<B extends "ethereum">(
-		backend: B,
+	async withdraw(
 		epoch: bigint,
 		exitProof: ChainProofChunk[],
-	): Promise<TransactionGenerator<B>> {
-		return this.erdstallConn.withdraw(backend, epoch, exitProof);
+	): Promise<TransactionGenerator<"ethereum">> {
+		return this.erdstallConn.withdraw(epoch, exitProof);
 	}
 }
 

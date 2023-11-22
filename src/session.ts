@@ -146,7 +146,8 @@ export class Session<Bs extends Backend[]>
 	private nonce: bigint;
 	private readonly enclaveWriter: EnclaveWriter & InternalEnclaveWatcher;
 	readonly receiptDispatcher: ReceiptDispatcher;
-	protected clients: Map<Bs[number], ErdstallBackendSession<Bs[number]>>;
+	// Filled dynamically when we receive configs.
+	protected clients: Map<number, ErdstallBackendSession<Bs[number]>>;
 
 	private sessionArgs: ConstructorArgs<Bs>;
 
@@ -155,6 +156,7 @@ export class Session<Bs extends Backend[]>
 		enclaveConn: (EnclaveWriter & InternalEnclaveWatcher) | URL,
 		signer: Signer<Bs[number]>,
 		l2signer: crypto.Signer<crypto.Crypto>,
+		chains: Map<number, Bs[number]>,
 		...args: ConstructorArgs<Bs>
 	) {
 		// NOTE: It is safe to pass no arguments to the super constructor for the
@@ -274,19 +276,19 @@ export class Session<Bs extends Backend[]>
 		return this.enclaveWriter.exit(exittx);
 	}
 
-	async leave<B extends RequestedBackends<Bs>>(
-		backend: B,
+	async leave(
 		notify?: (message: string, stage: number, maxStages: number) => void,
-	): Promise<TransactionGenerator<B>> {
+	): Promise< Map<number, TransactionGenerator<Bs[number]>> > {
 		let skipped = 0;
 		let cb: ErdstallEventHandler<"phaseshift", never>;
 		let atStage = 1;
 		let maxStages = 3;
 		const p = new Promise<void>((accept) => {
 			cb = () => {
-				// One Epoch when the current epoch ends for which we receive the ExitProof.
-				// One more Epoch to guarantee that our ExitProof is part of a sealed epoch.
-				if (skipped < 2) {
+				// One Epoch when the current epoch ends for which we receive the ExitProof. (Challenge duration)
+				// One further epoch: response duration.
+				// One more epoch: Freeze enactment / propagation.
+				if (skipped < 3) {
 					skipped++;
 				} else {
 					accept();
@@ -300,24 +302,34 @@ export class Session<Bs extends Backend[]>
 		await p.then(() => this.off_internal("phaseshift", cb));
 		notify?.("withdrawing", atStage++, maxStages);
 
-		// TODO: FIXME
-		// return this.withdraw(backend, exitProof);
-		throw new Error("not implemented");
+
+		const transactions = new Map<number, TransactionGenerator<Bs[number]>>();
+		for(const [address, chains] of exitProof.proofs.entries())
+		{
+			for(const [chain, proofs] of chains.entries())
+			{
+				transactions.set(chain, await this.withdraw(
+					chain,
+					exitProof.epoch,
+					proofs.exit));
+			}
+		}
+		return transactions;
 	}
 
-	async withdraw<B extends RequestedBackends<Bs>>(
-		backend: B,
+	async withdraw(
+		chain: number,
 		epoch: bigint,
 		exitProof: ChainProofChunk[],
-	): Promise<TransactionGenerator<B>> {
-		return this.clients.get(backend)!.withdraw(backend, epoch, exitProof);
+	): Promise<TransactionGenerator<Bs[number]>> {
+		return this.clients.get(chain)!.withdraw(epoch, exitProof);
 	}
 
-	async deposit<B extends RequestedBackends<Bs>>(
-		backend: B,
+	async deposit(
+		chain: number,
 		asset: ChainAssets,
-	): Promise<TransactionGenerator<B>> {
-		return this.clients.get(backend)!.deposit(backend, asset);
+	): Promise<TransactionGenerator<Bs[number]>> {
+		return this.clients.get(chain)!.deposit(asset);
 	}
 
 	async createOffer(
@@ -347,8 +359,11 @@ export class Session<Bs extends Backend[]>
 		// Construct all requested session backends.
 		for (const backendCtor of this.sessionArgs) {
 			const session = createSession(config, backendCtor);
-			let _backendCtor = backendCtor as { backend: Bs[number] };
-			this.clients.set(_backendCtor.backend, session);
+			let _backendCtor = backendCtor as {
+				backend: Bs[number];
+				chain: number
+			};
+			this.clients.set(_backendCtor.chain, session);
 		}
 
 		// Forward all cached events to respective clients.

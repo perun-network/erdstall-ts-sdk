@@ -77,7 +77,6 @@ export class LedgerReadConn implements LedgerReader<"ethereum"> {
 	}
 
 	async getNftMetadata(
-		_backend: "ethereum",
 		token: Address<"ethereum">,
 		id: bigint,
 		useCache?: boolean,

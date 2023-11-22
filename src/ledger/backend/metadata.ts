@@ -35,8 +35,7 @@ export interface Attribute {
 
 export interface NFTMetadataProvider<B extends Backend> {
 	getNftMetadata(
-		backend: B,
-		token: BackendAddress<Backend>,
+		token: BackendAddress<B>, // TODO: introduce differentiation between address and token ID.
 		id: bigint,
 		useCache?: boolean,
 	): Promise<NFTMetadata>;

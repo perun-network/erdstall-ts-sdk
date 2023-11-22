@@ -22,7 +22,7 @@ import { ChainAssets } from "#erdstall/ledger/assets";
 import { Uint256 } from "#erdstall/api/util";
 import { TransactionGenerator } from "#erdstall/utils";
 import { EnclaveEvent } from "#erdstall/enclave";
-import { NFTMetadataProvider } from "#erdstall/ledger/backend";
+import { NFTMetadataProvider, NFTMetadata } from "#erdstall/ledger/backend";
 import { ErdstallEvent, ErdstallEventHandler } from "./event";
 export * from "./client";
 export * from "./session";
@@ -199,10 +199,9 @@ export interface Depositor<B extends Backend> {
 	 * function. For more information about stages look at the corresponding
 	 * documentation.
 	 */
-	deposit<CB extends B>(
-		backend: CB,
+	deposit(
 		assets: ChainAssets,
-	): Promise<TransactionGenerator<CB>>;
+	): Promise<TransactionGenerator<B>>;
 }
 
 /**
@@ -223,11 +222,10 @@ export interface Withdrawer<B extends Backend> {
 	 * Withdrawing is a multistep process which might contain different amount of
 	 * steps for each type of asset contained in the balance proof.
 	 */
-	withdraw<CB extends B>(
-		backend: CB,
+	withdraw(
 		epoch: bigint,
 		exitProof: ChainProofChunk[],
-	): Promise<TransactionGenerator<CB>>;
+	): Promise<TransactionGenerator<B>>;
 }
 
 /**
@@ -253,7 +251,7 @@ export interface Exiter {
  * Describes an entity with the ability to exit AND withdraw funds from
  * Erdstall.
  */
-export interface Leaver<B extends Backend> extends Exiter, Withdrawer<B> {
+export interface Leaver<Bs extends Backend[]> extends Exiter {
 	/**
 	 * Leaves Erdstall by first exiting and then withdrawing available funds.
 	 *
@@ -263,10 +261,9 @@ export interface Leaver<B extends Backend> extends Exiter, Withdrawer<B> {
 	 * Check out the documentation for `Withdrawer.withdraw` and `Stages` for
 	 * more information about theh return type.
 	 */
-	leave<CB extends B>(
-		backend: CB,
+	leave(
 		notify?: (message: string, stage: number, maxStages: number) => void,
-	): Promise<TransactionGenerator<CB>>;
+	): Promise< Map<number, TransactionGenerator<Bs[number]>> >;
 }
 
 /**
@@ -374,17 +371,21 @@ export interface ErdstallClient<Bs extends Backend[]>
 		Contracter<RequestedBackends<Bs>>,
 		Initializer<RequestedBackends<Bs>>,
 		Subscriber,
-		NFTMetadataProvider<RequestedBackends<Bs>>,
 		AccountGetter,
 		Attester,
-		Contracter<RequestedBackends<Bs>>,
-		NFTMetadataProvider<RequestedBackends<Bs>> {
+		Contracter<RequestedBackends<Bs>>{
 	/**
 	 * Provider allowing to query token information related to Erdstall and
 	 * its onchain contracts.
 	 */
 	// readonly tokenProvider: TokenProvider<Backend>;
 	// readonly onChainQuerier: OnChainQuerier<Bs>;
+	getNftMetadata(
+		chain: number,
+		token: BackendAddress<Backend>,
+		id: bigint,
+		useCache?: boolean,
+	): Promise<NFTMetadata>;
 }
 
 /**
@@ -409,10 +410,19 @@ export interface ErdstallSession<Bs extends Backend[]>
 		Minter,
 		Burner,
 		Trader,
-		Depositor<RequestedBackends<Bs>>,
-		Withdrawer<RequestedBackends<Bs>>,
 		Exiter,
-		Leaver<RequestedBackends<Bs>> {
+		Leaver<Bs> {
+
+	// Need a different signature for deposit withdraw, since it needs the explicit chain argument, while backends have their chain ID embeddd implicitly.
+	deposit(
+		chain: number,
+		assets: ChainAssets,
+	): Promise<TransactionGenerator<Bs[number]>>;
+	withdraw(
+		chain: number,
+		epoch: bigint,
+		exitProof: ChainProofChunk[],
+	): Promise<TransactionGenerator<Bs[number]>>;
 	/**
 	 * The address connected to this session.
 	 */

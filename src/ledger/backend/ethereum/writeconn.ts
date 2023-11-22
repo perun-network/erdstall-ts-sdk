@@ -35,11 +35,10 @@ export class LedgerWriteConn
 		this.chain = chain;
 	}
 
-	async withdraw<B extends "ethereum">(
-		_backend: B,
+	async withdraw(
 		epoch: bigint,
 		exitProofs: ChainProofChunk[],
-	): Promise<TransactionGenerator<B>> {
+	): Promise<TransactionGenerator<"ethereum">> {
 		const calls: Promise<ethers.ContractTransaction>[] = [];
 
 		for(let i = 0; i < exitProofs.length; i++)
@@ -74,10 +73,9 @@ export class LedgerWriteConn
 		};
 	}
 
-	async deposit<B extends "ethereum">(
-		_backend: B,
+	async deposit(
 		assets: ChainAssets,
-	): Promise<TransactionGenerator<B>> {
+	): Promise<TransactionGenerator<"ethereum">> {
 		const calls: Calls = [];
 
 		if (!assets.assets.size)

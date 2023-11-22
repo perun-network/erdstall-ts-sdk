@@ -54,10 +54,9 @@ export class SubstrateSession
 		return ret;
 	}
 
-	async deposit<B extends "substrate">(
-		backend: B,
+	async deposit(
 		assets: ChainAssets,
-	): Promise<TransactionGenerator<B>> {
+	): Promise<TransactionGenerator<"substrate">> {
 		let api = await this.api;
 		const txs: any[] = [];
 		for(let [assetID, asset] of assets.ordered())
@@ -85,11 +84,10 @@ export class SubstrateSession
 		let chunks = await this.chunk_txs(txs);
 		return { stages: this.issueTXs(chunks), numStages: chunks.length };
 	}
-	async withdraw<B extends "substrate">(
-		backend: B,
+	async withdraw(
 		epoch: bigint,
 		exitProof: ChainProofChunk[],
-	): Promise<TransactionGenerator<B>> {
+	): Promise<TransactionGenerator<"substrate">> {
 		let api = await this.api;
 		const txs: any[] = [];
 		for (let i = 0; i <  exitProof.length; i++) {

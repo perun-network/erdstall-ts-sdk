@@ -40,7 +40,6 @@ export class SubstrateClient implements ErdstallBackendClient<"substrate"> {
 		throw new Error("Method not implemented.");
 	}
 	getNftMetadata(
-		backend: "substrate",
 		token: Address<"substrate">,
 		id: bigint,
 		useCache?: boolean | undefined,

@@ -37,7 +37,6 @@ export class LedgerReadConn implements LedgerReader<"substrate"> {
 	}
 
 	getNftMetadata(
-		backend: "substrate",
 		token: Address<"substrate">,
 		id: bigint,
 		useCache?: boolean | undefined,
