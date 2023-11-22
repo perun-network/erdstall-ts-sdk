@@ -6,7 +6,6 @@ export * from "./address";
 export * from "./signature";
 export * from "./assets";
 export * from "./bigint";
-export * from "./mocks";
 export * from "./proofs";
 export * from "./phaseshift";
 export * from "./random";

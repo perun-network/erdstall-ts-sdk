@@ -4,11 +4,12 @@
 import { ErdstallEventHandler } from "#erdstall";
 import { Address } from "#erdstall/crypto";
 import { LedgerEvent } from "#erdstall/ledger";
-import { TokenProvider, NFTMetadata } from "#erdstall/ledger/backend";
+import { NFTMetadata } from "#erdstall/ledger/backend";
 import { Erdstall } from "./contracts/contracts/Erdstall";
 import { IERC721Metadata__factory } from "./contracts";
 import { ethCallbackShim, Listener } from "./ethwrapper";
 import { LedgerReader } from "#erdstall/ledger/backend";
+import { EthereumTokenProvider } from "./tokencache";
 import axios from "axios";
 
 export const ErrUnsupportedLedgerEvent = new Error(
@@ -25,9 +26,9 @@ export class LedgerReadConn implements LedgerReader<"ethereum"> {
 		Listener
 	>;
 	private metadataCache: Map<string, NFTMetadata>;
-	readonly tokenCache: TokenProvider<"ethereum">;
+	readonly tokenCache: EthereumTokenProvider;
 
-	constructor(contract: Erdstall, tokenCache: TokenProvider<"ethereum">) {
+	constructor(contract: Erdstall, tokenCache: EthereumTokenProvider) {
 		this.contract = contract;
 		this.eventCache = new Map();
 		this.metadataCache = new Map();
@@ -38,7 +39,7 @@ export class LedgerReadConn implements LedgerReader<"ethereum"> {
 		ev: T,
 		cb: ErdstallEventHandler<T, "ethereum">,
 	): void {
-		const wcb = ethCallbackShim(this.contract, this.tokenCache, ev, cb);
+		const wcb = ethCallbackShim(this.contract, ev, cb);
 		this.eventCache.set(cb, wcb);
 		this.contract.on(ev, wcb);
 	}
@@ -49,7 +50,7 @@ export class LedgerReadConn implements LedgerReader<"ethereum"> {
 	): void {
 		this.contract.once(
 			ev,
-			ethCallbackShim(this.contract, this.tokenCache, ev, cb),
+			ethCallbackShim(this.contract, ev, cb),
 		);
 	}
 

@@ -11,10 +11,9 @@ import {
 import { Asset } from "./asset";
 import { customJSON } from "#erdstall/api/util";
 import { Address, addressKey, Crypto, AssetID } from "#erdstall/crypto";
-import { Backend, TokenProvider } from "#erdstall/ledger/backend";
-import { Erdstall } from "#erdstall/ledger/backend/ethereum/contracts";
-import { Amount, decodePackedAmount } from "./amount";
-import { Tokens, decodePackedIds } from "./tokens";
+import { Backend } from "#erdstall/ledger/backend";
+import { Amount } from "./amount";
+import { Tokens } from "./tokens";
 import { TokenType } from "./asset";
 import { Chain } from "../chain";
 
@@ -22,18 +21,6 @@ export const ETHZERO = "0x0000000000000000000000000000000000000000";
 
 @jsonObject
 export class ChainAssets {
-	// Asset origin -> asset.
-	//
-	// eNFT auf ETH
-	// Tokens auf Substrate
-	//
-	// eNFT origin: Ethereum
-	// eNFT was bridged -> eNFT an meinen Account
-	//
-	// Steht jetzt aber in den ChainAssets, die unterschrieben für substrate.
-	//
-	// Obwohl immernoch ein NFT auf Ethereum, kann das gegenüber substrate
-	// contract bewiesen werden.
 	@jsonMapMember(Number, () => LocalAssets, { shape: MapShape.OBJECT })
 	public assets: Map<Chain, LocalAssets>;
 
@@ -336,36 +323,6 @@ function isProperSubset(
 		}
 	}
 	return true;
-}
-
-export async function decodePackedAssets(
-	erdstall: Erdstall,
-	tokenProvider: Pick<TokenProvider<Backend>, "tokenTypeOf">,
-	values: Erdstall.TokenValueStructOutput[],
-): Promise<ChainAssets> {
-	// TODO: Implement me.
-	throw new Error("not implemented");
-	// const assets = new Assets();
-	// for (const [t, v] of values) {
-	// 	const ttype = await tokenProvider.tokenTypeOf(erdstall, t);
-	// 	assets.addAsset(t, decodePackedAsset(v, ttype));
-	// }
-	// return assets;
-}
-
-function decodePackedAsset(data: string, ttype: TokenType): Asset {
-	switch (ttype) {
-		case "ETH": {
-			return decodePackedAmount(data);
-		}
-		case "ERC20": {
-			return decodePackedAmount(data);
-		}
-		case "ERC721": {
-			const res = decodePackedIds(data);
-			return new Tokens(res);
-		}
-	}
 }
 
 customJSON(Assets);

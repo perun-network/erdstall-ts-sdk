@@ -1,169 +1,79 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { Signer } from "ethers";
+import { Signer, providers } from "ethers";
 import { Address, addressKey } from "#erdstall/crypto";
+import { EthereumAddress } from "#erdstall/crypto/ethereum";
 import { TokenTypeRegistered } from "#erdstall/ledger";
 import { TokenType, ETHZERO } from "#erdstall/ledger/assets";
 import {
 	Erdstall,
-	ERC20__factory,
-	ERC721__factory,
+	ERC20__factory, ERC20Holder, ERC20Holder__factory,
+	ERC721__factory, ERC721Holder, ERC721Holder__factory,
+	ETHHolder, ETHHolder__factory,
 } from "#erdstall/ledger/backend/ethereum/contracts";
-import { TokenProvider } from "#erdstall/ledger/backend";
-
-interface Responder {
-	symbol(): Promise<string>;
-}
 
 type TokenTypes = Map<string, TokenType>;
 type TokenHolders = Map<TokenType, string>;
 
-export class EthereumTokenProvider implements TokenProvider<"ethereum"> {
-	readonly typeCache: TokenTypes;
-	readonly holderCache: TokenHolders;
-	private bigbang?: number;
+
+// Gets created with unresolved holders. Call resolve_holders() to pass the actual holders. Access token holders via tokenHolderFor().
+export class EthereumTokenProvider {
+	readonly holders: Promise<Map<TokenType, EthereumAddress>>;
+	private set_holders?: (arg: Map<TokenType, EthereumAddress>) => void;
+	private fail_holders?: (arg: any) => void;
 
 	constructor() {
-		this.typeCache = new Map<string, TokenType>();
-		this.typeCache.set(ETHZERO, "ETH");
-		this.holderCache = new Map<TokenType, string>();
+		this.holders = new Promise<Map<TokenType, EthereumAddress>>(
+			(acc, rej) => {
+			this.set_holders = acc;
+			this.fail_holders = rej;
+			}
+		);
 	}
 
-	setType(tokenAddr: string, ttype: TokenType) {
-		this.typeCache.set(addressKey(tokenAddr), ttype);
+	resolve_holders(holders: Map<TokenType, EthereumAddress>) {
+		const set_holders = this.set_holders;
+		this.fail_holders = undefined;
+		this.set_holders = undefined;
+		set_holders!(holders);
 	}
 
+	// query token holder for a token type. Fails if none is configured within a reasonable timeout.
 	async tokenHolderFor(
-		erdstall: Erdstall,
 		ttype: TokenType,
-	): Promise<string> {
-		if (this.holderCache.has(ttype)) {
-			return this.holderCache.get(ttype)!;
-		}
+	): Promise<EthereumAddress> {
+		return await new Promise<EthereumAddress>(async (accept, reject) => {
+			const timeout = setTimeout(() => {
+				const fail_holders = this.fail_holders;
+				this.fail_holders = undefined;
+				const e = new Error("Timeout: no token holders have been provided!");
+				fail_holders!(e);
+				reject(e);
+			}, 15000);
 
-		await this.queryRegisteredTokenTypes(erdstall, this.bigbang);
-
-		if (!this.holderCache.has(ttype)) {
-			throw new Error(
-				"no holder for the given tokentype registered on erdstall",
-			);
-		}
-		return this.holderCache.get(ttype)!;
-	}
-
-	async tokenTypeOf(
-		erdstall: Erdstall,
-		tokenAddr: string,
-	): Promise<TokenType> {
-		tokenAddr = addressKey(tokenAddr);
-		if (this.typeCache.has(tokenAddr)) {
-			return this.typeCache.get(tokenAddr)!;
-		}
-
-		const ttype = await this.queryTokenType(erdstall, tokenAddr);
-		if (!ttype) {
-			return Promise.reject(
-				new Error(`given token not registered: ${tokenAddr}`),
-			);
-		}
-
-		this.typeCache.set(tokenAddr, ttype!);
-		return ttype!;
-	}
-
-	async queryTokenType(
-		erdstall: Erdstall,
-		tokenAddr: string,
-	): Promise<TokenType | undefined> {
-		tokenAddr = addressKey(tokenAddr);
-		// TODO: Fixme.
-		// await this.queryRegisteredTokens(erdstall, this.bigbang);
-		return this.typeCache.get(tokenAddr);
-	}
-
-	async findRegisteredTokenWithSymbol(
-		erdstall: Erdstall,
-		symbol: string,
-		fromBlock?: number,
-	): Promise<Address<"ethereum"> | undefined> {
-		const from = fromBlock
-			? fromBlock
-			: (await erdstall.bigBangTime()).toNumber();
-
-		// TODO: Fixme.
-		throw Error("not implemented");
-		// const registeredTokens = await this.queryRegisteredTokens(
-		// 	erdstall,
-		// 	from,
-		// );
-
-		// for (const ev of registeredTokens) {
-		// 	try {
-		// 		const token = this.resolveTokenType(
-		// 			erdstall.signer,
-		// 			requireTokenType(ev.tokenType),
-		// 			ev.token,
-		// 		);
-		// 		const sym = await token.symbol();
-		// 		if (sym === symbol) {
-		// 			return ev.token;
-		// 		}
-		// 	} catch {
-		// 		return;
-		// 	}
-		// }
-		return;
-	}
-
-	async queryRegisteredTokenTypes(
-		erdstall: Erdstall,
-		fromBlock?: number,
-	): Promise<TokenTypeRegistered<"ethereum">[]> {
-		const from = fromBlock
-			? fromBlock
-			: (await erdstall.bigBangTime()).toNumber();
-
-		const filter = erdstall.filters.TokenTypeRegistered(null, null);
-		return erdstall.queryFilter(filter, from).then((ev) => {
-			return ev.map((entry) => {
-				// TODO: Fixme.
-				throw Error("not implemented");
-				// const ttype = requireTokenType(entry.args.tokenType);
-				// const tokenHolder = entry.args.tokenHolder;
-
-				// if (!this.holderCache.has(ttype)) {
-				// 	this.holderCache.set(ttype, tokenHolder);
-				// }
-
-				// return {
-				// 	source: "ethereum",
-				// 	tokenType: ttype,
-				// 	tokenHolder: EthereumAddress.fromString(tokenHolder),
-				// };
-			});
+			try {
+				accept((await this.holders).get(ttype)!);
+			} catch(e: any) {
+				reject(e);
+			} finally {
+				clearTimeout(timeout);
+			}
 		});
 	}
 
-	resolveTokenType(
-		signer: Signer,
-		ttype: TokenType,
-		token: string | Address<"ethereum">,
-	): Responder {
-		token = addressKey(token);
-		switch (ttype) {
-			case "ERC20":
-				return ERC20__factory.connect(token, signer);
-			case "ERC721":
-				return ERC721__factory.connect(token, signer);
-			case "ETH":
-				return {
-					symbol: async function (): Promise<string> {
-						return "ETH";
-					},
-				};
-			default:
-				throw Error("not implemented");
-		}
+	async getERC20Holder(provider: providers.Provider): Promise<ERC20Holder> {
+		const holder = await this.tokenHolderFor("ERC20");
+		return ERC20Holder__factory.connect(holder.toString(), provider);
+	}
+
+	async getERC721Holder(provider: providers.Provider): Promise<ERC721Holder> {
+		const holder = await this.tokenHolderFor("ERC721");
+		return ERC721Holder__factory.connect(holder.toString(), provider);
+	}
+
+	async getEthHolder(provider: providers.Provider): Promise<ETHHolder> {
+		const holder = await this.tokenHolderFor("ETH");
+		return ETHHolder__factory.connect(holder.toString(), provider);
 	}
 }

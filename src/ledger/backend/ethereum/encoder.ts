@@ -6,8 +6,6 @@ import {
 	Amount,
 	Asset,
 	ChainAssets,
-	packAmount,
-	packTokens,
 	Tokens,
 } from "#erdstall/ledger/assets";
 import {
@@ -18,6 +16,8 @@ import {
 import { Chain } from "#erdstall/ledger/chain";
 import { Erdstall } from "#erdstall/ledger/backend/ethereum/contracts/contracts/Erdstall";
 import { ABIEncoder } from "#erdstall/api/util";
+
+import { packAmount, packTokens } from "./ethwrapper";
 
 export class EthereumEncoder implements Encoder<"ethereum"> {
 	encode(desc: ChainProofDesc<"ethereum">): EncodedChainProof {

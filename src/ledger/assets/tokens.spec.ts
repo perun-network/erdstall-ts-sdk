@@ -2,7 +2,7 @@
 "use strict";
 
 import { expect } from "chai";
-import { Tokens, encodePackedIds, decodePackedIds } from "./tokens";
+import { Tokens, decodePackedIds } from "./tokens";
 import * as test from "#erdstall/test";
 import { logSeedOnFailure } from "#erdstall/test";
 
@@ -77,7 +77,8 @@ describe("Tokens:Decoding", function () {
 	const rng = test.newPrng();
 	it("allows to properly decode packed IDs", function () {
 		const ids = test.newRandomTokens(rng, 101);
-		const idsPacked = encodePackedIds(ids.value);
+		const idsPacked = utils.hexlify(utils.concat(ids.value.map(
+			id => utils.defaultAbiCoder.encode(["uint256"], [value]))));
 		expect(decodePackedIds(idsPacked)).to.deep.equal(ids.value);
 		expect(decodePackedIds("")).to.deep.equal([]);
 		expect(decodePackedIds("0x")).to.deep.equal([]);

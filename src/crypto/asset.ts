@@ -25,7 +25,7 @@ export class AssetID {
 	}
 
 	origin(): Chain {
-		const origin = (this.bytes[0] + this.bytes[1]) << 8;
+		const origin = this.bytes[0] + (this.bytes[1] << 8);
 		return origin as Chain;
 	}
 

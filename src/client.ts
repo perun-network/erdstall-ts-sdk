@@ -30,7 +30,7 @@ export type BackendClientConstructors = {
 	};
 	substrate: {
 		backend: "substrate";
-		arg: number;
+		arg: URL;
 		initializer: (config: ClientConfig) => SubstrateClient;
 	};
 	test: {

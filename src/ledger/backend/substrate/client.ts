@@ -6,18 +6,15 @@ import { AttestationResult, ClientConfig } from "#erdstall/api/responses";
 import { ErdstallEvent, ErdstallEventHandler } from "#erdstall/event";
 import { Account } from "#erdstall/ledger/account";
 import { Address } from "#erdstall/crypto";
-import { OnChainQuerier } from "#erdstall/ledger/onChainQuerier";
 import { Backend } from "#erdstall/ledger/backend/backends";
 import { NFTMetadata } from "#erdstall/ledger/backend/metadata";
-import { TokenProvider } from "#erdstall/ledger/backend/tokenprovider";
+import { WsProvider } from "@polkadot/api";
 
 export class SubstrateClient implements ErdstallBackendClient<"substrate"> {
-	readonly tokenProvider: TokenProvider<"substrate">;
-	readonly onChainQuerier: OnChainQuerier<"substrate">;
+	protected readonly provider: WsProvider;
 
-	constructor(arg: number) {
-		console.log("SUBSTRATECONSTRUCTOR: {}", arg);
-		throw new Error("not implemented");
+	constructor(wsProvider: URL) {
+		this.provider = new WsProvider(wsProvider.toString());
 	}
 
 	on<EV extends ErdstallEvent>(
@@ -60,13 +57,17 @@ export class SubstrateClient implements ErdstallBackendClient<"substrate"> {
 
 export function mkDefaultSubstrateClientConstructor(): {
 	backend: "substrate";
-	arg: number;
+	arg: URL;
 	initializer: (c: ClientConfig) => SubstrateClient;
 } {
-	const arg = 420;
-	return {
+	const ret: {
+		backend: "substrate";
+		arg: URL;
+		initializer: (c: ClientConfig) => SubstrateClient;
+	} = {
 		backend: "substrate",
-		arg: arg,
-		initializer: (_c: ClientConfig) => new SubstrateClient(arg),
+		arg: new URL("wss://rpc-rococo.bajun.network"),
+		initializer: (_c: ClientConfig) => new SubstrateClient(ret.arg),
 	};
+	return ret;
 }

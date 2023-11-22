@@ -15,7 +15,7 @@ import {
 	Erdstall__factory,
 	EthereumClient,
 	LedgerWriteConn,
-	TokenFetcher,
+	EthereumTokenProvider,
 } from "#erdstall/ledger/backend/ethereum";
 import { ErdstallBackendSession } from "#erdstall";
 import { TransactionGenerator } from "#erdstall/utils";
@@ -45,9 +45,10 @@ export class EthereumSession
 
 	async withdraw<B extends "ethereum">(
 		backend: B,
+		epoch: bigint,
 		exitProof: ChainProofChunk[],
 	): Promise<TransactionGenerator<B>> {
-		return this.erdstallConn.withdraw(backend, exitProof);
+		return this.erdstallConn.withdraw(backend, epoch, exitProof);
 	}
 }
 
@@ -59,7 +60,10 @@ export function defaultEthereumSessionInitializer(
 		(config.chains[0] as ChainConfig<"ethereum">).data.contract.toString(),
 		signer,
 	);
-	const ledgerWriter = new LedgerWriteConn(erdstall, new TokenFetcher());
+	const ledgerWriter = new LedgerWriteConn(
+		erdstall,
+		1, // CHAIN_ETH
+		new EthereumTokenProvider());
 
 	return new EthereumSession(signer, ledgerWriter);
 }

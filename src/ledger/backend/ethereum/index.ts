@@ -3,11 +3,9 @@
 
 export * from "./readconn";
 export * from "./writeconn";
-export * from "./tokenfetcher";
 export * from "./contracts";
 export * from "./contracts_deposit";
 export * from "./tokencache";
 export * from "./tokenmanager";
-export * from "./ethereumOnChainQuerier";
 export * from "./client";
 export * from "./session";

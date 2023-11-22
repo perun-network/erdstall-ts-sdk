@@ -3,3 +3,4 @@
 
 export * from "./address";
 export * from "./signature";
+export * from "./signer";

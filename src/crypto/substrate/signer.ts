@@ -4,15 +4,15 @@
 import { Bytes, Signer as EthersSigner, utils } from "ethers";
 import { Address, Signature, Signer } from "#erdstall/crypto";
 import { sr25519PairFromSeed, sr25519Sign } from "@polkadot/util-crypto";
-//import { Keypair } from "@polkadot/keyring";
+import { Keypair } from "@polkadot/util-crypto/types";
 import { SubstrateSignature } from "./signature";
 import { SubstrateAddress } from "./address";
 
 // Compile-time check that the EthersSigner implements the Signer interface.
 export class SubstrateSigner implements Signer<"substrate"> {
-	readonly keyPair: any;
+	readonly keyPair: Keypair;
 
-	constructor(keyPair: any) {
+	constructor(keyPair: Keypair) {
 		this.keyPair = keyPair;
 	}
 

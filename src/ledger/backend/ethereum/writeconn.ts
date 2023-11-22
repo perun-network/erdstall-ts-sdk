@@ -1,15 +1,18 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { ethers, Signer } from "ethers";
-import { Asset, ChainAssets } from "#erdstall/ledger/assets";
-import { EthereumAddress as Address } from "#erdstall/crypto/ethereum";
+import { ethers } from "ethers";
+import { Asset, ChainAssets, Amount } from "#erdstall/ledger/assets";
+import {
+	EthereumAddress as Address,
+	EthereumSigner as Signer,
+} from "#erdstall/crypto/ethereum";
 import { ChainProofChunk } from "#erdstall/api/responses";
 import { Erdstall } from "./contracts";
 import { LedgerWriter } from "#erdstall/ledger/backend";
 import { LedgerReadConn } from "./readconn";
 import { depositors, Calls } from "./tokenmanager";
-import { TokenProvider } from "#erdstall/ledger/backend";
+import { EthereumTokenProvider } from "./tokencache";
 import { TransactionGenerator } from "#erdstall/utils";
 import { Chain } from "#erdstall/ledger/chain";
 
@@ -20,16 +23,39 @@ export class LedgerWriteConn
 	implements LedgerWriter<"ethereum">
 {
 	readonly signer: Signer;
+	readonly chain: number;
 
-	constructor(contract: Erdstall, tokenCache: TokenProvider<"ethereum">) {
+	constructor(
+		contract: Erdstall,
+		chain: number,
+		tokenCache: EthereumTokenProvider,
+	) {
 		super(contract, tokenCache);
-		this.signer = contract.signer;
+		this.signer = new Signer(contract.signer);
+		this.chain = chain;
 	}
 
 	async withdraw<B extends "ethereum">(
 		_backend: B,
+		epoch: bigint,
 		exitProofs: ChainProofChunk[],
 	): Promise<TransactionGenerator<B>> {
+		const calls: Promise<ethers.ContractTransaction>[] = [];
+
+		for(let i = 0; i < exitProofs.length; i++)
+		{
+			const chunk = exitProofs[i];
+			calls.push(this.contract.withdraw({
+				epoch: epoch,
+				id: i,
+				count: exitProofs.length,
+				chain: this.chain,
+				account: (await this.signer.address()).toJSON(),
+				exit: true,
+				tokens: (() => { throw new Error("TODO"); })(),
+			}, chunk.sig.toJSON()));
+		}
+
 		return {
 			stages: this.call([
 				[
@@ -69,19 +95,18 @@ export class LedgerWriteConn
 			throw new Error("attempting to deposit non-ethereum assets");
 
 		const addStage = async (tokenAddr: string, amount: Asset) => {
-			const ttype = await this.tokenCache.tokenTypeOf(
-				this.contract,
-				tokenAddr,
-			);
-			const holder = await this.tokenCache.tokenHolderFor(
-				this.contract,
-				ttype,
-			);
+			const tokenAddrAddr = Address.fromString(tokenAddr);
+			const ttype = (amount instanceof Amount)
+				? tokenAddrAddr.isZero()
+					? "ETH"
+					: "ERC20"
+				: "ERC721";
+			const holder = await this.tokenCache.tokenHolderFor(ttype);
 
 			const depositCalls = depositors.get(ttype)!(
 				this.signer,
-				Address.fromString(holder),
-				Address.fromString(tokenAddr),
+				holder,
+				tokenAddrAddr,
 				amount,
 			);
 			calls.push(...depositCalls);
@@ -108,7 +133,7 @@ export class LedgerWriteConn
 	> {
 		if (calls.length == 0) throw new Error("0 calls");
 
-		let nonce = await this.signer.getTransactionCount();
+		let nonce = await this.signer.ethersSigner.getTransactionCount();
 		for (const [name, call] of calls) {
 			yield (async (): Promise<
 				[TransactionName, ethers.ContractTransaction]

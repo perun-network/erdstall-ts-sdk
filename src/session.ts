@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { Signer as EthereumSigner } from "ethers";
+//import { Signer as EthereumSigner } from "ethers";
 import {
 	BalanceProofs,
 	ChainProof,
@@ -22,6 +22,8 @@ import { Account } from "#erdstall/ledger";
 import { ChainAssets } from "#erdstall/ledger/assets";
 import { Uint256 } from "#erdstall/api/util";
 import * as crypto from "#erdstall/crypto";
+import { EthereumSigner } from "#erdstall/crypto/ethereum";
+import { SubstrateSigner } from "#erdstall/crypto/substrate";
 import {
 	BackendAddress,
 	ErdstallBackendSession,
@@ -64,12 +66,20 @@ type BackendSessionConstructors = {
 type BackendSessionConstructorOverloads = {
 	ethereum: {
 		signer: EthereumSigner;
+		chain: number;
 		initializer: (
 			config: ClientConfig,
 			signer: EthereumSigner,
 		) => EthereumSession;
 	};
-	substrate: {};
+	substrate: {
+		arg: {
+			signer: SubstrateSigner,
+			provider: URL,
+		},
+		chain: number;
+		initializer: undefined;
+	};
 	test: {};
 };
 
@@ -116,7 +126,10 @@ function createSession(
 			return ethSess;
 		case "substrate":
 			const subSess: ErdstallBackendSession<"substrate"> =
-				new SubstrateSession(420);
+				new SubstrateSession(
+					backendCtor.arg.signer,
+					backendCtor.chain,
+					backendCtor.arg.provider);
 			return subSess;
 		case "test":
 			throw new Error("test backend not implemented");
@@ -294,9 +307,10 @@ export class Session<Bs extends Backend[]>
 
 	async withdraw<B extends RequestedBackends<Bs>>(
 		backend: B,
+		epoch: bigint,
 		exitProof: ChainProofChunk[],
 	): Promise<TransactionGenerator<B>> {
-		return this.clients.get(backend)!.withdraw(backend, exitProof);
+		return this.clients.get(backend)!.withdraw(backend, epoch, exitProof);
 	}
 
 	async deposit<B extends RequestedBackends<Bs>>(

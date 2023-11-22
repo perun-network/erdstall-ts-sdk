@@ -90,22 +90,4 @@ export class Amount extends Asset {
 	}
 }
 
-export function encodePackedAmount(value: bigint): string {
-	return utils.defaultAbiCoder.encode(["uint256"], [value]);
-}
-
-export function decodePackedAmount(data: string): Amount {
-	let idArr: Uint8Array;
-	if (!data.startsWith("0x")) {
-		idArr = utils.arrayify(`0x${data}`);
-	} else {
-		idArr = utils.arrayify(data);
-	}
-	return new Amount(mkBigInt(idArr.values(), 256, 8));
-}
-
-export function packAmount(amount: Amount): bigint {
-	return amount.value;
-}
-
 registerAssetType(TypeTags.Amount, Amount.fromJSON);

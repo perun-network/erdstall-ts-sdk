@@ -12,10 +12,12 @@ import {
 } from "./contracts/common";
 import { ErdstallEventHandler } from "#erdstall";
 import { LedgerEvent } from "#erdstall/ledger";
-import { decodePackedAssets } from "#erdstall/ledger/assets";
+import { Asset, ChainAssets, Amount, Tokens } from "#erdstall/ledger/assets";
+import { TokenType } from "./tokentype";
+
+import { mkBigInt } from "#erdstall/utils/bigint";
 
 import { Erdstall } from "./contracts";
-import { TokenProvider } from "#erdstall/ledger/backend/tokenprovider";
 import {
 	EthereumAddress,
 	EthereumSignature as Signature,
@@ -25,13 +27,11 @@ import {
 export type Listener = (...args: Array<any>) => void;
 export function ethCallbackShim<T extends LedgerEvent>(
 	erdstall: Erdstall,
-	tokenProvider: Pick<TokenProvider<"ethereum">, "tokenTypeOf">,
 	ev: T,
 	cb: ErdstallEventHandler<typeof ev, "ethereum">,
 ): Listener;
 export function ethCallbackShim(
 	erdstall: Erdstall,
-	tokenProvider: Pick<TokenProvider<"ethereum">, "tokenTypeOf">,
 	ev: LedgerEvent,
 	cb: ErdstallEventHandler<typeof ev, "ethereum">,
 ): Listener {
@@ -40,9 +40,9 @@ export function ethCallbackShim(
 		case "Frozen":
 			return wrapFrozen(erdstall, cb as EEH<typeof ev>);
 		case "Deposited":
-			return wrapDeposited(erdstall, tokenProvider, cb as EEH<typeof ev>);
+			return wrapDeposited(erdstall, cb as EEH<typeof ev>);
 		case "Withdrawn":
-			return wrapWithdrawn(erdstall, tokenProvider, cb as EEH<typeof ev>);
+			return wrapWithdrawn(erdstall, cb as EEH<typeof ev>);
 		case "TokenTypeRegistered":
 			return wrapTokenTypeRegistered(erdstall, cb as EEH<typeof ev>);
 		case "Challenged":
@@ -50,7 +50,6 @@ export function ethCallbackShim(
 		case "ChallengeResponded":
 			return wrapChallengeResponded(
 				erdstall,
-				tokenProvider,
 				cb as EEH<typeof ev>,
 			);
 	}
@@ -69,7 +68,6 @@ function wrapFrozen(
 
 function wrapDeposited(
 	erdstall: Erdstall,
-	tokenProvider: Pick<TokenProvider<"ethereum">, "tokenTypeOf">,
 	cb: ErdstallEventHandler<"Deposited", "ethereum">,
 ): Listener {
 	type tp = InstanceTypes<typeof erdstall.filters.Deposited>;
@@ -78,9 +76,7 @@ function wrapDeposited(
 		account,
 		tokenValue,
 	) => {
-		const assets = await decodePackedAssets(erdstall, tokenProvider, [
-			tokenValue,
-		]);
+		const assets = decodePackedAssets(erdstall, [tokenValue]);
 		return cb({
 			source: "ethereum",
 			epoch: epoch.toBigInt(),
@@ -93,7 +89,6 @@ function wrapDeposited(
 
 function wrapWithdrawn(
 	erdstall: Erdstall,
-	tokenProvider: Pick<TokenProvider<"ethereum">, "tokenTypeOf">,
 	cb: ErdstallEventHandler<"Withdrawn", "ethereum">,
 ): Listener {
 	type tp = InstanceTypes<typeof erdstall.filters.Withdrawn>;
@@ -102,9 +97,8 @@ function wrapWithdrawn(
 		account,
 		tokenValues,
 	) => {
-		const assets = await decodePackedAssets(
+		const assets = decodePackedAssets(
 			erdstall,
-			tokenProvider,
 			tokenValues,
 		);
 		return cb({
@@ -156,7 +150,6 @@ function wrapChallenged(
 
 function wrapChallengeResponded(
 	erdstall: Erdstall,
-	tokenProvider: Pick<TokenProvider<"ethereum">, "tokenTypeOf">,
 	cb: ErdstallEventHandler<"ChallengeResponded", "ethereum">,
 ): Listener {
 	type tp = InstanceTypes<typeof erdstall.filters.ChallengeResponded>;
@@ -169,9 +162,8 @@ function wrapChallengeResponded(
 		exit,
 		sig,
 	) => {
-		const assets = await decodePackedAssets(
+		const assets = decodePackedAssets(
 			erdstall,
-			tokenProvider,
 			tokenValues,
 		);
 		const address = EthereumAddress.fromString(account);
@@ -185,6 +177,81 @@ function wrapChallengeResponded(
 		});
 	};
 	return wcb;
+}
+
+
+function decodePackedAssets(
+	erdstall: Erdstall,
+	values: Erdstall.TokenValueStructOutput[],
+): ChainAssets {
+	// TODO: Implement me.
+	throw new Error("not implemented");
+	// const assets = new Assets();
+	// for (const [t, v] of values) {
+	// 	const ttype = await tokenProvider.tokenTypeOf(erdstall, t);
+	// 	assets.addAsset(t, decodePackedAsset(v, ttype));
+	// }
+	// return assets;
+}
+
+
+function decodePackedAmount(data: string): Amount {
+	let idArr: Uint8Array;
+	if (!data.startsWith("0x")) {
+		idArr = utils.arrayify(`0x${data}`);
+	} else {
+		idArr = utils.arrayify(data);
+	}
+	return new Amount(mkBigInt(idArr.values(), 256, 8));
+}
+
+export function packAmount(amount: Amount): bigint {
+	return amount.value;
+}
+
+
+
+// decodePackedIds receives a hex encoded string representing one or more ABI
+// packed encoded `uint256` values.
+export function decodePackedIds(ids: string): bigint[] {
+	let idArr: Uint8Array;
+	if (!ids.startsWith("0x")) {
+		idArr = utils.arrayify(`0x${ids}`);
+	} else {
+		idArr = utils.arrayify(ids);
+	}
+
+	if (idArr.length % 32 !== 0)
+		throw new Error("received token array not divisible by 32");
+	const size = idArr.length / 32;
+	const res = Array.from({ length: size }, (_, i) => {
+		return mkBigInt(idArr.slice(i * 32, i * 32 + 32).values(), 256, 8);
+	});
+	return res;
+}
+
+export function packTokens(tokens: Tokens): bigint[] {
+	return tokens.value.map((v) => packAmount(new Amount(v)));
+}
+
+export function encodePackedIds(ids: bigint[]): string {
+	return utils.hexlify(utils.concat(ids.map(id => utils.defaultAbiCoder.encode(["uint256"], [id]))));
+}
+
+
+function decodePackedAsset(data: string, ttype: TokenType): Asset {
+	switch (ttype) {
+		case "ETH": {
+			return decodePackedAmount(data);
+		}
+		case "ERC20": {
+			return decodePackedAmount(data);
+		}
+		case "ERC721": {
+			const res = decodePackedIds(data);
+			return new Tokens(res);
+		}
+	}
 }
 
 // Typechain forces us to parse the polymorphic type arguments for the

@@ -11,7 +11,7 @@ import {
 	registerAssetType,
 } from "./asset";
 import { mkBigInt } from "#erdstall/utils/bigint";
-import { Amount, encodePackedAmount, packAmount } from "./amount";
+import { Amount } from "./amount";
 
 export const ErrIDAlreadyContained = new Error(
 	"given ID already contained in tokens",
@@ -189,31 +189,4 @@ export function mapNFTs<T>(
 			return [];
 		}
 	}).flat();
-}
-
-// decodePackedIds receives a hex encoded string representing one or more ABI
-// packed encoded `uint256` values.
-export function decodePackedIds(ids: string): bigint[] {
-	let idArr: Uint8Array;
-	if (!ids.startsWith("0x")) {
-		idArr = utils.arrayify(`0x${ids}`);
-	} else {
-		idArr = utils.arrayify(ids);
-	}
-
-	if (idArr.length % 32 !== 0)
-		throw new Error("received token array not divisible by 32");
-	const size = idArr.length / 32;
-	const res = Array.from({ length: size }, (_, i) => {
-		return mkBigInt(idArr.slice(i * 32, i * 32 + 32).values(), 256, 8);
-	});
-	return res;
-}
-
-export function packTokens(tokens: Tokens): bigint[] {
-	return tokens.value.map((v) => packAmount(new Amount(v)));
-}
-
-export function encodePackedIds(ids: bigint[]): string {
-	return utils.hexlify(utils.concat(ids.map(encodePackedAmount)));
 }

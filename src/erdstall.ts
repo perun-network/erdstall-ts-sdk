@@ -225,6 +225,7 @@ export interface Withdrawer<B extends Backend> {
 	 */
 	withdraw<CB extends B>(
 		backend: CB,
+		epoch: bigint,
 		exitProof: ChainProofChunk[],
 	): Promise<TransactionGenerator<CB>>;
 }
