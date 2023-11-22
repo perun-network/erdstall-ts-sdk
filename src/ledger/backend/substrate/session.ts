@@ -3,7 +3,7 @@
 
 import { ChainProofChunk, ClientConfig } from "#erdstall/api/responses";
 import { ErdstallBackendSession } from "#erdstall/erdstall";
-import { Assets, ChainAssets, Amount, Tokens } from "#erdstall/ledger/assets";
+import { ChainAssets, Amount, Tokens } from "#erdstall/ledger/assets";
 import { StageName, StageTransaction, TransactionGenerator } from "#erdstall/utils";
 import { SubstrateSigner } from "#erdstall/crypto/substrate";
 import { SubstrateClient } from "./client";

@@ -44,10 +44,12 @@ export class ChainAssets {
 		return obj;
 	}
 
-	addAsset(chain: Chain, token: string, asset: Asset) {
+	addAsset(chain: Chain, localID: Uint8Array, asset: Asset) {
 		if (asset instanceof Amount) {
-			this.assets.get(chain)?.fungibles.addAsset(token, asset);
-		}
+			this.assets.get(chain)?.fungibles.addAsset(localID, asset);
+		} else if (asset instanceof Tokens) {
+			this.assets.get(chain)?.nfts.addAsset(localID, asset);
+		} else throw new Error("Unhandled asset type");
 	}
 
 	cmp(other: ChainAssets): boolean {
@@ -104,7 +106,8 @@ export class LocalFungibles {
 		return obj;
 	}
 
-	addAsset(token: string, asset: Amount) {
+	addAsset(localID: Uint8Array, asset: Amount) {
+		const token = utils.hexlify(localID);
 		const a = this.assets.get(token);
 		if (a !== undefined) {
 			a.add(asset);
@@ -136,6 +139,16 @@ export class LocalNonFungibles {
 			obj[k] = v.toJSON();
 		});
 		return obj;
+	}
+
+	addAsset(localID: Uint8Array, asset: Tokens) {
+		const token = utils.hexlify(localID);
+		const a = this.assets.get(token);
+		if (a !== undefined) {
+			a.add(asset);
+		}
+
+		this.assets.set(token, asset);
 	}
 }
 
@@ -192,137 +205,3 @@ customJSON(LocalFungibles);
 customJSON(LocalNonFungibles);
 customJSON(LocalAssets);
 customJSON(LocalAsset);
-
-@jsonObject
-export class Assets {
-	public values: Map<string, Asset>;
-
-	constructor(
-		...assets: { token: string | Address<Crypto>; asset: Asset }[]
-	) {
-		this.values = new Map<string, Asset>();
-		assets.forEach(({ token, asset }) => this.addAsset(token, asset));
-	}
-
-	static toJSON(me: Assets) {
-		var obj: any = {};
-		me.values.forEach((v, k) => {
-			var withTypeEncoded: any = {};
-			withTypeEncoded[v.typeTag()] = v.toJSON();
-			obj[k] = withTypeEncoded;
-		});
-		return obj;
-	}
-
-	static fromJSON(data: any): Assets {
-		const vs = new Assets();
-		for (const k in data) {
-			if (!utils.isAddress(k)) {
-				throw new Error(`decoding asset with malformed address: ${k}`);
-			}
-			// Make sure addresses are lowercase keys and not checksum encoded.
-			vs.values.set(addressKey(k), Asset.fromJSON(data[k]));
-		}
-		return vs;
-	}
-
-	private orderedAssets(): [string, Asset][] {
-		let assets: [string, Asset][] = [];
-		for (const entry of this.values.entries()) {
-			assets.push(entry);
-		}
-		return assets.sort(
-			(
-				[addr1, _]: [string, Asset],
-				[addr2, __]: [string, Asset],
-			): number => {
-				return addr1.localeCompare(addr2);
-			},
-		);
-	}
-
-	hasAsset(addr: string | Address<Crypto>): boolean {
-		return this.values.has(addressKey(addr));
-	}
-
-	addAssets(assets: Assets): void {
-		const it = assets.values.entries();
-		for (let next = it.next(); !next.done; next = it.next()) {
-			const [k, v] = next.value;
-			this.addAsset(k, v);
-		}
-	}
-
-	addAsset(addr: string | Address<Crypto>, asset: Asset): void {
-		addr = addressKey(addr);
-		if (asset.zero()) {
-			return;
-		}
-
-		if (this.values.has(addr)) {
-			this.values.get(addr)!.add(asset);
-		} else {
-			this.values.set(addr, asset);
-		}
-	}
-
-	cmp(assets: Assets): "lt" | "eq" | "gt" | "uncomparable" {
-		const res = ["lt", "eq", "gt"] as const;
-		let swap = 1;
-		let cmp = 0;
-		let a = this.values;
-		let b = assets.values;
-
-		if (a.size < b.size) {
-			a = b;
-			b = this.values;
-			swap = -1;
-		}
-
-		if (!isProperSubset(b, a)) {
-			return "uncomparable";
-		}
-
-		const it = a.entries();
-		for (let next = it.next(); !next.done; next = it.next()) {
-			const [k, va] = next.value;
-
-			const bHasNotToken = !b.has(k);
-			if (bHasNotToken && cmp === -1) {
-				return "uncomparable";
-			} else if (bHasNotToken) {
-				cmp = 1;
-				continue;
-			}
-
-			const vb = b.get(k)!;
-			const r = va.cmp(vb);
-			if (r === "uncomparable") {
-				return r;
-			} else if (
-				(r === "lt" && cmp === 1) ||
-				(r === "gt" && cmp === -1)
-			) {
-				return "uncomparable";
-			} else if (r !== "eq" && cmp === 0) {
-				cmp = res.indexOf(r) - 1;
-			}
-		}
-		return res[cmp * swap + 1];
-	}
-}
-
-function isProperSubset(
-	presumedSubset: Map<string, Asset>,
-	presumedSuperset: Map<string, Asset>,
-): boolean {
-	const it = presumedSubset.keys();
-	for (let k = it.next(); !k.done; k = it.next()) {
-		if (!presumedSuperset.has(k.value)) {
-			return false;
-		}
-	}
-	return true;
-}
-
-customJSON(Assets);

@@ -4,7 +4,6 @@
 import PRNG, { newRandomUint8Array } from "#erdstall/test/random";
 import {
 	newRandomAddress,
-	newRandomAssets,
 	newRandomChainAssets,
 	newRandomUint64,
 } from "#erdstall/test";
