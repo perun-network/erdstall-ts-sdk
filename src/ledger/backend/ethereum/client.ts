@@ -6,6 +6,7 @@ import { LedgerEvent } from "#erdstall/ledger";
 import { Address } from "#erdstall/crypto";
 import { ethers, Signer } from "ethers";
 import { NFTMetadata } from "#erdstall/ledger/backend";
+import { LocalAsset } from "#erdstall/ledger/assets";
 import {
 	Erdstall__factory,
 	LedgerReadConn,
@@ -30,7 +31,7 @@ export class EthereumClient implements ErdstallBackendClient<"ethereum"> {
 	}
 
 	getNftMetadata(
-		token: Address<"ethereum">,
+		token: LocalAsset,
 		id: bigint,
 		useCache?: boolean,
 	): Promise<NFTMetadata> {

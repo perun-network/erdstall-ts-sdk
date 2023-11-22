@@ -3,6 +3,7 @@
 
 import { ErdstallEventHandler } from "#erdstall/event";
 import { LedgerEvent } from "#erdstall/ledger";
+import { LocalAsset } from "#erdstall/ledger/assets";
 import { Address } from "#erdstall/crypto";
 import { Backend, LedgerReader, NFTMetadata } from "#erdstall/ledger/backend";
 
@@ -37,7 +38,7 @@ export class LedgerReadConn implements LedgerReader<"substrate"> {
 	}
 
 	getNftMetadata(
-		token: Address<"substrate">,
+		token: LocalAsset,
 		id: bigint,
 		useCache?: boolean | undefined,
 	): Promise<NFTMetadata> {

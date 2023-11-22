@@ -3,6 +3,7 @@
 
 import { BackendAddress } from "#erdstall";
 import { Backend } from "#erdstall/ledger/backend";
+import { LocalAsset } from "#erdstall/ledger/assets";
 
 export interface NFTMetadata {
 	image?: string;
@@ -35,7 +36,7 @@ export interface Attribute {
 
 export interface NFTMetadataProvider<B extends Backend> {
 	getNftMetadata(
-		token: BackendAddress<B>, // TODO: introduce differentiation between address and token ID.
+		token: LocalAsset,
 		id: bigint,
 		useCache?: boolean,
 	): Promise<NFTMetadata>;

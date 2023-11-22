@@ -18,7 +18,7 @@ import {
 	BackendCrypto,
 	RequestedBackends,
 } from "#erdstall/ledger/backend";
-import { ChainAssets } from "#erdstall/ledger/assets";
+import { ChainAssets, LocalAsset } from "#erdstall/ledger/assets";
 import { Uint256 } from "#erdstall/api/util";
 import { TransactionGenerator } from "#erdstall/utils";
 import { EnclaveEvent } from "#erdstall/enclave";
@@ -382,7 +382,7 @@ export interface ErdstallClient<Bs extends Backend[]>
 	// readonly onChainQuerier: OnChainQuerier<Bs>;
 	getNftMetadata(
 		chain: number,
-		token: BackendAddress<Backend>,
+		token: LocalAsset,
 		id: bigint,
 		useCache?: boolean,
 	): Promise<NFTMetadata>;

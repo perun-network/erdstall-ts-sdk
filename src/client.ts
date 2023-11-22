@@ -12,6 +12,7 @@ import * as crypto from "#erdstall/crypto";
 import { AttestationResult, ClientConfig } from "#erdstall/api/responses";
 import { Enclave, isEnclaveEvent, EnclaveReader } from "#erdstall/enclave";
 import { Account, isLedgerEvent, LedgerEvent } from "#erdstall/ledger";
+import { LocalAsset } from "#erdstall/ledger/assets";
 import { Backend } from "#erdstall/ledger/backend";
 import { EthereumClient } from "#erdstall/ledger/backend/ethereum";
 import { SubstrateClient } from "#erdstall/ledger/backend/substrate";
@@ -124,7 +125,7 @@ export class Client<Bs extends Backend[]> implements ErdstallClient<Bs> {
 
 	getNftMetadata(
 		chain: number,
-		token: BackendAddress<Backend>,
+		token: LocalAsset,
 		id: bigint,
 		useCache?: boolean,
 	): Promise<NFTMetadata> {
