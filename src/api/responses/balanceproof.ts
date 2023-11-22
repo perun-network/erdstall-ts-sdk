@@ -69,16 +69,13 @@ export class BalanceProofs extends ErdstallObject {
 	@jsonBigIntMember()
 	readonly epoch: bigint;
 
-	// TODO: Signature is issued by the enclave, so not really chain specific.
-	// Signature is issued on canonicalized json of BalanceProofs
-	// (w/o sig of course).
 	@jsonMember(crypto.Signature)
-	readonly sig: crypto.Signature<crypto.Crypto>;
+	readonly sig?: crypto.Signature<crypto.Crypto>;
 
 	constructor(
 		proofs: Map<string, Map<Chain, ChainProof>>,
 		epoch: bigint,
-		sig: ErdstallSignature,
+		sig?: ErdstallSignature,
 	) {
 		super();
 		this.proofs = proofs;
@@ -94,13 +91,15 @@ export class BalanceProofs extends ErdstallObject {
 	}
 
 	public verify(address: crypto.Address<crypto.Crypto>): boolean {
-		return this.sig.verify(
+		return this.sig?.verify(
 			this.encodePayload(),
-			address);
+			address) ? true : false;
 	}
 
 	public encodePayload(): Uint8Array {
-		const toEncode = TypedJSON.toPlainJson(this, BalanceProofs);
+
+		const toEncode = TypedJSON.toPlainJson(
+			new BalanceProofs(this.proofs, this.epoch, undefined), BalanceProofs);
 		const msg = canonicalize(toEncode);
 		const enc = new TextEncoder();
 		return enc.encode(msg);
