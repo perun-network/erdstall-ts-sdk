@@ -5,13 +5,26 @@ import { Signer, providers } from "ethers";
 import { Address, addressKey } from "#erdstall/crypto";
 import { EthereumAddress } from "#erdstall/crypto/ethereum";
 import { TokenTypeRegistered } from "#erdstall/ledger";
-import { TokenType, ETHZERO } from "#erdstall/ledger/assets";
+import { ETHZERO } from "#erdstall/ledger/assets";
 import {
 	Erdstall,
 	ERC20__factory, ERC20Holder, ERC20Holder__factory,
 	ERC721__factory, ERC721Holder, ERC721Holder__factory,
 	ETHHolder, ETHHolder__factory,
 } from "#erdstall/ledger/backend/ethereum/contracts";
+
+const _tokenTypes = ["ETH", "ERC20", "ERC721"] as const;
+
+// TokenType resolves TokenType -> Deposit-Routine.
+export type TokenType = (typeof _tokenTypes)[number];
+
+export function isTokenType(maybeToken: any): maybeToken is TokenType {
+	return _tokenTypes.includes(maybeToken);
+}
+export function requireTokenType(maybeToken: string): TokenType {
+	if (!isTokenType(maybeToken)) throw ErrUnknownTokenType;
+	return maybeToken;
+}
 
 type TokenTypes = Map<string, TokenType>;
 type TokenHolders = Map<TokenType, string>;

@@ -3,19 +3,6 @@
 
 import { isUint256 } from "#erdstall/api/util";
 
-const _tokenTypes = ["ETH", "ERC20", "ERC721"] as const;
-
-// TokenType resolves TokenType -> Deposit-Routine.
-export type TokenType = (typeof _tokenTypes)[number];
-
-export function isTokenType(maybeToken: any): maybeToken is TokenType {
-	return _tokenTypes.includes(maybeToken);
-}
-export function requireTokenType(maybeToken: string): TokenType {
-	if (!isTokenType(maybeToken)) throw ErrUnknownTokenType;
-	return maybeToken;
-}
-
 export const TypeTags = {
 	Amount: "uint",
 	Tokens: "idset",
