@@ -30,8 +30,6 @@ const fullExitTypeName = "full";
 
 @jsonObject
 export class FullExit extends ExitMode {
-	// NOTE: Add "omitempty" in backend, to remove preserveNull here.
-	@jsonMember(Number, { preserveNull: true })
 	chain: number;
 
 	constructor(chain: number, immediate: boolean) {
