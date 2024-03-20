@@ -3,7 +3,7 @@
 "use strict";
 
 import { BackendAddress, BackendSignature } from "#erdstall/erdstall";
-import { ChainAssets, TokenType } from "./assets";
+import { ChainAssets } from "./assets";
 import { Backend } from "#erdstall/ledger/backend";
 
 const event = [
@@ -12,7 +12,6 @@ const event = [
 	"Withdrawn",
 	"Challenged",
 	"ChallengeResponded",
-	"TokenTypeRegistered",
 ] as const;
 
 /**
@@ -33,15 +32,6 @@ export interface Deposited<Bs extends Backend[][number]> {
 	epoch: bigint;
 	address: BackendAddress<Bs>;
 	assets: ChainAssets;
-}
-
-/**
- * TokenTypeRegistered event struct emitted by the Erdstall contract.
- */
-export interface TokenTypeRegistered<Bs extends Backend[][number]> {
-	source: Bs;
-	tokenType: TokenType;
-	tokenHolder: BackendAddress<Bs>;
 }
 
 /**

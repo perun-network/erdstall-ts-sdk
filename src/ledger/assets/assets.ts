@@ -14,7 +14,6 @@ import { Address, addressKey, Crypto, AssetID } from "#erdstall/crypto";
 import { Backend } from "#erdstall/ledger/backend";
 import { Amount } from "./amount";
 import { Tokens } from "./tokens";
-import { TokenType } from "./asset";
 import { Chain } from "../chain";
 
 export const ETHZERO = "0x0000000000000000000000000000000000000000";

@@ -10,7 +10,6 @@ import {
 	Frozen,
 	Challenged,
 	ChallengeResponded,
-	TokenTypeRegistered,
 } from "./ledger";
 import { EnclaveEvent } from "./enclave/event";
 import {
@@ -36,7 +35,6 @@ type _eventHandlers<B extends Backend> = {
 	Withdrawn: (ev: Withdrawn<B>) => void;
 	Challenged: (ev: Challenged<B>) => void;
 	ChallengeResponded: (ev: ChallengeResponded<B>) => void;
-	TokenTypeRegistered: (ev: TokenTypeRegistered<B>) => void;
 
 	open: () => void;
 	close: () => void;

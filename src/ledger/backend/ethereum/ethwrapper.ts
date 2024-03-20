@@ -44,8 +44,6 @@ export function ethCallbackShim(
 			return wrapDeposited(erdstall, cb as EEH<typeof ev>);
 		case "Withdrawn":
 			return wrapWithdrawn(erdstall, cb as EEH<typeof ev>);
-		case "TokenTypeRegistered":
-			return wrapTokenTypeRegistered(erdstall, cb as EEH<typeof ev>);
 		case "Challenged":
 			return wrapChallenged(erdstall, cb as EEH<typeof ev>);
 		case "ChallengeResponded":
@@ -107,24 +105,6 @@ function wrapWithdrawn(
 			epoch: epoch.toBigInt(),
 			address: EthereumAddress.fromString(account),
 			tokens: assets,
-		});
-	};
-	return wcb;
-}
-
-function wrapTokenTypeRegistered(
-	erdstall: Erdstall,
-	cb: ErdstallEventHandler<"TokenTypeRegistered", "ethereum">,
-): Listener {
-	type tp = InstanceTypes<typeof erdstall.filters.TokenTypeRegistered>;
-	const wcb: TypedListener<TypedEvent<tp[0], tp[1]>> = async (
-		tokenType,
-		tokenHolder,
-	) => {
-		return cb({
-			source: "ethereum",
-			tokenHolder: EthereumAddress.fromString(tokenHolder),
-			tokenType: tokenType as any,
 		});
 	};
 	return wcb;

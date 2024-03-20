@@ -8,7 +8,7 @@ import {
 	EthereumSigner as Signer,
 } from "#erdstall/crypto/ethereum";
 import { Asset } from "#erdstall/ledger/assets";
-import { TokenType } from "#erdstall/ledger/assets";
+import { TokenType } from "./tokentype";
 import {
 	makeETHDepositCalls,
 	makeERC20DepositCalls,

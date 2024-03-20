@@ -17,7 +17,6 @@ export const ErrSubtrahendLargerThanMinuend = new Error(
 );
 export const ErrIncompatibleAssets = new Error("incompatible assets");
 export const ErrValueOutOfBounds = new Error("value is not a uint256");
-export const ErrUnknownTokenType = new Error("unkown tokentype");
 
 const assetImpls = new Map<string, (value: any) => Asset>();
 
