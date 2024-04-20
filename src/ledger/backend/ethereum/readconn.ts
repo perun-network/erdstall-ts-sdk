@@ -4,14 +4,12 @@
 import { ErdstallEventHandler } from "#erdstall";
 import { Address } from "#erdstall/crypto";
 import { LedgerEvent } from "#erdstall/ledger";
-import { NFTMetadata } from "#erdstall/ledger/backend";
 import { LocalAsset } from "#erdstall/ledger/assets";
 import { Erdstall } from "./contracts/contracts/Erdstall";
 import { IERC721Metadata__factory } from "./contracts";
 import { ethCallbackShim, Listener } from "./ethwrapper";
 import { LedgerReader } from "#erdstall/ledger/backend";
 import { EthereumTokenProvider } from "./tokencache";
-import axios from "axios";
 
 export const ErrUnsupportedLedgerEvent = new Error(
 	"unsupported ledger event encountered",
@@ -26,13 +24,11 @@ export class LedgerReadConn implements LedgerReader<"ethereum"> {
 		ErdstallEventHandler<LedgerEvent, "ethereum">,
 		Listener
 	>;
-	private metadataCache: Map<string, NFTMetadata>;
 	readonly tokenCache: EthereumTokenProvider;
 
 	constructor(contract: Erdstall, tokenCache: EthereumTokenProvider) {
 		this.contract = contract;
 		this.eventCache = new Map();
-		this.metadataCache = new Map();
 		this.tokenCache = tokenCache;
 	}
 
@@ -75,33 +71,5 @@ export class LedgerReadConn implements LedgerReader<"ethereum"> {
 	erdstall(): { chain: "ethereum"; address: Address<"ethereum"> }[] {
 		throw new Error("not implemented");
 		//		return Address.fromString(this.contract.address);
-	}
-
-	async getNftMetadata(
-		token: LocalAsset,
-		id: bigint,
-		useCache?: boolean,
-	): Promise<NFTMetadata> {
-		const tokenKey = token.key;
-		if (
-			(useCache == undefined || useCache) &&
-			this.metadataCache.has(tokenKey)
-		) {
-			return this.metadataCache.get(tokenKey)!;
-		}
-
-		// TODO: Create IMetadata contract interface for which bindings can be
-		// generated, so we have a single interface over which we can query
-		// metadata for different contract implementations in the future.
-		const metadataContract = IERC721Metadata__factory.connect(
-			tokenKey,
-			this.contract.provider,
-		);
-		const tokenURI = await metadataContract.tokenURI(id);
-		const res = await axios
-			.get<NFTMetadata>(tokenURI)
-			.then((res) => res.data);
-		this.metadataCache.set(tokenKey, res);
-		return res;
 	}
 }

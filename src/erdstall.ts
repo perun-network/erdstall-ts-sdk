@@ -22,7 +22,6 @@ import { ChainAssets, LocalAsset } from "#erdstall/ledger/assets";
 import { Uint256 } from "#erdstall/api/util";
 import { TransactionGenerator } from "#erdstall/utils";
 import { EnclaveEvent } from "#erdstall/enclave";
-import { NFTMetadataProvider, NFTMetadata } from "#erdstall/ledger/backend";
 import { ErdstallEvent, ErdstallEventHandler } from "./event";
 export * from "./client";
 export * from "./session";
@@ -374,18 +373,6 @@ export interface ErdstallClient<Bs extends Backend[]>
 		AccountGetter,
 		Attester,
 		Contracter<RequestedBackends<Bs>>{
-	/**
-	 * Provider allowing to query token information related to Erdstall and
-	 * its onchain contracts.
-	 */
-	// readonly tokenProvider: TokenProvider<Backend>;
-	// readonly onChainQuerier: OnChainQuerier<Bs>;
-	getNftMetadata(
-		chain: number,
-		token: LocalAsset,
-		id: bigint,
-		useCache?: boolean,
-	): Promise<NFTMetadata>;
 }
 
 /**
@@ -394,8 +381,7 @@ export interface ErdstallClient<Bs extends Backend[]>
  */
 export interface ErdstallBackendClient<B extends Backend>
 	extends ErdstallWatcher<B>,
-		Contracter<B>,
-		NFTMetadataProvider<B> {}
+		Contracter<B> {}
 
 /**
  * Describes an active session which can observe Erdstall and its state as

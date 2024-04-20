@@ -5,7 +5,6 @@ import { ErdstallBackendClient, ErdstallEventHandler } from "#erdstall";
 import { LedgerEvent } from "#erdstall/ledger";
 import { Address } from "#erdstall/crypto";
 import { ethers, Signer } from "ethers";
-import { NFTMetadata } from "#erdstall/ledger/backend";
 import { LocalAsset } from "#erdstall/ledger/assets";
 import {
 	Erdstall__factory,
@@ -28,14 +27,6 @@ export class EthereumClient implements ErdstallBackendClient<"ethereum"> {
 
 	erdstall() {
 		return this.erdstallConn.erdstall();
-	}
-
-	getNftMetadata(
-		token: LocalAsset,
-		id: bigint,
-		useCache?: boolean,
-	): Promise<NFTMetadata> {
-		return this.erdstallConn.getNftMetadata(token, id, useCache);
 	}
 
 	on<T extends LedgerEvent>(

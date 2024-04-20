@@ -11,4 +11,3 @@ export * from "./phaseshift";
 export * from "./random";
 export * from "./transactions/transactions";
 export * from "./wallet";
-export * from "./metadata";

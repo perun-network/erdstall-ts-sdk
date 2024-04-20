@@ -2,7 +2,6 @@
 "use strict";
 
 export * from "./backends";
-export * from "./metadata";
 export * from "./reader";
 export * from "./writer";
 export * from "./signer";

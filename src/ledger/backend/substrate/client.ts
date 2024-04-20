@@ -8,7 +8,6 @@ import { Account } from "#erdstall/ledger/account";
 import { Address } from "#erdstall/crypto";
 import { Backend } from "#erdstall/ledger/backend/backends";
 import { LocalAsset } from "#erdstall/ledger/assets";
-import { NFTMetadata } from "#erdstall/ledger/backend/metadata";
 import { WsProvider } from "@polkadot/api";
 
 export class SubstrateClient implements ErdstallBackendClient<"substrate"> {
@@ -38,13 +37,6 @@ export class SubstrateClient implements ErdstallBackendClient<"substrate"> {
 		throw new Error("Method not implemented.");
 	}
 	subscribe(who?: Address<"substrate"> | undefined): Promise<void> {
-		throw new Error("Method not implemented.");
-	}
-	getNftMetadata(
-		token: LocalAsset,
-		id: bigint,
-		useCache?: boolean | undefined,
-	): Promise<NFTMetadata> {
 		throw new Error("Method not implemented.");
 	}
 	getAccount(who: Address<"substrate">): Promise<Account> {

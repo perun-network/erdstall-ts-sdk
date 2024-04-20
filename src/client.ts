@@ -17,7 +17,6 @@ import { Backend } from "#erdstall/ledger/backend";
 import { EthereumClient } from "#erdstall/ledger/backend/ethereum";
 import { SubstrateClient } from "#erdstall/ledger/backend/substrate";
 import { ethers, Signer } from "ethers";
-import { NFTMetadata } from "#erdstall/ledger/backend";
 import { EventCache, OneShotEventCache } from "#erdstall/utils";
 
 export type BackendClientConstructors = {
@@ -121,17 +120,6 @@ export class Client<Bs extends Backend[]> implements ErdstallClient<Bs> {
 		} else {
 			return res as any;
 		}
-	}
-
-	getNftMetadata(
-		chain: number,
-		token: LocalAsset,
-		id: bigint,
-		useCache?: boolean,
-	): Promise<NFTMetadata> {
-		return this.clients
-			.get(chain)!
-			.getNftMetadata(token, id, useCache);
 	}
 
 	protected on_internal<T extends EnclaveEvent>(
