@@ -20,6 +20,8 @@ export class EthereumAddress extends Address<"ethereum"> implements ABIValue {
 		this.value = value;
 	}
 
+	get keyBytes(): Uint8Array { return new Uint8Array([...this.value]); }
+
 	static fromJSON(val: any): EthereumAddress {
 		if (typeof val !== "string") {
 			throw new Error("Expected to decode address from a string");

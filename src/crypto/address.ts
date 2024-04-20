@@ -20,6 +20,7 @@ export abstract class Address<_C extends Crypto> {
 	abstract equals(other: Address<_C>): boolean;
 	abstract toString(): string;
 	abstract toJSON(): string;
+	abstract get keyBytes(): Uint8Array;
 
 	static ensure(addr: string | Address<Crypto>): Address<Crypto> {
 		if (addr === undefined) return addr;

@@ -20,6 +20,8 @@ export class SubstrateAddress extends Address<"substrate"> {
 		this.value = value;
 	}
 
+	get keyBytes(): Uint8Array { return new Uint8Array([...this.value]); }
+
 	static fromJSON(val: any): SubstrateAddress {
 		if(typeof val !== "string") {
 			throw new Error("Expected to decode address from a string");

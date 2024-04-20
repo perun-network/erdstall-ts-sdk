@@ -23,6 +23,8 @@ export class TestAddress extends Address<"test"> {
 		this.value = value;
 	}
 
+	get keyBytes(): Uint8Array { return new Uint8Array([...this.value]); }
+
 	get key(): string {
 		throw new Error("Method not implemented.");
 	}

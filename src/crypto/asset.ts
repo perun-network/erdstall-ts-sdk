@@ -2,6 +2,9 @@
 "use strict";
 
 import { Chain } from "#erdstall/ledger/chain";
+import { Address, Crypto } from "#erdstall/crypto";
+import { ethers } from "ethers";
+
 
 export class AssetID {
 	// [Origin Chain][AssetType][ID LocalAsset] packed into fixed-size array.
@@ -9,6 +12,15 @@ export class AssetID {
 
 	constructor(bytes: Uint8Array) {
 		this.bytes = bytes;
+	}
+
+	static erdstallUserToken(
+		user: Address<Crypto>,
+		name32: Uint8Array,
+	): Uint8Array {
+		return ethers.getBytes(ethers.keccak256(
+			new Uint8Array([...user.keyBytes, ...name32]),
+		));
 	}
 
 	static fromMetadata(
