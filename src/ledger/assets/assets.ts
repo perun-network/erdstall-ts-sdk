@@ -23,8 +23,8 @@ export class ChainAssets {
 	@jsonMapMember(Number, () => LocalAssets, { shape: MapShape.OBJECT })
 	public assets: Map<Chain, LocalAssets>;
 
-	constructor(assets: Map<Chain, LocalAssets>) {
-		this.assets = assets;
+	constructor(assets?: Map<Chain, LocalAssets>) {
+		this.assets = assets ?? new Map();
 	}
 
 	static fromJSON(data: any): ChainAssets {
@@ -44,10 +44,12 @@ export class ChainAssets {
 	}
 
 	addAsset(chain: Chain, localID: Uint8Array, asset: Asset) {
+		if(!this.assets.has(chain))
+			this.assets.set(chain, new LocalAssets());
 		if (asset instanceof Amount) {
-			this.assets.get(chain)?.fungibles.addAsset(localID, asset);
+			this.assets.get(chain)!.fungibles.addAsset(localID, asset);
 		} else if (asset instanceof Tokens) {
-			this.assets.get(chain)?.nfts.addAsset(localID, asset);
+			this.assets.get(chain)!.nfts.addAsset(localID, asset);
 		} else throw new Error("Unhandled asset type");
 	}
 
@@ -85,8 +87,8 @@ export class ChainAssets {
 export class LocalFungibles {
 	@jsonMapMember(String, () => Amount, { shape: MapShape.OBJECT })
 	public assets: Map<string, Amount>;
-	constructor(assets: Map<string, Amount>) {
-		this.assets = assets;
+	constructor(assets?: Map<string, Amount>) {
+		this.assets = assets ?? new Map();
 	}
 
 	static fromJSON(data: any): LocalFungibles {
@@ -120,8 +122,8 @@ export class LocalFungibles {
 export class LocalNonFungibles {
 	@jsonMapMember(String, () => Tokens, { shape: MapShape.OBJECT })
 	public assets: Map<string, Tokens>;
-	constructor(assets: Map<string, Tokens>) {
-		this.assets = assets;
+	constructor(assets?: Map<string, Tokens>) {
+		this.assets = assets ?? new Map();
 	}
 
 	static fromJSON(data: any): LocalNonFungibles {
@@ -157,9 +159,9 @@ export class LocalAssets {
 	public fungibles: LocalFungibles;
 	@jsonMember(LocalNonFungibles)
 	public nfts: LocalNonFungibles;
-	constructor(fungibles: LocalFungibles, nfts: LocalNonFungibles) {
-		this.fungibles = fungibles;
-		this.nfts = nfts;
+	constructor(fungibles?: LocalFungibles, nfts?: LocalNonFungibles) {
+		this.fungibles = fungibles ?? new LocalFungibles();
+		this.nfts = nfts ?? new LocalNonFungibles();
 	}
 
 	static fromJSON(data: any): LocalAssets {
