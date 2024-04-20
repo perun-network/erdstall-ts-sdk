@@ -30,6 +30,7 @@
 		"lint": "eslint ./src --ext .ts",
 		"bindings": "./scripts/genbindings.sh",
 		"test:e2e": "env TS_NODE_PROJECT=\"tsconfig.e2e.json\" mocha -b --timeout 120000 -r jsdom-global/register -r ts-node/register -r tsconfig-paths/register 'src/e2e/**/*.spec.ts'",
+		"test:e2e:session": "env TS_NODE_PROJECT=\"tsconfig.e2e.json\" mocha -b --timeout 120000 -r jsdom-global/register -r ts-node/register -r tsconfig-paths/register 'src/e2e/operator_e2e.spec.ts'",
 		"test": "env TS_NODE_PROJECT=\"tsconfig.test.json\" mocha --timeout 15000 -r jsdom-global/register -r ts-node/register -r tsconfig-paths/register 'src/{,!(e2e)/**}/*.spec.ts'",
 		"test-file": "env TS_NODE_PROJECT=\"tsconfig.test.json\" mocha --timeout 15000 -r jsdom-global/register -r ts-node/register -r tsconfig-paths/register",
 		"prepack": "yarn build && tsc-alias -p tsconfig.json && ts-node ./scripts/prepack.ts ./package.json ./dist/package.json",
