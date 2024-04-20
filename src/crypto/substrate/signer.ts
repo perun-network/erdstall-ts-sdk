@@ -3,7 +3,9 @@
 
 import { Signer as EthersSigner, ethers } from "ethers";
 import { Address, Signature, Signer } from "#erdstall/crypto";
-import { sr25519PairFromSeed, sr25519Sign } from "@polkadot/util-crypto";
+import {
+	sr25519PairFromSeed, sr25519Sign, cryptoWaitReady
+} from "@polkadot/util-crypto";
 import { Keypair } from "@polkadot/util-crypto/types";
 import { SubstrateSignature } from "./signature";
 import { SubstrateAddress } from "./address";
@@ -16,9 +18,10 @@ export class SubstrateSigner implements Signer<"substrate"> {
 		this.keyPair = keyPair;
 	}
 
-	sign(message: Uint8Array): Promise<Signature<"substrate">> {
+	async sign(message: Uint8Array): Promise<Signature<"substrate">> {
+		await cryptoWaitReady();
 		const sig = sr25519Sign(message, this.keyPair);
-		return Promise.resolve(new SubstrateSignature(sig))
+		return new SubstrateSignature(sig);
 	}
 
 	async address(): Promise<Address<"substrate">> {
@@ -29,14 +32,15 @@ export class SubstrateSigner implements Signer<"substrate"> {
 	// associated account's address, and the private key used for restoring
 	// that account later using `restoreCustodialAccount()`.
 	// WARNING: the randomness used to generate this account is insecure.
-	static generateCustodialAccount(): {
+	static async generateCustodialAccount(): Promise<{
 		signer: SubstrateSigner;
 		seed: Uint8Array;
-	} {
+	}> {
 		let seed = new Uint8Array(32);
 		for(let i = 0; i < seed.length; i++)
 			seed[i] = (Math.random() * 512) & 0xff; // NOTE SECURITY: unsafe, but portable. The web crypto API is not available on node.js until v19.
 
+		await cryptoWaitReady();
 		let keys = sr25519PairFromSeed(seed)
 		return {
 			signer: new SubstrateSigner(keys),
