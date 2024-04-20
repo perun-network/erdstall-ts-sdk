@@ -14,59 +14,26 @@ import { Enclave, isEnclaveEvent, EnclaveReader } from "#erdstall/enclave";
 import { Account, isLedgerEvent, LedgerEvent } from "#erdstall/ledger";
 import { LocalAsset } from "#erdstall/ledger/assets";
 import { Backend } from "#erdstall/ledger/backend";
+import { BackendChainConfig } from "#erdstall/ledger/backend/backends";
 import { EthereumClient } from "#erdstall/ledger/backend/ethereum";
 import { SubstrateClient } from "#erdstall/ledger/backend/substrate";
 import { ethers, Signer } from "ethers";
 import { EventCache, OneShotEventCache } from "#erdstall/utils";
 
 export type BackendClientConstructors = {
-	ethereum: {
+	ethereum?: {
 		backend: "ethereum";
-		chain: number;
-		provider: ethers.Provider | Signer;
-		initializer: (
-			config: ClientConfig,
-			provider: ethers.Provider | Signer,
-		) => EthereumClient;
+		initializer: (config: BackendChainConfig<"ethereum">) => EthereumClient;
 	};
-	substrate: {
+	substrate?: {
 		backend: "substrate";
-		chain: number;
-		arg: URL;
-		initializer: (config: ClientConfig) => SubstrateClient;
+		initializer: (config: BackendChainConfig<"substrate">) => SubstrateClient;
 	};
-	test: {
+	test?: {
 		backend: "test";
+		initializer: (config: BackendChainConfig<"test">) => ErdstallBackendClient<"test">;
 	};
 };
-
-// ConstructorArgs creates a type-level tuple of the backends constructors
-// used with this client.
-export type ConstructorArgs<Bs extends Backend[]> = Bs extends [
-	infer Head,
-	...infer Rest,
-]
-	? Head extends Backend
-		? Rest extends Backend[]
-			? [BackendClientConstructors[Head], ...ConstructorArgs<Rest>]
-			: never
-		: never
-	: [];
-
-// createClient is a wrapper for different backend constructors.
-function createClient<Bs extends Backend[]>(
-	config: ClientConfig,
-	backendCtor: BackendClientConstructors[keyof BackendClientConstructors],
-): ErdstallBackendClient<Bs[number]> {
-	switch (backendCtor.backend) {
-		case "ethereum":
-			return backendCtor.initializer(config, backendCtor.provider);
-		case "substrate":
-			return new SubstrateClient(backendCtor.arg);
-		case "test":
-			throw new Error("test backend not implemented");
-	}
-}
 
 // The Erdstall multi-client. It is a convenience client giving a uniform
 // interface for all backends requested.
@@ -81,25 +48,25 @@ export class Client<Bs extends Backend[]> implements ErdstallClient<Bs> {
 	protected enclaveConn: EnclaveReader & InternalEnclaveWatcher;
 	protected initialized: boolean = false;
 
-	// NOTE: Note that this has to be maintained with the Session
-	// implementation. If possible, lift this to compile time.
-	private clientArgs: ConstructorArgs<Bs>;
+	private blockchainReadCtors: BackendClientConstructors;
 
 	constructor(
 		enclaveConn: (EnclaveReader & InternalEnclaveWatcher) | URL,
-		...args: ConstructorArgs<Bs>
+		blockchainReadCtors: BackendClientConstructors,
 	) {
 		if (enclaveConn! instanceof URL)
+		{
 			this.enclaveConn = Enclave.dial(
 				enclaveConn as URL,
 			) as EnclaveReader & InternalEnclaveWatcher;
+		}
 		else this.enclaveConn = enclaveConn;
 
 		this.clients = new Map();
 
 		// Allow creating a client without any backend arguments. Eases
 		// implementation of ErdstallSessions.
-		this.clientArgs = args;
+		this.blockchainReadCtors = blockchainReadCtors;
 
 		this.erdstallEventHandlerCache = new EventCache<
 			LedgerEvent,
@@ -245,15 +212,23 @@ export class Client<Bs extends Backend[]> implements ErdstallClient<Bs> {
 	}
 
 	private defaultOnConfigHandler: ErdstallEventHandler<"config", Bs[number]> =
-		(config) => {
-			// Construct all requested clients.
-			for (const backendCtor of this.clientArgs) {
-				const client = createClient(config, backendCtor);
-				let _backendCtor = backendCtor as {
-					backend: Bs[number];
-					chain: number
-				};
-				this.clients.set(_backendCtor.chain, client);
+		(config: ClientConfig) => {
+			for(const chainCfg of config.chains)
+			{
+				if(!this.blockchainReadCtors.hasOwnProperty(chainCfg.type))
+				{
+					console.warn(`No backend configured for ${
+						chainCfg.type
+					} chain <${
+						chainCfg.id
+					}>: not creating a backend client.`);
+					continue;
+				}
+				
+				const ctor = this.blockchainReadCtors[chainCfg.type]!;
+				this.clients.set(
+					chainCfg.id,
+					(ctor.initializer as unknown as any)(chainCfg.data));
 			}
 
 			// Forward all cached events to respective clients.
@@ -293,5 +268,10 @@ export class Client<Bs extends Backend[]> implements ErdstallClient<Bs> {
 			});
 			this.enclaveConn.connect();
 		});
+	}
+
+	disconnect(): void {
+		this.initialized = false;
+		this.enclaveConn.disconnect();
 	}
 }

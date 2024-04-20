@@ -33,28 +33,16 @@ import { ErdstallEventHandler } from "./event";
 import {
 	Client,
 	BackendClientConstructors,
-	ConstructorArgs as ClientConstructorArgs,
 } from "./client";
 import { TransactionGenerator } from "#erdstall/utils";
 import { ReceiptDispatcher } from "./utils/receipt_dispatcher";
 import { PendingTransaction } from "./api/util/pending_transaction";
 import { Backend, RequestedBackends, Signer } from "#erdstall/ledger/backend";
+import { BackendChainConfig } from "#erdstall/ledger/backend/backends";
 import { EthereumSession } from "#erdstall/ledger/backend/ethereum";
 import { SubstrateSession } from "./ledger/backend/substrate/session";
 
 export const ErrUnitialisedClient = new Error("client unitialised");
-
-// The backend session constructors used to construct sessions for specific
-// backends. They naturally extend the type of `BackendClientConstructors`
-// since a `Client` of a specific backend is the super type of its session.
-type BackendSessionConstructors = {
-	[K in keyof BackendClientConstructors]: UnifyTypes<
-		{
-			[V in keyof BackendClientConstructors[K]]: BackendClientConstructors[K][V];
-		},
-		BackendSessionConstructorOverloads[K]
-	>;
-};
 
 // BackendSessionConstructorOverloads is a type-level map of the backend
 // session constructors. It might be necessary to have more/additional arguments
@@ -63,78 +51,29 @@ type BackendSessionConstructors = {
 //
 // NOTE: If there is a compiler error here, it is likely that a new backend
 // was added and has to be listed here.
-type BackendSessionConstructorOverloads = {
+export type BackendSessionConstructors = {
 	ethereum: {
-		signer: EthereumSigner;
-		chain: number;
+		type: "ethereum";
 		initializer: (
-			config: ClientConfig,
+			config: BackendChainConfig<"ethereum">,
 			signer: EthereumSigner,
 		) => EthereumSession;
 	};
 	substrate: {
-		arg: {
+		type: "substrate";
+		initializer: (
+			config: BackendChainConfig<"substrate">,
 			signer: SubstrateSigner,
-			provider: URL,
-		},
-		chain: number;
-		initializer: undefined;
+		) => SubstrateSession;
 	};
-	test: {};
+	test: {
+		type: "test";
+		initializer: (
+			config: BackendChainConfig<"test">,
+			signer: Signer<"test">,
+		) => ErdstallBackendSession<"test">;
+	};
 };
-
-// UnifyTypes creates a type-level union of the types of two objects. If keys
-// are matching, the type of the second object is used.
-//
-// Example:
-//  type A = { a: string, b: number }
-//  type B = { c: boolean, d: bigint }
-//  type C = UnifyTypes<A, B>
-//  // C = { a: string, b: number, c: boolean, d: bigint }
-//  type D = { a: number }
-//  type E = UnifyTypes<A, D>
-//  // E = { a: number, b: number }
-type UnifyTypes<T, U> = {
-	[K in keyof T | keyof U]: K extends keyof U
-		? U[K]
-		: K extends keyof T
-		? T[K]
-		: never;
-};
-
-// ConstructorArgs creates a type-level tuple of the backends constructors
-// used with this client.
-type ConstructorArgs<Bs extends Backend[]> = Bs extends [
-	infer Head,
-	...infer Rest,
-]
-	? Head extends Backend
-		? Rest extends Backend[]
-			? [BackendSessionConstructors[Head], ...ConstructorArgs<Rest>]
-			: never
-		: never
-	: [];
-
-function createSession(
-	config: ClientConfig,
-	backendCtor: BackendSessionConstructors[keyof BackendSessionConstructors],
-): ErdstallBackendSession<Backend> {
-	switch (backendCtor.backend) {
-		case "ethereum":
-			const ethSess: ErdstallBackendSession<"ethereum"> =
-				backendCtor.initializer(config, backendCtor.signer);
-			return ethSess;
-		case "substrate":
-			const subSess: ErdstallBackendSession<"substrate"> =
-				new SubstrateSession(
-					backendCtor.arg.signer,
-					backendCtor.chain,
-					backendCtor.arg.provider);
-			return subSess;
-		case "test":
-			throw new Error("test backend not implemented");
-	}
-}
 
 export class Session<Bs extends Backend[]>
 	extends Client<Bs>
@@ -142,49 +81,56 @@ export class Session<Bs extends Backend[]>
 {
 	readonly address: crypto.Address<crypto.Crypto>;
 	readonly l2signer: crypto.Signer<crypto.Crypto>;
-	readonly signer: Signer<Bs[number]>;
 	private nonce: bigint;
 	private readonly enclaveWriter: EnclaveWriter & InternalEnclaveWatcher;
 	readonly receiptDispatcher: ReceiptDispatcher;
 	// Filled dynamically when we receive configs.
 	protected clients: Map<number, ErdstallBackendSession<Bs[number]>>;
+	private blockchainWriteCtors: BackendSessionConstructors;
 
-	private sessionArgs: ConstructorArgs<Bs>;
-
-	constructor(
-		address: crypto.Address<crypto.Crypto>,
-		enclaveConn: (EnclaveWriter & InternalEnclaveWatcher) | URL,
-		signer: Signer<Bs[number]>,
+	static async create<Bs extends Backend[]>(
 		l2signer: crypto.Signer<crypto.Crypto>,
-		chains: Map<number, Bs[number]>,
-		...args: ConstructorArgs<Bs>
+		enclaveConn: (EnclaveWriter & InternalEnclaveWatcher) | URL,
+		backendCtors: BackendSessionConstructors) {
+		const addr = await l2signer.address();
+		return new Session<Bs>(
+			addr,
+			l2signer,
+			enclaveConn,
+			backendCtors);
+	}
+	private constructor(
+		l2address: crypto.Address<crypto.Crypto>,
+		l2signer: crypto.Signer<crypto.Crypto>,
+		enclaveConn: (EnclaveWriter & InternalEnclaveWatcher) | URL,
+		backendCtors: BackendSessionConstructors
 	) {
 		// NOTE: It is safe to pass no arguments to the super constructor for the
 		// client here, since the Session and Client implementation both rely on
 		// initializing their backend{client|session} instances upon retrieving the
 		// config from the operator.
-		super(enclaveConn, ...([] as ClientConstructorArgs<Bs>));
+		super(enclaveConn, {} as BackendClientConstructors);
 
 		this.enclaveWriter = this.enclaveConn as EnclaveWriter &
 			InternalEnclaveWatcher;
-		this.address = address;
 		// Start with an invalid nonce, so that it will be queried anew
 		// upon its next use.
 		this.nonce = 0n;
 		// When encountering any error, assume it might be a nonce mismatch. In
 		// this case, reset the nonce to an invalid value.
-		this.enclaveWriter.on("error", () => {
+		try { this.enclaveWriter.on("error", () => {
 			this.nonce = 0n;
 		});
+		} catch(e) { console.error(this.enclaveWriter, e); }
 		this.clients = new Map();
-		this.sessionArgs = args;
+		this.blockchainWriteCtors = backendCtors;
 		this.receiptDispatcher = new ReceiptDispatcher();
 		this.on_internal(
 			"receipt",
 			this.receiptDispatcher.watch.bind(this.receiptDispatcher),
 		);
-		this.signer = signer;
 		this.l2signer = l2signer;
+		this.address = l2address;
 	}
 
 	// Queries the next nonce and increases the counter. If the nonce has an
@@ -221,7 +167,7 @@ export class Session<Bs extends Backend[]>
 
 	async transferTo(
 		assets: ChainAssets,
-		to: BackendAddress<Backend>,
+		to: crypto.Address<crypto.Crypto>,
 	): Promise<PendingTransaction> {
 		if (!this.initialized) {
 			throw ErrUnitialisedClient;
@@ -297,7 +243,8 @@ export class Session<Bs extends Backend[]>
 			this.on_internal("phaseshift", cb);
 		});
 		notify?.("awaiting exit proof", atStage++, maxStages);
-		const exitProof = await this.exit();
+		const exitProof = (await this.exit()).accounts.get((this.address).key)!;
+
 		notify?.("awaiting epoch sealing", atStage++, maxStages);
 		await p.then(() => this.off_internal("phaseshift", cb));
 		notify?.("withdrawing", atStage++, maxStages);
@@ -357,13 +304,21 @@ export class Session<Bs extends Backend[]>
 		config,
 	) => {
 		// Construct all requested session backends.
-		for (const backendCtor of this.sessionArgs) {
-			const session = createSession(config, backendCtor);
-			let _backendCtor = backendCtor as {
-				backend: Bs[number];
-				chain: number
-			};
-			this.clients.set(_backendCtor.chain, session);
+		for (const chainCfg of config.chains) {
+			if(!this.blockchainWriteCtors.hasOwnProperty(chainCfg.type))
+			{
+				console.warn(`No backend configured for ${
+						chainCfg.type
+					} chain <${
+						chainCfg.id
+					}>: not creating a backend client.`);
+					continue;
+			}
+
+			const ctor = this.blockchainWriteCtors[chainCfg.type]!;
+			this.clients.set(
+				chainCfg.id,
+				(ctor.initializer as unknown as any)(chainCfg.data));
 		}
 
 		// Forward all cached events to respective clients.
@@ -379,6 +334,6 @@ export class Session<Bs extends Backend[]>
 	};
 
 	initialize(_timeout?: number): Promise<void> {
-		return super.initialize(undefined, this.onConfigHandler);
+		return super.initialize(_timeout, this.onConfigHandler);
 	}
 }

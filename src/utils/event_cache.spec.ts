@@ -9,7 +9,7 @@ describe("OneShotEventCache", function () {
 	const cbs = [() => 42, () => 69, () => 420];
 	const key = "proof";
 	it("allows setting and removing multiple handlers", function () {
-		const cache = new OneShotEventCache<ErdstallEvent>();
+		const cache = new OneShotEventCache<ErdstallEvent, "ethereum">();
 		cbs.forEach((cb) => cache.set(key, cb));
 		expect(cache.has(key)).to.be.true;
 		expectAllToBe(true, key, cbs, cache);
@@ -22,7 +22,7 @@ describe("OneShotEventCache", function () {
 	});
 
 	it("allows deleting specific handlers", function () {
-		const cache = new OneShotEventCache<ErdstallEvent>();
+		const cache = new OneShotEventCache<ErdstallEvent, "ethereum">();
 		cbs.forEach((cb) => cache.set(key, cb));
 		expectAllToBe(true, key, cbs, cache);
 
@@ -49,7 +49,7 @@ describe("OneShotEventCache", function () {
 	});
 
 	it("removes all entries for a key when getting", function () {
-		const cache = new OneShotEventCache<ErdstallEvent>();
+		const cache = new OneShotEventCache<ErdstallEvent, "ethereum">();
 		expect(cache.get(key)).to.be.undefined;
 
 		cbs.forEach((cb) => cache.set(key, cb));
@@ -68,7 +68,7 @@ describe("EventCache", function () {
 	const cbs = [() => 42, () => 69, () => 420];
 	const key = "proof";
 	it("does not remove entries when getting", function () {
-		const cache = new EventCache<ErdstallEvent>();
+		const cache = new EventCache<ErdstallEvent, "ethereum">();
 		expect(cache.get(key)).to.be.undefined;
 
 		cbs.forEach((cb) => cache.set(key, cb));
@@ -81,8 +81,8 @@ describe("EventCache", function () {
 function expectAllToBe(
 	trueOrFalse: boolean,
 	key: ErdstallEvent,
-	collection: ErdstallEventHandler<typeof key>[],
-	cache: OneShotEventCache<typeof key>,
+	collection: ErdstallEventHandler<typeof key, "ethereum">[],
+	cache: OneShotEventCache<typeof key, "ethereum">,
 ) {
 	expect(collection.every((cb) => cache.has(key, cb))).to.equal(trueOrFalse);
 }
