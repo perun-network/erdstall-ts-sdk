@@ -1,22 +1,20 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
-
+/* TODO: re-enable when we have staging op.
 import { expect } from "chai";
 
 import { Wallet } from "ethers";
 import { ETHZERO, Amount, Asset } from "#erdstall/ledger/assets";
-import { Address } from "#erdstall/ledger";
 import {
 	makeETHDepositCalls,
 	makeERC20DepositCalls,
 	makeERC721DepositCalls,
 } from "./contracts_deposit";
 import { DepositerCallsFactory } from "./tokenmanager";
-import { PerunArt__factory } from "./contracts/factories/PerunArt__factory";
 
-import { Environment, setupEnv } from "#erdstall/test/ledger";
 import * as test from "#erdstall/test";
 import { logSeedOnFailure } from "#erdstall/test";
+import { EthereumSigner, EthereumAddress as Address } from "#erdstall/crypto/ethereum";
 
 const TOKEN_SIZE = 4;
 
@@ -24,21 +22,18 @@ describe("Deposit_Call_Wrapper", () => {
 	const rng = test.newPrng();
 	let testenv: Environment;
 	let bob: Wallet;
+	let bobSigner: EthereumSigner;
 	const amount = new Amount(test.newRandomBigInt(rng, 16));
 	const tokens = test.newRandomTokens(rng, TOKEN_SIZE);
 
 	before(async () => {
 		testenv = await setupEnv();
 		bob = testenv.users[0];
-
-		const part = PerunArt__factory.connect(testenv.perunArt, bob);
-		for (const id of tokens.value) {
-			await part.mint(bob.address, id);
-		}
+		bobSigner = new EthereumSigner(bob);
 	});
 
 	it("allows deposits for ETH, ERC20 and ERC721", async () => {
-		let nonce = await bob.getTransactionCount();
+		let nonce = await bob.getNonce();
 
 		const testCases: [DepositerCallsFactory, string, string, Asset][] = [
 			[makeETHDepositCalls, testenv.ethHolder, ETHZERO, amount],
@@ -53,7 +48,7 @@ describe("Deposit_Call_Wrapper", () => {
 
 		for (const [call, holder, token, assets] of testCases) {
 			const depCall = (call as DepositerCallsFactory)(
-				bob,
+				bobSigner,
 				Address.fromString(holder),
 				Address.fromString(token),
 				assets,
@@ -62,7 +57,7 @@ describe("Deposit_Call_Wrapper", () => {
 				const tx = await call({ nonce: nonce++ });
 				const txr = await tx.wait();
 				expect(
-					txr.status,
+					txr!.status,
 					`${token} deposit should succeed`,
 				).to.be.equal(0x1);
 			}
@@ -73,3 +68,4 @@ describe("Deposit_Call_Wrapper", () => {
 		logSeedOnFailure(rng, this.currentTest);
 	});
 });
+*/

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
+/* TODO: Re-enable when we have a test/staging deployment or something.
 
 import { expect } from "chai";
 import { Enclave } from "./connection";
@@ -202,3 +203,4 @@ function testOnceEventSubs(
 		"registering a one shot event is only executed once",
 	).equals(1);
 }
+*/
