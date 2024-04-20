@@ -6,6 +6,7 @@ import { jsonObject } from "#erdstall/export/typedjson";
 import { equalArray } from "#erdstall/utils/arrays";
 import { ABIValue, customJSON } from "#erdstall/api/util";
 import { Address, registerAddressType } from "#erdstall/crypto/address";
+import { toHex, parseHex } from "#erdstall/utils/hexbytes";
 
 /**
  * This class implements an address representation and is used within the SDK
@@ -23,9 +24,7 @@ export class EthereumAddress extends Address<"ethereum"> implements ABIValue {
 		if (typeof val !== "string") {
 			throw new Error("Expected to decode address from a string");
 		}
-		return new EthereumAddress(
-			ethers.getBytes(val),
-		);
+		return new EthereumAddress(parseHex(val, "0x"));
 	}
 
 	static toJSON(me: EthereumAddress): any {
@@ -33,7 +32,7 @@ export class EthereumAddress extends Address<"ethereum"> implements ABIValue {
 	}
 
 	public toJSON(): any {
-		return ethers.hexlify(this.value);
+		return toHex(this.value, "0x");
 	}
 
 	static fromString(addr: string): EthereumAddress {
@@ -52,10 +51,6 @@ export class EthereumAddress extends Address<"ethereum"> implements ABIValue {
 
 	toString(): string {
 		return ethers.getAddress(ethers.hexlify(this.value));
-	}
-
-	get key(): string {
-		return this.toJSON();
 	}
 
 	asABI(): any {

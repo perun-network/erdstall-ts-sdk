@@ -5,11 +5,13 @@ import { ethers } from "ethers";
 import { registerSignatureType, Signature } from "#erdstall/crypto/signature";
 import { EthereumAddress } from "./address";
 import { Address } from "#erdstall/crypto/address";
-import { jsonMember, jsonObject } from "#erdstall/export/typedjson";
+import { jsonObject } from "#erdstall/export/typedjson";
+import { parseHex, toHex } from "#erdstall/utils/hexbytes";
+import { customJSON } from "#erdstall/api/util";
 
 @jsonObject
 export class EthereumSignature extends Signature<"ethereum"> {
-	@jsonMember bytes: Uint8Array;
+	bytes: Uint8Array;
 
 	constructor(value: Uint8Array) {
 		super();
@@ -20,19 +22,20 @@ export class EthereumSignature extends Signature<"ethereum"> {
 		if(typeof data !== "string") {
 			throw new Error("Expected to decode address from a string");
 		}
-		return new EthereumSignature(ethers.getBytes(data));
+		return new EthereumSignature(parseHex(data, "0x"));
 	}
 
 	verify(msg: Uint8Array, signer: Address<"ethereum">): boolean {
-		return ethers.verifyMessage(msg, this.toString()) === signer.toString()
+		const d = ethers.getBytes(ethers.keccak256(msg));
+		return ethers.verifyMessage(d, this.toString()) === signer.toString();
 	}
 
 	toJSON() {
-		return ethers.hexlify(this.bytes);
+		return toHex(this.bytes, "0x");
 	}
 
 	toString(): string {
-		return ethers.hexlify(this.bytes);
+		return toHex(this.bytes, "0x");
 	}
 
 	toBytes(): Uint8Array {
@@ -53,3 +56,4 @@ export class EthereumSignature extends Signature<"ethereum"> {
 }
 
 registerSignatureType("ethereum", EthereumSignature);
+customJSON(EthereumSignature);

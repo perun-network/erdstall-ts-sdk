@@ -2,7 +2,7 @@
 "use strict";
 
 import {
-	jsonBigIntMember,
+	jsonU64Member,
 	jsonObject,
 	jsonMapMember,
 	jsonMember,
@@ -20,9 +20,9 @@ const typeName = "AttestResponse";
 
 @jsonObject
 export class Parameters {
-	@jsonBigIntMember() powDepth: bigint;
-	@jsonBigIntMember() epochDuration: bigint;
-	@jsonBigIntMember() initBlock: bigint;
+	@jsonU64Member() powDepth: bigint;
+	@jsonU64Member() epochDuration: bigint;
+	@jsonU64Member() initBlock: bigint;
 	@jsonMember(crypto.Address) tee: crypto.Address<crypto.Crypto>;
 	@jsonMember(crypto.Address) contract: crypto.Address<crypto.Crypto>;
 
@@ -72,7 +72,7 @@ export class AttestationReportData {
 		Chain,
 		AttestationReportChainData<Backend>
 	>;
-	@jsonBigIntMember() nonce: bigint;
+	@jsonU64Member() nonce: bigint;
 
 	constructor(
 		p: Parameters,

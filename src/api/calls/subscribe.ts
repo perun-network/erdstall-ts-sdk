@@ -46,7 +46,7 @@ export class SubscribeBalanceProofs extends ErdstallObject {
 
 @jsonObject
 export class SubscribeTXs extends ErdstallObject {
-	@jsonMember who?: Address<Crypto>;
+	@jsonMember(Address) who?: Address<Crypto>;
 	@jsonMember(Boolean) cancel?: boolean;
 
 	constructor(who?: Address<Crypto>, cancel?: boolean) {

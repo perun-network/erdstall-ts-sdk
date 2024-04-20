@@ -3,7 +3,8 @@
 
 import { jsonObject } from "#erdstall/export/typedjson";
 import { customJSON } from "#erdstall/api/util";
-import { Address } from "#erdstall/crypto/address";
+import { Address, registerAddressType } from "#erdstall/crypto/address";
+import { equalArray } from "#erdstall/utils/arrays";
 import { decodeAddress, encodeAddress } from "@polkadot/util-crypto";
 import { hexToU8a, u8aToHex } from "@polkadot/util"
 
@@ -12,9 +13,10 @@ import { hexToU8a, u8aToHex } from "@polkadot/util"
  * wherever an address is required.
  */
 @jsonObject
-export class SubstrateAddress implements Address<"substrate"> {
+export class SubstrateAddress extends Address<"substrate"> {
 	private value: Uint8Array;
 	constructor(value: Uint8Array) {
+		super();
 		this.value = value;
 	}
 
@@ -47,15 +49,12 @@ export class SubstrateAddress implements Address<"substrate"> {
 		return encodeAddress(this.value);
 	}
 
-	get key(): string {
-		return this.toJSON()
-	}
-
 	equals(other: SubstrateAddress): boolean {
-		return this.key == other.key
+		return equalArray(this.value, other.value);
 	}
 }
 
+registerAddressType("substrate", SubstrateAddress);
 customJSON(SubstrateAddress);
 
 export function addressKey(addr: SubstrateAddress | string): string {

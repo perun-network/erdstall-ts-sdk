@@ -10,10 +10,10 @@ export class TestSignature extends Signature<"test"> {
 	@jsonMember(String)
 	msg: string;
 
-	@jsonMember(Address)
-	address: Address<"test">;
+	@jsonMember(TestAddress)
+	address: TestAddress | null;
 
-	constructor(msg: string, address: Address<"test">) {
+	constructor(msg: string, address: TestAddress | null) {
 		super();
 		this.msg = msg;
 		this.address = address;
@@ -33,19 +33,20 @@ export class TestSignature extends Signature<"test"> {
 	}
 
 	static fromJSON(data: any): Signature<"test"> {
-		const address = TestAddress.fromJSON(data.address);
+		const address = (data.address ?? null) == null ? null :
+			TestAddress.fromJSON(data.address);
 		const value = data.msg;
 		return new TestSignature(value, address);
 	}
 
 	verify(msg: Uint8Array, addr: Address<"test">): boolean {
 		const enc = Array.from(msg).map(x => x.toString(16).padStart(2, "0")).join("");
-		return this.msg === enc && addr.equals(this.address);
+		return this.msg === enc && addr ? this.address ? addr.equals(this.address) : false : true;
 	}
 
 	toJSON() {
 		return {
-			address: Address.toJSON(this.address),
+			address: this.address?.toJSON(),
 			msg: this.msg,
 		};
 	}

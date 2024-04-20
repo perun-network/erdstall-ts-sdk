@@ -12,6 +12,7 @@ import {
 } from "./asset";
 import { mkBigInt } from "#erdstall/utils/bigint";
 import { Amount } from "./amount";
+import { bigTo0xEven } from "#erdstall/export/typedjson";
 
 export const ErrIDAlreadyContained = new Error(
 	"given ID already contained in tokens",
@@ -37,7 +38,7 @@ export class Tokens extends Asset {
 	}
 
 	toJSON() {
-		return this.value.map((val) => "0x"+val.toString(16));
+		return this.value.map((val) => bigTo0xEven(val));
 	}
 
 	static fromJSON(idset: string[]): Tokens {

@@ -11,7 +11,7 @@ import {
 	assertUint256,
 	registerAssetType,
 } from "./asset";
-import { mkBigInt } from "#erdstall/utils/bigint";
+import { bigTo0xEven } from "#erdstall/export/typedjson";
 
 /** Amount represents a currency amount in its smallest unit. */
 export class Amount extends Asset {
@@ -24,7 +24,7 @@ export class Amount extends Asset {
 	}
 
 	toJSON() {
-		return "0x"+this.value.toString(16);
+		return bigTo0xEven(this.value);
 	}
 
 	static fromJSON(hexString: string): Amount {

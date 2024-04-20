@@ -8,6 +8,7 @@ import { EthereumAddress } from "#erdstall/crypto/ethereum";
 import * as crypto from "#erdstall/crypto";
 import PRNG, { newRandomUint8Array } from "./random";
 import { customJSON } from "#erdstall/api/util";
+import { parseHex, toHex } from "#erdstall/utils/hexbytes";
 
 export function newRandomAddress(rng: PRNG): EthereumAddress {
 	return new EthereumAddress(newRandomUint8Array(rng, 20));
@@ -35,7 +36,7 @@ export class TestAddress extends Address<"test"> {
 	}
 
 	toJSON(): string {
-		return ethers.hexlify(this.value);
+		return toHex(this.value, "0x");
 	}
 
 	fromJSON(val: any): TestAddress {
@@ -43,9 +44,7 @@ export class TestAddress extends Address<"test"> {
 	}
 
 	static fromJSON(val: any): TestAddress {
-		return new TestAddress(
-			ethers.getBytes(val),
-		);
+		return new TestAddress(parseHex(val));
 	}
 
 	static toJSON(me: TestAddress): any {

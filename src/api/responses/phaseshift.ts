@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { jsonObject, jsonBigIntMember } from "#erdstall/export/typedjson";
+import { jsonObject, jsonU64Member } from "#erdstall/export/typedjson";
 import { ErdstallObject, registerErdstallType } from "#erdstall/api";
 
 const phaseShiftTypeName = "PhaseShift";
@@ -10,7 +10,7 @@ const phaseShiftTypeName = "PhaseShift";
 // phase for each account in the Erdstall system.
 @jsonObject
 export class PhaseShift extends ErdstallObject {
-	@jsonBigIntMember() currentEpoch: bigint;
+	@jsonU64Member() currentEpoch: bigint;
 
 	constructor(currentEpoch: bigint) {
 		super();

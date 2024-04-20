@@ -16,7 +16,7 @@ export function registerAddressType(
 
 export abstract class Address<_C extends Crypto> {
 	abstract type(): _C;
-	abstract get key(): string;
+	get key(): string { return Address.toJSON(this); }
 	abstract equals(other: Address<_C>): boolean;
 	abstract toString(): string;
 	abstract toJSON(): string;
@@ -24,20 +24,15 @@ export abstract class Address<_C extends Crypto> {
 	static ensure(addr: string | Address<Crypto>): Address<Crypto> {
 		if (addr === undefined) return addr;
 		if (addr instanceof Address) return addr;
-		return Address.fromJSON(addr);
+		return Address.fromJSON(JSON.parse(addr));
 	}
 
-	static fromJSON(js: any): Address<Crypto> {
-		if (typeof js === "string") {
-			js = JSON.parse(js);
-		}
-		let data = JSON.stringify(js.data);
-
-		if (!addressImpls.has(js.type)) {
-			throw new Error(`unknown address type ${js.type}`);
+	static fromJSON({data, type}: {data: any, type: string}): Address<Crypto> {
+		if (!addressImpls.has(type)) {
+			throw new Error(`unknown address type ${type}`);
 		}
 
-		return TypedJSON.parse(data, addressImpls.get(js.type)!)!;
+		return TypedJSON.parse(JSON.stringify(data), addressImpls.get(type)!)!;
 	}
 
 	static toJSON(me: Address<Crypto>): any {

@@ -4,7 +4,7 @@
 import {
 	jsonObject,
 	jsonMember,
-	jsonBigIntMember,
+	jsonU64Member,
 	jsonArrayMember,
 	jsonMapMember,
 	MapShape,
@@ -18,13 +18,14 @@ import { Backend } from "#erdstall/ledger/backend";
 import { Chain } from "#erdstall/ledger/chain";
 import { BackendSignature, ErdstallSignature } from "#erdstall/erdstall";
 import canonicalize from "canonicalize";
+import { customJSON } from "#erdstall/api/util";
 
 const balanceProofsTypeName = "BalanceProofs";
 
 // Balance is the value of funds for the account within epoch.
 @jsonObject
 export class Balance {
-	@jsonBigIntMember() epoch: bigint;
+	@jsonU64Member() epoch: bigint;
 	@jsonMember(crypto.Address) account: crypto.Address<crypto.Crypto>;
 	@jsonMember(Boolean) exit: boolean;
 	@jsonMember(() => ChainAssets) values: ChainAssets;
@@ -46,6 +47,37 @@ export class Balance {
 // phase for each account in the Erdstall system.
 @jsonObject
 export class BalanceProofs extends ErdstallObject {
+	accounts: Map<string, BalanceProof>;
+
+	constructor() { super(); this.accounts = new Map(); }
+
+	static toJSON(me: BalanceProofs) {
+		const json: any = {};
+		me.accounts.forEach((bp, key) => {
+			json[key] = TypedJSON.toPlainJson(bp, BalanceProof);
+		});
+		return json;
+	}
+
+	static fromJSON(json: any): BalanceProofs {
+		const bps = new BalanceProofs();
+		for(let key in json) {
+			bps.accounts.set(key, TypedJSON.parse(json[key], BalanceProof)!);
+		}
+		return bps;
+	}
+
+	public objectType() {
+		return BalanceProofs;
+	}
+	protected objectTypeName() {
+		return balanceProofsTypeName;
+	}
+
+}
+
+@jsonObject
+export class BalanceProof {
 	// Account Address -> Chain -> ChainProof.
 	// It might be that an account address has multiple entries for different
 	// chains IFF the chains support the same crypto for addresses.
@@ -65,7 +97,7 @@ export class BalanceProofs extends ErdstallObject {
 		},
 	)
 	readonly proofs: Map<string, Map<Chain, ChainProof>>;
-	@jsonBigIntMember()
+	@jsonU64Member()
 	readonly epoch: bigint;
 
 	@jsonMember(crypto.Signature)
@@ -76,17 +108,9 @@ export class BalanceProofs extends ErdstallObject {
 		epoch: bigint,
 		sig?: ErdstallSignature,
 	) {
-		super();
 		this.proofs = proofs;
 		this.sig = sig;
 		this.epoch = epoch;
-	}
-
-	public objectType() {
-		return BalanceProofs;
-	}
-	protected objectTypeName() {
-		return balanceProofsTypeName;
 	}
 
 	public verify(address: crypto.Address<crypto.Crypto>): boolean {
@@ -96,9 +120,8 @@ export class BalanceProofs extends ErdstallObject {
 	}
 
 	public encodePayload(): Uint8Array {
-
 		const toEncode = TypedJSON.toPlainJson(
-			new BalanceProofs(this.proofs, this.epoch, undefined), BalanceProofs);
+			new BalanceProof(this.proofs, this.epoch, undefined), BalanceProof);
 		const msg = canonicalize(toEncode);
 		const enc = new TextEncoder();
 		return enc.encode(msg);
@@ -135,3 +158,4 @@ export class ChainProof {
 }
 
 registerErdstallType(balanceProofsTypeName, BalanceProofs);
+customJSON(BalanceProofs);

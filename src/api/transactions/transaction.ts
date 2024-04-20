@@ -9,10 +9,11 @@ import {
 	jsonMember,
 	TypedJSON,
 	Serializable,
-	jsonBigIntMember,
+	jsonU64Member,
 } from "#erdstall/export/typedjson";
 import canonicalize from "canonicalize";
 import { ethers } from "ethers";
+import { toHex, parseHex } from "#erdstall/utils/hexbytes";
 
 const transactionImpls = new Map<string, Serializable<Transaction>>();
 const transactionTypeName = "Transaction";
@@ -28,7 +29,7 @@ export function registerTransactionType(
 @jsonObject
 export abstract class Transaction extends ErdstallObject {
 	@jsonMember(Address) sender: Address<Crypto>;
-	@jsonBigIntMember() nonce: bigint;
+	@jsonU64Member() nonce: bigint;
 	@jsonMember(Signature) sig?: Signature<Crypto>;
 
 	constructor(sender: Address<Crypto>, nonce: bigint) {
@@ -38,9 +39,6 @@ export abstract class Transaction extends ErdstallObject {
 	}
 
 	async sign(signer: Signer<Crypto>): Promise<this> {
-		// Make sure the signature is set to undefined, otherwise signing would not
-		// be idempotent.
-		this.sig = undefined;
 		this.sender = await signer.address();
 		const msg = this.encodePayload();
 		this.sig = await signer.sign(msg);
@@ -51,6 +49,7 @@ export abstract class Transaction extends ErdstallObject {
 		if (!this.sig) {
 			return false;
 		}
+
 		return this.sig.verify(
 			this.encodePayload(),
 			this.sender
@@ -69,8 +68,11 @@ export abstract class Transaction extends ErdstallObject {
 	}
 
 	encodePayload(): Uint8Array {
+		let clone = Object.assign(
+			Object.create(Object.getPrototypeOf(this)),
+			{...this, sig: undefined});
 		const msg = canonicalize(
-			JSON.stringify({ value: Transaction.toJSON(this) }),
+			{ value: Transaction.toJSON(clone)},
 		);
 		if (msg === undefined) {
 			throw new Error("failed to canonicalize transaction");
@@ -112,9 +114,9 @@ TypedJSON.mapType(Uint8Array, {
 		if (!json) {
 			return new Uint8Array();
 		}
-		return ethers.getBytes(json);
+		return parseHex(json, "0x");
 	},
-	serializer: (value) => (value == null ? value : ethers.getBytes(value)),
+	serializer: (value) => (value == null ? value : toHex(value, "0x")),
 });
 @jsonObject
 export class TransactionOutput {

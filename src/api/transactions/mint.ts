@@ -6,7 +6,7 @@ import { Address, Crypto } from "#erdstall/crypto";
 import {
 	jsonObject,
 	jsonMember,
-	jsonBigIntMember,
+	jsonU256Member,
 } from "#erdstall/export/typedjson";
 
 const mintTypeName = "Mint";
@@ -14,7 +14,7 @@ const mintTypeName = "Mint";
 @jsonObject
 export class Mint extends Transaction {
 	@jsonMember(Uint8Array) token: Uint8Array;
-	@jsonBigIntMember() id: bigint;
+	@jsonU256Member() id: bigint;
 
 	constructor(
 		sender: Address<Crypto>,

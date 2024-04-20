@@ -23,23 +23,23 @@ export enum TxStatusCode {
 
 @jsonObject
 export class TxReceipt extends ErdstallObject {
-	@jsonMember(() => Transaction) tx: Transaction;
+	@jsonMember(Transaction) tx: Transaction;
 	@jsonMember(TransactionOutput) output: TransactionOutput;
-	@jsonMember(() => Signature) sig: Signature<Crypto>;
-	@jsonMember(String) hash: String;
+	@jsonMember(Signature<Crypto>) sig: Signature<Crypto>;
+	@jsonMember(String) hash: string;
 
 	@jsonMapMember(String, () => Account, { shape: MapShape.OBJECT })
 	delta: Map<string, Account>;
 	/**
 	 * Erdstall standard status codes can be checked against the enum TxStatusCode
 	 */
-	@jsonMember(Number) status: Number;
+	@jsonMember(Number) status: number;
 	@jsonMember(String) error?: string;
 
 	constructor(
 		tx: Transaction,
 		delta: Map<string, Account>,
-		status: Number,
+		status: number,
 		output: TransactionOutput,
 		sig: Signature<Crypto>,
 		hash: string,

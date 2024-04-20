@@ -4,6 +4,8 @@
 import { ErdstallObject, registerErdstallType } from "#erdstall/api";
 import { jsonObject } from "#erdstall/export/typedjson";
 import { Backend, BackendChainConfig } from "#erdstall/ledger/backend";
+import { Address, Crypto } from "#erdstall/crypto";
+import { Chain } from "#erdstall/ledger";
 import { customJSON } from "../util";
 
 export class ChainConfig<B extends Backend> {
@@ -68,10 +70,18 @@ const clientConfigTypeName = "ClientConfig";
 @jsonObject
 export class ClientConfig extends ErdstallObject {
 	chains: ChainConfig<Backend>[];
+	enclave: Map<Chain, Address<Crypto>>;
+	enclaveNativeSigner: Address<Crypto>;
 
-	constructor(...chains: ChainConfig<Backend>[]) {
+	constructor(
+		chains: ChainConfig<Backend>[],
+		enclave: Map<Chain, Address<Crypto>>,
+		enclaveNativeSigner: Address<Crypto>,
+	) {
 		super();
 		this.chains = chains;
+		this.enclave = enclave;
+		this.enclaveNativeSigner = enclaveNativeSigner;
 	}
 
 	static fromJSON(data: any): ClientConfig {
@@ -79,7 +89,14 @@ export class ClientConfig extends ErdstallObject {
 		for (const conf of data.chains as ChainConfig<Backend>[]) {
 			chains.push(ChainConfig.fromJSON(JSON.stringify(conf)));
 		}
-		return new ClientConfig(...chains);
+		let enc: Map<Chain, Address<Crypto>> = new Map();
+		for(const key in data.enclave ?? {}) {
+			enc.set(parseInt(key), Address.fromJSON(data.enclave[key]));
+		}
+		const native = enc.get(Chain.Erdstall)!;
+		enc.delete(Chain.Erdstall);
+
+		return new ClientConfig(chains, enc, native);
 	}
 
 	static toJSON(me: ClientConfig) {

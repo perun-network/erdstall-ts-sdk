@@ -2,7 +2,7 @@
 "use strict";
 
 import {
-	jsonBigIntMember,
+	jsonU64Member,
 	jsonObject,
 	jsonMember,
 } from "#erdstall/export/typedjson";
@@ -14,7 +14,7 @@ const accountTypeName = "AccountResponse";
 @jsonObject
 export class Account extends ErdstallObject {
 	@jsonMember(ledger.Account) account: ledger.Account;
-	@jsonBigIntMember() epoch: bigint;
+	@jsonU64Member() epoch: bigint;
 
 	constructor(account: ledger.Account, epoch: bigint) {
 		super();

@@ -4,7 +4,7 @@
 import {
 	jsonObject,
 	jsonMember,
-	jsonBigIntMember,
+	jsonU64Member,
 } from "#erdstall/export/typedjson";
 import { ChainAssets } from "#erdstall/ledger/assets";
 
@@ -14,7 +14,7 @@ import { ChainAssets } from "#erdstall/ledger/assets";
  */
 @jsonObject
 export class Account {
-	@jsonBigIntMember() nonce: bigint;
+	@jsonU64Member() nonce: bigint;
 	@jsonMember(() => ChainAssets) values: ChainAssets;
 	@jsonMember(() => ChainAssets) locked: ChainAssets;
 

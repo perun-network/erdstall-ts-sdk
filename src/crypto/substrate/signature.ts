@@ -1,17 +1,28 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { Signature, Address } from "#erdstall/crypto";
-import { isHex, hexToU8a, u8aToHex } from "@polkadot/util";
+import { Signature, registerSignatureType } from "#erdstall/crypto/signature";
+import { Address } from "#erdstall/crypto/address";
+import { parseHex, toHex } from "#erdstall/utils/hexbytes";
 import { signatureVerify } from "@polkadot/util-crypto";
+import { jsonObject } from "#erdstall/export/typedjson";
+import { customJSON } from "#erdstall/api/util";
 
-export class SubstrateSignature implements Signature<"substrate"> {
+@jsonObject
+export class SubstrateSignature extends Signature<"substrate"> {
 	private bytes: Uint8Array;
 
 	constructor(bytes: Uint8Array) {
+		super();
 		this.bytes = bytes;
 	}
 
+	static fromJSON(data: any): Signature<"substrate"> {
+		if(typeof data !== "string") {
+			throw new Error("Expected to decode address from a string")
+		}
+		return new SubstrateSignature(parseHex(data, "0x"));
+	}
 	verify(msg: Uint8Array, addr: Address<"substrate">) {
 		return signatureVerify(
 			msg,
@@ -20,24 +31,22 @@ export class SubstrateSignature implements Signature<"substrate"> {
 		).isValid;
 	}
 
+	toJSON() {
+		return toHex(this.bytes, "0x");
+	}
+
+	toString(): string {
+		return toHex(this.bytes, "0x")
+	}
+
 	toBytes(): Uint8Array {
 		return this.bytes;
-	}
-	toString(): string {
-		return this.toJSON()
 	}
 
 	type(): "substrate" {
 		return "substrate";
 	}
-
-	static fromJSON(data: any): Signature<"substrate"> {
-		if(typeof data !== "string") {
-			throw new Error("Expected to decode address from a string")
-		}
-		return new SubstrateSignature(hexToU8a(data));
-	}
-	toJSON() {
-		return u8aToHex(this.bytes);
-	}
 }
+
+registerSignatureType("substrate", SubstrateSignature);
+customJSON(SubstrateSignature);

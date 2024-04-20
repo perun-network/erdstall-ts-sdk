@@ -6,7 +6,7 @@ import * as assets from "#erdstall/ledger/assets";
 import {
 	jsonObject,
 	jsonMember,
-	jsonBigIntMember,
+	jsonU64Member,
 	TypedJSON,
 } from "#erdstall/export/typedjson";
 import { Address, Signature, Crypto, Signer } from "#erdstall/crypto";
@@ -38,7 +38,7 @@ export class TradeOffer {
 	@jsonMember(Address) owner: Address<Crypto>;
 	@jsonMember(() => assets.ChainAssets) offer: assets.ChainAssets;
 	@jsonMember(() => assets.ChainAssets) request: assets.ChainAssets;
-	@jsonBigIntMember() expiry: bigint;
+	@jsonU64Member() expiry: bigint;
 	@jsonMember(TradeFees) fees?: TradeFees;
 	@jsonMember(Signature) sig?: Signature<Crypto>;
 
