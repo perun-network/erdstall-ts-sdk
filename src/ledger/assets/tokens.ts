@@ -10,7 +10,6 @@ import {
 	ErrIncompatibleAssets,
 	registerAssetType,
 } from "./asset";
-import { mkBigInt } from "#erdstall/utils/bigint";
 import { Amount } from "./amount";
 import { bigTo0xEven } from "#erdstall/export/typedjson";
 

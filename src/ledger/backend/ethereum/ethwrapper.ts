@@ -16,8 +16,6 @@ import { Asset, ChainAssets, Amount, Tokens } from "#erdstall/ledger/assets";
 import { AssetID } from "#erdstall/crypto";
 import { TokenType } from "./tokentype";
 
-import { mkBigInt } from "#erdstall/utils/bigint";
-
 import { Erdstall } from "./contracts";
 import {
 	EthereumAddress,
