@@ -14,11 +14,11 @@ import { ChainConfig, ClientConfig } from "#erdstall/api/responses";
 import { EthereumTokenProvider } from "./tokencache";
 
 export class EthereumClient implements ErdstallBackendClient<"ethereum"> {
-	protected provider: ethers.providers.Provider | Signer;
+	protected provider: ethers.Provider | Signer;
 	protected erdstallConn: LedgerReadConn;
 
 	constructor(
-		provider: ethers.providers.Provider | Signer,
+		provider: ethers.Provider | Signer,
 		erdstallConn: LedgerReadConn,
 	) {
 		this.provider = provider;
@@ -57,24 +57,25 @@ export class EthereumClient implements ErdstallBackendClient<"ethereum"> {
 
 export function defaultEthereumClientInitializer(
 	config: ClientConfig,
-	provider: ethers.providers.Provider | Signer,
+	provider: ethers.Provider | Signer,
 ): EthereumClient {
 	// NOTE CLEANUP: Temporary hack.
 	const erdstallAddr = (config.chains[0] as ChainConfig<"ethereum">).data.contract;
 	const erdstall = Erdstall__factory.connect(erdstallAddr.toString(), provider);
-	const ledgerReader = new LedgerReadConn(erdstall, new EthereumTokenProvider());
+	const ledgerReader = new LedgerReadConn(erdstall,
+		new EthereumTokenProvider(ethCfg!.id));
 
 	return new EthereumClient(provider, ledgerReader);
 }
 
 export function mkDefaultEthereumClientConstructor(
-	provider: ethers.providers.Provider | Signer,
+	provider: ethers.Provider | Signer,
 ): {
 	backend: "ethereum";
-	provider: ethers.providers.Provider | Signer;
+	provider: ethers.Provider | Signer;
 	initializer: (
 		config: ClientConfig,
-		provider: ethers.providers.Provider | Signer,
+		provider: ethers.Provider | Signer,
 	) => EthereumClient;
 } {
 	return {

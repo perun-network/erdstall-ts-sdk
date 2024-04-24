@@ -23,10 +23,10 @@ export type BackendClientConstructors = {
 	ethereum: {
 		backend: "ethereum";
 		chain: number;
-		provider: ethers.providers.Provider | Signer;
+		provider: ethers.Provider | Signer;
 		initializer: (
 			config: ClientConfig,
-			provider: ethers.providers.Provider | Signer,
+			provider: ethers.Provider | Signer,
 		) => EthereumClient;
 	};
 	substrate: {

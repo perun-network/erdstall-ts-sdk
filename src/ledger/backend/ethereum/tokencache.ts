@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { Signer, providers } from "ethers";
+import { ethers } from "ethers";
 import { Address, addressKey } from "#erdstall/crypto";
 import { EthereumAddress } from "#erdstall/crypto/ethereum";
 import { TokenType } from "./tokentype";
+import { Chain } from "#erdstall/ledger";
 import {
 	Erdstall,
 	ERC20__factory, ERC20Holder, ERC20Holder__factory,
@@ -16,10 +17,12 @@ import {
 // Gets created with unresolved holders. Call resolve_holders() to pass the actual holders. Access token holders via tokenHolderFor().
 export class EthereumTokenProvider {
 	readonly holders: Promise<Map<TokenType, EthereumAddress>>;
+	readonly chain: Chain;
 	private set_holders?: (arg: Map<TokenType, EthereumAddress>) => void;
 	private fail_holders?: (arg: any) => void;
 
-	constructor() {
+	constructor(chain: Chain) {
+		this.chain = chain;
 		this.holders = new Promise<Map<TokenType, EthereumAddress>>(
 			(acc, rej) => {
 			this.set_holders = acc;
@@ -58,17 +61,17 @@ export class EthereumTokenProvider {
 		});
 	}
 
-	async getERC20Holder(provider: providers.Provider): Promise<ERC20Holder> {
+	async getERC20Holder(provider: ethers.Provider): Promise<ERC20Holder> {
 		const holder = await this.tokenHolderFor("ERC20");
 		return ERC20Holder__factory.connect(holder.toString(), provider);
 	}
 
-	async getERC721Holder(provider: providers.Provider): Promise<ERC721Holder> {
+	async getERC721Holder(provider: ethers.Provider): Promise<ERC721Holder> {
 		const holder = await this.tokenHolderFor("ERC721");
 		return ERC721Holder__factory.connect(holder.toString(), provider);
 	}
 
-	async getEthHolder(provider: providers.Provider): Promise<ETHHolder> {
+	async getEthHolder(provider: ethers.Provider): Promise<ETHHolder> {
 		const holder = await this.tokenHolderFor("ETH");
 		return ETHHolder__factory.connect(holder.toString(), provider);
 	}

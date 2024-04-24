@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { BigNumber, utils } from "ethers";
+import { ethers } from "ethers";
 import {
 	Asset,
 	TypeTags,
@@ -37,13 +37,7 @@ export class Tokens extends Asset {
 	}
 
 	toJSON() {
-		return this.value.map((val) => {
-			const arr = utils.arrayify(BigNumber.from(val));
-			const offset = 32 - arr.length;
-			const abi = new Uint8Array(32);
-			abi.set(arr, offset);
-			return utils.hexValue(abi);
-		});
+		return this.value.map((val) => "0x"+val.toString(16));
 	}
 
 	static fromJSON(idset: string[]): Tokens {

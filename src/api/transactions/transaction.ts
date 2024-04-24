@@ -12,7 +12,7 @@ import {
 	jsonBigIntMember,
 } from "#erdstall/export/typedjson";
 import canonicalize from "canonicalize";
-import { utils } from "ethers";
+import { ethers } from "ethers";
 
 const transactionImpls = new Map<string, Serializable<Transaction>>();
 const transactionTypeName = "Transaction";
@@ -81,7 +81,7 @@ export abstract class Transaction extends ErdstallObject {
 
 	hash(): string {
 		const toHash = this.encodePayload();
-		return utils.keccak256(
+		return ethers.keccak256(
 			new Uint8Array([...toHash, ...this.sig!.toBytes()]),
 		);
 	}
@@ -112,9 +112,9 @@ TypedJSON.mapType(Uint8Array, {
 		if (!json) {
 			return new Uint8Array();
 		}
-		return utils.arrayify(json, { allowMissingPrefix: true });
+		return ethers.getBytes(json);
 	},
-	serializer: (value) => (value == null ? value : utils.hexlify(value)),
+	serializer: (value) => (value == null ? value : ethers.getBytes(value)),
 });
 @jsonObject
 export class TransactionOutput {

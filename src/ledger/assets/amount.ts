@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { BigNumber, utils } from "ethers";
+import { ethers } from "ethers";
 
 import {
 	Asset,
@@ -24,7 +24,7 @@ export class Amount extends Asset {
 	}
 
 	toJSON() {
-		return utils.hexValue(BigNumber.from(this.value));
+		return "0x"+this.value.toString(16);
 	}
 
 	static fromJSON(hexString: string): Amount {

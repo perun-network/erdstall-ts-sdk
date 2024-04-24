@@ -11,6 +11,7 @@ import {
 import { Address } from "#erdstall/crypto";
 import { EthereumAddress } from "#erdstall/crypto/ethereum";
 import { ChainAssets } from "#erdstall/ledger/assets";
+import { Chain } from "#erdstall/ledger";
 import {
 	Erdstall__factory,
 	EthereumClient,
@@ -54,21 +55,24 @@ export function defaultEthereumSessionInitializer(
 	config: ClientConfig,
 	signer: Signer,
 ): EthereumSession {
+	const ethCfg = config.chains.find(c => c.id == Chain.EthereumMainnet)
+		?? config.chains.find(c => c.type === "ethereum");
+
 	const erdstall = Erdstall__factory.connect(
-		(config.chains[0] as ChainConfig<"ethereum">).data.contract.toString(),
+		(ethCfg! as ChainConfig<"ethereum">).data.contract.toString(),
 		signer,
 	);
 	const ledgerWriter = new LedgerWriteConn(
 		erdstall,
-		1, // CHAIN_ETH
-		new EthereumTokenProvider());
+		ethCfg!.id,
+		new EthereumTokenProvider(ethCfg!.id));
 
 	return new EthereumSession(signer, ledgerWriter);
 }
 
 export function mkDefaultEthereumSessionConstructor(signer: Signer): {
 	backend: "ethereum";
-	provider: ethers.providers.Provider | Signer;
+	provider: ethers.Provider | Signer;
 	signer: Signer;
 	initializer: (config: ClientConfig, signer: Signer) => EthereumSession;
 } {

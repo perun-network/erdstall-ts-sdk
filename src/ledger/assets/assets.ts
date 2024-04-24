@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { utils } from "ethers";
+import { ethers } from "ethers";
 import {
 	jsonMapMember,
 	jsonMember,
@@ -61,13 +61,13 @@ export class ChainAssets {
 			const localList = new Array<[AssetID, Asset]>();
 			for (const [token, amount] of locals.fungibles.assets) {
 				localList.push([
-					AssetID.fromMetadata(chain, 0, utils.arrayify(token)),
+					AssetID.fromMetadata(chain, 0, ethers.getBytes(token)),
 					amount,
 				]);
 			}
 			for (const [token, tokens] of locals.nfts.assets) {
 				localList.push([
-					AssetID.fromMetadata(chain, 1, utils.arrayify(token)),
+					AssetID.fromMetadata(chain, 1, ethers.getBytes(token)),
 					tokens,
 				]);
 			}
@@ -106,7 +106,7 @@ export class LocalFungibles {
 	}
 
 	addAsset(localID: Uint8Array, asset: Amount) {
-		const token = utils.hexlify(localID);
+		const token = ethers.hexlify(localID);
 		const a = this.assets.get(token);
 		if (a !== undefined) {
 			a.add(asset);
@@ -141,7 +141,7 @@ export class LocalNonFungibles {
 	}
 
 	addAsset(localID: Uint8Array, asset: Tokens) {
-		const token = utils.hexlify(localID);
+		const token = ethers.hexlify(localID);
 		const a = this.assets.get(token);
 		if (a !== undefined) {
 			a.add(asset);

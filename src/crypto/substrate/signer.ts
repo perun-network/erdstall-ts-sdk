@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { Bytes, Signer as EthersSigner, utils } from "ethers";
+import { Signer as EthersSigner, ethers } from "ethers";
 import { Address, Signature, Signer } from "#erdstall/crypto";
 import { sr25519PairFromSeed, sr25519Sign } from "@polkadot/util-crypto";
 import { Keypair } from "@polkadot/util-crypto/types";

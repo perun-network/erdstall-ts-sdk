@@ -4,11 +4,11 @@
 // typechain generated events types, which are rather cumbersome to use anyway.
 "use strict";
 
-import { utils } from "ethers";
+import { ethers } from "ethers";
 import {
 	TypedListener,
-	TypedEventFilter,
-	TypedEvent,
+	TypedDeferredTopicFilter as TypedEventFilter,
+	TypedContractEvent as TypedEvent,
 } from "./contracts/common";
 import { ErdstallEventHandler } from "#erdstall";
 import { LedgerEvent, Chain } from "#erdstall/ledger";
@@ -60,7 +60,7 @@ function wrapFrozen(
 ): Listener {
 	type tp = InstanceTypes<typeof erdstall.filters.Frozen>;
 	const wcb: TypedListener<TypedEvent<tp[0], tp[1]>> = async (epoch) => {
-		return cb({ source: "ethereum", epoch: epoch.toBigInt() });
+		return cb({ source: "ethereum", epoch });
 	};
 	return wcb;
 }
@@ -78,7 +78,7 @@ function wrapDeposited(
 		const assets = decodePackedAssets([tokenValue]);
 		return cb({
 			source: "ethereum",
-			epoch: epoch.toBigInt(),
+			epoch,
 			address: EthereumAddress.fromString(account),
 			assets: assets,
 		});
@@ -99,7 +99,7 @@ function wrapWithdrawn(
 		const assets = decodePackedAssets(tokenValues);
 		return cb({
 			source: "ethereum",
-			epoch: epoch.toBigInt(),
+			epoch,
 			address: EthereumAddress.fromString(account),
 			tokens: assets,
 		});
@@ -118,7 +118,7 @@ function wrapChallenged(
 	) => {
 		return cb({
 			source: "ethereum",
-			epoch: epoch.toBigInt(),
+			epoch,
 			address: EthereumAddress.fromString(account),
 		});
 	};
@@ -141,10 +141,10 @@ function wrapChallengeResponded(
 	) => {
 		const assets = decodePackedAssets(tokenValues);
 		const address = EthereumAddress.fromString(account);
-		const sigBytes = utils.arrayify(sig);
+		const sigBytes = ethers.getBytes(sig);
 		return cb({
 			source: "ethereum",
-			epoch: epoch.toBigInt(),
+			epoch,
 			address: address,
 			tokens: assets,
 			sig: new Signature(sigBytes),
@@ -156,9 +156,9 @@ function wrapChallengeResponded(
 
 function decodePackedAssetID(packed: Erdstall.AssetStructOutput): AssetID {
 	return AssetID.fromMetadata(
-		packed.origin as Chain,
-		packed.assetType,
-		utils.arrayify(packed.localID)
+		Number(packed.origin) as Chain,
+		Number(packed.assetType),
+		ethers.getBytes(packed.localID)
 	);
 }
 
@@ -171,8 +171,7 @@ function decodePackedAssets(
 		assets.addAsset(
 			id.origin(),
 			id.localID(),
-			decodePackedAsset(
-				value.map(x => x.toBigInt()), id.type()));
+			decodePackedAsset(value, id.type()));
 	}
 	return assets;
 }

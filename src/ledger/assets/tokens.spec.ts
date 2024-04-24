@@ -77,7 +77,7 @@ describe("Tokens:Decoding", function () {
 	const rng = test.newPrng();
 	it("allows to properly decode packed IDs", function () {
 		const ids = test.newRandomTokens(rng, 101);
-		const idsPacked = utils.hexlify(utils.concat(ids.value.map(
+		const idsPacked = ethers.hexlify(utils.concat(ids.value.map(
 			id => utils.defaultAbiCoder.encode(["uint256"], [value]))));
 		expect(decodePackedIds(idsPacked)).to.deep.equal(ids.value);
 		expect(decodePackedIds("")).to.deep.equal([]);

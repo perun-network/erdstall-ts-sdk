@@ -14,11 +14,12 @@ import {
 	makeERC20DepositCalls,
 	makeERC721DepositCalls,
 } from "./contracts_deposit";
+import * as common from "./contracts/common";
 import { TransactionName } from "./transactionname";
 
 export type DepositCall = (
-	obj?: ethers.PayableOverrides,
-) => Promise<ethers.ContractTransaction>;
+	obj?: common.PayableOverrides,
+) => Promise<ethers.ContractTransactionResponse>;
 
 export type Calls = [TransactionName, DepositCall][];
 

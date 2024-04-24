@@ -10,7 +10,7 @@ export interface TransactionGenerator<B extends Backend> {
 }
 
 type TransactionGenerators = {
-	ethereum: ["approve" | "deposit" | "withdraw", ethers.ContractTransaction];
+	ethereum: ["approve" | "deposit" | "withdraw", ethers.ContractTransactionResponse];
 	substrate: ["deposit" | "withdraw", Promise<void>];
 	test: ["mock", string];
 };

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { utils } from "ethers";
+import { ethers } from "ethers";
 import { jsonObject } from "#erdstall/export/typedjson";
 import { Address, registerAddressType } from "#erdstall/crypto";
 import { EthereumAddress } from "#erdstall/crypto/ethereum";
@@ -35,7 +35,7 @@ export class TestAddress extends Address<"test"> {
 	}
 
 	toJSON(): string {
-		return utils.hexlify(this.value);
+		return ethers.hexlify(this.value);
 	}
 
 	fromJSON(val: any): TestAddress {
@@ -44,7 +44,7 @@ export class TestAddress extends Address<"test"> {
 
 	static fromJSON(val: any): TestAddress {
 		return new TestAddress(
-			utils.arrayify(val, { allowMissingPrefix: true }),
+			ethers.getBytes(val),
 		);
 	}
 

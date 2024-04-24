@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { utils } from "ethers";
+import { ethers } from "ethers";
 import { registerSignatureType, Signature } from "#erdstall/crypto/signature";
 import { EthereumAddress } from "./address";
 import { Address } from "#erdstall/crypto/address";
@@ -20,19 +20,19 @@ export class EthereumSignature extends Signature<"ethereum"> {
 		if(typeof data !== "string") {
 			throw new Error("Expected to decode address from a string");
 		}
-		return new EthereumSignature(utils.arrayify(data));
+		return new EthereumSignature(ethers.getBytes(data));
 	}
 
 	verify(msg: Uint8Array, signer: Address<"ethereum">): boolean {
-		return utils.verifyMessage(msg, this.toString()) === signer.toString()
+		return ethers.verifyMessage(msg, this.toString()) === signer.toString()
 	}
 
 	toJSON() {
-		return utils.hexlify(this.bytes);
+		return ethers.hexlify(this.bytes);
 	}
 
 	toString(): string {
-		return utils.hexlify(this.bytes);
+		return ethers.hexlify(this.bytes);
 	}
 
 	toBytes(): Uint8Array {

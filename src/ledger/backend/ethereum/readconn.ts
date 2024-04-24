@@ -39,7 +39,7 @@ export class LedgerReadConn implements LedgerReader<"ethereum"> {
 	): void {
 		const wcb = ethCallbackShim(this.contract, ev, cb);
 		this.eventCache.set(cb, wcb);
-		this.contract.on(ev, wcb);
+		this.contract.on(this.contract.filters[ev], wcb);
 	}
 
 	once<T extends LedgerEvent>(
@@ -47,7 +47,7 @@ export class LedgerReadConn implements LedgerReader<"ethereum"> {
 		cb: ErdstallEventHandler<T, "ethereum">,
 	): void {
 		this.contract.once(
-			ev,
+			this.contract.filters[ev],
 			ethCallbackShim(this.contract, ev, cb),
 		);
 	}
@@ -60,7 +60,7 @@ export class LedgerReadConn implements LedgerReader<"ethereum"> {
 			return;
 		}
 		const wcb = this.eventCache.get(cb)!;
-		this.contract.off(ev, wcb);
+		this.contract.off(this.contract.filters[ev], wcb);
 		this.eventCache.delete(cb);
 	}
 
@@ -75,7 +75,7 @@ export class LedgerReadConn implements LedgerReader<"ethereum"> {
 	}
 
 	async getWrappedToken(token: AssetID): Promise<EthereumAddress> {
-		const provider = this.contract.provider;
+		const provider = this.contract.runner!.provider!;
 		switch(token.type())
 		{
 		default: throw new Error(`unhandled token type ${token.type()}!`);

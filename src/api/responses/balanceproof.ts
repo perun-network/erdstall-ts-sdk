@@ -18,7 +18,6 @@ import { Backend } from "#erdstall/ledger/backend";
 import { Chain } from "#erdstall/ledger/chain";
 import { BackendSignature, ErdstallSignature } from "#erdstall/erdstall";
 import canonicalize from "canonicalize";
-import { utils } from "ethers";
 
 const balanceProofsTypeName = "BalanceProofs";
 

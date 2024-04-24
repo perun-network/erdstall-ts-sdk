@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { ethers } from "ethers";
+import { ethers, Signer as EthersSigner } from "ethers";
+import * as common from "./contracts/common";
 import { Asset, ChainAssets, Amount } from "#erdstall/ledger/assets";
 import {
 	EthereumAddress as Address,
@@ -32,7 +33,9 @@ export class LedgerWriteConn
 		tokenCache: EthereumTokenProvider,
 	) {
 		super(contract, tokenCache);
-		this.signer = new Signer(contract.signer);
+		if(!(contract.runner as any)?.signMessage)
+			throw new Error("LedgerWriteConn: expected a signer provider");
+		this.signer = new Signer(contract.runner! as EthersSigner);
 		this.chain = chain;
 	}
 
@@ -40,29 +43,22 @@ export class LedgerWriteConn
 		epoch: bigint,
 		exitProofs: ChainProofChunk[],
 	): Promise<TransactionGenerator<"ethereum">> {
-		const calls: Promise<ethers.ContractTransaction>[] = [];
-
-		for(let i = 0; i < exitProofs.length; i++)
-		{
-			const chunk = exitProofs[i];
-			calls.push(this.contract.withdraw({
-				epoch: epoch,
-				id: i,
-				count: exitProofs.length,
-				chain: this.chain,
-				account: (await this.signer.address()).toJSON(),
-				exit: true,
-				tokens: encodePackedAssets(chunk.funds),
-			}, chunk.sig.toJSON()));
-		}
+		const acc = (await this.signer.address()).toJSON();
+		const calls = exitProofs.map(
+			(chunk, i) => (obj?: common.NonPayableOverrides) =>
+				this.contract.withdraw({
+					epoch: epoch,
+					id: i,
+					count: exitProofs.length,
+					chain: this.chain,
+					account: acc,
+					exit: true,
+					tokens: encodePackedAssets(chunk.funds),
+				}, chunk.sig.toJSON(),
+				obj ?? {}));
 
 		return {
-			stages: this.call(calls.map(call => [
-				"withdraw",
-				(
-					_?: ethers.PayableOverrides,
-				): Promise<ethers.ContractTransaction> => call,
-			])),
+			stages: this.call(calls.map(call => ["withdraw", call])),
 			numStages: calls.length,
 		};
 	}
@@ -115,16 +111,16 @@ export class LedgerWriteConn
 	private async *call(
 		calls: Calls,
 	): AsyncGenerator<
-		[TransactionName, ethers.ContractTransaction],
+		[TransactionName, ethers.ContractTransactionResponse],
 		void,
 		void
 	> {
 		if (calls.length == 0) throw new Error("0 calls");
 
-		let nonce = await this.signer.ethersSigner.getTransactionCount();
+		let nonce = await this.signer.ethersSigner.getNonce();
 		for (const [name, call] of calls) {
 			yield (async (): Promise<
-				[TransactionName, ethers.ContractTransaction]
+				[TransactionName, ethers.ContractTransactionResponse]
 			> => {
 				try {
 					const ctx = await call({ nonce: nonce++ });

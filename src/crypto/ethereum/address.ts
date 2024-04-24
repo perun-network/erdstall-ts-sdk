@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { utils } from "ethers";
+import { ethers } from "ethers";
 import { jsonObject } from "#erdstall/export/typedjson";
 import { equalArray } from "#erdstall/utils/arrays";
 import { ABIValue, customJSON } from "#erdstall/api/util";
@@ -24,7 +24,7 @@ export class EthereumAddress extends Address<"ethereum"> implements ABIValue {
 			throw new Error("Expected to decode address from a string");
 		}
 		return new EthereumAddress(
-			utils.arrayify(val, { allowMissingPrefix: true }),
+			ethers.getBytes(val),
 		);
 	}
 
@@ -33,7 +33,7 @@ export class EthereumAddress extends Address<"ethereum"> implements ABIValue {
 	}
 
 	public toJSON(): any {
-		return utils.hexlify(this.value);
+		return ethers.hexlify(this.value);
 	}
 
 	static fromString(addr: string): EthereumAddress {
@@ -51,7 +51,7 @@ export class EthereumAddress extends Address<"ethereum"> implements ABIValue {
 	}
 
 	toString(): string {
-		return utils.getAddress(utils.hexlify(this.value));
+		return ethers.getAddress(ethers.hexlify(this.value));
 	}
 
 	get key(): string {
