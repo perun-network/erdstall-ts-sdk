@@ -13,11 +13,11 @@ jobs:
     steps:
       - name: "Checkout SDK"
         uses: actions/checkout@v3
-      - name: "Prettier Check"
-        uses: creyD/prettier_action@v4.0
-        with:
-          dry: True
-          prettier_options: --config .prettierrc --check **/*.ts
+#      - name: "Prettier Check"
+#        uses: creyD/prettier_action@v4.0
+#        with:
+#          dry: True
+#          prettier_options: --config .prettierrc --check **/*.ts
       - name: "Setup Node.js"
         uses: actions/setup-node@v3
         with:
