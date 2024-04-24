@@ -38,6 +38,25 @@ export class EthereumTokenProvider {
 		set_holders!(holders);
 	}
 
+	async fetch_holders(
+		erdstallAddr: EthereumAddress,
+		contract: Erdstall,
+	): Promise<Map<TokenType, EthereumAddress>> {
+		if(!this.set_holders)
+			return this.holders;
+
+		const holders = new Map<TokenType, EthereumAddress>();
+		holders.set("ERC20", EthereumAddress.fromString(
+			await contract.tokenHolders(0)));
+		holders.set("ERC721", EthereumAddress.fromString(
+			await contract.tokenHolders(1)));
+		holders.set("ETH", EthereumAddress.fromString(
+			await contract.tokenHolders(2)));
+
+		this.resolve_holders(holders);
+		return holders;
+	}
+
 	// query token holder for a token type. Fails if none is configured within a reasonable timeout.
 	async tokenHolderFor(
 		ttype: TokenType,

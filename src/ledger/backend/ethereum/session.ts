@@ -29,25 +29,25 @@ export class EthereumSession
 	implements ErdstallBackendSession<"ethereum">
 {
 	private readonly signer: Signer;
-	protected erdstallConn: LedgerWriteConn;
+	protected backendConn: LedgerWriteConn;
 
-	constructor(signer: Signer, erdstallConn: LedgerWriteConn) {
-		super(signer, erdstallConn);
+	constructor(signer: Signer, backendConn: LedgerWriteConn) {
+		super(signer, backendConn);
 		this.signer = signer;
-		this.erdstallConn = erdstallConn;
+		this.backendConn = backendConn;
 	}
 
 	async deposit(
 		assets: ChainAssets,
 	): Promise<TransactionGenerator<"ethereum">> {
-		return this.erdstallConn.deposit(assets);
+		return this.backendConn.deposit(assets);
 	}
 
 	async withdraw(
 		epoch: bigint,
 		exitProof: ChainProofChunk[],
 	): Promise<TransactionGenerator<"ethereum">> {
-		return this.erdstallConn.withdraw(epoch, exitProof);
+		return this.backendConn.withdraw(epoch, exitProof);
 	}
 }
 

@@ -2,7 +2,7 @@
 "use strict";
 
 import { ErdstallBackendClient, ErdstallEventHandler } from "#erdstall";
-import { LedgerEvent } from "#erdstall/ledger";
+import { Chain, LedgerEvent } from "#erdstall/ledger";
 import { Address } from "#erdstall/crypto";
 import { ethers, Signer } from "ethers";
 import { LocalAsset } from "#erdstall/ledger/assets";
@@ -59,8 +59,10 @@ export function defaultEthereumClientInitializer(
 	config: ClientConfig,
 	provider: ethers.Provider | Signer,
 ): EthereumClient {
-	// NOTE CLEANUP: Temporary hack.
-	const erdstallAddr = (config.chains[0] as ChainConfig<"ethereum">).data.contract;
+	const ethCfg = config.chains.find(c => c.id == Chain.EthereumMainnet)
+		?? config.chains.find(c => c.type === "ethereum");
+
+	const erdstallAddr = (ethCfg! as ChainConfig<"ethereum">).data.contract;
 	const erdstall = Erdstall__factory.connect(erdstallAddr.toString(), provider);
 	const ledgerReader = new LedgerReadConn(erdstall,
 		new EthereumTokenProvider(ethCfg!.id));

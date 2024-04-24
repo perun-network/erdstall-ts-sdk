@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-const _tokenTypes = ["ETH", "ERC20", "ERC721"] as const;
+const _tokenTypes = ["ERC20", "ERC721", "ETH"] as const;
 
 export type TokenType = (typeof _tokenTypes)[number];
