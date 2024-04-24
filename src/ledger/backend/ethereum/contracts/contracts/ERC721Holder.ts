@@ -3,84 +3,68 @@
 /* eslint-disable */
 import type {
   BaseContract,
-  BigNumber,
   BigNumberish,
   BytesLike,
-  CallOverrides,
-  ContractTransaction,
-  Overrides,
-  PopulatedTransaction,
-  Signer,
-  utils,
-} from "ethers";
-import type {
   FunctionFragment,
   Result,
+  Interface,
   EventFragment,
-} from "@ethersproject/abi";
-import type { Listener, Provider } from "@ethersproject/providers";
+  AddressLike,
+  ContractRunner,
+  ContractMethod,
+  Listener,
+} from "ethers";
 import type {
-  TypedEventFilter,
-  TypedEvent,
+  TypedContractEvent,
+  TypedDeferredTopicFilter,
+  TypedEventLog,
+  TypedLogDescription,
   TypedListener,
-  OnEvent,
-  PromiseOrValue,
+  TypedContractMethod,
 } from "../common";
 
-export interface ERC721HolderInterface extends utils.Interface {
-  functions: {
-    "deployedToken(uint16,bytes32)": FunctionFragment;
-    "deposit(address,uint256[])": FunctionFragment;
-    "erdstall()": FunctionFragment;
-    "foreignAssets(address)": FunctionFragment;
-    "registerMetadata(bytes32,string,string,string,bytes)": FunctionFragment;
-    "template()": FunctionFragment;
-    "transfer(uint16,bytes32,address,uint256[])": FunctionFragment;
-  };
-
+export interface ERC721HolderInterface extends Interface {
   getFunction(
-    nameOrSignatureOrTopic:
+    nameOrSignature:
       | "deployedToken"
       | "deposit"
       | "erdstall"
       | "foreignAssets"
       | "registerMetadata"
+      | "setCustomURI"
       | "template"
       | "transfer"
   ): FunctionFragment;
 
+  getEvent(
+    nameOrSignatureOrTopic: "ForeignAssetContractDeployed"
+  ): EventFragment;
+
   encodeFunctionData(
     functionFragment: "deployedToken",
-    values: [PromiseOrValue<BigNumberish>, PromiseOrValue<BytesLike>]
+    values: [BigNumberish, BytesLike]
   ): string;
   encodeFunctionData(
     functionFragment: "deposit",
-    values: [PromiseOrValue<string>, PromiseOrValue<BigNumberish>[]]
+    values: [AddressLike, BigNumberish[]]
   ): string;
   encodeFunctionData(functionFragment: "erdstall", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "foreignAssets",
-    values: [PromiseOrValue<string>]
+    values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "registerMetadata",
-    values: [
-      PromiseOrValue<BytesLike>,
-      PromiseOrValue<string>,
-      PromiseOrValue<string>,
-      PromiseOrValue<string>,
-      PromiseOrValue<BytesLike>
-    ]
+    values: [BytesLike, string, string, string, BytesLike, BytesLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setCustomURI",
+    values: [BytesLike, BigNumberish, string, BytesLike, BytesLike]
   ): string;
   encodeFunctionData(functionFragment: "template", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "transfer",
-    values: [
-      PromiseOrValue<BigNumberish>,
-      PromiseOrValue<BytesLike>,
-      PromiseOrValue<string>,
-      PromiseOrValue<BigNumberish>[]
-    ]
+    values: [BigNumberish, BytesLike, AddressLike, BigNumberish[]]
   ): string;
 
   decodeFunctionResult(
@@ -97,265 +81,222 @@ export interface ERC721HolderInterface extends utils.Interface {
     functionFragment: "registerMetadata",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(
+    functionFragment: "setCustomURI",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "template", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "transfer", data: BytesLike): Result;
-
-  events: {
-    "ForeignAssetContractDeployed(address,uint16,bytes32)": EventFragment;
-  };
-
-  getEvent(
-    nameOrSignatureOrTopic: "ForeignAssetContractDeployed"
-  ): EventFragment;
 }
 
-export interface ForeignAssetContractDeployedEventObject {
-  addr: string;
-  origin: number;
-  localID: string;
+export namespace ForeignAssetContractDeployedEvent {
+  export type InputTuple = [
+    addr: AddressLike,
+    origin: BigNumberish,
+    localID: BytesLike
+  ];
+  export type OutputTuple = [addr: string, origin: bigint, localID: string];
+  export interface OutputObject {
+    addr: string;
+    origin: bigint;
+    localID: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type ForeignAssetContractDeployedEvent = TypedEvent<
-  [string, number, string],
-  ForeignAssetContractDeployedEventObject
->;
-
-export type ForeignAssetContractDeployedEventFilter =
-  TypedEventFilter<ForeignAssetContractDeployedEvent>;
 
 export interface ERC721Holder extends BaseContract {
-  connect(signerOrProvider: Signer | Provider | string): this;
-  attach(addressOrName: string): this;
-  deployed(): Promise<this>;
+  connect(runner?: ContractRunner | null): ERC721Holder;
+  waitForDeployment(): Promise<this>;
 
   interface: ERC721HolderInterface;
 
-  queryFilter<TEvent extends TypedEvent>(
-    event: TypedEventFilter<TEvent>,
+  queryFilter<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
     fromBlockOrBlockhash?: string | number | undefined,
     toBlock?: string | number | undefined
-  ): Promise<Array<TEvent>>;
+  ): Promise<Array<TypedEventLog<TCEvent>>>;
+  queryFilter<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    fromBlockOrBlockhash?: string | number | undefined,
+    toBlock?: string | number | undefined
+  ): Promise<Array<TypedEventLog<TCEvent>>>;
 
-  listeners<TEvent extends TypedEvent>(
-    eventFilter?: TypedEventFilter<TEvent>
-  ): Array<TypedListener<TEvent>>;
-  listeners(eventName?: string): Array<Listener>;
-  removeAllListeners<TEvent extends TypedEvent>(
-    eventFilter: TypedEventFilter<TEvent>
-  ): this;
-  removeAllListeners(eventName?: string): this;
-  off: OnEvent<this>;
-  on: OnEvent<this>;
-  once: OnEvent<this>;
-  removeListener: OnEvent<this>;
+  on<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
+  on<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
 
-  functions: {
-    deployedToken(
-      origin_: PromiseOrValue<BigNumberish>,
-      localID: PromiseOrValue<BytesLike>,
-      overrides?: CallOverrides
-    ): Promise<[string]>;
+  once<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
+  once<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
 
-    deposit(
-      token: PromiseOrValue<string>,
-      ids: PromiseOrValue<BigNumberish>[],
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
+  listeners<TCEvent extends TypedContractEvent>(
+    event: TCEvent
+  ): Promise<Array<TypedListener<TCEvent>>>;
+  listeners(eventName?: string): Promise<Array<Listener>>;
+  removeAllListeners<TCEvent extends TypedContractEvent>(
+    event?: TCEvent
+  ): Promise<this>;
 
-    erdstall(overrides?: CallOverrides): Promise<[string]>;
+  deployedToken: TypedContractMethod<
+    [origin_: BigNumberish, localID: BytesLike],
+    [string],
+    "view"
+  >;
 
-    foreignAssets(
-      arg0: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<[string, number] & { localID: string; origin: number }>;
+  deposit: TypedContractMethod<
+    [token: AddressLike, ids: BigNumberish[]],
+    [void],
+    "nonpayable"
+  >;
 
-    registerMetadata(
-      assetHash: PromiseOrValue<BytesLike>,
-      name: PromiseOrValue<string>,
-      symbol: PromiseOrValue<string>,
-      baseURI: PromiseOrValue<string>,
-      sig: PromiseOrValue<BytesLike>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
+  erdstall: TypedContractMethod<[], [string], "view">;
 
-    template(overrides?: CallOverrides): Promise<[string]>;
+  foreignAssets: TypedContractMethod<
+    [arg0: AddressLike],
+    [[string, bigint] & { localID: string; origin: bigint }],
+    "view"
+  >;
 
-    transfer(
-      origin: PromiseOrValue<BigNumberish>,
-      localID: PromiseOrValue<BytesLike>,
-      recipient: PromiseOrValue<string>,
-      value: PromiseOrValue<BigNumberish>[],
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-  };
+  registerMetadata: TypedContractMethod<
+    [
+      assetHash: BytesLike,
+      name: string,
+      symbol: string,
+      baseURI: string,
+      sig: BytesLike,
+      certificate: BytesLike
+    ],
+    [void],
+    "nonpayable"
+  >;
 
-  deployedToken(
-    origin_: PromiseOrValue<BigNumberish>,
-    localID: PromiseOrValue<BytesLike>,
-    overrides?: CallOverrides
-  ): Promise<string>;
+  setCustomURI: TypedContractMethod<
+    [
+      assetHash: BytesLike,
+      id: BigNumberish,
+      uri: string,
+      sig: BytesLike,
+      certificate: BytesLike
+    ],
+    [void],
+    "nonpayable"
+  >;
 
-  deposit(
-    token: PromiseOrValue<string>,
-    ids: PromiseOrValue<BigNumberish>[],
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
+  template: TypedContractMethod<[], [string], "view">;
 
-  erdstall(overrides?: CallOverrides): Promise<string>;
+  transfer: TypedContractMethod<
+    [
+      origin: BigNumberish,
+      localID: BytesLike,
+      recipient: AddressLike,
+      value: BigNumberish[]
+    ],
+    [void],
+    "nonpayable"
+  >;
 
-  foreignAssets(
-    arg0: PromiseOrValue<string>,
-    overrides?: CallOverrides
-  ): Promise<[string, number] & { localID: string; origin: number }>;
+  getFunction<T extends ContractMethod = ContractMethod>(
+    key: string | FunctionFragment
+  ): T;
 
-  registerMetadata(
-    assetHash: PromiseOrValue<BytesLike>,
-    name: PromiseOrValue<string>,
-    symbol: PromiseOrValue<string>,
-    baseURI: PromiseOrValue<string>,
-    sig: PromiseOrValue<BytesLike>,
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
+  getFunction(
+    nameOrSignature: "deployedToken"
+  ): TypedContractMethod<
+    [origin_: BigNumberish, localID: BytesLike],
+    [string],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "deposit"
+  ): TypedContractMethod<
+    [token: AddressLike, ids: BigNumberish[]],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "erdstall"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "foreignAssets"
+  ): TypedContractMethod<
+    [arg0: AddressLike],
+    [[string, bigint] & { localID: string; origin: bigint }],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "registerMetadata"
+  ): TypedContractMethod<
+    [
+      assetHash: BytesLike,
+      name: string,
+      symbol: string,
+      baseURI: string,
+      sig: BytesLike,
+      certificate: BytesLike
+    ],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "setCustomURI"
+  ): TypedContractMethod<
+    [
+      assetHash: BytesLike,
+      id: BigNumberish,
+      uri: string,
+      sig: BytesLike,
+      certificate: BytesLike
+    ],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "template"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "transfer"
+  ): TypedContractMethod<
+    [
+      origin: BigNumberish,
+      localID: BytesLike,
+      recipient: AddressLike,
+      value: BigNumberish[]
+    ],
+    [void],
+    "nonpayable"
+  >;
 
-  template(overrides?: CallOverrides): Promise<string>;
-
-  transfer(
-    origin: PromiseOrValue<BigNumberish>,
-    localID: PromiseOrValue<BytesLike>,
-    recipient: PromiseOrValue<string>,
-    value: PromiseOrValue<BigNumberish>[],
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
-  callStatic: {
-    deployedToken(
-      origin_: PromiseOrValue<BigNumberish>,
-      localID: PromiseOrValue<BytesLike>,
-      overrides?: CallOverrides
-    ): Promise<string>;
-
-    deposit(
-      token: PromiseOrValue<string>,
-      ids: PromiseOrValue<BigNumberish>[],
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    erdstall(overrides?: CallOverrides): Promise<string>;
-
-    foreignAssets(
-      arg0: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<[string, number] & { localID: string; origin: number }>;
-
-    registerMetadata(
-      assetHash: PromiseOrValue<BytesLike>,
-      name: PromiseOrValue<string>,
-      symbol: PromiseOrValue<string>,
-      baseURI: PromiseOrValue<string>,
-      sig: PromiseOrValue<BytesLike>,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    template(overrides?: CallOverrides): Promise<string>;
-
-    transfer(
-      origin: PromiseOrValue<BigNumberish>,
-      localID: PromiseOrValue<BytesLike>,
-      recipient: PromiseOrValue<string>,
-      value: PromiseOrValue<BigNumberish>[],
-      overrides?: CallOverrides
-    ): Promise<void>;
-  };
+  getEvent(
+    key: "ForeignAssetContractDeployed"
+  ): TypedContractEvent<
+    ForeignAssetContractDeployedEvent.InputTuple,
+    ForeignAssetContractDeployedEvent.OutputTuple,
+    ForeignAssetContractDeployedEvent.OutputObject
+  >;
 
   filters: {
-    "ForeignAssetContractDeployed(address,uint16,bytes32)"(
-      addr?: null,
-      origin?: null,
-      localID?: null
-    ): ForeignAssetContractDeployedEventFilter;
-    ForeignAssetContractDeployed(
-      addr?: null,
-      origin?: null,
-      localID?: null
-    ): ForeignAssetContractDeployedEventFilter;
-  };
-
-  estimateGas: {
-    deployedToken(
-      origin_: PromiseOrValue<BigNumberish>,
-      localID: PromiseOrValue<BytesLike>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    deposit(
-      token: PromiseOrValue<string>,
-      ids: PromiseOrValue<BigNumberish>[],
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    erdstall(overrides?: CallOverrides): Promise<BigNumber>;
-
-    foreignAssets(
-      arg0: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    registerMetadata(
-      assetHash: PromiseOrValue<BytesLike>,
-      name: PromiseOrValue<string>,
-      symbol: PromiseOrValue<string>,
-      baseURI: PromiseOrValue<string>,
-      sig: PromiseOrValue<BytesLike>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    template(overrides?: CallOverrides): Promise<BigNumber>;
-
-    transfer(
-      origin: PromiseOrValue<BigNumberish>,
-      localID: PromiseOrValue<BytesLike>,
-      recipient: PromiseOrValue<string>,
-      value: PromiseOrValue<BigNumberish>[],
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-  };
-
-  populateTransaction: {
-    deployedToken(
-      origin_: PromiseOrValue<BigNumberish>,
-      localID: PromiseOrValue<BytesLike>,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    deposit(
-      token: PromiseOrValue<string>,
-      ids: PromiseOrValue<BigNumberish>[],
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    erdstall(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    foreignAssets(
-      arg0: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    registerMetadata(
-      assetHash: PromiseOrValue<BytesLike>,
-      name: PromiseOrValue<string>,
-      symbol: PromiseOrValue<string>,
-      baseURI: PromiseOrValue<string>,
-      sig: PromiseOrValue<BytesLike>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    template(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    transfer(
-      origin: PromiseOrValue<BigNumberish>,
-      localID: PromiseOrValue<BytesLike>,
-      recipient: PromiseOrValue<string>,
-      value: PromiseOrValue<BigNumberish>[],
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
+    "ForeignAssetContractDeployed(address,uint16,bytes32)": TypedContractEvent<
+      ForeignAssetContractDeployedEvent.InputTuple,
+      ForeignAssetContractDeployedEvent.OutputTuple,
+      ForeignAssetContractDeployedEvent.OutputObject
+    >;
+    ForeignAssetContractDeployed: TypedContractEvent<
+      ForeignAssetContractDeployedEvent.InputTuple,
+      ForeignAssetContractDeployedEvent.OutputTuple,
+      ForeignAssetContractDeployedEvent.OutputObject
+    >;
   };
 }

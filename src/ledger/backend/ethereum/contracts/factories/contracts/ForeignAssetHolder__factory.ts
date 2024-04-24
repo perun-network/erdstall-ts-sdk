@@ -2,8 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import { Contract, Signer, utils } from "ethers";
-import type { Provider } from "@ethersproject/providers";
+import { Contract, Interface, type ContractRunner } from "ethers";
 import type {
   ForeignAssetHolder,
   ForeignAssetHolderInterface,
@@ -13,6 +12,11 @@ const _abi = [
   {
     inputs: [],
     name: "CallerIsNotErdstall",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "ERC1167FailedCreateClone",
     type: "error",
   },
   {
@@ -152,12 +156,12 @@ const _abi = [
 export class ForeignAssetHolder__factory {
   static readonly abi = _abi;
   static createInterface(): ForeignAssetHolderInterface {
-    return new utils.Interface(_abi) as ForeignAssetHolderInterface;
+    return new Interface(_abi) as ForeignAssetHolderInterface;
   }
   static connect(
     address: string,
-    signerOrProvider: Signer | Provider
+    runner?: ContractRunner | null
   ): ForeignAssetHolder {
-    return new Contract(address, _abi, signerOrProvider) as ForeignAssetHolder;
+    return new Contract(address, _abi, runner) as unknown as ForeignAssetHolder;
   }
 }

@@ -3,128 +3,105 @@
 /* eslint-disable */
 import type {
   BaseContract,
-  BigNumber,
   BigNumberish,
   BytesLike,
-  CallOverrides,
-  ContractTransaction,
-  Overrides,
-  PopulatedTransaction,
-  Signer,
-  utils,
-} from "ethers";
-import type {
   FunctionFragment,
   Result,
+  Interface,
   EventFragment,
-} from "@ethersproject/abi";
-import type { Listener, Provider } from "@ethersproject/providers";
+  AddressLike,
+  ContractRunner,
+  ContractMethod,
+  Listener,
+} from "ethers";
 import type {
-  TypedEventFilter,
-  TypedEvent,
+  TypedContractEvent,
+  TypedDeferredTopicFilter,
+  TypedEventLog,
+  TypedLogDescription,
   TypedListener,
-  OnEvent,
-  PromiseOrValue,
+  TypedContractMethod,
 } from "../common";
 
 export declare namespace Erdstall {
   export type AssetStruct = {
-    origin: PromiseOrValue<BigNumberish>;
-    assetType: PromiseOrValue<BigNumberish>;
-    localID: PromiseOrValue<BytesLike>;
+    origin: BigNumberish;
+    assetType: BigNumberish;
+    localID: BytesLike;
   };
 
-  export type AssetStructOutput = [number, number, string] & {
-    origin: number;
-    assetType: number;
-    localID: string;
-  };
+  export type AssetStructOutput = [
+    origin: bigint,
+    assetType: bigint,
+    localID: string
+  ] & { origin: bigint; assetType: bigint; localID: string };
 
   export type TokenValueStruct = {
     asset: Erdstall.AssetStruct;
-    value: PromiseOrValue<BigNumberish>[];
+    value: BigNumberish[];
   };
 
   export type TokenValueStructOutput = [
-    Erdstall.AssetStructOutput,
-    BigNumber[]
-  ] & { asset: Erdstall.AssetStructOutput; value: BigNumber[] };
+    asset: Erdstall.AssetStructOutput,
+    value: bigint[]
+  ] & { asset: Erdstall.AssetStructOutput; value: bigint[] };
 
   export type BalanceChunkStruct = {
-    epoch: PromiseOrValue<BigNumberish>;
-    id: PromiseOrValue<BigNumberish>;
-    count: PromiseOrValue<BigNumberish>;
-    chain: PromiseOrValue<BigNumberish>;
-    account: PromiseOrValue<string>;
-    exit: PromiseOrValue<boolean>;
+    epoch: BigNumberish;
+    id: BigNumberish;
+    count: BigNumberish;
+    chain: BigNumberish;
+    account: AddressLike;
+    exit: boolean;
     tokens: Erdstall.TokenValueStruct[];
   };
 
   export type BalanceChunkStructOutput = [
-    BigNumber,
-    number,
-    number,
-    number,
-    string,
-    boolean,
-    Erdstall.TokenValueStructOutput[]
+    epoch: bigint,
+    id: bigint,
+    count: bigint,
+    chain: bigint,
+    account: string,
+    exit: boolean,
+    tokens: Erdstall.TokenValueStructOutput[]
   ] & {
-    epoch: BigNumber;
-    id: number;
-    count: number;
-    chain: number;
+    epoch: bigint;
+    id: bigint;
+    count: bigint;
+    chain: bigint;
     account: string;
     exit: boolean;
     tokens: Erdstall.TokenValueStructOutput[];
   };
 
-  export type FreezeProofStruct = {
-    chain: PromiseOrValue<BigNumberish>;
-    block: PromiseOrValue<BigNumberish>;
-    epoch: PromiseOrValue<BigNumberish>;
+  export type ZeroBalanceProofStruct = {
+    epoch: BigNumberish;
+    chain: BigNumberish;
+    account: AddressLike;
   };
 
-  export type FreezeProofStructOutput = [number, BigNumber, BigNumber] & {
-    chain: number;
-    block: BigNumber;
-    epoch: BigNumber;
+  export type ZeroBalanceProofStructOutput = [
+    epoch: bigint,
+    chain: bigint,
+    account: string
+  ] & { epoch: bigint; chain: bigint; account: string };
+
+  export type FreezeProofStruct = {
+    chain: BigNumberish;
+    block: BigNumberish;
+    epoch: BigNumberish;
   };
+
+  export type FreezeProofStructOutput = [
+    chain: bigint,
+    block: bigint,
+    epoch: bigint
+  ] & { chain: bigint; block: bigint; epoch: bigint };
 }
 
-export interface ErdstallInterface extends utils.Interface {
-  functions: {
-    "bigBangTime()": FunctionFragment;
-    "chainID()": FunctionFragment;
-    "challenge()": FunctionFragment;
-    "challenges(uint64,address)": FunctionFragment;
-    "deployBlockNum()": FunctionFragment;
-    "deposit(address,uint8,uint16,bytes32,uint256[])": FunctionFragment;
-    "deposits(uint64,address,uint256)": FunctionFragment;
-    "encodeBalanceProof((uint64,uint32,uint32,uint16,address,bool,((uint16,uint8,bytes32),uint256[])[]))": FunctionFragment;
-    "ensureFrozen()": FunctionFragment;
-    "epochDuration()": FunctionFragment;
-    "frozenEpoch()": FunctionFragment;
-    "holderTypes(address)": FunctionFragment;
-    "metadataWasHandled(address)": FunctionFragment;
-    "numChallenges(uint64)": FunctionFragment;
-    "owner()": FunctionFragment;
-    "registerTokenType(address,uint8)": FunctionFragment;
-    "renounceOwnership()": FunctionFragment;
-    "respondChallenge((uint64,uint32,uint32,uint16,address,bool,((uint16,uint8,bytes32),uint256[])[]),bytes)": FunctionFragment;
-    "submitFreezeProof((uint16,uint64,uint64),bytes,bytes)": FunctionFragment;
-    "tee()": FunctionFragment;
-    "tokenHolders(uint8)": FunctionFragment;
-    "transferOwnership(address)": FunctionFragment;
-    "verifyBalance((uint64,uint32,uint32,uint16,address,bool,((uint16,uint8,bytes32),uint256[])[]),bytes)": FunctionFragment;
-    "verifyTeeSig(bytes,bytes)": FunctionFragment;
-    "withdraw((uint64,uint32,uint32,uint16,address,bool,((uint16,uint8,bytes32),uint256[])[]),bytes)": FunctionFragment;
-    "withdrawFrozen((uint64,uint32,uint32,uint16,address,bool,((uint16,uint8,bytes32),uint256[])[]),bytes)": FunctionFragment;
-    "withdrawFrozenDeposit()": FunctionFragment;
-    "withdrawn(uint64,address)": FunctionFragment;
-  };
-
+export interface ErdstallInterface extends Interface {
   getFunction(
-    nameOrSignatureOrTopic:
+    nameOrSignature:
       | "bigBangTime"
       | "chainID"
       | "challenge"
@@ -143,17 +120,34 @@ export interface ErdstallInterface extends utils.Interface {
       | "registerTokenType"
       | "renounceOwnership"
       | "respondChallenge"
+      | "respondZero"
       | "submitFreezeProof"
       | "tee"
       | "tokenHolders"
       | "transferOwnership"
       | "verifyBalance"
+      | "verifyLightClientCert"
       | "verifyTeeSig"
       | "withdraw"
       | "withdrawFrozen"
       | "withdrawFrozenDeposit"
       | "withdrawn"
   ): FunctionFragment;
+
+  getEvent(
+    nameOrSignatureOrTopic:
+      | "ChallengeResponded"
+      | "Challenged"
+      | "Deposited"
+      | "FirstTimeFungible"
+      | "FirstTimeNFT"
+      | "Frozen"
+      | "OwnershipTransferred"
+      | "TokenTypeRegistered"
+      | "WithdrawalException"
+      | "Withdrawn"
+      | "ZeroResponded"
+  ): EventFragment;
 
   encodeFunctionData(
     functionFragment: "bigBangTime",
@@ -163,7 +157,7 @@ export interface ErdstallInterface extends utils.Interface {
   encodeFunctionData(functionFragment: "challenge", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "challenges",
-    values: [PromiseOrValue<BigNumberish>, PromiseOrValue<string>]
+    values: [BigNumberish, AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "deployBlockNum",
@@ -171,21 +165,11 @@ export interface ErdstallInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "deposit",
-    values: [
-      PromiseOrValue<string>,
-      PromiseOrValue<BigNumberish>,
-      PromiseOrValue<BigNumberish>,
-      PromiseOrValue<BytesLike>,
-      PromiseOrValue<BigNumberish>[]
-    ]
+    values: [AddressLike, BigNumberish, BigNumberish, BytesLike, BigNumberish[]]
   ): string;
   encodeFunctionData(
     functionFragment: "deposits",
-    values: [
-      PromiseOrValue<BigNumberish>,
-      PromiseOrValue<string>,
-      PromiseOrValue<BigNumberish>
-    ]
+    values: [BigNumberish, AddressLike, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "encodeBalanceProof",
@@ -205,20 +189,20 @@ export interface ErdstallInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "holderTypes",
-    values: [PromiseOrValue<string>]
+    values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "metadataWasHandled",
-    values: [PromiseOrValue<string>]
+    values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "numChallenges",
-    values: [PromiseOrValue<BigNumberish>]
+    values: [BigNumberish]
   ): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "registerTokenType",
-    values: [PromiseOrValue<string>, PromiseOrValue<BigNumberish>]
+    values: [AddressLike, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "renounceOwnership",
@@ -226,40 +210,44 @@ export interface ErdstallInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "respondChallenge",
-    values: [Erdstall.BalanceChunkStruct, PromiseOrValue<BytesLike>]
+    values: [Erdstall.BalanceChunkStruct, BytesLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "respondZero",
+    values: [Erdstall.ZeroBalanceProofStruct, BytesLike]
   ): string;
   encodeFunctionData(
     functionFragment: "submitFreezeProof",
-    values: [
-      Erdstall.FreezeProofStruct,
-      PromiseOrValue<BytesLike>,
-      PromiseOrValue<BytesLike>
-    ]
+    values: [Erdstall.FreezeProofStruct, BytesLike, BytesLike]
   ): string;
   encodeFunctionData(functionFragment: "tee", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "tokenHolders",
-    values: [PromiseOrValue<BigNumberish>]
+    values: [BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "transferOwnership",
-    values: [PromiseOrValue<string>]
+    values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "verifyBalance",
-    values: [Erdstall.BalanceChunkStruct, PromiseOrValue<BytesLike>]
+    values: [Erdstall.BalanceChunkStruct, BytesLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "verifyLightClientCert",
+    values: [AddressLike, BytesLike]
   ): string;
   encodeFunctionData(
     functionFragment: "verifyTeeSig",
-    values: [PromiseOrValue<BytesLike>, PromiseOrValue<BytesLike>]
+    values: [BytesLike, BytesLike]
   ): string;
   encodeFunctionData(
     functionFragment: "withdraw",
-    values: [Erdstall.BalanceChunkStruct, PromiseOrValue<BytesLike>]
+    values: [Erdstall.BalanceChunkStruct, BytesLike]
   ): string;
   encodeFunctionData(
     functionFragment: "withdrawFrozen",
-    values: [Erdstall.BalanceChunkStruct, PromiseOrValue<BytesLike>]
+    values: [Erdstall.BalanceChunkStruct, BytesLike]
   ): string;
   encodeFunctionData(
     functionFragment: "withdrawFrozenDeposit",
@@ -267,7 +255,7 @@ export interface ErdstallInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "withdrawn",
-    values: [PromiseOrValue<BigNumberish>, PromiseOrValue<string>]
+    values: [BigNumberish, AddressLike]
   ): string;
 
   decodeFunctionResult(
@@ -325,6 +313,10 @@ export interface ErdstallInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "respondZero",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "submitFreezeProof",
     data: BytesLike
   ): Result;
@@ -342,6 +334,10 @@ export interface ErdstallInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "verifyLightClientCert",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "verifyTeeSig",
     data: BytesLike
   ): Result;
@@ -355,958 +351,753 @@ export interface ErdstallInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "withdrawn", data: BytesLike): Result;
-
-  events: {
-    "ChallengeResponded(uint64,address,uint32,uint32,tuple[],bool,bytes)": EventFragment;
-    "Challenged(uint64,address)": EventFragment;
-    "Deposited(uint64,address,tuple)": EventFragment;
-    "FirstTimeFungible(bytes32,string,string,uint8)": EventFragment;
-    "FirstTimeNFT(bytes32,string,string,string)": EventFragment;
-    "Frozen(uint64)": EventFragment;
-    "OwnershipTransferred(address,address)": EventFragment;
-    "TokenTypeRegistered(uint8,address)": EventFragment;
-    "WithdrawalException(uint64,address,tuple,bytes)": EventFragment;
-    "Withdrawn(uint64,address,tuple[])": EventFragment;
-  };
-
-  getEvent(nameOrSignatureOrTopic: "ChallengeResponded"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "Challenged"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "Deposited"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "FirstTimeFungible"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "FirstTimeNFT"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "Frozen"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "OwnershipTransferred"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "TokenTypeRegistered"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "WithdrawalException"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "Withdrawn"): EventFragment;
 }
 
-export interface ChallengeRespondedEventObject {
-  epoch: BigNumber;
-  account: string;
-  id: number;
-  count: number;
-  tokens: Erdstall.TokenValueStructOutput[];
-  exit: boolean;
-  sig: string;
+export namespace ChallengeRespondedEvent {
+  export type InputTuple = [
+    epoch: BigNumberish,
+    account: AddressLike,
+    id: BigNumberish,
+    count: BigNumberish,
+    tokens: Erdstall.TokenValueStruct[],
+    exit: boolean,
+    sig: BytesLike
+  ];
+  export type OutputTuple = [
+    epoch: bigint,
+    account: string,
+    id: bigint,
+    count: bigint,
+    tokens: Erdstall.TokenValueStructOutput[],
+    exit: boolean,
+    sig: string
+  ];
+  export interface OutputObject {
+    epoch: bigint;
+    account: string;
+    id: bigint;
+    count: bigint;
+    tokens: Erdstall.TokenValueStructOutput[];
+    exit: boolean;
+    sig: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type ChallengeRespondedEvent = TypedEvent<
-  [
-    BigNumber,
-    string,
-    number,
-    number,
-    Erdstall.TokenValueStructOutput[],
-    boolean,
-    string
-  ],
-  ChallengeRespondedEventObject
->;
 
-export type ChallengeRespondedEventFilter =
-  TypedEventFilter<ChallengeRespondedEvent>;
-
-export interface ChallengedEventObject {
-  epoch: BigNumber;
-  account: string;
+export namespace ChallengedEvent {
+  export type InputTuple = [epoch: BigNumberish, account: AddressLike];
+  export type OutputTuple = [epoch: bigint, account: string];
+  export interface OutputObject {
+    epoch: bigint;
+    account: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type ChallengedEvent = TypedEvent<
-  [BigNumber, string],
-  ChallengedEventObject
->;
 
-export type ChallengedEventFilter = TypedEventFilter<ChallengedEvent>;
-
-export interface DepositedEventObject {
-  epoch: BigNumber;
-  account: string;
-  value: Erdstall.TokenValueStructOutput;
+export namespace DepositedEvent {
+  export type InputTuple = [
+    epoch: BigNumberish,
+    account: AddressLike,
+    value: Erdstall.TokenValueStruct
+  ];
+  export type OutputTuple = [
+    epoch: bigint,
+    account: string,
+    value: Erdstall.TokenValueStructOutput
+  ];
+  export interface OutputObject {
+    epoch: bigint;
+    account: string;
+    value: Erdstall.TokenValueStructOutput;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type DepositedEvent = TypedEvent<
-  [BigNumber, string, Erdstall.TokenValueStructOutput],
-  DepositedEventObject
->;
 
-export type DepositedEventFilter = TypedEventFilter<DepositedEvent>;
-
-export interface FirstTimeFungibleEventObject {
-  localID: string;
-  name: string;
-  symbol: string;
-  decimals: number;
+export namespace FirstTimeFungibleEvent {
+  export type InputTuple = [
+    localID: BytesLike,
+    name: string,
+    symbol: string,
+    decimals: BigNumberish
+  ];
+  export type OutputTuple = [
+    localID: string,
+    name: string,
+    symbol: string,
+    decimals: bigint
+  ];
+  export interface OutputObject {
+    localID: string;
+    name: string;
+    symbol: string;
+    decimals: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type FirstTimeFungibleEvent = TypedEvent<
-  [string, string, string, number],
-  FirstTimeFungibleEventObject
->;
 
-export type FirstTimeFungibleEventFilter =
-  TypedEventFilter<FirstTimeFungibleEvent>;
-
-export interface FirstTimeNFTEventObject {
-  localID: string;
-  name: string;
-  symbol: string;
-  sampleURI: string;
+export namespace FirstTimeNFTEvent {
+  export type InputTuple = [
+    localID: BytesLike,
+    name: string,
+    symbol: string,
+    sampleURI: string
+  ];
+  export type OutputTuple = [
+    localID: string,
+    name: string,
+    symbol: string,
+    sampleURI: string
+  ];
+  export interface OutputObject {
+    localID: string;
+    name: string;
+    symbol: string;
+    sampleURI: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type FirstTimeNFTEvent = TypedEvent<
-  [string, string, string, string],
-  FirstTimeNFTEventObject
->;
 
-export type FirstTimeNFTEventFilter = TypedEventFilter<FirstTimeNFTEvent>;
-
-export interface FrozenEventObject {
-  epoch: BigNumber;
+export namespace FrozenEvent {
+  export type InputTuple = [epoch: BigNumberish];
+  export type OutputTuple = [epoch: bigint];
+  export interface OutputObject {
+    epoch: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type FrozenEvent = TypedEvent<[BigNumber], FrozenEventObject>;
 
-export type FrozenEventFilter = TypedEventFilter<FrozenEvent>;
-
-export interface OwnershipTransferredEventObject {
-  previousOwner: string;
-  newOwner: string;
+export namespace OwnershipTransferredEvent {
+  export type InputTuple = [previousOwner: AddressLike, newOwner: AddressLike];
+  export type OutputTuple = [previousOwner: string, newOwner: string];
+  export interface OutputObject {
+    previousOwner: string;
+    newOwner: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type OwnershipTransferredEvent = TypedEvent<
-  [string, string],
-  OwnershipTransferredEventObject
->;
 
-export type OwnershipTransferredEventFilter =
-  TypedEventFilter<OwnershipTransferredEvent>;
-
-export interface TokenTypeRegisteredEventObject {
-  assetType: number;
-  tokenHolder: string;
+export namespace TokenTypeRegisteredEvent {
+  export type InputTuple = [assetType: BigNumberish, tokenHolder: AddressLike];
+  export type OutputTuple = [assetType: bigint, tokenHolder: string];
+  export interface OutputObject {
+    assetType: bigint;
+    tokenHolder: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type TokenTypeRegisteredEvent = TypedEvent<
-  [number, string],
-  TokenTypeRegisteredEventObject
->;
 
-export type TokenTypeRegisteredEventFilter =
-  TypedEventFilter<TokenTypeRegisteredEvent>;
-
-export interface WithdrawalExceptionEventObject {
-  epoch: BigNumber;
-  account: string;
-  token: Erdstall.TokenValueStructOutput;
-  error: string;
+export namespace WithdrawalExceptionEvent {
+  export type InputTuple = [
+    epoch: BigNumberish,
+    account: AddressLike,
+    token: Erdstall.TokenValueStruct,
+    error: BytesLike
+  ];
+  export type OutputTuple = [
+    epoch: bigint,
+    account: string,
+    token: Erdstall.TokenValueStructOutput,
+    error: string
+  ];
+  export interface OutputObject {
+    epoch: bigint;
+    account: string;
+    token: Erdstall.TokenValueStructOutput;
+    error: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type WithdrawalExceptionEvent = TypedEvent<
-  [BigNumber, string, Erdstall.TokenValueStructOutput, string],
-  WithdrawalExceptionEventObject
->;
 
-export type WithdrawalExceptionEventFilter =
-  TypedEventFilter<WithdrawalExceptionEvent>;
-
-export interface WithdrawnEventObject {
-  epoch: BigNumber;
-  account: string;
-  tokens: Erdstall.TokenValueStructOutput[];
+export namespace WithdrawnEvent {
+  export type InputTuple = [
+    epoch: BigNumberish,
+    account: AddressLike,
+    tokens: Erdstall.TokenValueStruct[]
+  ];
+  export type OutputTuple = [
+    epoch: bigint,
+    account: string,
+    tokens: Erdstall.TokenValueStructOutput[]
+  ];
+  export interface OutputObject {
+    epoch: bigint;
+    account: string;
+    tokens: Erdstall.TokenValueStructOutput[];
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
-export type WithdrawnEvent = TypedEvent<
-  [BigNumber, string, Erdstall.TokenValueStructOutput[]],
-  WithdrawnEventObject
->;
 
-export type WithdrawnEventFilter = TypedEventFilter<WithdrawnEvent>;
+export namespace ZeroRespondedEvent {
+  export type InputTuple = [epoch: BigNumberish, account: AddressLike];
+  export type OutputTuple = [epoch: bigint, account: string];
+  export interface OutputObject {
+    epoch: bigint;
+    account: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
 
 export interface Erdstall extends BaseContract {
-  connect(signerOrProvider: Signer | Provider | string): this;
-  attach(addressOrName: string): this;
-  deployed(): Promise<this>;
+  connect(runner?: ContractRunner | null): Erdstall;
+  waitForDeployment(): Promise<this>;
 
   interface: ErdstallInterface;
 
-  queryFilter<TEvent extends TypedEvent>(
-    event: TypedEventFilter<TEvent>,
+  queryFilter<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
     fromBlockOrBlockhash?: string | number | undefined,
     toBlock?: string | number | undefined
-  ): Promise<Array<TEvent>>;
-
-  listeners<TEvent extends TypedEvent>(
-    eventFilter?: TypedEventFilter<TEvent>
-  ): Array<TypedListener<TEvent>>;
-  listeners(eventName?: string): Array<Listener>;
-  removeAllListeners<TEvent extends TypedEvent>(
-    eventFilter: TypedEventFilter<TEvent>
-  ): this;
-  removeAllListeners(eventName?: string): this;
-  off: OnEvent<this>;
-  on: OnEvent<this>;
-  once: OnEvent<this>;
-  removeListener: OnEvent<this>;
-
-  functions: {
-    bigBangTime(overrides?: CallOverrides): Promise<[BigNumber]>;
-
-    chainID(overrides?: CallOverrides): Promise<[number]>;
-
-    challenge(
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-
-    challenges(
-      arg0: PromiseOrValue<BigNumberish>,
-      arg1: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<[number]>;
-
-    deployBlockNum(overrides?: CallOverrides): Promise<[BigNumber]>;
-
-    deposit(
-      depositor: PromiseOrValue<string>,
-      assetType: PromiseOrValue<BigNumberish>,
-      origin: PromiseOrValue<BigNumberish>,
-      token: PromiseOrValue<BytesLike>,
-      value: PromiseOrValue<BigNumberish>[],
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-
-    deposits(
-      arg0: PromiseOrValue<BigNumberish>,
-      arg1: PromiseOrValue<string>,
-      arg2: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<
-      [Erdstall.AssetStructOutput] & { asset: Erdstall.AssetStructOutput }
-    >;
-
-    encodeBalanceProof(
-      balance: Erdstall.BalanceChunkStruct,
-      overrides?: CallOverrides
-    ): Promise<[string]>;
-
-    ensureFrozen(
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-
-    epochDuration(overrides?: CallOverrides): Promise<[BigNumber]>;
-
-    frozenEpoch(overrides?: CallOverrides): Promise<[BigNumber]>;
-
-    holderTypes(
-      arg0: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<[number]>;
-
-    metadataWasHandled(
-      arg0: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<[boolean]>;
-
-    numChallenges(
-      arg0: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
-
-    owner(overrides?: CallOverrides): Promise<[string]>;
-
-    registerTokenType(
-      holder: PromiseOrValue<string>,
-      localTokenType: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-
-    renounceOwnership(
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-
-    respondChallenge(
-      balance: Erdstall.BalanceChunkStruct,
-      sig: PromiseOrValue<BytesLike>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-
-    submitFreezeProof(
-      proof: Erdstall.FreezeProofStruct,
-      sig: PromiseOrValue<BytesLike>,
-      certificate: PromiseOrValue<BytesLike>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-
-    tee(overrides?: CallOverrides): Promise<[string]>;
-
-    tokenHolders(
-      arg0: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<[string]>;
-
-    transferOwnership(
-      newOwner: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-
-    verifyBalance(
-      balance: Erdstall.BalanceChunkStruct,
-      sig: PromiseOrValue<BytesLike>,
-      overrides?: CallOverrides
-    ): Promise<[void]>;
-
-    verifyTeeSig(
-      abiCode: PromiseOrValue<BytesLike>,
-      sig: PromiseOrValue<BytesLike>,
-      overrides?: CallOverrides
-    ): Promise<[boolean]>;
-
-    withdraw(
-      balance: Erdstall.BalanceChunkStruct,
-      sig: PromiseOrValue<BytesLike>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-
-    withdrawFrozen(
-      balance: Erdstall.BalanceChunkStruct,
-      sig: PromiseOrValue<BytesLike>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-
-    withdrawFrozenDeposit(
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-
-    withdrawn(
-      arg0: PromiseOrValue<BigNumberish>,
-      arg1: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<[boolean]>;
-  };
-
-  bigBangTime(overrides?: CallOverrides): Promise<BigNumber>;
-
-  chainID(overrides?: CallOverrides): Promise<number>;
-
-  challenge(
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
-  challenges(
-    arg0: PromiseOrValue<BigNumberish>,
-    arg1: PromiseOrValue<string>,
-    overrides?: CallOverrides
-  ): Promise<number>;
-
-  deployBlockNum(overrides?: CallOverrides): Promise<BigNumber>;
-
-  deposit(
-    depositor: PromiseOrValue<string>,
-    assetType: PromiseOrValue<BigNumberish>,
-    origin: PromiseOrValue<BigNumberish>,
-    token: PromiseOrValue<BytesLike>,
-    value: PromiseOrValue<BigNumberish>[],
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
-  deposits(
-    arg0: PromiseOrValue<BigNumberish>,
-    arg1: PromiseOrValue<string>,
-    arg2: PromiseOrValue<BigNumberish>,
-    overrides?: CallOverrides
-  ): Promise<Erdstall.AssetStructOutput>;
-
-  encodeBalanceProof(
-    balance: Erdstall.BalanceChunkStruct,
-    overrides?: CallOverrides
-  ): Promise<string>;
-
-  ensureFrozen(
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
-  epochDuration(overrides?: CallOverrides): Promise<BigNumber>;
-
-  frozenEpoch(overrides?: CallOverrides): Promise<BigNumber>;
-
-  holderTypes(
-    arg0: PromiseOrValue<string>,
-    overrides?: CallOverrides
-  ): Promise<number>;
-
-  metadataWasHandled(
-    arg0: PromiseOrValue<string>,
-    overrides?: CallOverrides
-  ): Promise<boolean>;
-
-  numChallenges(
-    arg0: PromiseOrValue<BigNumberish>,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
-  owner(overrides?: CallOverrides): Promise<string>;
-
-  registerTokenType(
-    holder: PromiseOrValue<string>,
-    localTokenType: PromiseOrValue<BigNumberish>,
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
-  renounceOwnership(
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
-  respondChallenge(
-    balance: Erdstall.BalanceChunkStruct,
-    sig: PromiseOrValue<BytesLike>,
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
-  submitFreezeProof(
-    proof: Erdstall.FreezeProofStruct,
-    sig: PromiseOrValue<BytesLike>,
-    certificate: PromiseOrValue<BytesLike>,
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
-  tee(overrides?: CallOverrides): Promise<string>;
-
-  tokenHolders(
-    arg0: PromiseOrValue<BigNumberish>,
-    overrides?: CallOverrides
-  ): Promise<string>;
-
-  transferOwnership(
-    newOwner: PromiseOrValue<string>,
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
-  verifyBalance(
-    balance: Erdstall.BalanceChunkStruct,
-    sig: PromiseOrValue<BytesLike>,
-    overrides?: CallOverrides
-  ): Promise<void>;
-
-  verifyTeeSig(
-    abiCode: PromiseOrValue<BytesLike>,
-    sig: PromiseOrValue<BytesLike>,
-    overrides?: CallOverrides
-  ): Promise<boolean>;
-
-  withdraw(
-    balance: Erdstall.BalanceChunkStruct,
-    sig: PromiseOrValue<BytesLike>,
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
-  withdrawFrozen(
-    balance: Erdstall.BalanceChunkStruct,
-    sig: PromiseOrValue<BytesLike>,
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
-  withdrawFrozenDeposit(
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
-  withdrawn(
-    arg0: PromiseOrValue<BigNumberish>,
-    arg1: PromiseOrValue<string>,
-    overrides?: CallOverrides
-  ): Promise<boolean>;
-
-  callStatic: {
-    bigBangTime(overrides?: CallOverrides): Promise<BigNumber>;
-
-    chainID(overrides?: CallOverrides): Promise<number>;
-
-    challenge(overrides?: CallOverrides): Promise<void>;
-
-    challenges(
-      arg0: PromiseOrValue<BigNumberish>,
-      arg1: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<number>;
-
-    deployBlockNum(overrides?: CallOverrides): Promise<BigNumber>;
-
-    deposit(
-      depositor: PromiseOrValue<string>,
-      assetType: PromiseOrValue<BigNumberish>,
-      origin: PromiseOrValue<BigNumberish>,
-      token: PromiseOrValue<BytesLike>,
-      value: PromiseOrValue<BigNumberish>[],
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    deposits(
-      arg0: PromiseOrValue<BigNumberish>,
-      arg1: PromiseOrValue<string>,
-      arg2: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<Erdstall.AssetStructOutput>;
-
-    encodeBalanceProof(
-      balance: Erdstall.BalanceChunkStruct,
-      overrides?: CallOverrides
-    ): Promise<string>;
-
-    ensureFrozen(overrides?: CallOverrides): Promise<void>;
-
-    epochDuration(overrides?: CallOverrides): Promise<BigNumber>;
-
-    frozenEpoch(overrides?: CallOverrides): Promise<BigNumber>;
-
-    holderTypes(
-      arg0: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<number>;
-
-    metadataWasHandled(
-      arg0: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<boolean>;
-
-    numChallenges(
-      arg0: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    owner(overrides?: CallOverrides): Promise<string>;
-
-    registerTokenType(
-      holder: PromiseOrValue<string>,
-      localTokenType: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    renounceOwnership(overrides?: CallOverrides): Promise<void>;
-
-    respondChallenge(
-      balance: Erdstall.BalanceChunkStruct,
-      sig: PromiseOrValue<BytesLike>,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    submitFreezeProof(
-      proof: Erdstall.FreezeProofStruct,
-      sig: PromiseOrValue<BytesLike>,
-      certificate: PromiseOrValue<BytesLike>,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    tee(overrides?: CallOverrides): Promise<string>;
-
-    tokenHolders(
-      arg0: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<string>;
-
-    transferOwnership(
-      newOwner: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    verifyBalance(
-      balance: Erdstall.BalanceChunkStruct,
-      sig: PromiseOrValue<BytesLike>,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    verifyTeeSig(
-      abiCode: PromiseOrValue<BytesLike>,
-      sig: PromiseOrValue<BytesLike>,
-      overrides?: CallOverrides
-    ): Promise<boolean>;
-
-    withdraw(
-      balance: Erdstall.BalanceChunkStruct,
-      sig: PromiseOrValue<BytesLike>,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    withdrawFrozen(
-      balance: Erdstall.BalanceChunkStruct,
-      sig: PromiseOrValue<BytesLike>,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    withdrawFrozenDeposit(overrides?: CallOverrides): Promise<void>;
-
-    withdrawn(
-      arg0: PromiseOrValue<BigNumberish>,
-      arg1: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<boolean>;
-  };
+  ): Promise<Array<TypedEventLog<TCEvent>>>;
+  queryFilter<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    fromBlockOrBlockhash?: string | number | undefined,
+    toBlock?: string | number | undefined
+  ): Promise<Array<TypedEventLog<TCEvent>>>;
+
+  on<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
+  on<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
+
+  once<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
+  once<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
+
+  listeners<TCEvent extends TypedContractEvent>(
+    event: TCEvent
+  ): Promise<Array<TypedListener<TCEvent>>>;
+  listeners(eventName?: string): Promise<Array<Listener>>;
+  removeAllListeners<TCEvent extends TypedContractEvent>(
+    event?: TCEvent
+  ): Promise<this>;
+
+  bigBangTime: TypedContractMethod<[], [bigint], "view">;
+
+  chainID: TypedContractMethod<[], [bigint], "view">;
+
+  challenge: TypedContractMethod<[], [void], "nonpayable">;
+
+  challenges: TypedContractMethod<
+    [arg0: BigNumberish, arg1: AddressLike],
+    [bigint],
+    "view"
+  >;
+
+  deployBlockNum: TypedContractMethod<[], [bigint], "view">;
+
+  deposit: TypedContractMethod<
+    [
+      depositor: AddressLike,
+      assetType: BigNumberish,
+      origin: BigNumberish,
+      token: BytesLike,
+      value: BigNumberish[]
+    ],
+    [void],
+    "nonpayable"
+  >;
+
+  deposits: TypedContractMethod<
+    [arg0: BigNumberish, arg1: AddressLike, arg2: BigNumberish],
+    [Erdstall.AssetStructOutput],
+    "view"
+  >;
+
+  encodeBalanceProof: TypedContractMethod<
+    [balance: Erdstall.BalanceChunkStruct],
+    [string],
+    "view"
+  >;
+
+  ensureFrozen: TypedContractMethod<[], [void], "nonpayable">;
+
+  epochDuration: TypedContractMethod<[], [bigint], "view">;
+
+  frozenEpoch: TypedContractMethod<[], [bigint], "view">;
+
+  holderTypes: TypedContractMethod<[arg0: AddressLike], [bigint], "view">;
+
+  metadataWasHandled: TypedContractMethod<
+    [arg0: AddressLike],
+    [boolean],
+    "view"
+  >;
+
+  numChallenges: TypedContractMethod<[arg0: BigNumberish], [bigint], "view">;
+
+  owner: TypedContractMethod<[], [string], "view">;
+
+  registerTokenType: TypedContractMethod<
+    [holder: AddressLike, localTokenType: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
+  renounceOwnership: TypedContractMethod<[], [void], "nonpayable">;
+
+  respondChallenge: TypedContractMethod<
+    [balance: Erdstall.BalanceChunkStruct, sig: BytesLike],
+    [void],
+    "nonpayable"
+  >;
+
+  respondZero: TypedContractMethod<
+    [proof: Erdstall.ZeroBalanceProofStruct, sig: BytesLike],
+    [void],
+    "nonpayable"
+  >;
+
+  submitFreezeProof: TypedContractMethod<
+    [proof: Erdstall.FreezeProofStruct, sig: BytesLike, certificate: BytesLike],
+    [void],
+    "nonpayable"
+  >;
+
+  tee: TypedContractMethod<[], [string], "view">;
+
+  tokenHolders: TypedContractMethod<[arg0: BigNumberish], [string], "view">;
+
+  transferOwnership: TypedContractMethod<
+    [newOwner: AddressLike],
+    [void],
+    "nonpayable"
+  >;
+
+  verifyBalance: TypedContractMethod<
+    [balance: Erdstall.BalanceChunkStruct, sig: BytesLike],
+    [void],
+    "view"
+  >;
+
+  verifyLightClientCert: TypedContractMethod<
+    [lightClient: AddressLike, certificate: BytesLike],
+    [void],
+    "view"
+  >;
+
+  verifyTeeSig: TypedContractMethod<
+    [abiCode: BytesLike, sig: BytesLike],
+    [boolean],
+    "view"
+  >;
+
+  withdraw: TypedContractMethod<
+    [balance: Erdstall.BalanceChunkStruct, sig: BytesLike],
+    [void],
+    "nonpayable"
+  >;
+
+  withdrawFrozen: TypedContractMethod<
+    [balance: Erdstall.BalanceChunkStruct, sig: BytesLike],
+    [void],
+    "nonpayable"
+  >;
+
+  withdrawFrozenDeposit: TypedContractMethod<[], [void], "nonpayable">;
+
+  withdrawn: TypedContractMethod<
+    [arg0: BigNumberish, arg1: AddressLike],
+    [boolean],
+    "view"
+  >;
+
+  getFunction<T extends ContractMethod = ContractMethod>(
+    key: string | FunctionFragment
+  ): T;
+
+  getFunction(
+    nameOrSignature: "bigBangTime"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "chainID"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "challenge"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "challenges"
+  ): TypedContractMethod<
+    [arg0: BigNumberish, arg1: AddressLike],
+    [bigint],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "deployBlockNum"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "deposit"
+  ): TypedContractMethod<
+    [
+      depositor: AddressLike,
+      assetType: BigNumberish,
+      origin: BigNumberish,
+      token: BytesLike,
+      value: BigNumberish[]
+    ],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "deposits"
+  ): TypedContractMethod<
+    [arg0: BigNumberish, arg1: AddressLike, arg2: BigNumberish],
+    [Erdstall.AssetStructOutput],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "encodeBalanceProof"
+  ): TypedContractMethod<
+    [balance: Erdstall.BalanceChunkStruct],
+    [string],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "ensureFrozen"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "epochDuration"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "frozenEpoch"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "holderTypes"
+  ): TypedContractMethod<[arg0: AddressLike], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "metadataWasHandled"
+  ): TypedContractMethod<[arg0: AddressLike], [boolean], "view">;
+  getFunction(
+    nameOrSignature: "numChallenges"
+  ): TypedContractMethod<[arg0: BigNumberish], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "owner"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "registerTokenType"
+  ): TypedContractMethod<
+    [holder: AddressLike, localTokenType: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "renounceOwnership"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "respondChallenge"
+  ): TypedContractMethod<
+    [balance: Erdstall.BalanceChunkStruct, sig: BytesLike],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "respondZero"
+  ): TypedContractMethod<
+    [proof: Erdstall.ZeroBalanceProofStruct, sig: BytesLike],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "submitFreezeProof"
+  ): TypedContractMethod<
+    [proof: Erdstall.FreezeProofStruct, sig: BytesLike, certificate: BytesLike],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "tee"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "tokenHolders"
+  ): TypedContractMethod<[arg0: BigNumberish], [string], "view">;
+  getFunction(
+    nameOrSignature: "transferOwnership"
+  ): TypedContractMethod<[newOwner: AddressLike], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "verifyBalance"
+  ): TypedContractMethod<
+    [balance: Erdstall.BalanceChunkStruct, sig: BytesLike],
+    [void],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "verifyLightClientCert"
+  ): TypedContractMethod<
+    [lightClient: AddressLike, certificate: BytesLike],
+    [void],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "verifyTeeSig"
+  ): TypedContractMethod<
+    [abiCode: BytesLike, sig: BytesLike],
+    [boolean],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "withdraw"
+  ): TypedContractMethod<
+    [balance: Erdstall.BalanceChunkStruct, sig: BytesLike],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "withdrawFrozen"
+  ): TypedContractMethod<
+    [balance: Erdstall.BalanceChunkStruct, sig: BytesLike],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "withdrawFrozenDeposit"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "withdrawn"
+  ): TypedContractMethod<
+    [arg0: BigNumberish, arg1: AddressLike],
+    [boolean],
+    "view"
+  >;
+
+  getEvent(
+    key: "ChallengeResponded"
+  ): TypedContractEvent<
+    ChallengeRespondedEvent.InputTuple,
+    ChallengeRespondedEvent.OutputTuple,
+    ChallengeRespondedEvent.OutputObject
+  >;
+  getEvent(
+    key: "Challenged"
+  ): TypedContractEvent<
+    ChallengedEvent.InputTuple,
+    ChallengedEvent.OutputTuple,
+    ChallengedEvent.OutputObject
+  >;
+  getEvent(
+    key: "Deposited"
+  ): TypedContractEvent<
+    DepositedEvent.InputTuple,
+    DepositedEvent.OutputTuple,
+    DepositedEvent.OutputObject
+  >;
+  getEvent(
+    key: "FirstTimeFungible"
+  ): TypedContractEvent<
+    FirstTimeFungibleEvent.InputTuple,
+    FirstTimeFungibleEvent.OutputTuple,
+    FirstTimeFungibleEvent.OutputObject
+  >;
+  getEvent(
+    key: "FirstTimeNFT"
+  ): TypedContractEvent<
+    FirstTimeNFTEvent.InputTuple,
+    FirstTimeNFTEvent.OutputTuple,
+    FirstTimeNFTEvent.OutputObject
+  >;
+  getEvent(
+    key: "Frozen"
+  ): TypedContractEvent<
+    FrozenEvent.InputTuple,
+    FrozenEvent.OutputTuple,
+    FrozenEvent.OutputObject
+  >;
+  getEvent(
+    key: "OwnershipTransferred"
+  ): TypedContractEvent<
+    OwnershipTransferredEvent.InputTuple,
+    OwnershipTransferredEvent.OutputTuple,
+    OwnershipTransferredEvent.OutputObject
+  >;
+  getEvent(
+    key: "TokenTypeRegistered"
+  ): TypedContractEvent<
+    TokenTypeRegisteredEvent.InputTuple,
+    TokenTypeRegisteredEvent.OutputTuple,
+    TokenTypeRegisteredEvent.OutputObject
+  >;
+  getEvent(
+    key: "WithdrawalException"
+  ): TypedContractEvent<
+    WithdrawalExceptionEvent.InputTuple,
+    WithdrawalExceptionEvent.OutputTuple,
+    WithdrawalExceptionEvent.OutputObject
+  >;
+  getEvent(
+    key: "Withdrawn"
+  ): TypedContractEvent<
+    WithdrawnEvent.InputTuple,
+    WithdrawnEvent.OutputTuple,
+    WithdrawnEvent.OutputObject
+  >;
+  getEvent(
+    key: "ZeroResponded"
+  ): TypedContractEvent<
+    ZeroRespondedEvent.InputTuple,
+    ZeroRespondedEvent.OutputTuple,
+    ZeroRespondedEvent.OutputObject
+  >;
 
   filters: {
-    "ChallengeResponded(uint64,address,uint32,uint32,tuple[],bool,bytes)"(
-      epoch?: PromiseOrValue<BigNumberish> | null,
-      account?: PromiseOrValue<string> | null,
-      id?: null,
-      count?: null,
-      tokens?: null,
-      exit?: null,
-      sig?: null
-    ): ChallengeRespondedEventFilter;
-    ChallengeResponded(
-      epoch?: PromiseOrValue<BigNumberish> | null,
-      account?: PromiseOrValue<string> | null,
-      id?: null,
-      count?: null,
-      tokens?: null,
-      exit?: null,
-      sig?: null
-    ): ChallengeRespondedEventFilter;
-
-    "Challenged(uint64,address)"(
-      epoch?: PromiseOrValue<BigNumberish> | null,
-      account?: PromiseOrValue<string> | null
-    ): ChallengedEventFilter;
-    Challenged(
-      epoch?: PromiseOrValue<BigNumberish> | null,
-      account?: PromiseOrValue<string> | null
-    ): ChallengedEventFilter;
-
-    "Deposited(uint64,address,tuple)"(
-      epoch?: PromiseOrValue<BigNumberish> | null,
-      account?: PromiseOrValue<string> | null,
-      value?: null
-    ): DepositedEventFilter;
-    Deposited(
-      epoch?: PromiseOrValue<BigNumberish> | null,
-      account?: PromiseOrValue<string> | null,
-      value?: null
-    ): DepositedEventFilter;
-
-    "FirstTimeFungible(bytes32,string,string,uint8)"(
-      localID?: null,
-      name?: null,
-      symbol?: null,
-      decimals?: null
-    ): FirstTimeFungibleEventFilter;
-    FirstTimeFungible(
-      localID?: null,
-      name?: null,
-      symbol?: null,
-      decimals?: null
-    ): FirstTimeFungibleEventFilter;
-
-    "FirstTimeNFT(bytes32,string,string,string)"(
-      localID?: null,
-      name?: null,
-      symbol?: null,
-      sampleURI?: null
-    ): FirstTimeNFTEventFilter;
-    FirstTimeNFT(
-      localID?: null,
-      name?: null,
-      symbol?: null,
-      sampleURI?: null
-    ): FirstTimeNFTEventFilter;
-
-    "Frozen(uint64)"(
-      epoch?: PromiseOrValue<BigNumberish> | null
-    ): FrozenEventFilter;
-    Frozen(epoch?: PromiseOrValue<BigNumberish> | null): FrozenEventFilter;
-
-    "OwnershipTransferred(address,address)"(
-      previousOwner?: PromiseOrValue<string> | null,
-      newOwner?: PromiseOrValue<string> | null
-    ): OwnershipTransferredEventFilter;
-    OwnershipTransferred(
-      previousOwner?: PromiseOrValue<string> | null,
-      newOwner?: PromiseOrValue<string> | null
-    ): OwnershipTransferredEventFilter;
-
-    "TokenTypeRegistered(uint8,address)"(
-      assetType?: null,
-      tokenHolder?: null
-    ): TokenTypeRegisteredEventFilter;
-    TokenTypeRegistered(
-      assetType?: null,
-      tokenHolder?: null
-    ): TokenTypeRegisteredEventFilter;
-
-    "WithdrawalException(uint64,address,tuple,bytes)"(
-      epoch?: PromiseOrValue<BigNumberish> | null,
-      account?: PromiseOrValue<string> | null,
-      token?: Erdstall.TokenValueStruct | null,
-      error?: null
-    ): WithdrawalExceptionEventFilter;
-    WithdrawalException(
-      epoch?: PromiseOrValue<BigNumberish> | null,
-      account?: PromiseOrValue<string> | null,
-      token?: Erdstall.TokenValueStruct | null,
-      error?: null
-    ): WithdrawalExceptionEventFilter;
-
-    "Withdrawn(uint64,address,tuple[])"(
-      epoch?: PromiseOrValue<BigNumberish> | null,
-      account?: PromiseOrValue<string> | null,
-      tokens?: null
-    ): WithdrawnEventFilter;
-    Withdrawn(
-      epoch?: PromiseOrValue<BigNumberish> | null,
-      account?: PromiseOrValue<string> | null,
-      tokens?: null
-    ): WithdrawnEventFilter;
-  };
-
-  estimateGas: {
-    bigBangTime(overrides?: CallOverrides): Promise<BigNumber>;
-
-    chainID(overrides?: CallOverrides): Promise<BigNumber>;
-
-    challenge(
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    challenges(
-      arg0: PromiseOrValue<BigNumberish>,
-      arg1: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    deployBlockNum(overrides?: CallOverrides): Promise<BigNumber>;
-
-    deposit(
-      depositor: PromiseOrValue<string>,
-      assetType: PromiseOrValue<BigNumberish>,
-      origin: PromiseOrValue<BigNumberish>,
-      token: PromiseOrValue<BytesLike>,
-      value: PromiseOrValue<BigNumberish>[],
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    deposits(
-      arg0: PromiseOrValue<BigNumberish>,
-      arg1: PromiseOrValue<string>,
-      arg2: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    encodeBalanceProof(
-      balance: Erdstall.BalanceChunkStruct,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    ensureFrozen(
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    epochDuration(overrides?: CallOverrides): Promise<BigNumber>;
-
-    frozenEpoch(overrides?: CallOverrides): Promise<BigNumber>;
-
-    holderTypes(
-      arg0: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    metadataWasHandled(
-      arg0: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    numChallenges(
-      arg0: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    owner(overrides?: CallOverrides): Promise<BigNumber>;
-
-    registerTokenType(
-      holder: PromiseOrValue<string>,
-      localTokenType: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    renounceOwnership(
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    respondChallenge(
-      balance: Erdstall.BalanceChunkStruct,
-      sig: PromiseOrValue<BytesLike>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    submitFreezeProof(
-      proof: Erdstall.FreezeProofStruct,
-      sig: PromiseOrValue<BytesLike>,
-      certificate: PromiseOrValue<BytesLike>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    tee(overrides?: CallOverrides): Promise<BigNumber>;
-
-    tokenHolders(
-      arg0: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    transferOwnership(
-      newOwner: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    verifyBalance(
-      balance: Erdstall.BalanceChunkStruct,
-      sig: PromiseOrValue<BytesLike>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    verifyTeeSig(
-      abiCode: PromiseOrValue<BytesLike>,
-      sig: PromiseOrValue<BytesLike>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    withdraw(
-      balance: Erdstall.BalanceChunkStruct,
-      sig: PromiseOrValue<BytesLike>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    withdrawFrozen(
-      balance: Erdstall.BalanceChunkStruct,
-      sig: PromiseOrValue<BytesLike>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    withdrawFrozenDeposit(
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    withdrawn(
-      arg0: PromiseOrValue<BigNumberish>,
-      arg1: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-  };
-
-  populateTransaction: {
-    bigBangTime(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    chainID(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    challenge(
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    challenges(
-      arg0: PromiseOrValue<BigNumberish>,
-      arg1: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    deployBlockNum(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    deposit(
-      depositor: PromiseOrValue<string>,
-      assetType: PromiseOrValue<BigNumberish>,
-      origin: PromiseOrValue<BigNumberish>,
-      token: PromiseOrValue<BytesLike>,
-      value: PromiseOrValue<BigNumberish>[],
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    deposits(
-      arg0: PromiseOrValue<BigNumberish>,
-      arg1: PromiseOrValue<string>,
-      arg2: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    encodeBalanceProof(
-      balance: Erdstall.BalanceChunkStruct,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    ensureFrozen(
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    epochDuration(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    frozenEpoch(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    holderTypes(
-      arg0: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    metadataWasHandled(
-      arg0: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    numChallenges(
-      arg0: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    owner(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    registerTokenType(
-      holder: PromiseOrValue<string>,
-      localTokenType: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    renounceOwnership(
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    respondChallenge(
-      balance: Erdstall.BalanceChunkStruct,
-      sig: PromiseOrValue<BytesLike>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    submitFreezeProof(
-      proof: Erdstall.FreezeProofStruct,
-      sig: PromiseOrValue<BytesLike>,
-      certificate: PromiseOrValue<BytesLike>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    tee(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    tokenHolders(
-      arg0: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    transferOwnership(
-      newOwner: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    verifyBalance(
-      balance: Erdstall.BalanceChunkStruct,
-      sig: PromiseOrValue<BytesLike>,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    verifyTeeSig(
-      abiCode: PromiseOrValue<BytesLike>,
-      sig: PromiseOrValue<BytesLike>,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    withdraw(
-      balance: Erdstall.BalanceChunkStruct,
-      sig: PromiseOrValue<BytesLike>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    withdrawFrozen(
-      balance: Erdstall.BalanceChunkStruct,
-      sig: PromiseOrValue<BytesLike>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    withdrawFrozenDeposit(
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    withdrawn(
-      arg0: PromiseOrValue<BigNumberish>,
-      arg1: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
+    "ChallengeResponded(uint64,address,uint32,uint32,tuple[],bool,bytes)": TypedContractEvent<
+      ChallengeRespondedEvent.InputTuple,
+      ChallengeRespondedEvent.OutputTuple,
+      ChallengeRespondedEvent.OutputObject
+    >;
+    ChallengeResponded: TypedContractEvent<
+      ChallengeRespondedEvent.InputTuple,
+      ChallengeRespondedEvent.OutputTuple,
+      ChallengeRespondedEvent.OutputObject
+    >;
+
+    "Challenged(uint64,address)": TypedContractEvent<
+      ChallengedEvent.InputTuple,
+      ChallengedEvent.OutputTuple,
+      ChallengedEvent.OutputObject
+    >;
+    Challenged: TypedContractEvent<
+      ChallengedEvent.InputTuple,
+      ChallengedEvent.OutputTuple,
+      ChallengedEvent.OutputObject
+    >;
+
+    "Deposited(uint64,address,tuple)": TypedContractEvent<
+      DepositedEvent.InputTuple,
+      DepositedEvent.OutputTuple,
+      DepositedEvent.OutputObject
+    >;
+    Deposited: TypedContractEvent<
+      DepositedEvent.InputTuple,
+      DepositedEvent.OutputTuple,
+      DepositedEvent.OutputObject
+    >;
+
+    "FirstTimeFungible(bytes32,string,string,uint8)": TypedContractEvent<
+      FirstTimeFungibleEvent.InputTuple,
+      FirstTimeFungibleEvent.OutputTuple,
+      FirstTimeFungibleEvent.OutputObject
+    >;
+    FirstTimeFungible: TypedContractEvent<
+      FirstTimeFungibleEvent.InputTuple,
+      FirstTimeFungibleEvent.OutputTuple,
+      FirstTimeFungibleEvent.OutputObject
+    >;
+
+    "FirstTimeNFT(bytes32,string,string,string)": TypedContractEvent<
+      FirstTimeNFTEvent.InputTuple,
+      FirstTimeNFTEvent.OutputTuple,
+      FirstTimeNFTEvent.OutputObject
+    >;
+    FirstTimeNFT: TypedContractEvent<
+      FirstTimeNFTEvent.InputTuple,
+      FirstTimeNFTEvent.OutputTuple,
+      FirstTimeNFTEvent.OutputObject
+    >;
+
+    "Frozen(uint64)": TypedContractEvent<
+      FrozenEvent.InputTuple,
+      FrozenEvent.OutputTuple,
+      FrozenEvent.OutputObject
+    >;
+    Frozen: TypedContractEvent<
+      FrozenEvent.InputTuple,
+      FrozenEvent.OutputTuple,
+      FrozenEvent.OutputObject
+    >;
+
+    "OwnershipTransferred(address,address)": TypedContractEvent<
+      OwnershipTransferredEvent.InputTuple,
+      OwnershipTransferredEvent.OutputTuple,
+      OwnershipTransferredEvent.OutputObject
+    >;
+    OwnershipTransferred: TypedContractEvent<
+      OwnershipTransferredEvent.InputTuple,
+      OwnershipTransferredEvent.OutputTuple,
+      OwnershipTransferredEvent.OutputObject
+    >;
+
+    "TokenTypeRegistered(uint8,address)": TypedContractEvent<
+      TokenTypeRegisteredEvent.InputTuple,
+      TokenTypeRegisteredEvent.OutputTuple,
+      TokenTypeRegisteredEvent.OutputObject
+    >;
+    TokenTypeRegistered: TypedContractEvent<
+      TokenTypeRegisteredEvent.InputTuple,
+      TokenTypeRegisteredEvent.OutputTuple,
+      TokenTypeRegisteredEvent.OutputObject
+    >;
+
+    "WithdrawalException(uint64,address,tuple,bytes)": TypedContractEvent<
+      WithdrawalExceptionEvent.InputTuple,
+      WithdrawalExceptionEvent.OutputTuple,
+      WithdrawalExceptionEvent.OutputObject
+    >;
+    WithdrawalException: TypedContractEvent<
+      WithdrawalExceptionEvent.InputTuple,
+      WithdrawalExceptionEvent.OutputTuple,
+      WithdrawalExceptionEvent.OutputObject
+    >;
+
+    "Withdrawn(uint64,address,tuple[])": TypedContractEvent<
+      WithdrawnEvent.InputTuple,
+      WithdrawnEvent.OutputTuple,
+      WithdrawnEvent.OutputObject
+    >;
+    Withdrawn: TypedContractEvent<
+      WithdrawnEvent.InputTuple,
+      WithdrawnEvent.OutputTuple,
+      WithdrawnEvent.OutputObject
+    >;
+
+    "ZeroResponded(uint64,address)": TypedContractEvent<
+      ZeroRespondedEvent.InputTuple,
+      ZeroRespondedEvent.OutputTuple,
+      ZeroRespondedEvent.OutputObject
+    >;
+    ZeroResponded: TypedContractEvent<
+      ZeroRespondedEvent.InputTuple,
+      ZeroRespondedEvent.OutputTuple,
+      ZeroRespondedEvent.OutputObject
+    >;
   };
 }

@@ -3,50 +3,36 @@
 /* eslint-disable */
 import type {
   BaseContract,
-  BigNumber,
   BigNumberish,
   BytesLike,
-  CallOverrides,
-  ContractTransaction,
-  Overrides,
-  PopulatedTransaction,
-  Signer,
-  utils,
+  FunctionFragment,
+  Result,
+  Interface,
+  ContractRunner,
+  ContractMethod,
+  Listener,
 } from "ethers";
-import type { FunctionFragment, Result } from "@ethersproject/abi";
-import type { Listener, Provider } from "@ethersproject/providers";
 import type {
-  TypedEventFilter,
-  TypedEvent,
+  TypedContractEvent,
+  TypedDeferredTopicFilter,
+  TypedEventLog,
   TypedListener,
-  OnEvent,
-  PromiseOrValue,
+  TypedContractMethod,
 } from "../../common";
 
-export interface BehaviorSelectInterface extends utils.Interface {
-  functions: {
-    "reset()": FunctionFragment;
-    "setMode(uint8)": FunctionFragment;
-    "setModeWithCountdown(uint8,uint256,uint8,uint256)": FunctionFragment;
-  };
-
+export interface BehaviorSelectInterface extends Interface {
   getFunction(
-    nameOrSignatureOrTopic: "reset" | "setMode" | "setModeWithCountdown"
+    nameOrSignature: "reset" | "setMode" | "setModeWithCountdown"
   ): FunctionFragment;
 
   encodeFunctionData(functionFragment: "reset", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "setMode",
-    values: [PromiseOrValue<BigNumberish>]
+    values: [BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "setModeWithCountdown",
-    values: [
-      PromiseOrValue<BigNumberish>,
-      PromiseOrValue<BigNumberish>,
-      PromiseOrValue<BigNumberish>,
-      PromiseOrValue<BigNumberish>
-    ]
+    values: [BigNumberish, BigNumberish, BigNumberish, BigNumberish]
   ): string;
 
   decodeFunctionResult(functionFragment: "reset", data: BytesLike): Result;
@@ -55,126 +41,88 @@ export interface BehaviorSelectInterface extends utils.Interface {
     functionFragment: "setModeWithCountdown",
     data: BytesLike
   ): Result;
-
-  events: {};
 }
 
 export interface BehaviorSelect extends BaseContract {
-  connect(signerOrProvider: Signer | Provider | string): this;
-  attach(addressOrName: string): this;
-  deployed(): Promise<this>;
+  connect(runner?: ContractRunner | null): BehaviorSelect;
+  waitForDeployment(): Promise<this>;
 
   interface: BehaviorSelectInterface;
 
-  queryFilter<TEvent extends TypedEvent>(
-    event: TypedEventFilter<TEvent>,
+  queryFilter<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
     fromBlockOrBlockhash?: string | number | undefined,
     toBlock?: string | number | undefined
-  ): Promise<Array<TEvent>>;
+  ): Promise<Array<TypedEventLog<TCEvent>>>;
+  queryFilter<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    fromBlockOrBlockhash?: string | number | undefined,
+    toBlock?: string | number | undefined
+  ): Promise<Array<TypedEventLog<TCEvent>>>;
 
-  listeners<TEvent extends TypedEvent>(
-    eventFilter?: TypedEventFilter<TEvent>
-  ): Array<TypedListener<TEvent>>;
-  listeners(eventName?: string): Array<Listener>;
-  removeAllListeners<TEvent extends TypedEvent>(
-    eventFilter: TypedEventFilter<TEvent>
-  ): this;
-  removeAllListeners(eventName?: string): this;
-  off: OnEvent<this>;
-  on: OnEvent<this>;
-  once: OnEvent<this>;
-  removeListener: OnEvent<this>;
+  on<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
+  on<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
 
-  functions: {
-    reset(
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
+  once<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
+  once<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
 
-    setMode(
-      mode_: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
+  listeners<TCEvent extends TypedContractEvent>(
+    event: TCEvent
+  ): Promise<Array<TypedListener<TCEvent>>>;
+  listeners(eventName?: string): Promise<Array<Listener>>;
+  removeAllListeners<TCEvent extends TypedContractEvent>(
+    event?: TCEvent
+  ): Promise<this>;
 
-    setModeWithCountdown(
-      before_: PromiseOrValue<BigNumberish>,
-      countdown_: PromiseOrValue<BigNumberish>,
-      after_: PromiseOrValue<BigNumberish>,
-      resetCount_: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-  };
+  reset: TypedContractMethod<[], [void], "nonpayable">;
 
-  reset(
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
+  setMode: TypedContractMethod<[mode_: BigNumberish], [void], "nonpayable">;
 
-  setMode(
-    mode_: PromiseOrValue<BigNumberish>,
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
+  setModeWithCountdown: TypedContractMethod<
+    [
+      before_: BigNumberish,
+      countdown_: BigNumberish,
+      after_: BigNumberish,
+      resetCount_: BigNumberish
+    ],
+    [void],
+    "nonpayable"
+  >;
 
-  setModeWithCountdown(
-    before_: PromiseOrValue<BigNumberish>,
-    countdown_: PromiseOrValue<BigNumberish>,
-    after_: PromiseOrValue<BigNumberish>,
-    resetCount_: PromiseOrValue<BigNumberish>,
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
+  getFunction<T extends ContractMethod = ContractMethod>(
+    key: string | FunctionFragment
+  ): T;
 
-  callStatic: {
-    reset(overrides?: CallOverrides): Promise<void>;
-
-    setMode(
-      mode_: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    setModeWithCountdown(
-      before_: PromiseOrValue<BigNumberish>,
-      countdown_: PromiseOrValue<BigNumberish>,
-      after_: PromiseOrValue<BigNumberish>,
-      resetCount_: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<void>;
-  };
+  getFunction(
+    nameOrSignature: "reset"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "setMode"
+  ): TypedContractMethod<[mode_: BigNumberish], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "setModeWithCountdown"
+  ): TypedContractMethod<
+    [
+      before_: BigNumberish,
+      countdown_: BigNumberish,
+      after_: BigNumberish,
+      resetCount_: BigNumberish
+    ],
+    [void],
+    "nonpayable"
+  >;
 
   filters: {};
-
-  estimateGas: {
-    reset(
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    setMode(
-      mode_: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    setModeWithCountdown(
-      before_: PromiseOrValue<BigNumberish>,
-      countdown_: PromiseOrValue<BigNumberish>,
-      after_: PromiseOrValue<BigNumberish>,
-      resetCount_: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-  };
-
-  populateTransaction: {
-    reset(
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    setMode(
-      mode_: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    setModeWithCountdown(
-      before_: PromiseOrValue<BigNumberish>,
-      countdown_: PromiseOrValue<BigNumberish>,
-      after_: PromiseOrValue<BigNumberish>,
-      resetCount_: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-  };
 }

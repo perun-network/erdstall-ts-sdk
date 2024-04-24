@@ -3,136 +3,112 @@
 /* eslint-disable */
 import type {
   BaseContract,
-  BigNumber,
   BigNumberish,
   BytesLike,
-  CallOverrides,
-  ContractTransaction,
-  Overrides,
-  PopulatedTransaction,
-  Signer,
-  utils,
+  FunctionFragment,
+  Result,
+  Interface,
+  AddressLike,
+  ContractRunner,
+  ContractMethod,
+  Listener,
 } from "ethers";
-import type { FunctionFragment, Result } from "@ethersproject/abi";
-import type { Listener, Provider } from "@ethersproject/providers";
 import type {
-  TypedEventFilter,
-  TypedEvent,
+  TypedContractEvent,
+  TypedDeferredTopicFilter,
+  TypedEventLog,
   TypedListener,
-  OnEvent,
-  PromiseOrValue,
+  TypedContractMethod,
 } from "../common";
 
-export interface TokenHolderInterface extends utils.Interface {
-  functions: {
-    "erdstall()": FunctionFragment;
-    "transfer(uint16,bytes32,address,uint256[])": FunctionFragment;
-  };
-
-  getFunction(
-    nameOrSignatureOrTopic: "erdstall" | "transfer"
-  ): FunctionFragment;
+export interface TokenHolderInterface extends Interface {
+  getFunction(nameOrSignature: "erdstall" | "transfer"): FunctionFragment;
 
   encodeFunctionData(functionFragment: "erdstall", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "transfer",
-    values: [
-      PromiseOrValue<BigNumberish>,
-      PromiseOrValue<BytesLike>,
-      PromiseOrValue<string>,
-      PromiseOrValue<BigNumberish>[]
-    ]
+    values: [BigNumberish, BytesLike, AddressLike, BigNumberish[]]
   ): string;
 
   decodeFunctionResult(functionFragment: "erdstall", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "transfer", data: BytesLike): Result;
-
-  events: {};
 }
 
 export interface TokenHolder extends BaseContract {
-  connect(signerOrProvider: Signer | Provider | string): this;
-  attach(addressOrName: string): this;
-  deployed(): Promise<this>;
+  connect(runner?: ContractRunner | null): TokenHolder;
+  waitForDeployment(): Promise<this>;
 
   interface: TokenHolderInterface;
 
-  queryFilter<TEvent extends TypedEvent>(
-    event: TypedEventFilter<TEvent>,
+  queryFilter<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
     fromBlockOrBlockhash?: string | number | undefined,
     toBlock?: string | number | undefined
-  ): Promise<Array<TEvent>>;
+  ): Promise<Array<TypedEventLog<TCEvent>>>;
+  queryFilter<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    fromBlockOrBlockhash?: string | number | undefined,
+    toBlock?: string | number | undefined
+  ): Promise<Array<TypedEventLog<TCEvent>>>;
 
-  listeners<TEvent extends TypedEvent>(
-    eventFilter?: TypedEventFilter<TEvent>
-  ): Array<TypedListener<TEvent>>;
-  listeners(eventName?: string): Array<Listener>;
-  removeAllListeners<TEvent extends TypedEvent>(
-    eventFilter: TypedEventFilter<TEvent>
-  ): this;
-  removeAllListeners(eventName?: string): this;
-  off: OnEvent<this>;
-  on: OnEvent<this>;
-  once: OnEvent<this>;
-  removeListener: OnEvent<this>;
+  on<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
+  on<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
 
-  functions: {
-    erdstall(overrides?: CallOverrides): Promise<[string]>;
+  once<TCEvent extends TypedContractEvent>(
+    event: TCEvent,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
+  once<TCEvent extends TypedContractEvent>(
+    filter: TypedDeferredTopicFilter<TCEvent>,
+    listener: TypedListener<TCEvent>
+  ): Promise<this>;
 
-    transfer(
-      origin: PromiseOrValue<BigNumberish>,
-      localID: PromiseOrValue<BytesLike>,
-      recipient: PromiseOrValue<string>,
-      value: PromiseOrValue<BigNumberish>[],
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-  };
+  listeners<TCEvent extends TypedContractEvent>(
+    event: TCEvent
+  ): Promise<Array<TypedListener<TCEvent>>>;
+  listeners(eventName?: string): Promise<Array<Listener>>;
+  removeAllListeners<TCEvent extends TypedContractEvent>(
+    event?: TCEvent
+  ): Promise<this>;
 
-  erdstall(overrides?: CallOverrides): Promise<string>;
+  erdstall: TypedContractMethod<[], [string], "view">;
 
-  transfer(
-    origin: PromiseOrValue<BigNumberish>,
-    localID: PromiseOrValue<BytesLike>,
-    recipient: PromiseOrValue<string>,
-    value: PromiseOrValue<BigNumberish>[],
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
+  transfer: TypedContractMethod<
+    [
+      origin: BigNumberish,
+      localID: BytesLike,
+      recipient: AddressLike,
+      value: BigNumberish[]
+    ],
+    [void],
+    "nonpayable"
+  >;
 
-  callStatic: {
-    erdstall(overrides?: CallOverrides): Promise<string>;
+  getFunction<T extends ContractMethod = ContractMethod>(
+    key: string | FunctionFragment
+  ): T;
 
-    transfer(
-      origin: PromiseOrValue<BigNumberish>,
-      localID: PromiseOrValue<BytesLike>,
-      recipient: PromiseOrValue<string>,
-      value: PromiseOrValue<BigNumberish>[],
-      overrides?: CallOverrides
-    ): Promise<void>;
-  };
+  getFunction(
+    nameOrSignature: "erdstall"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "transfer"
+  ): TypedContractMethod<
+    [
+      origin: BigNumberish,
+      localID: BytesLike,
+      recipient: AddressLike,
+      value: BigNumberish[]
+    ],
+    [void],
+    "nonpayable"
+  >;
 
   filters: {};
-
-  estimateGas: {
-    erdstall(overrides?: CallOverrides): Promise<BigNumber>;
-
-    transfer(
-      origin: PromiseOrValue<BigNumberish>,
-      localID: PromiseOrValue<BytesLike>,
-      recipient: PromiseOrValue<string>,
-      value: PromiseOrValue<BigNumberish>[],
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-  };
-
-  populateTransaction: {
-    erdstall(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    transfer(
-      origin: PromiseOrValue<BigNumberish>,
-      localID: PromiseOrValue<BytesLike>,
-      recipient: PromiseOrValue<string>,
-      value: PromiseOrValue<BigNumberish>[],
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-  };
 }

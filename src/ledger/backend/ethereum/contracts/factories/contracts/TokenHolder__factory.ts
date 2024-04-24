@@ -2,8 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import { Contract, Signer, utils } from "ethers";
-import type { Provider } from "@ethersproject/providers";
+import { Contract, Interface, type ContractRunner } from "ethers";
 import type {
   TokenHolder,
   TokenHolderInterface,
@@ -66,12 +65,9 @@ const _abi = [
 export class TokenHolder__factory {
   static readonly abi = _abi;
   static createInterface(): TokenHolderInterface {
-    return new utils.Interface(_abi) as TokenHolderInterface;
+    return new Interface(_abi) as TokenHolderInterface;
   }
-  static connect(
-    address: string,
-    signerOrProvider: Signer | Provider
-  ): TokenHolder {
-    return new Contract(address, _abi, signerOrProvider) as TokenHolder;
+  static connect(address: string, runner?: ContractRunner | null): TokenHolder {
+    return new Contract(address, _abi, runner) as unknown as TokenHolder;
   }
 }
