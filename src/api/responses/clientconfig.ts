@@ -83,7 +83,7 @@ export class ClientConfig extends ErdstallObject {
 	}
 
 	static toJSON(me: ClientConfig) {
-		// TODO: Why is this hack necessary?
+		// NOTE: Why is this hack necessary?
 		return {
 			chains: me.chains.map((ccfg) => ChainConfig.toJSON(ccfg)),
 		} as any;

@@ -25,7 +25,6 @@ export enum TxStatusCode {
 export class TxReceipt extends ErdstallObject {
 	@jsonMember(() => Transaction) tx: Transaction;
 	@jsonMember(TransactionOutput) output: TransactionOutput;
-	// TODO: Receipts should also be signed with the ErdstallSignature.
 	@jsonMember(() => Signature) sig: Signature<Crypto>;
 	@jsonMember(String) hash: String;
 

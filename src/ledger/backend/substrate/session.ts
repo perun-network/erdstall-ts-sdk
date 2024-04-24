@@ -163,7 +163,7 @@ export class SubstrateSession
 					}
 
 					if(status.isFinalized) {
-						// TODO: transaction hash or something.
+						// NOTE IMPROVE: transaction hash or something.
 						accept();
 					}
 				});	

@@ -176,7 +176,7 @@ export const sdkActions = {
 		// Here we are creating `Assets` containing some ETH and PRN which will be
 		// used for depositing in the next step.
 		const depositBal = new Assets(
-			// TODO: Make this ChainAssets.
+			// NOTE: Make this ChainAssets.
 			{
 				token: assets.ETHZERO, // ETH is represented by the zero address 0x00..
 				asset: new assets.Amount(ethAmount),
@@ -395,7 +395,7 @@ export const sdkActions = {
 		// Erdstall related contracts, which frees you of the burden to come up
 		// with bindings on your own.
 
-		// TODO: REINTRODUCE
+		// NOTE: REINTRODUCE
 		// // The SDK provides a convenience field for on chain calls which will grow
 		// // over time. E.g.
 		// [PERUN_ADDR, PART_ADDR]
@@ -425,7 +425,7 @@ export const sdkActions = {
 			PERUN_ADDR.toString(),
 			provider,
 		).balanceOf(session.address.toString());
-		// TODO: Hack.
+		// NOTE: Hack.
 		const part = {} as any;
 		const eth = await provider.getBalance(session.address.toString());
 

@@ -75,7 +75,6 @@ export function mkDefaultEthereumSessionConstructor(signer: Signer): {
 	return {
 		backend: "ethereum",
 		signer: signer,
-		// TODO: Single source of truth for the session constructor.
 		provider: signer,
 		initializer: defaultEthereumSessionInitializer,
 	};

@@ -67,7 +67,7 @@ export function defaultEthereumClientInitializer(
 	config: ClientConfig,
 	provider: ethers.providers.Provider | Signer,
 ): EthereumClient {
-	// TODO: Temporary hack.
+	// NOTE CLEANUP: Temporary hack.
 	const erdstallAddr = (config.chains[0] as ChainConfig<"ethereum">).data.contract;
 	const erdstall = Erdstall__factory.connect(erdstallAddr.toString(), provider);
 	const ledgerReader = new LedgerReadConn(erdstall, new EthereumTokenProvider());

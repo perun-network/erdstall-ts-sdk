@@ -116,9 +116,9 @@ export function endToEndTestHarness(sdkActions: SDKActions) {
 
 			sessions[ALICE].once(
 				"config",
-				// TODO: Workaround:
+				// NOTE CLEANUP: Workaround:
 				(config) =>
-					// TODO: Another workaround?
+					// NOTE: Another workaround?
 					(teeAddress = EthereumAddress.fromString(
 						(
 							config.chains[0]

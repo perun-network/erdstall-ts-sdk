@@ -24,7 +24,6 @@ export abstract class Address<_C extends Crypto> {
 	static ensure(addr: string | Address<Crypto>): Address<Crypto> {
 		if (addr === undefined) return addr;
 		if (addr instanceof Address) return addr;
-		// TODO: This might fail if the address is not in proper JSON format.
 		return Address.fromJSON(addr);
 	}
 

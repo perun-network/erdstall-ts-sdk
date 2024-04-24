@@ -12,8 +12,7 @@ type TokenTypes = ["Fungible", "NFT"];
 // Substrate on the other hand maps "Fungible" and "NFT" tokens to the Erdstall
 // pallet, since that handles all specifics.
 
-// TODO: Wrap this up.
-
 type EthereumMapping = [["Fungible", ["ETH", "ERC20"]], ["NFT", ["ERC721"]]];
 
+// NOTE CLEANUP: do we need this?
 type SubstrateMapping = [["Fungible", ["PALLET"], ["NFT", ["PALLET"]]]];

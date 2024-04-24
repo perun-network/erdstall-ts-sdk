@@ -20,7 +20,7 @@ type _supportedBackendConnectors = {
 
 	substrate: [ContractPromise, SubstrateChainConfig, "substrate"];
 
-	// TODO: Might be removable.
+	// NOTE CLEANUP: Might be removable.
 	test: [null, null, "test"];
 };
 

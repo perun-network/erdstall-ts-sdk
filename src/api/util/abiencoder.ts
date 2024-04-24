@@ -58,7 +58,7 @@ export class ABIEncoder {
 		return this.encodeTagged(...fields);
 	}
 
-	// TODO: Clean this up.
+	// NOTE: CLEANUP.
 	encodeTagged(...fields: EncoderArg[]): this {
 		this.types = this.types.concat(
 			fields.map((f): string => {

@@ -35,7 +35,7 @@ export class SubstrateSigner implements Signer<"substrate"> {
 	} {
 		let seed = new Uint8Array(32);
 		for(let i = 0; i < seed.length; i++)
-			seed[i] = (Math.random() * 512) & 0xff; // Note: unsafe, but portable. The web crypto API is not available on node.js until v19. TODO: use a portable secure randomness engine.
+			seed[i] = (Math.random() * 512) & 0xff; // NOTE SECURITY: unsafe, but portable. The web crypto API is not available on node.js until v19.
 
 		let keys = sr25519PairFromSeed(seed)
 		return {

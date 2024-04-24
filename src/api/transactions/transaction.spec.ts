@@ -50,7 +50,7 @@ describe("Wiremessages", () => {
 		const tx = TypedJSON.parse(testHashing, Transfer);
 		expect(tx!.hash().length).to.eql(66);
 	});
-	// TODO: Reenable as soon as Erdstall core is ready.
+	// NOTE: Reenable as soon as Erdstall core is ready.
 	// it("de-/encodes attestation reports", () => {
 	// 	genericJSONTest(testAttestResponse, ErdstallObject);
 	// });

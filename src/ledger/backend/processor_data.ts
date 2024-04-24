@@ -16,10 +16,9 @@ export function registerProcessoInitReportDataType(
 	processorImpls.set(typeName, typeClass);
 }
 
-// TODO: Everything except Ethereum uses AuxData from core.
+// NOTE: Everything except Ethereum uses AuxData from core.
 export abstract class ProcessorInitReportData<_B extends Backend> {
 	static fromJSON(js: any): ProcessorInitReportData<Backend> {
-		// TODO: Finish as soon as Erdstall core is ready with this type.
 		if (!processorImpls.has(js.type)) {
 			throw new Error(`unknown processor type ${js.type}`);
 		}
