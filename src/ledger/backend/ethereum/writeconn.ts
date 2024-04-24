@@ -15,6 +15,7 @@ import { depositors, Calls } from "./tokenmanager";
 import { EthereumTokenProvider } from "./tokencache";
 import { TransactionGenerator } from "#erdstall/utils";
 import { Chain } from "#erdstall/ledger/chain";
+import { encodePackedAssets } from "./ethwrapper";
 
 type TransactionName = "approve" | "deposit" | "withdraw";
 
@@ -51,25 +52,18 @@ export class LedgerWriteConn
 				chain: this.chain,
 				account: (await this.signer.address()).toJSON(),
 				exit: true,
-				tokens: (() => { throw new Error("TODO"); })(),
+				tokens: encodePackedAssets(chunk.funds),
 			}, chunk.sig.toJSON()));
 		}
 
 		return {
-			stages: this.call([
-				[
-					"withdraw",
-					(
-						_?: ethers.PayableOverrides,
-					): Promise<ethers.ContractTransaction> => {
-						// TODO: Reintroduce.
-						throw new Error("Method not implemented.");
-						// const [balance, sig] = exitProof.toEthProof();
-						// return this.contract.withdraw(balance, sig);
-					},
-				],
-			]),
-			numStages: 1,
+			stages: this.call(calls.map(call => [
+				"withdraw",
+				(
+					_?: ethers.PayableOverrides,
+				): Promise<ethers.ContractTransaction> => call,
+			])),
+			numStages: calls.length,
 		};
 	}
 
@@ -81,17 +75,13 @@ export class LedgerWriteConn
 		if (!assets.assets.size)
 			throw new Error("attempting to deposit nothing");
 
-		// TODO: It might be nice if we would ignore other assets for other chains
+		// NOTE IMPROVE: It might be nice if we would ignore other assets for other chains
 		// and instead only require that the correct backend has entries here.
 		// Observe user experience.
 		//
-		// TODO: We do not only support `Chain.EthereumMainnet`.
-		if (
-			assets.assets.size !== 1 ||
-			!assets.assets.has(Chain.EthereumMainnet)
-		)
-			throw new Error("attempting to deposit non-ethereum assets");
+		// NOTE: We do not only support `Chain.EthereumMainnet`.
 
+		// TODO: handle wrapped assets?.
 		const addStage = async (tokenAddr: string, amount: Asset) => {
 			const tokenAddrAddr = Address.fromString(tokenAddr);
 			const ttype = (amount instanceof Amount)
