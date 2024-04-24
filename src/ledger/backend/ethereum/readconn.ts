@@ -2,7 +2,8 @@
 "use strict";
 
 import { ErdstallEventHandler } from "#erdstall";
-import { Address } from "#erdstall/crypto";
+import { AssetID, Address } from "#erdstall/crypto";
+import { EthereumAddress } from "#erdstall/crypto/ethereum";
 import { LedgerEvent } from "#erdstall/ledger";
 import { LocalAsset } from "#erdstall/ledger/assets";
 import { Erdstall } from "./contracts/contracts/Erdstall";
@@ -71,5 +72,25 @@ export class LedgerReadConn implements LedgerReader<"ethereum"> {
 	erdstall(): { chain: "ethereum"; address: Address<"ethereum"> }[] {
 		throw new Error("not implemented");
 		//		return Address.fromString(this.contract.address);
+	}
+
+	async getWrappedToken(token: AssetID): Promise<EthereumAddress> {
+		const provider = this.contract.provider;
+		switch(token.type())
+		{
+		default: throw new Error(`unhandled token type ${token.type()}!`);
+		case 0:
+		{
+			const holder = await this.tokenCache.getERC20Holder(provider);
+			return EthereumAddress.fromString(
+				await holder.deployedToken(token.origin(), token.localID()));
+		}
+		case 1:
+		{
+			const holder = await this.tokenCache.getERC721Holder(provider);
+			return EthereumAddress.fromString(
+				await holder.deployedToken(token.origin(), token.localID()));
+		}
+		}
 	}
 }
