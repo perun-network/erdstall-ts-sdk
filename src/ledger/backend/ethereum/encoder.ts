@@ -17,7 +17,7 @@ import { Chain } from "#erdstall/ledger/chain";
 import { Erdstall } from "#erdstall/ledger/backend/ethereum/contracts/contracts/Erdstall";
 import { ABIEncoder } from "#erdstall/api/util";
 
-import { packAmount, packTokens } from "./ethwrapper";
+import { encodePackedAssets } from "./ethwrapper";
 
 export class EthereumEncoder implements Encoder<"ethereum"> {
 	encode(desc: ChainProofDesc<"ethereum">): EncodedChainProof {
@@ -100,30 +100,12 @@ function abiEncodeChainProofs(
 
 function packChainAssets(
 	assets: ChainAssets,
-): [string, Erdstall.TokenValueStruct[]] {
+): [string, any[]] {
 	const tokensAbiType = "tuple(tuple(uint16,uint8,bytes32),uint256[])[]";
-	const packed = new Array<Erdstall.TokenValueStruct>();
-	for (const [assetId, vals] of assets.ordered()) {
-		const asset: Erdstall.AssetStruct = {
-			origin: assetId.origin(),
-			assetType: assetId.type(),
-			localID: assetId.localID(),
-		};
-		const values = packAssets(vals);
-		const tv: Erdstall.TokenValueStruct = {
-			asset: asset,
-			value: values,
-		};
-		packed.push(tv);
-	}
-	return [tokensAbiType, packed];
-}
-
-function packAssets(asset: Asset): bigint[] {
-	switch (asset.typeTag()) {
-		case "uint":
-			return [packAmount(asset as Amount)];
-		case "idset":
-			return packTokens(asset as Tokens);
-	}
+	const packed = encodePackedAssets(assets);
+	return [tokensAbiType, packed.map(tv => [[
+		tv.asset.origin,
+		tv.asset.assetType,
+		tv.asset.localID,
+		], tv.value])];
 }
