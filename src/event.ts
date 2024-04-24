@@ -42,7 +42,6 @@ type _eventHandlers<B extends Backend> = {
 	receipt: (receipt: TxReceipt) => void;
 	phaseshift: (phaseShift: PhaseShift) => void;
 	proof: (proof: BalanceProofs) => void;
-	exitproof: (exitProof: BalanceProofs) => void;
 	error: (error: string | Error) => void;
 };
 

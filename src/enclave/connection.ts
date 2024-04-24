@@ -209,7 +209,8 @@ export class Enclave implements EnclaveWriter {
 
 	public async exit(exitRequest: ExitRequest): Promise<BalanceProofs> {
 		const p = new Promise<BalanceProofs>((resolve, reject) => {
-			this.once_internal("exitproof", resolve);
+			// NOTE RACE if a proof is received before the exit request is processed. Would need more elaborate logic to harden against that. It would be better to handle tracking of balance proofs in a different manner.
+			this.once_internal("proof", resolve);
 			this.sendCall(exitRequest).catch(reject);
 		});
 
@@ -321,17 +322,8 @@ export class Enclave implements EnclaveWriter {
 			case TxReceipt:
 				return this.callEvent("receipt", obj);
 			case BalanceProofs: {
-				// TODO: Handle.
-				throw new Error("not implemented");
-				// const bps = obj as BalanceProofs;
-				// for (const [_, bp] of bps.map) {
-				// 	if (bp.balance.exit) {
-				// 		this.callEvent("exitproof", bp);
-				// 	} else {
-				// 		this.callEvent("proof", bp);
-				// 	}
-				// }
-				// break;
+				const bps = obj as BalanceProofs;
+				return this.callEvent("proof", bps);
 			}
 			case PhaseShift: {
 				const ps = obj as PhaseShift;
