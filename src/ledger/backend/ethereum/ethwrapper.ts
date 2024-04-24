@@ -75,7 +75,7 @@ function wrapDeposited(
 		account,
 		tokenValue,
 	) => {
-		const assets = decodePackedAssets(erdstall, [tokenValue]);
+		const assets = decodePackedAssets([tokenValue]);
 		return cb({
 			source: "ethereum",
 			epoch: epoch.toBigInt(),
@@ -96,10 +96,7 @@ function wrapWithdrawn(
 		account,
 		tokenValues,
 	) => {
-		const assets = decodePackedAssets(
-			erdstall,
-			tokenValues,
-		);
+		const assets = decodePackedAssets(tokenValues);
 		return cb({
 			source: "ethereum",
 			epoch: epoch.toBigInt(),
@@ -142,10 +139,7 @@ function wrapChallengeResponded(
 		exit,
 		sig,
 	) => {
-		const assets = decodePackedAssets(
-			erdstall,
-			tokenValues,
-		);
+		const assets = decodePackedAssets(tokenValues);
 		const address = EthereumAddress.fromString(account);
 		const sigBytes = utils.arrayify(sig);
 		return cb({
@@ -169,7 +163,6 @@ function decodePackedAssetID(packed: Erdstall.AssetStructOutput): AssetID {
 }
 
 function decodePackedAssets(
-	erdstall: Erdstall,
 	values: Erdstall.TokenValueStructOutput[],
 ): ChainAssets {
 	const assets = new ChainAssets(new Map());
@@ -184,16 +177,30 @@ function decodePackedAssets(
 	return assets;
 }
 
-export function packAmount(amount: Amount): bigint {
-	return amount.value;
-}
-
-export function packTokens(tokens: Tokens): bigint[] {
-	return tokens.value.map((v) => packAmount(new Amount(v)));
-}
-
-export function encodePackedIds(ids: bigint[]): string {
-	return utils.hexlify(utils.concat(ids.map(id => utils.defaultAbiCoder.encode(["uint256"], [id]))));
+export function encodePackedAssets(
+	assets: ChainAssets,
+): Erdstall.TokenValueStruct[] {
+	const values: Erdstall.TokenValueStruct[] = [];
+	for(const [ asset, value ] of assets.ordered()) {
+		const id: Erdstall.AssetStruct = {
+			origin: asset.origin(),
+			assetType: asset.type(),
+			localID: asset.localID(),
+		};
+		if(value instanceof Amount)
+			values.push({
+				asset: id,
+				value: [value.value],
+			});
+		else if(value instanceof Tokens)
+			values.push({
+				asset: id,
+				value: value.value,
+			});
+		else
+			throw new Error(`Unhandled asset type`);
+	}
+	return values;
 }
 
 
