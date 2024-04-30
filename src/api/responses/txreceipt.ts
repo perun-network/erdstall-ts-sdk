@@ -2,18 +2,17 @@
 "use strict";
 
 import { ErdstallObject, registerErdstallType } from "#erdstall/api";
-import { Account, Address } from "#erdstall/ledger";
+import { Account } from "#erdstall/ledger";
+import { Address, Signature, Crypto } from "#erdstall/crypto";
 import { Transaction, TransactionOutput } from "#erdstall/api/transactions";
 import {
 	jsonObject,
 	jsonMember,
 	jsonMapMember,
+	TypedJSON,
 	MapShape,
 } from "#erdstall/export/typedjson";
-import { Signature } from "../signature";
-import { utils } from "ethers";
-import { ABIEncoder, ABIPacked } from "../util";
-import { ETHZERO } from "#erdstall/ledger/assets";
+import canonicalize from "canonicalize";
 
 const txReceiptTypeName = "TxReceipt";
 
@@ -24,25 +23,25 @@ export enum TxStatusCode {
 
 @jsonObject
 export class TxReceipt extends ErdstallObject {
-	@jsonMember(() => Transaction) tx: Transaction;
+	@jsonMember(Transaction) tx: Transaction;
 	@jsonMember(TransactionOutput) output: TransactionOutput;
-	@jsonMember(() => Signature) sig: Signature;
-	@jsonMember(String) hash: String;
+	@jsonMember(Signature<Crypto>) sig: Signature<Crypto>;
+	@jsonMember(String) hash: string;
 
 	@jsonMapMember(String, () => Account, { shape: MapShape.OBJECT })
 	delta: Map<string, Account>;
 	/**
 	 * Erdstall standard status codes can be checked against the enum TxStatusCode
 	 */
-	@jsonMember(Number) status: Number;
+	@jsonMember(Number) status: number;
 	@jsonMember(String) error?: string;
 
 	constructor(
 		tx: Transaction,
 		delta: Map<string, Account>,
-		status: Number,
+		status: number,
 		output: TransactionOutput,
-		sig: Signature,
+		sig: Signature<Crypto>,
 		hash: string,
 		error?: string,
 	) {
@@ -62,31 +61,21 @@ export class TxReceipt extends ErdstallObject {
 	protected objectTypeName(): string {
 		return txReceiptTypeName;
 	}
-	packTagged(_: Address): ABIPacked {
-		const enc = new ABIEncoder();
-		return enc.pack(this.encodeABI(enc, _), Address.fromString(ETHZERO));
-	}
-	protected encodeABI(e: ABIEncoder, _: Address): string {
-		e.encode(
-			["bytes", utils.arrayify(this.hash as utils.BytesLike)],
-			["bytes", this.output.payload],
+	protected encodePayload(): Uint8Array {
+		const json = JSON.parse(TypedJSON.stringify(this, TxReceipt));
+		delete json.sig;
+		const msg = canonicalize(
+			JSON.stringify({value: json }),
 		);
-		return "ErdstallTransactionOutput";
+		return new TextEncoder().encode(msg);
 	}
-	verify(contract: Address): boolean {
-		console.log(
-			utils.hexlify(this.packTagged(Address.fromString(ETHZERO)).bytes),
-		);
+	verify(enclaveNativeSigner: Address<Crypto>): boolean {
 		if (!this.sig) {
 			return false;
 		}
-		const rec = utils.verifyMessage(
-			this.packTagged(contract).keccak256(),
-			this.sig!.toString(),
-		);
-		console.log(rec);
-		console.log(this.tx.sender.toString());
-		return rec === this.tx.sender.toString();
+		return this.sig!.verify(
+			this.encodePayload(),
+			enclaveNativeSigner);
 	}
 }
 

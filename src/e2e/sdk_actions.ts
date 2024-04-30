@@ -1,14 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
-
-import { Address } from "#erdstall/ledger";
+/*
 import { Assets } from "#erdstall/ledger/assets";
 import * as assets from "#erdstall/ledger/assets";
-import { Session, Client } from "#erdstall";
-import {
-	PerunArt__factory,
-	PerunToken__factory,
-} from "#erdstall/ledger/backend/contracts";
+import { Session, Client, ErdstallSession } from "#erdstall";
+import { PerunToken__factory } from "#erdstall/ledger/backend/ethereum/contracts";
 import {
 	Transfer,
 	Mint,
@@ -19,8 +15,20 @@ import {
 
 import { ethers, utils } from "ethers";
 import { PERUN_ADDR, PART_ADDR } from "./parameters";
+import { EthereumAddress } from "#erdstall/crypto/ethereum";
+import {
+	mkDefaultEthereumClientConstructor,
+	mkDefaultEthereumSessionConstructor,
+} from "#erdstall/ledger/backend/ethereum";
+import {
+	mkDefaultSubstrateClientConstructor,
+	SubstrateClient,
+} from "#erdstall/ledger/backend/substrate";
 
 export type SDKActions = typeof sdkActions;
+
+// The list of backends used for this test trace.
+export type TestBackends = ["ethereum", "substrate"];
 
 // sdkActions shows how to use the SDK for each step in a hypothetical
 // scenario. Each key stands for one step a user might do when acting within
@@ -38,7 +46,7 @@ export const sdkActions = {
 		nodeUrl: string,
 		signer: ethers.Signer,
 		operatorUrl: URL,
-	): Promise<Session> => {
+	): Promise<Session<TestBackends>> => {
 		// First we need a provider which allows the SDK to communicate with the
 		// underlying ledger. In the case of creating an `ErdstallClient` simply
 		// creating the provider or querying it from the environment (e.g. MetaMask
@@ -47,7 +55,12 @@ export const sdkActions = {
 
 		// Using the provider and the URL for the operator allows creating an
 		// `ErdstallClient`.
-		const client = new Client(provider, operatorUrl);
+		// const client = new Client(provider, operatorUrl);
+		const client = new Client<TestBackends>(
+			operatorUrl,
+			mkDefaultEthereumClientConstructor(provider),
+			mkDefaultSubstrateClientConstructor(),
+		);
 		// One could use this readonly client to listen for various events within
 		// Erdstall by registering callbacks before issuing the
 		// `client.initialize()` call.
@@ -60,8 +73,19 @@ export const sdkActions = {
 		// to be created. This signer can be obtained in a browser-setting by
 		// calling the `provider.getSigner()` method (if the user has granted
 		// access to your app using his account).
-		const userAddr = Address.fromString(await signer.getAddress());
-		const session = new Session(userAddr, signer, operatorUrl);
+		const userAddr = EthereumAddress.fromString(await signer.getAddress());
+		// const session = new Session(userAddr, signer, operatorUrl);
+		const session = new Session<TestBackends>(
+			userAddr,
+			operatorUrl,
+			signer,
+			mkDefaultEthereumSessionConstructor(signer),
+			{
+				backend: "substrate",
+				arg: 42,
+				initializer: (_c) => new SubstrateClient(42),
+			},
+		);
 
 		// We could now proactively set eventhandlers in place:
 		//
@@ -93,12 +117,14 @@ export const sdkActions = {
 		});
 
 		// (Onchain) Erdstall handlers:
+		//
+		// The origin of each on-chain event is tagged in each event under the
+		// event.source field.
+		// If your Session is defined as `Session<["ethereum" | "substrate"]>`, the
+		// `event.source` field has the type `"ethereum" | "substrate"`.
 		session.on("TokenTypeRegistered", (_tokenTypeRegisteredEvent) => {
 			// A new token type with its token holder contract was registered on the
 			// Erdstall smart contract.
-		});
-		session.on("TokenRegistered", (_tokenRegisteredEvent) => {
-			// A new token was registered on Erdstall.
 		});
 		session.on("Deposited", (_depositEvent) => {
 			// A deposit was registered on Erdstall.
@@ -124,7 +150,7 @@ export const sdkActions = {
 		return session;
 	},
 
-	initialize: async (session: Session) => {
+	initialize: async (session: Session<TestBackends>) => {
 		// Initialize the session. This connects us to the operator and grants us
 		// the ability to extend our subscriptions in the next step.
 		await session.initialize();
@@ -132,11 +158,15 @@ export const sdkActions = {
 
 	// Subscribing ensures that the `ErdstallClient` or `ErdstallSession`
 	// receives events for phaseshifts, balanceproofs and tx-receipts.
-	subscribe: async (session: Session) => {
+	subscribe: async (session: Session<TestBackends>) => {
 		return session.subscribeSelf();
 	},
 
-	deposit: async (session: Session, ethAmount: bigint, prnAmount: bigint) => {
+	deposit: async (
+		session: Session<TestBackends>,
+		ethAmount: bigint,
+		prnAmount: bigint,
+	) => {
 		// Erdstall balances are abstract `Assets`. These assets contain individual
 		// assets of the `Asset` type. Currently the SDK supports two types of assets:
 		//
@@ -146,6 +176,7 @@ export const sdkActions = {
 		// Here we are creating `Assets` containing some ETH and PRN which will be
 		// used for depositing in the next step.
 		const depositBal = new Assets(
+			// NOTE: Make this ChainAssets.
 			{
 				token: assets.ETHZERO, // ETH is represented by the zero address 0x00..
 				asset: new assets.Amount(ethAmount),
@@ -156,36 +187,46 @@ export const sdkActions = {
 			},
 		);
 
-		const { stages, numStages: _numStages } = await session.deposit(
-			depositBal,
-		);
-		// Depositing is a multi-stage process. ERC20 tokens like PRN have to be
-		// approved first, before being transferred. Here this results in the
-		// following stages:
-		//
-		// ETH => One transfer stage.
-		// PRN => One approve stage + One transfer stage.
-		//
-		// console.info("Number of stages: ", _numStages); // > Number of stages: 3
+		{
+			const { stages, numStages: _numStages } = await session.deposit(
+				"ethereum",
+				depositBal as any,
+			);
+			// Depositing is a multi-stage process. ERC20 tokens like PRN have to be
+			// approved first, before being transferred. Here this results in the
+			// following stages:
+			//
+			// ETH => One transfer stage.
+			// PRN => One approve stage + One transfer stage.
+			//
+			// console.info("Number of stages: ", _numStages); // > Number of stages: 3
 
-		// One can use this information to update users on the current progress of
-		// onchain transactions since they tend to take up quite some time in the
-		// real world.
-		for await (const [_name, stage] of stages) {
-			// Each stage of a transaction comes with a name which also can be used
-			// for improved UX or logging.
-			const ctx = await stage.wait();
-			// Also it is always advisable to assert the contract transactions status
-			// to be a success.
-			if (ctx.status !== 0x1) {
-				// handle contract error.
+			// One can use this information to update users on the current progress of
+			// onchain transactions since they tend to take up quite some time in the
+			// real world.
+			for await (const [_name, stage] of stages) {
+				// Each stage of a transaction comes with a name which also can be used
+				// for improved UX or logging.
+				const ctx = await stage.wait();
+				// Also it is always advisable to assert the contract transactions status
+				// to be a success.
+				if (ctx.status !== 0x1) {
+					// handle contract error.
+				}
 			}
+		}
+
+		{
+			const { stages, numStages: _numStages } = await session.deposit(
+				"substrate",
+				{} as any,
+			);
 		}
 	},
 
 	offchainTransfer: async (
-		alice: Session,
-		bob: Session,
+		alice: Session<TestBackends>,
+		bob: Session<TestBackends>,
 		prnAmount: bigint,
 	): Promise<void> => {
 		const amount = new Assets({
@@ -253,7 +294,7 @@ export const sdkActions = {
 		});
 	},
 
-	leave: async (session: Session) => {
+	leave: async (session: Session<TestBackends>) => {
 		// `leave` is a convenience function for first `exit`ing the Erdstall
 		// system and afterwards `withdrawing` all available funds for the user.
 		// So alternatively, if more control is required:
@@ -265,13 +306,13 @@ export const sdkActions = {
 		// --   callback!
 		//
 		// const { stages } = await session.withdraw(exitProof);
-		const { stages } = await session.leave();
+		const { stages } = await session.leave("ethereum");
 		for await (const [_name, stage] of stages) {
 			await stage.wait();
 		}
 	},
 
-	mint: async (session: Session, nftID: bigint) => {
+	mint: async (session: Session<TestBackends>, nftID: bigint) => {
 		// Offchain minting is simply a matter of passing an ERC721 contract
 		// address and an ID (unique!). Currently it is possible to mint for any
 		// contract offchain which is registered in Erdstall and counts as an
@@ -280,8 +321,8 @@ export const sdkActions = {
 	},
 
 	trade: async (
-		charlie: Session,
-		dagobert: Session,
+		charlie: Session<TestBackends>,
+		dagobert: Session<TestBackends>,
 		charlieNft: bigint,
 		wantedPrnAmount: bigint,
 	) => {
@@ -324,7 +365,7 @@ export const sdkActions = {
 		return (await dagobert.acceptTrade(tradeOffer)).receipt;
 	},
 
-	burn: async (dagobert: Session, formerCharlieNft: bigint) => {
+	burn: async (dagobert: Session<TestBackends>, formerCharlieNft: bigint) => {
 		// Burning a NFT requires being the owner of it. Since Charlie transferred
 		// his NFT in the step before, Dagobert is now able to do as he pleases.
 		// Maybe he was not a fan of monkeys and now wants some lit whales.
@@ -337,10 +378,10 @@ export const sdkActions = {
 	},
 
 	leavingAndSeeFundsOnchain: async function (
-		session: Session,
+		session: Session<TestBackends>,
 		provider: ethers.providers.Provider,
 	) {
-		const { stages } = await session.leave();
+		const { stages } = await session.leave("ethereum");
 		for await (const [, stage] of stages) {
 			await stage.wait();
 		}
@@ -354,16 +395,18 @@ export const sdkActions = {
 		// Erdstall related contracts, which frees you of the burden to come up
 		// with bindings on your own.
 
-		// The SDK provides a convenience field for on chain calls which will grow
-		// over time. E.g.
-		[PERUN_ADDR, PART_ADDR]
-			.map((addr) => addr.toString())
-			.map((addr) => {
-				session.onChainQuerier.queryTokensOwnedByAddress(
-					addr,
-					session.address.toString(),
-				);
-			});
+		// NOTE: REINTRODUCE
+		// // The SDK provides a convenience field for on chain calls which will grow
+		// // over time. E.g.
+		// [PERUN_ADDR, PART_ADDR]
+		// 	.map((addr) => addr.toString())
+		// 	.map((addr) => {
+		// 		session.onChainQuerier.queryTokensOwnedByAddress(
+		// 			"ethereum",
+		// 			addr,
+		// 			session.address.toString(),
+		// 		);
+		// 	});
 
 		// The tokenProvider can be used to query information about tokens related
 		// to Erdstall. The necessary `erdstallAddr` for these calls can be
@@ -382,10 +425,8 @@ export const sdkActions = {
 			PERUN_ADDR.toString(),
 			provider,
 		).balanceOf(session.address.toString());
-		const part = await PerunArt__factory.connect(
-			PART_ADDR.toString(),
-			provider,
-		).balanceOf(session.address.toString());
+		// NOTE: Hack.
+		const part = {} as any;
 		const eth = await provider.getBalance(session.address.toString());
 
 		// In the case of Alice we would see the following output:
@@ -399,3 +440,5 @@ export const sdkActions = {
 
 	// This concludes the overview over the SDK.
 };
+
+*/

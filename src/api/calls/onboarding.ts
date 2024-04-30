@@ -3,13 +3,13 @@
 
 import { jsonObject, jsonMember } from "#erdstall/export/typedjson";
 import { ErdstallObject } from "#erdstall/api";
-import { Address } from "#erdstall/ledger";
+import { Address, Crypto } from "#erdstall/crypto";
 
 @jsonObject
 export class Onboarding extends ErdstallObject {
-	@jsonMember(Address) who: Address;
+	@jsonMember(Address) who: Address<Crypto>;
 
-	constructor(who: Address) {
+	constructor(who: Address<Crypto>) {
 		super();
 		this.who = who;
 	}

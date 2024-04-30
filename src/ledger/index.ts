@@ -2,9 +2,7 @@
 "use strict";
 
 export * from "./account";
-export * from "./address";
+export * from "./chain";
 export * from "./event";
-export * from "./onChainQuerier";
-
-export * from "./backend/readconn";
-export * from "./backend/writeconn";
+export * from "./backend/writer";
+export * from "./backend/reader";

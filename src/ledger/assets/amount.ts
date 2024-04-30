@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { BigNumber, utils } from "ethers";
+import { ethers } from "ethers";
 
 import {
 	Asset,
@@ -11,7 +11,7 @@ import {
 	assertUint256,
 	registerAssetType,
 } from "./asset";
-import { mkBigInt } from "#erdstall/utils/bigint";
+import { bigTo0xEven } from "#erdstall/export/typedjson";
 
 /** Amount represents a currency amount in its smallest unit. */
 export class Amount extends Asset {
@@ -24,7 +24,7 @@ export class Amount extends Asset {
 	}
 
 	toJSON() {
-		return utils.hexValue(BigNumber.from(this.value));
+		return bigTo0xEven(this.value);
 	}
 
 	static fromJSON(hexString: string): Amount {
@@ -33,13 +33,6 @@ export class Amount extends Asset {
 
 	typeTag(): TypeTagName {
 		return TypeTags.Amount;
-	}
-
-	asABI(): Uint8Array {
-		const arr = utils.arrayify(BigNumber.from(this.value));
-		const abi = new Uint8Array(32);
-		abi.set(arr, 32 - arr.length);
-		return abi;
 	}
 
 	zero(): boolean {
@@ -95,20 +88,6 @@ export class Amount extends Asset {
 			return "eq";
 		}
 	}
-}
-
-export function encodePackedAmount(value: bigint): string {
-	return utils.defaultAbiCoder.encode(["uint256"], [value]);
-}
-
-export function decodePackedAmount(data: string): Amount {
-	let idArr: Uint8Array;
-	if (!data.startsWith("0x")) {
-		idArr = utils.arrayify(`0x${data}`);
-	} else {
-		idArr = utils.arrayify(data);
-	}
-	return new Amount(mkBigInt(idArr.values(), 256, 8));
 }
 
 registerAssetType(TypeTags.Amount, Amount.fromJSON);

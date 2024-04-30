@@ -2,7 +2,7 @@
 "use strict";
 
 import {
-	jsonBigIntMember,
+	jsonU64Member,
 	jsonObject,
 	jsonMapMember,
 	jsonMember,
@@ -10,19 +10,24 @@ import {
 } from "#erdstall/export/typedjson";
 import { ErdstallObject, registerErdstallType } from "#erdstall/api";
 import * as ledger from "#erdstall/ledger";
+import { Chain } from "#erdstall/ledger/chain";
+import * as crypto from "#erdstall/crypto";
+import { ProcessorInitReportData } from "#erdstall/ledger/backend/processor_data";
+import { BackendAddress } from "#erdstall/erdstall";
+import { Backend } from "#erdstall/ledger/backend";
 
 const typeName = "AttestResponse";
 
 @jsonObject
 export class Parameters {
-	@jsonBigIntMember() powDepth: bigint;
-	@jsonBigIntMember() epochDuration: bigint;
-	@jsonBigIntMember() initBlock: bigint;
-	@jsonMember(ledger.Address) tee: ledger.Address;
-	@jsonMember(ledger.Address) contract: ledger.Address;
+	@jsonU64Member() powDepth: bigint;
+	@jsonU64Member() epochDuration: bigint;
+	@jsonU64Member() initBlock: bigint;
+	@jsonMember(crypto.Address) tee: crypto.Address<crypto.Crypto>;
+	@jsonMember(crypto.Address) contract: crypto.Address<crypto.Crypto>;
 
-	@jsonMapMember(String, () => ledger.Address, { shape: MapShape.OBJECT })
-	tokenHolders: Map<string, ledger.Address>;
+	@jsonMapMember(String, () => crypto.Address, { shape: MapShape.OBJECT })
+	tokenHolders: Map<string, crypto.Address<crypto.Crypto>>;
 
 	@jsonMember(String) network: string;
 
@@ -30,9 +35,9 @@ export class Parameters {
 		powDepth: bigint,
 		epochDuration: bigint,
 		initBlock: bigint,
-		tee: ledger.Address,
-		contract: ledger.Address,
-		tokenHolders: Map<string, ledger.Address>,
+		tee: crypto.Address<crypto.Crypto>,
+		contract: crypto.Address<crypto.Crypto>,
+		tokenHolders: Map<string, crypto.Address<crypto.Crypto>>,
 		network: string,
 	) {
 		this.powDepth = powDepth;
@@ -46,30 +51,37 @@ export class Parameters {
 }
 
 @jsonObject
-export class AttestationReportData extends Parameters {
-	@jsonBigIntMember() nonce: bigint;
-	@jsonMember(String) trustedBlockHash: string;
-	@jsonBigIntMember() trustedBlockNum: bigint;
+export class AttestationReportChainData<B extends Backend> {
+	@jsonMember(() => crypto.Address)
+	address: BackendAddress<B>;
+	@jsonMember(() => ProcessorInitReportData)
+	processorData: ProcessorInitReportData<B>;
+	constructor(
+		address: BackendAddress<B>,
+		processorData: ProcessorInitReportData<B>,
+	) {
+		this.address = address;
+		this.processorData = processorData;
+	}
+}
+
+@jsonObject
+export class AttestationReportData {
+	@jsonMember(Parameters) params: Parameters;
+	@jsonMapMember(Number, AttestationReportChainData) chains: Map<
+		Chain,
+		AttestationReportChainData<Backend>
+	>;
+	@jsonU64Member() nonce: bigint;
 
 	constructor(
 		p: Parameters,
+		chains: Map<Chain, AttestationReportChainData<Backend>>,
 		nonce: bigint,
-		trustedBlockHash: string,
-		trustedBlockNum: bigint,
 	) {
-		super(
-			p?.powDepth,
-			p?.epochDuration,
-			p?.initBlock,
-			p?.tee,
-			p?.contract,
-			p?.tokenHolders,
-			p?.network,
-		);
-
+		this.params = p;
+		this.chains = chains;
 		this.nonce = nonce;
-		this.trustedBlockHash = trustedBlockHash;
-		this.trustedBlockNum = trustedBlockNum;
 	}
 }
 

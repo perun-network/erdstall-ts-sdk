@@ -1,33 +1,18 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { ethers, Signer } from "ethers";
+// TokenTypes supported by Erdstall. Currently only "fungible" and "NFT" are
+// supported. If any special token types are added to Erdstall, they will have
+// to be added here.
+type TokenTypes = ["Fungible", "NFT"];
 
-import { Address } from "#erdstall/ledger";
-import { Asset } from "#erdstall/ledger/assets";
-import { TokenType } from "#erdstall/ledger/assets";
-import { TransactionName } from "#erdstall/utils";
-import {
-	makeETHDepositCalls,
-	makeERC20DepositCalls,
-	makeERC721DepositCalls,
-} from "./contracts_deposit";
+// Each backend has a mapping from generic token types to specific counterparts
+// on their respective chain. E.g. Ethereum has the native asset "ETH" and all
+// ERC20 tokens mapped as "Fungible" tokens. "NFT" tokens are mapped to ERC721.
+// Substrate on the other hand maps "Fungible" and "NFT" tokens to the Erdstall
+// pallet, since that handles all specifics.
 
-export type DepositCall = (
-	obj?: ethers.PayableOverrides,
-) => Promise<ethers.ContractTransaction>;
-export type Calls = [TransactionName, DepositCall][];
+type EthereumMapping = [["Fungible", ["ETH", "ERC20"]], ["NFT", ["ERC721"]]];
 
-export type DepositerCallsFactory = (
-	signer: Signer,
-	holderAddr: Address,
-	tokenAddr: Address,
-	amount: Asset,
-) => Calls;
-
-export const depositors = new Map<TokenType, DepositerCallsFactory>([
-	["ETH", makeETHDepositCalls],
-	["ERC20", makeERC20DepositCalls],
-	["ERC721", makeERC721DepositCalls],
-	["ERC721Mintable", makeERC721DepositCalls],
-]);
+// NOTE CLEANUP: do we need this?
+type SubstrateMapping = [["Fungible", ["PALLET"], ["NFT", ["PALLET"]]]];

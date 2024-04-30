@@ -2,7 +2,7 @@
 "use strict";
 
 import { expect } from "chai";
-import { Amount, encodePackedAmount, decodePackedAmount } from "./amount";
+import { Amount } from "./amount";
 import { Tokens } from "./tokens";
 import * as test from "#erdstall/test";
 import { logSeedOnFailure } from "#erdstall/test";
@@ -33,18 +33,5 @@ describe("Amount", () => {
 			t1.sub(t2);
 		}, "subtracting compatible tokens which lead to out of bounds values should throw")
 			.throws;
-	});
-});
-
-describe("Amount:Decoding", function () {
-	const rng = test.newPrng();
-	it("allows to properly decode packed amounts", function () {
-		const v = test.newRandomAmount(rng);
-		const packedV = encodePackedAmount(v.value);
-		expect(decodePackedAmount(packedV).value).to.deep.equal(v.value);
-	});
-
-	afterEach(function () {
-		logSeedOnFailure(rng, this.currentTest);
 	});
 });

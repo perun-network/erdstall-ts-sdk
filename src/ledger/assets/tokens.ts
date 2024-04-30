@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { BigNumber, utils } from "ethers";
+import { ethers } from "ethers";
 import {
 	Asset,
 	TypeTags,
@@ -10,8 +10,8 @@ import {
 	ErrIncompatibleAssets,
 	registerAssetType,
 } from "./asset";
-import { mkBigInt } from "#erdstall/utils/bigint";
-import { Amount, encodePackedAmount } from "./amount";
+import { Amount } from "./amount";
+import { bigTo0xEven } from "#erdstall/export/typedjson";
 
 export const ErrIDAlreadyContained = new Error(
 	"given ID already contained in tokens",
@@ -37,13 +37,7 @@ export class Tokens extends Asset {
 	}
 
 	toJSON() {
-		return this.value.map((val) => {
-			const arr = utils.arrayify(BigNumber.from(val));
-			const offset = 32 - arr.length;
-			const abi = new Uint8Array(32);
-			abi.set(arr, offset);
-			return utils.hexValue(abi);
-		});
+		return this.value.map((val) => bigTo0xEven(val));
 	}
 
 	static fromJSON(idset: string[]): Tokens {
@@ -56,10 +50,6 @@ export class Tokens extends Asset {
 
 	typeTag(): TypeTagName {
 		return TypeTags.Tokens;
-	}
-
-	asABI(): Uint8Array {
-		return utils.concat(this.value.map((v) => new Amount(v).asABI()));
 	}
 
 	zero(): boolean {
@@ -193,27 +183,4 @@ export function mapNFTs<T>(
 			return [];
 		}
 	}).flat();
-}
-
-// decodePackedIds receives a hex encoded string representing one or more ABI
-// packed encoded `uint256` values.
-export function decodePackedIds(ids: string): bigint[] {
-	let idArr: Uint8Array;
-	if (!ids.startsWith("0x")) {
-		idArr = utils.arrayify(`0x${ids}`);
-	} else {
-		idArr = utils.arrayify(ids);
-	}
-
-	if (idArr.length % 32 !== 0)
-		throw new Error("received token array not divisible by 32");
-	const size = idArr.length / 32;
-	const res = Array.from({ length: size }, (_, i) => {
-		return mkBigInt(idArr.slice(i * 32, i * 32 + 32).values(), 256, 8);
-	});
-	return res;
-}
-
-export function encodePackedIds(ids: bigint[]): string {
-	return utils.hexlify(utils.concat(ids.map(encodePackedAmount)));
 }

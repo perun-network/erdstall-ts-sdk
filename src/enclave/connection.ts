@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { Address } from "#erdstall/ledger";
+import { Address, Crypto } from "#erdstall/crypto";
 import { Call, Result } from "#erdstall/api";
 import { EnclaveWatcher, ErdstallEventHandler } from "#erdstall";
 import { ErdstallObject } from "#erdstall/api";
@@ -23,7 +23,6 @@ import {
 import {
 	ClientConfig,
 	TxReceipt,
-	BalanceProof,
 	BalanceProofs,
 	Account,
 	PhaseShift,
@@ -54,7 +53,7 @@ export interface EnclaveReader extends EnclaveWatcher, Connector {
 	 * @param acc - The address of interest.
 	 * @returns A promise containing the state of the account in Erdstall.
 	 */
-	getAccount(acc: Address): Promise<Account>;
+	getAccount(acc: Address<Crypto>): Promise<Account>;
 
 	/**
 	 * Queries the enclave's remote attestation.
@@ -68,7 +67,7 @@ export interface EnclaveWriter extends EnclaveReader, Connector {
 	/**
 	 * Enters Erdstall with the given address.
 	 */
-	onboard(who: Address): Promise<void>;
+	onboard(who: Address<Crypto>): Promise<void>;
 	/**
 	 * Sends the given transfer transaction to the enclave.
 	 *
@@ -100,10 +99,10 @@ export interface EnclaveWriter extends EnclaveReader, Connector {
 	/**
 	 * Sends the given exit request to the enclave.
 	 *
-	 * @param tx - The exit request to send.
+	 * @param exitRequest - The exit request to send.
 	 * @returns A promise containing the balance proof with its exit flag set.
 	 */
-	exit(exitRequest: ExitRequest): Promise<BalanceProof>;
+	exit(exitRequest: ExitRequest): Promise<BalanceProofs>;
 
 	// needed to allow interface checking.
 	isEnclaveWriter(): void;
@@ -111,15 +110,15 @@ export interface EnclaveWriter extends EnclaveReader, Connector {
 
 export class Enclave implements EnclaveWriter {
 	private provider: EnclaveProvider;
-	private handlers: EventCache<EnclaveEvent>;
-	private internalHandlers: EventCache<EnclaveEvent>;
-	private oneShotHandlers: OneShotEventCache<EnclaveEvent>;
-	private internalOneShotHandlers: OneShotEventCache<EnclaveEvent>;
+	private handlers: EventCache<EnclaveEvent, never>;
+	private internalHandlers: EventCache<EnclaveEvent, never>;
+	private oneShotHandlers: OneShotEventCache<EnclaveEvent, never>;
+	private internalOneShotHandlers: OneShotEventCache<EnclaveEvent, never>;
 	private calls: Map<string, [Function, Function]>;
 	private id: number;
 
 	private globallySubscribed: boolean;
-	private individuallySubscribed: Set<string>;
+	private individuallySubscribed: Set<Address<Crypto>>;
 	private phaseShiftSubscribed: boolean;
 
 	static dial(operator: URL): Enclave {
@@ -128,10 +127,13 @@ export class Enclave implements EnclaveWriter {
 
 	constructor(provider: EnclaveProvider) {
 		this.provider = provider;
-		this.handlers = new EventCache<EnclaveEvent>();
-		this.internalHandlers = new EventCache<EnclaveEvent>();
-		this.oneShotHandlers = new OneShotEventCache<EnclaveEvent>();
-		this.internalOneShotHandlers = new OneShotEventCache<EnclaveEvent>();
+		this.handlers = new EventCache<EnclaveEvent, never>();
+		this.internalHandlers = new EventCache<EnclaveEvent, never>();
+		this.oneShotHandlers = new OneShotEventCache<EnclaveEvent, never>();
+		this.internalOneShotHandlers = new OneShotEventCache<
+			EnclaveEvent,
+			never
+		>();
 
 		this.calls = new Map<
 			string,
@@ -141,7 +143,7 @@ export class Enclave implements EnclaveWriter {
 		this.id = 0;
 
 		this.globallySubscribed = false;
-		this.individuallySubscribed = new Set<string>();
+		this.individuallySubscribed = new Set();
 		this.phaseShiftSubscribed = false;
 	}
 
@@ -159,16 +161,16 @@ export class Enclave implements EnclaveWriter {
 		this.provider.close();
 	}
 
-	public async onboard(who: Address): Promise<void> {
+	public async onboard(who: Address<Crypto>): Promise<void> {
 		const onboard = new Onboarding(who);
 		await this.sendCall(onboard);
 		return;
 	}
 
-	public async subscribe(who?: Address): Promise<void> {
+	public async subscribe(who?: Address<Crypto>): Promise<void> {
 		this.phaseShiftSubscribed = true;
 		if (who) {
-			this.individuallySubscribed.add(who.key);
+			this.individuallySubscribed.add(who);
 		} else {
 			this.globallySubscribed = true;
 		}
@@ -205,16 +207,17 @@ export class Enclave implements EnclaveWriter {
 		return this.sendCall(tx) as Promise<TxAccepted>;
 	}
 
-	public async exit(exitRequest: ExitRequest): Promise<BalanceProof> {
-		const p = new Promise<BalanceProof>((resolve, reject) => {
-			this.once_internal("exitproof", resolve);
+	public async exit(exitRequest: ExitRequest): Promise<BalanceProofs> {
+		const p = new Promise<BalanceProofs>((resolve, reject) => {
+			// NOTE RACE if a proof is received before the exit request is processed. Would need more elaborate logic to harden against that. It would be better to handle tracking of balance proofs in a different manner.
+			this.once_internal("proof", resolve);
 			this.sendCall(exitRequest).catch(reject);
 		});
 
 		return p;
 	}
 
-	public async getAccount(acc: Address): Promise<Account> {
+	public async getAccount(acc: Address<Crypto>): Promise<Account> {
 		return this.sendCall(new GetAccount(acc)) as Promise<Account>;
 	}
 
@@ -234,42 +237,42 @@ export class Enclave implements EnclaveWriter {
 
 	public on<T extends EnclaveEvent>(
 		eventType: T,
-		cb: ErdstallEventHandler<T>,
+		cb: ErdstallEventHandler<T, never>,
 	): void {
 		this.handlers.set(eventType, cb);
 	}
 
 	public once<T extends EnclaveEvent>(
 		eventType: T,
-		cb: ErdstallEventHandler<T>,
+		cb: ErdstallEventHandler<T, never>,
 	): void {
 		this.oneShotHandlers.set(eventType, cb);
 	}
 
 	public off<T extends EnclaveEvent>(
 		eventType: T,
-		cb: ErdstallEventHandler<T>,
+		cb: ErdstallEventHandler<T, never>,
 	) {
 		this.handlers.delete(eventType, cb);
 	}
 
 	public on_internal<T extends EnclaveEvent>(
 		eventType: T,
-		cb: ErdstallEventHandler<T>,
+		cb: ErdstallEventHandler<T, never>,
 	): void {
 		this.internalHandlers.set(eventType, cb);
 	}
 
 	public once_internal<T extends EnclaveEvent>(
 		eventType: T,
-		cb: ErdstallEventHandler<T>,
+		cb: ErdstallEventHandler<T, never>,
 	): void {
 		this.internalOneShotHandlers.set(eventType, cb);
 	}
 
 	public off_internal<T extends EnclaveEvent>(
 		eventType: T,
-		cb: ErdstallEventHandler<T>,
+		cb: ErdstallEventHandler<T, never>,
 	) {
 		this.internalHandlers.delete(eventType, cb);
 	}
@@ -320,14 +323,7 @@ export class Enclave implements EnclaveWriter {
 				return this.callEvent("receipt", obj);
 			case BalanceProofs: {
 				const bps = obj as BalanceProofs;
-				for (const [_, bp] of bps.map) {
-					if (bp.balance.exit) {
-						this.callEvent("exitproof", bp);
-					} else {
-						this.callEvent("proof", bp);
-					}
-				}
-				break;
+				return this.callEvent("proof", bps);
 			}
 			case PhaseShift: {
 				const ps = obj as PhaseShift;
@@ -380,8 +376,8 @@ export class Enclave implements EnclaveWriter {
 
 		this.individuallySubscribed.forEach((addr) =>
 			calls.push(
-				new SubscribeTXs(Address.fromString(addr)),
-				new SubscribeBalanceProofs(Address.fromString(addr)),
+				new SubscribeTXs(addr),
+				new SubscribeBalanceProofs(addr),
 			),
 		);
 

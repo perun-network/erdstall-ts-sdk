@@ -1,6 +1,6 @@
 {
 	"name": "@polycrypt/erdstall",
-	"version": "0.3.0",
+	"version": "0.3.1",
 	"description": "SDK to interact with Erdstall Layer-2 Networks",
 	"main": "./index.js",
 	"exports": {
@@ -30,7 +30,9 @@
 		"lint": "eslint ./src --ext .ts",
 		"bindings": "./scripts/genbindings.sh",
 		"test:e2e": "env TS_NODE_PROJECT=\"tsconfig.e2e.json\" mocha -b --timeout 120000 -r jsdom-global/register -r ts-node/register -r tsconfig-paths/register 'src/e2e/**/*.spec.ts'",
+		"test:e2e:session": "env TS_NODE_PROJECT=\"tsconfig.e2e.json\" mocha -b --timeout 120000 -r jsdom-global/register -r ts-node/register -r tsconfig-paths/register 'src/e2e/operator_e2e.spec.ts'",
 		"test": "env TS_NODE_PROJECT=\"tsconfig.test.json\" mocha --timeout 15000 -r jsdom-global/register -r ts-node/register -r tsconfig-paths/register 'src/{,!(e2e)/**}/*.spec.ts'",
+		"test-file": "env TS_NODE_PROJECT=\"tsconfig.test.json\" mocha --timeout 15000 -r jsdom-global/register -r ts-node/register -r tsconfig-paths/register",
 		"prepack": "yarn build && tsc-alias -p tsconfig.json && ts-node ./scripts/prepack.ts ./package.json ./dist/package.json",
 		"devpub": "yarn prepack",
 		"doc": "typedoc ./src ./src/api ./src/enclave ./src/ledger ./src/ledger/backend ./src/test ./src/utils"
@@ -72,7 +74,7 @@
 		"ganache": "^7.0.2",
 		"ganache-cli": "^6.12.2",
 		"ganache-core": "^2.13.2",
-		"hardhat": "^2.4.0",
+		"hardhat": "^2.22.1",
 		"hardhat-waffle": "^0.0.1-security",
 		"jsdom": "^16.6.0",
 		"jsdom-global": "^3.0.2",
@@ -89,9 +91,13 @@
 		"walk": "^2.3.14"
 	},
 	"dependencies": {
+		"@polkadot/api": "^10.10.1",
+		"@polkadot/api-contract": "^10.10.1",
+		"@polkadot/util-crypto": "^12.5.1",
 		"axios": "^0.21.4",
+		"canonicalize": "^2.0.0",
 		"ethereum-waffle": "^3.4.0",
-		"ethers": "^5.4.1",
+		"ethers": "^6.11.1",
 		"isomorphic-ws": "^4.0.1",
 		"number-generator": "^4.0.5",
 		"reflect-metadata": "^0.1.13",

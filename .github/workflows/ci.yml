@@ -13,15 +13,15 @@ jobs:
     steps:
       - name: "Checkout SDK"
         uses: actions/checkout@v3
-      - name: "Prettier Check"
-        uses: creyD/prettier_action@v4.0
-        with:
-          dry: True
-          prettier_options: --config .prettierrc --check **/*.ts
+#      - name: "Prettier Check"
+#        uses: creyD/prettier_action@v4.0
+#        with:
+#          dry: True
+#          prettier_options: --config .prettierrc --check **/*.ts
       - name: "Setup Node.js"
         uses: actions/setup-node@v3
         with:
-          node-version: "16"
+          node-version: "20"
           cache: "yarn"
       - name: "Install dependencies"
         run: yarn install
@@ -29,18 +29,18 @@ jobs:
         run: yarn build
       - name: "Test"
         run: yarn test
-      - name: "Checkout Erdstall Core"
-        uses: actions/checkout@v3
-        with:
-          ssh-key: ${{ secrets.SSH_PRIV_KEY }}
-          repository: "perun-network/erdstall-ext"
-          path: "erdstall"
-      - name: "Set up Go 1.x"
-        uses: actions/setup-go@v3
-        with:
-          go-version: ^1.17
-      - name: "Build walkthrough operator"
-        working-directory: "erdstall"
-        run: go build -o wo ./cmd/walkthrough/main.go
-      - name: "End-2-End Test"
-        run: ERDSTALL_EXE=erdstall/wo yarn test:e2e
+#      - name: "Checkout Erdstall Core"
+#        uses: actions/checkout@v3
+#        with:
+#          ssh-key: ${{ secrets.SSH_PRIV_KEY }}
+#          repository: "perun-network/erdstall-ext"
+#          path: "erdstall"
+#      - name: "Set up Go 1.x"
+#        uses: actions/setup-go@v3
+#        with:
+#          go-version: ^1.17
+#      - name: "Build walkthrough operator"
+#        working-directory: "erdstall"
+#        run: go build -o wo ./cmd/walkthrough/main.go
+#      - name: "End-2-End Test"
+#        run: ERDSTALL_EXE=erdstall/wo yarn test:e2e

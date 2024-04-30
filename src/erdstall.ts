@@ -6,26 +6,43 @@
 
 import { PendingTransaction } from "#erdstall/api/util/pending_transaction";
 import { TradeOffer } from "#erdstall/api/transactions";
-import { BalanceProof, AttestationResult } from "#erdstall/api/responses";
-import { Address, Account, LedgerEvent } from "#erdstall/ledger";
-import { TokenProvider } from "#erdstall/ledger/backend";
-import { Assets } from "#erdstall/ledger/assets";
+import {
+	AttestationResult,
+	BalanceProofs,
+	ChainProofChunk,
+} from "#erdstall/api/responses";
+import { Account, LedgerEvent } from "#erdstall/ledger";
+import * as crypto from "#erdstall/crypto";
+import {
+	Backend,
+	BackendCrypto,
+	RequestedBackends,
+} from "#erdstall/ledger/backend";
+import { ChainAssets, LocalAsset } from "#erdstall/ledger/assets";
 import { Uint256 } from "#erdstall/api/util";
 import { TransactionGenerator } from "#erdstall/utils";
 import { EnclaveEvent } from "#erdstall/enclave";
-import { NFTMetadataProvider } from "#erdstall/ledger/backend";
-import { OnChainQuerier } from "./ledger";
-
 import { ErdstallEvent, ErdstallEventHandler } from "./event";
 export * from "./client";
 export * from "./session";
+
+export type ErdstallSignature = crypto.Signature<"ethereum">;
+
+// Each backend implementation can narrow down which crypto it supports. This
+// happens statically by indexing the crypto type.
+export type BackendSignature<B extends Backend> = crypto.Signature<
+	BackendCrypto<B>
+>;
+export type BackendAddress<B extends Backend> = crypto.Address<
+	BackendCrypto<B>
+>;
 
 /**
  * Describes the ability to watch out/listen for certain events.
  *
  * @typeParam T - Type of events to watch out/listen for.
  */
-interface watcher<T extends ErdstallEvent> {
+interface watcher<T extends ErdstallEvent, Bs extends Backend> {
 	/**
 	 * Registers a callback for the given event, s.t. it fires everytime until
 	 * manually unregistered with `off(ev, cb)`.
@@ -38,7 +55,7 @@ interface watcher<T extends ErdstallEvent> {
 	 * @remarks
 	 * The registered callback should always be manually unregistered.
 	 */
-	on: <EV extends T>(ev: EV, cb: ErdstallEventHandler<EV>) => void;
+	on: <EV extends T>(ev: EV, cb: ErdstallEventHandler<EV, Bs>) => void;
 
 	/**
 	 * Registers a callback for the given event, s.t. it fires only ONCE.
@@ -49,7 +66,7 @@ interface watcher<T extends ErdstallEvent> {
 	 * @param ev - The event of interest.
 	 * @param cb - The callback depending on the type of ev.
 	 */
-	once: <EV extends T>(ev: EV, cb: ErdstallEventHandler<EV>) => void;
+	once: <EV extends T>(ev: EV, cb: ErdstallEventHandler<EV, Bs>) => void;
 
 	/**
 	 * Unregisters a callback for the given event.
@@ -59,7 +76,7 @@ interface watcher<T extends ErdstallEvent> {
 	 * @param ev - The event of interest.
 	 * @param cb - The callback depending on the type of ev.
 	 */
-	off: <EV extends T>(ev: EV, cb: ErdstallEventHandler<EV>) => void;
+	off: <EV extends T>(ev: EV, cb: ErdstallEventHandler<EV, Bs>) => void;
 
 	/**
 	 * Removes all registered callbacks for all events.
@@ -70,27 +87,32 @@ interface watcher<T extends ErdstallEvent> {
 /**
  * Watcher only for LedgerEvents.
  */
-export interface ErdstallWatcher extends watcher<LedgerEvent> {}
+export interface ErdstallWatcher<Bs extends Backend>
+	extends watcher<LedgerEvent, Bs> {}
 
 /**
  * Watcher only for EnclaveEvents.
  */
-export interface EnclaveWatcher extends watcher<EnclaveEvent>, Subscriber {}
+export interface EnclaveWatcher
+	extends watcher<EnclaveEvent, never>,
+		Subscriber {}
 
 /**
  * Watcher for LedgerEvents and EnclaveEvents.
  */
-export interface Watcher extends watcher<ErdstallEvent> {}
+export interface Watcher<Bs extends Backend[]>
+	extends watcher<ErdstallEvent, Bs[number]> {}
 
 /**
  * Describes an entity within Erdstall with the ability to return the erdstall
  * contracts onchain address.
  */
-export interface Contracter {
+export interface Contracter<B extends Backend> {
 	/**
-	 * @returns The address of the onchain erdstall contract.
+	 * @returns The address of the onchain erdstall contract for each supported
+	 * backend.
 	 */
-	erdstall(): Address;
+	erdstall(): { chain: B; address: BackendAddress<B> }[];
 }
 
 /**
@@ -105,7 +127,10 @@ export interface Transactor {
 	 * @param to - The recipient of this transfer action.
 	 * @returns A promise containing the pending transaction for this transfer.
 	 */
-	transferTo(assets: Assets, to: Address): Promise<PendingTransaction>;
+	transferTo(
+		assets: ChainAssets,
+		to: crypto.Address<crypto.Crypto>,
+	): Promise<PendingTransaction>;
 }
 
 /**
@@ -119,7 +144,7 @@ export interface Minter {
 	 * @param id - The id of the token within the specified token contract.
 	 * @returns A promise containing the pending transaction for this mint.
 	 */
-	mint(token: Address, id: Uint256): Promise<PendingTransaction>;
+	mint(token: Uint8Array, id: Uint256): Promise<PendingTransaction>;
 }
 
 /**
@@ -132,7 +157,7 @@ export interface Burner {
 	 * @param assets - The assets to be burned by this transaction.
 	 * @returns A promise containing the pending transaction for this burn.
 	 */
-	burn(assets: Assets): Promise<PendingTransaction>;
+	burn(assets: ChainAssets): Promise<PendingTransaction>;
 }
 
 /**
@@ -146,7 +171,7 @@ export interface Trader {
 	 * @param expect - The assets which are expected in return.
 	 * @returns A promise containing the assembled and signed trade offer.
 	 */
-	createOffer(offer: Assets, expect: Assets): Promise<TradeOffer>;
+	createOffer(offer: ChainAssets, expect: ChainAssets): Promise<TradeOffer>;
 
 	/**
 	 * Accepts the given trade offer and submits this trade to Erdstall.
@@ -159,7 +184,7 @@ export interface Trader {
 /**
  * Describes an entity with the ability to deposit funds in Erdstall.
  */
-export interface Depositor {
+export interface Depositor<B extends Backend> {
 	/**
 	 * Deposits the specified assets in Erdstall. This is interacting with the
 	 * erdstall entity on the ledger.
@@ -173,13 +198,15 @@ export interface Depositor {
 	 * function. For more information about stages look at the corresponding
 	 * documentation.
 	 */
-	deposit(assets: Assets): Promise<TransactionGenerator>;
+	deposit(
+		assets: ChainAssets,
+	): Promise<TransactionGenerator<B>>;
 }
 
 /**
  * Describes an entity with the ability to withdraw funds from Erdstall.
  */
-export interface Withdrawer {
+export interface Withdrawer<B extends Backend> {
 	/**
 	 * Withdraws funds by using the given balance proof. The assets contained
 	 * within the balanceproof will be available onchain when done. This proof
@@ -194,7 +221,10 @@ export interface Withdrawer {
 	 * Withdrawing is a multistep process which might contain different amount of
 	 * steps for each type of asset contained in the balance proof.
 	 */
-	withdraw(exitProof: BalanceProof): Promise<TransactionGenerator>;
+	withdraw(
+		epoch: bigint,
+		exitProof: ChainProofChunk[],
+	): Promise<TransactionGenerator<B>>;
 }
 
 /**
@@ -213,14 +243,14 @@ export interface Exiter {
 	 * to use `Leaver.leave` over the individual `Exiter.exit` call, because the
 	 * latter has to be manually followed by a call to `Withdrawer.withdraw`.
 	 */
-	exit(): Promise<BalanceProof>;
+	exit(): Promise<BalanceProofs>;
 }
 
 /**
  * Describes an entity with the ability to exit AND withdraw funds from
  * Erdstall.
  */
-export interface Leaver extends Exiter, Withdrawer {
+export interface Leaver<Bs extends Backend[]> extends Exiter {
 	/**
 	 * Leaves Erdstall by first exiting and then withdrawing available funds.
 	 *
@@ -232,7 +262,7 @@ export interface Leaver extends Exiter, Withdrawer {
 	 */
 	leave(
 		notify?: (message: string, stage: number, maxStages: number) => void,
-	): Promise<TransactionGenerator>;
+	): Promise< Map<number, TransactionGenerator<Bs[number]>> >;
 }
 
 /**
@@ -263,7 +293,7 @@ export interface Subscriber {
 	 * TxReceipts.
 	 * @returns An empty promise which can be awaited.
 	 */
-	subscribe(who?: Address): Promise<void>;
+	subscribe(who?: crypto.Address<crypto.Crypto>): Promise<void>;
 }
 
 /**
@@ -290,7 +320,7 @@ export interface AccountGetter {
 	 * @returns A promise containing the current account state of the specified
 	 * address.
 	 */
-	getAccount(who: Address): Promise<Account>;
+	getAccount(who: crypto.Address<crypto.Crypto>): Promise<Account>;
 }
 
 export interface Attester {
@@ -316,7 +346,7 @@ export interface Onboarder {
 /**
  * Describes an entity which has to do some initialization before being used.
  */
-export interface Initializer {
+export interface Initializer<_B extends Backend> {
 	/**
 	 * Initalizes the entity. When coupled with a `Subscriber` see the remarks
 	 * section.
@@ -334,41 +364,58 @@ export interface Initializer {
  * Describes a passive client which can observe Erdstall and its state but is
  * incapable of taking any actions.
  */
-export interface ErdstallClient
-	extends Watcher,
-		Contracter,
-		Initializer,
+export interface ErdstallClient<Bs extends Backend[]>
+	// The type-level list tracks the supported backends at compile time.
+	extends Watcher<Bs>,
+		Contracter<RequestedBackends<Bs>>,
+		Initializer<RequestedBackends<Bs>>,
 		Subscriber,
-		NFTMetadataProvider,
 		AccountGetter,
-		Attester {
-	/**
-	 * Provider allowing to query token information related to Erdstall and
-	 * its onchain contracts.
-	 */
-	readonly tokenProvider: TokenProvider;
-	readonly onChainQuerier: OnChainQuerier;
+		Attester,
+		Contracter<RequestedBackends<Bs>>{
 }
+
+/**
+ * Generic ErdstallBackendClient responsible for communicating with ledger
+ * specific components. It is specialized for a specific backend.
+ */
+export interface ErdstallBackendClient<B extends Backend>
+	extends ErdstallWatcher<B>,
+		Contracter<B> {}
 
 /**
  * Describes an active session which can observe Erdstall and its state as
  * well as take actions like sending transactions.
  */
-export interface ErdstallSession
-	extends ErdstallClient,
+export interface ErdstallSession<Bs extends Backend[]>
+	extends ErdstallClient<Bs>,
 		SelfSubscriber,
 		OwnAccountGetter,
-		Initializer,
+		Initializer<RequestedBackends<Bs>>,
 		Transactor,
 		Minter,
 		Burner,
 		Trader,
-		Depositor,
-		Withdrawer,
 		Exiter,
-		Leaver {
+		Leaver<Bs> {
+
+	// Need a different signature for deposit withdraw, since it needs the explicit chain argument, while backends have their chain ID embeddd implicitly.
+	deposit(
+		chain: number,
+		assets: ChainAssets,
+	): Promise<TransactionGenerator<Bs[number]>>;
+	withdraw(
+		chain: number,
+		epoch: bigint,
+		exitProof: ChainProofChunk[],
+	): Promise<TransactionGenerator<Bs[number]>>;
 	/**
 	 * The address connected to this session.
 	 */
-	readonly address: Address;
+	readonly address: crypto.Address<crypto.Crypto>;
 }
+
+export interface ErdstallBackendSession<B extends Backend>
+	extends ErdstallBackendClient<B>,
+		Depositor<B>,
+		Withdrawer<B> {}

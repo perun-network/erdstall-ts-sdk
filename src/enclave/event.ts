@@ -9,7 +9,6 @@ const event = [
 	"receipt",
 	"phaseshift",
 	"proof",
-	"exitproof",
 	"error",
 ] as const;
 

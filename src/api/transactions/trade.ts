@@ -2,32 +2,32 @@
 "use strict";
 
 import { Transaction, registerTransactionType } from "./transaction";
-import { Address } from "#erdstall/ledger";
 import * as assets from "#erdstall/ledger/assets";
 import {
 	jsonObject,
 	jsonMember,
-	jsonBigIntMember,
+	jsonU64Member,
+	TypedJSON,
 } from "#erdstall/export/typedjson";
-import { ABIEncoder, ABIPacked } from "#erdstall/api/util";
-import { Signature } from "#erdstall/api";
-import { Signer, utils } from "ethers";
+import { Address, Signature, Crypto, Signer } from "#erdstall/crypto";
+import canonicalize from "canonicalize";
 
 @jsonObject
 export class TradeFees {
-	@jsonMember(Address) market: Address;
-	@jsonMember(() => assets.Assets) fee: assets.Assets;
+	@jsonMember(Address) market: Address<Crypto>;
+	@jsonMember(() => assets.ChainAssets) fee: assets.ChainAssets;
 
-	constructor(market: Address, fee: assets.Assets) {
+	constructor(market: Address<Crypto>, fee: assets.ChainAssets) {
 		this.market = market;
 		this.fee = fee;
 	}
 
-	packTagged(contract: Address): ABIPacked {
-		return new ABIEncoder(this.market, this.fee).pack(
-			"ErdstallTradeFees",
-			contract,
-		);
+	encodePayload(): Uint8Array {
+		const json = JSON.parse(TypedJSON.stringify(this, TradeFees));
+		const msg = canonicalize({
+			value: json
+		});
+		return new TextEncoder().encode(msg);
 	}
 }
 
@@ -35,51 +35,48 @@ const tradeTypeName = "Trade";
 
 @jsonObject
 export class TradeOffer {
-	@jsonMember(Address) owner: Address;
-	@jsonMember(() => assets.Assets) offer: assets.Assets;
-	@jsonMember(() => assets.Assets) request: assets.Assets;
-	@jsonBigIntMember() expiry: bigint;
+	@jsonMember(Address) owner: Address<Crypto>;
+	@jsonMember(() => assets.ChainAssets) offer: assets.ChainAssets;
+	@jsonMember(() => assets.ChainAssets) request: assets.ChainAssets;
+	@jsonU64Member() expiry: bigint;
 	@jsonMember(TradeFees) fees?: TradeFees;
-	@jsonMember(Signature) sig?: Signature;
+	@jsonMember(Signature) sig?: Signature<Crypto>;
 
-	constructor(owner: Address, offer: assets.Assets, request: assets.Assets) {
+	constructor(
+		owner: Address<Crypto>,
+		offer: assets.ChainAssets,
+		request: assets.ChainAssets,
+	) {
 		this.owner = owner;
 		this.offer = offer;
 		this.request = request;
 		this.expiry = (1n << 64n) - 1n; // For now, never expire.
 	}
 
-	async sign(contract: Address, signer: Signer): Promise<this> {
-		const sig = await signer.signMessage(
-			this.packTagged(contract).keccak256(),
-		);
-		this.sig = new Signature(sig);
+	async sign(signer: Signer<Crypto>): Promise<this> {
+		this.owner = await signer.address();
+		this.sig = await signer.sign(this.encodePayload());
 		return this;
 	}
 
-	verify(contract: Address): boolean {
+	verify(signer: Address<Crypto>): boolean {
 		if (!this.sig) {
 			return false;
 		}
-		const rec = utils.verifyMessage(
-			this.packTagged(contract).keccak256(),
-			this.sig!.toString(),
+		return this.sig.verify(
+			this.encodePayload(),
+			signer
 		);
-
-		return rec === this.owner.toString();
 	}
 
-	packTagged(contract: Address): ABIPacked {
-		return new ABIEncoder()
-			.encodeTagged(
-				contract,
-				this.owner,
-				this.offer,
-				["uint64", this.expiry],
-				this.request,
-				this.fees ? this.fees! : new Uint8Array(),
-			)
-			.pack("ErdstallTradeOffer", contract);
+	encodePayload(): Uint8Array {
+		const json = JSON.parse(TypedJSON.stringify(this, TradeOffer));
+		delete json.sig;
+
+		const msg = canonicalize({
+			value: json,
+		});
+		return new TextEncoder().encode(msg);
 	}
 }
 
@@ -87,7 +84,7 @@ export class TradeOffer {
 export class Trade extends Transaction {
 	@jsonMember(TradeOffer) offer: TradeOffer;
 
-	constructor(sender: Address, nonce: bigint, offer: TradeOffer) {
+	constructor(sender: Address<Crypto>, nonce: bigint, offer: TradeOffer) {
 		super(sender, nonce);
 		// Otherwise, throws "TypeError: Cannot read property 'sig' of undefined" in TypedJSON.parse.
 		if (offer && !offer.sig) throw new Error("trade offer must be signed");
@@ -99,10 +96,6 @@ export class Trade extends Transaction {
 	}
 	protected txTypeName(): string {
 		return tradeTypeName;
-	}
-	protected encodeABI(e: ABIEncoder, contract: Address): string {
-		e.encodeTagged(contract, this.offer.sig!, this.offer);
-		return "ErdstallTradeTX";
 	}
 }
 

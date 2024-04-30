@@ -2,7 +2,7 @@
 "use strict";
 
 import { ErdstallObject, registerErdstallType } from "#erdstall/api";
-import { Address } from "#erdstall/ledger";
+import { Address, Crypto } from "#erdstall/crypto";
 import { jsonObject, jsonMember } from "#erdstall/export/typedjson";
 
 const subBPsTypeName = "SubscribeBalanceProofs";
@@ -11,10 +11,10 @@ const subPhaseShiftName = "SubscribePhaseShifts";
 
 @jsonObject
 export class SubscribeBalanceProofs extends ErdstallObject {
-	@jsonMember(Address) who?: Address;
+	@jsonMember(Address) who?: Address<Crypto>;
 	@jsonMember(Boolean) cancel?: boolean;
 
-	constructor(who?: Address, cancel?: boolean) {
+	constructor(who?: Address<Crypto>, cancel?: boolean) {
 		super();
 		this.who = who;
 		this.cancel = cancel;
@@ -23,17 +23,33 @@ export class SubscribeBalanceProofs extends ErdstallObject {
 	public objectType(): any {
 		return SubscribeBalanceProofs;
 	}
+
 	protected objectTypeName(): string {
 		return subBPsTypeName;
+	}
+
+	public static fromJSON(json: any): SubscribeBalanceProofs {
+		if (!json.who) {
+			throw new Error("expected who field in subscribe balance proofs");
+		}
+		const who = Address.ensure(json.who);
+		return new SubscribeBalanceProofs(who, json.cancel);
+	}
+
+	public static toJSON(obj: SubscribeBalanceProofs): any {
+		return {
+			who: obj.who?.toJSON(),
+			cancel: obj.cancel,
+		};
 	}
 }
 
 @jsonObject
 export class SubscribeTXs extends ErdstallObject {
-	@jsonMember(Address) who?: Address;
+	@jsonMember(Address) who?: Address<Crypto>;
 	@jsonMember(Boolean) cancel?: boolean;
 
-	constructor(who?: Address, cancel?: boolean) {
+	constructor(who?: Address<Crypto>, cancel?: boolean) {
 		super();
 		this.who = who;
 		this.cancel = cancel;
@@ -45,6 +61,21 @@ export class SubscribeTXs extends ErdstallObject {
 	protected objectTypeName(): string {
 		return subTXsTypeName;
 	}
+
+	// public static fromJSON(json: any): SubscribeTXs {
+	// 	if (!json.who) {
+	// 		throw new Error("expected who field in subscribe transaction");
+	// 	}
+	// 	const who = Address.ensure(json.who);
+	// 	return new SubscribeTXs(who, json.cancel);
+	// }
+
+	// public static toJSON(obj: SubscribeTXs): any {
+	// 	return {
+	// 		who: obj.who?.toJSON(),
+	// 		cancel: obj.cancel,
+	// 	};
+	// }
 }
 
 @jsonObject

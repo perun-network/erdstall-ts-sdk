@@ -2,25 +2,24 @@
 "use strict";
 
 import { Transaction, registerTransactionType } from "./transaction";
-import { Address } from "#erdstall/ledger";
+import { Address, Crypto } from "#erdstall/crypto";
 import {
 	jsonObject,
 	jsonMember,
-	jsonBigIntMember,
+	jsonU256Member,
 } from "#erdstall/export/typedjson";
-import { ABIEncoder } from "#erdstall/api/util";
 
 const mintTypeName = "Mint";
 
 @jsonObject
 export class Mint extends Transaction {
-	@jsonMember(Address) token: Address;
-	@jsonBigIntMember() id: bigint;
+	@jsonMember(Uint8Array) token: Uint8Array;
+	@jsonU256Member() id: bigint;
 
 	constructor(
-		sender: Address,
+		sender: Address<Crypto>,
 		nonce: bigint,
-		tokenType: Address,
+		tokenType: Uint8Array,
 		id: bigint,
 	) {
 		super(sender, nonce);
@@ -33,10 +32,6 @@ export class Mint extends Transaction {
 	}
 	protected txTypeName(): string {
 		return mintTypeName;
-	}
-	protected encodeABI(e: ABIEncoder, _: Address): string {
-		e.encode(this.token, ["uint256", this.id]);
-		return "ErdstallMint";
 	}
 }
 

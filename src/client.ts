@@ -3,100 +3,128 @@
 
 import { InternalEnclaveWatcher } from "./internalenclavewatcher";
 import { ErdstallEvent, ErdstallEventHandler, EnclaveEvent } from "./event";
-import { ErdstallClient } from "./erdstall";
-import { Erdstall__factory } from "#erdstall/ledger/backend/contracts";
-import { ClientConfig, AttestationResult } from "#erdstall/api/responses";
-import { Enclave, isEnclaveEvent, EnclaveReader } from "#erdstall/enclave";
 import {
-	LedgerWriteConn,
-	LedgerReader,
-	LedgerWriter,
-	Address,
-	Account,
-	LedgerEvent,
-	isLedgerEvent,
-} from "#erdstall/ledger";
-import { TokenFetcher, TokenProvider } from "#erdstall/ledger/backend";
-import { EventCache, OneShotEventCache } from "#erdstall/utils";
+	ErdstallClient,
+	ErdstallBackendClient,
+	BackendAddress,
+} from "./erdstall";
+import * as crypto from "#erdstall/crypto";
+import { AttestationResult, ClientConfig } from "#erdstall/api/responses";
+import { Enclave, isEnclaveEvent, EnclaveReader } from "#erdstall/enclave";
+import { Account, isLedgerEvent, LedgerEvent } from "#erdstall/ledger";
+import { LocalAsset } from "#erdstall/ledger/assets";
+import { Backend } from "#erdstall/ledger/backend";
+import { BackendChainConfig } from "#erdstall/ledger/backend/backends";
+import { EthereumClient } from "#erdstall/ledger/backend/ethereum";
+import { SubstrateClient } from "#erdstall/ledger/backend/substrate";
 import { ethers, Signer } from "ethers";
-import { NFTMetadata } from "#erdstall/ledger/backend";
-import { OnChainQuerier } from "./ledger/onChainQuerier";
-import { EthereumOnChainQuerier } from "./ledger/backend/ethereumOnChainQuerier";
-import { Session } from "#erdstall";
+import { EventCache, OneShotEventCache } from "#erdstall/utils";
 
-export class Client implements ErdstallClient {
-	readonly tokenProvider: TokenProvider;
-	readonly onChainQuerier: OnChainQuerier;
+export type BackendClientConstructors = {
+	ethereum?: {
+		backend: "ethereum";
+		initializer: (config: BackendChainConfig<"ethereum">) => EthereumClient;
+	};
+	substrate?: {
+		backend: "substrate";
+		initializer: (config: BackendChainConfig<"substrate">) => SubstrateClient;
+	};
+	test?: {
+		backend: "test";
+		initializer: (config: BackendChainConfig<"test">) => ErdstallBackendClient<"test">;
+	};
+};
+
+// The Erdstall multi-client. It is a convenience client giving a uniform
+// interface for all backends requested.
+export class Client<Bs extends Backend[]> implements ErdstallClient<Bs> {
+	protected erdstallEventHandlerCache: EventCache<LedgerEvent, Bs[number]>;
+	protected erdstallOneShotHandlerCache: OneShotEventCache<
+		LedgerEvent,
+		Bs[number]
+	>;
+
+	protected clients: Map<number, ErdstallBackendClient<Bs[number]>>;
 	protected enclaveConn: EnclaveReader & InternalEnclaveWatcher;
-	protected provider: ethers.providers.Provider | Signer;
-	protected erdstallConn?: LedgerReader | LedgerWriter;
-	private erdstallEventHandlerCache: EventCache<LedgerEvent>;
-	private erdstallOneShotHandlerCache: OneShotEventCache<LedgerEvent>;
+	protected initialized: boolean = false;
+
+	private blockchainReadCtors: BackendClientConstructors;
 
 	constructor(
-		provider: ethers.providers.Provider | Signer,
-		encConn: (EnclaveReader & InternalEnclaveWatcher) | URL,
+		enclaveConn: (EnclaveReader & InternalEnclaveWatcher) | URL,
+		blockchainReadCtors: BackendClientConstructors,
 	) {
-		this.provider = provider;
-		if (encConn! instanceof URL)
-			this.enclaveConn = Enclave.dial(encConn as URL) as EnclaveReader &
-				InternalEnclaveWatcher;
-		else this.enclaveConn = encConn;
-		this.erdstallEventHandlerCache = new EventCache<LedgerEvent>();
-		this.erdstallOneShotHandlerCache = new OneShotEventCache<LedgerEvent>();
-		this.tokenProvider = new TokenFetcher();
-		this.onChainQuerier = new EthereumOnChainQuerier(this.provider);
-	}
-
-	erdstall(): Address {
-		return this.erdstallConn!.erdstall();
-	}
-
-	getNftMetadata(
-		token: Address,
-		id: bigint,
-		useCache?: boolean,
-	): Promise<NFTMetadata> {
-		if (!this.erdstallConn) {
-			throw new Error("client uninitialized");
+		if (enclaveConn! instanceof URL)
+		{
+			this.enclaveConn = Enclave.dial(
+				enclaveConn as URL,
+			) as EnclaveReader & InternalEnclaveWatcher;
 		}
-		return this.erdstallConn.getNftMetadata(token, id, useCache);
+		else this.enclaveConn = enclaveConn;
+
+		this.clients = new Map();
+
+		// Allow creating a client without any backend arguments. Eases
+		// implementation of ErdstallSessions.
+		this.blockchainReadCtors = blockchainReadCtors;
+
+		this.erdstallEventHandlerCache = new EventCache<
+			LedgerEvent,
+			Bs[number]
+		>();
+		this.erdstallOneShotHandlerCache = new OneShotEventCache<
+			LedgerEvent,
+			Bs[number]
+		>();
+	}
+
+	erdstall() {
+		const res = Array.from(this.clients.entries()).map(([_chain, client]) =>
+			client.erdstall(),
+		);
+		if (res.length == 1) {
+			return res[0] as any;
+		} else {
+			return res as any;
+		}
 	}
 
 	protected on_internal<T extends EnclaveEvent>(
 		ev: T,
-		cb: ErdstallEventHandler<T>,
+		cb: ErdstallEventHandler<T, Bs[number]>,
 	): void {
-		return this.enclaveConn.on_internal(
-			ev,
-			cb as ErdstallEventHandler<typeof ev>,
-		);
+		return this.enclaveConn.on_internal(ev, cb);
 	}
 
 	protected off_internal<T extends EnclaveEvent>(
 		ev: T,
-		cb: ErdstallEventHandler<T>,
+		cb: ErdstallEventHandler<T, Bs[number]>,
 	): void {
-		return this.enclaveConn.off_internal(
-			ev,
-			cb as ErdstallEventHandler<typeof ev>,
-		);
+		return this.enclaveConn.off_internal(ev, cb);
 	}
 
-	on<T extends ErdstallEvent>(ev: T, cb: ErdstallEventHandler<T>): void {
+	on<T extends ErdstallEvent>(
+		ev: T,
+		cb: ErdstallEventHandler<T, Bs[number]>,
+	): void {
 		if (isLedgerEvent(ev)) {
-			if (this.erdstallConn) {
-				this.erdstallConn.on(ev, cb as ErdstallEventHandler<typeof ev>);
-			} else {
+			if (!this.initialized) {
 				this.erdstallEventHandlerCache.set(
 					ev,
-					cb as ErdstallEventHandler<typeof ev>,
+					cb as ErdstallEventHandler<typeof ev, Bs[number]>,
 				);
 			}
+
+			this.clients.forEach((client) =>
+				client.on(
+					ev,
+					cb as ErdstallEventHandler<typeof ev, Bs[number]>,
+				),
+			);
 		} else if (isEnclaveEvent(ev)) {
 			return this.enclaveConn.on(
 				ev,
-				cb as ErdstallEventHandler<typeof ev>,
+				cb as ErdstallEventHandler<typeof ev, never>,
 			);
 		} else {
 			const exhaustiveCheck: never = ev;
@@ -106,31 +134,33 @@ export class Client implements ErdstallClient {
 
 	protected once_internal<T extends EnclaveEvent>(
 		ev: T,
-		cb: ErdstallEventHandler<T>,
+		cb: ErdstallEventHandler<T, Bs[number]>,
 	): void {
-		return this.enclaveConn.once_internal(
-			ev,
-			cb as ErdstallEventHandler<typeof ev>,
-		);
+		return this.enclaveConn.once_internal(ev, cb);
 	}
 
-	once<T extends ErdstallEvent>(ev: T, cb: ErdstallEventHandler<T>): void {
+	once<T extends ErdstallEvent>(
+		ev: T,
+		cb: ErdstallEventHandler<T, Bs[number]>,
+	): void {
 		if (isLedgerEvent(ev)) {
-			if (this.erdstallConn) {
-				this.erdstallConn.once(
-					ev,
-					cb as ErdstallEventHandler<typeof ev>,
-				);
-			} else {
+			if (!this.initialized) {
 				this.erdstallOneShotHandlerCache.set(
 					ev,
-					cb as ErdstallEventHandler<typeof ev>,
+					cb as ErdstallEventHandler<typeof ev, Bs[number]>,
 				);
 			}
+
+			this.clients.forEach((client) =>
+				client.once(
+					ev,
+					cb as ErdstallEventHandler<typeof ev, Bs[number]>,
+				),
+			);
 		} else if (isEnclaveEvent(ev)) {
 			return this.enclaveConn.once(
 				ev,
-				cb as ErdstallEventHandler<typeof ev>,
+				cb as ErdstallEventHandler<typeof ev, never>,
 			);
 		} else {
 			// Happens statically in TS and also throws an error when used as a JS lib.
@@ -139,16 +169,21 @@ export class Client implements ErdstallClient {
 		}
 	}
 
-	off<T extends ErdstallEvent>(ev: T, cb: ErdstallEventHandler<T>): void {
+	off<T extends ErdstallEvent>(
+		ev: T,
+		cb: ErdstallEventHandler<T, Bs[number]>,
+	): void {
 		if (isLedgerEvent(ev)) {
-			if (!this.erdstallConn) {
-				return;
-			}
-			this.erdstallConn.off(ev, cb as ErdstallEventHandler<typeof ev>);
+			this.clients.forEach((client) =>
+				client.off(
+					ev,
+					cb as ErdstallEventHandler<typeof ev, Bs[number]>,
+				),
+			);
 		} else if (isEnclaveEvent(ev)) {
 			return this.enclaveConn.off(
 				ev,
-				cb as ErdstallEventHandler<typeof ev>,
+				cb as ErdstallEventHandler<typeof ev, never>,
 			);
 		} else {
 			// Happens statically in TS and also throws an error when used as a JS lib.
@@ -159,16 +194,16 @@ export class Client implements ErdstallClient {
 
 	removeAllListeners(): void {
 		this.enclaveConn.removeAllListeners();
-		this.erdstallConn?.removeAllListeners();
+		this.clients.forEach((client) => client.removeAllListeners());
 		this.erdstallEventHandlerCache.clear();
 		this.erdstallOneShotHandlerCache.clear();
 	}
 
-	async subscribe(who?: Address): Promise<void> {
+	async subscribe(who?: crypto.Address<crypto.Crypto>): Promise<void> {
 		return this.enclaveConn.subscribe(who);
 	}
 
-	async getAccount(who: Address): Promise<Account> {
+	async getAccount(who: BackendAddress<Backend>): Promise<Account> {
 		return (await this.enclaveConn.getAccount(who)).account;
 	}
 
@@ -176,45 +211,67 @@ export class Client implements ErdstallClient {
 		return await this.enclaveConn.attest();
 	}
 
-	initialize(timeout?: number): Promise<void> {
+	private defaultOnConfigHandler: ErdstallEventHandler<"config", Bs[number]> =
+		(config: ClientConfig) => {
+			for(const chainCfg of config.chains)
+			{
+				if(!this.blockchainReadCtors.hasOwnProperty(chainCfg.type))
+				{
+					console.warn(`No backend configured for ${
+						chainCfg.type
+					} chain <${
+						chainCfg.id
+					}>: not creating a backend client.`);
+					continue;
+				}
+				
+				const ctor = this.blockchainReadCtors[chainCfg.type]!;
+				this.clients.set(
+					chainCfg.id,
+					(ctor.initializer as unknown as any)(chainCfg.data));
+			}
+
+			// Forward all cached events to respective clients.
+			for (const [_, client] of this.clients) {
+				for (const [ev, cbs] of this.erdstallEventHandlerCache) {
+					cbs.forEach((cb) => client.on(ev, cb));
+				}
+
+				for (const [ev, cbs] of this.erdstallOneShotHandlerCache) {
+					cbs.forEach((cb) => client.once(ev, cb));
+				}
+			}
+		};
+
+	initialize(
+		timeout?: number,
+		onConfigHandler: ErdstallEventHandler<"config", Bs[number]> = this
+			.defaultOnConfigHandler,
+	): Promise<void> {
 		return new Promise((resolve, reject) => {
 			const rejectTimeout = setTimeout(
 				reject,
-				timeout ? timeout! : 15000,
+				timeout ? timeout! : 15_000,
 			);
 
 			this.enclaveConn.once("error", reject);
 			this.enclaveConn.once("config", (config: ClientConfig) => {
-				const erdstall = Erdstall__factory.connect(
-					config.contract.toString(),
-					this.provider,
-				);
-				this.erdstallConn = new LedgerWriteConn(
-					erdstall,
-					this.tokenProvider,
-				);
-				if (this instanceof Session) {
-					this.receiptDispatcher.erdstallConn = this.erdstallConn;
-				}
+				onConfigHandler(config);
 
-				for (const [ev, cbs] of this.erdstallEventHandlerCache) {
-					cbs.forEach((cb) => {
-						this.erdstallConn!.on(ev, cb);
-					});
-				}
-
-				for (const [ev, cbs] of this.erdstallOneShotHandlerCache) {
-					cbs.forEach((cb) => {
-						this.erdstallConn!.once(ev, cb);
-					});
-				}
 				this.erdstallOneShotHandlerCache.clear();
+				this.erdstallEventHandlerCache.clear();
 
 				clearTimeout(rejectTimeout);
 				this.enclaveConn.off("error", reject);
+				this.initialized = true;
 				resolve();
 			});
 			this.enclaveConn.connect();
 		});
+	}
+
+	disconnect(): void {
+		this.initialized = false;
+		this.enclaveConn.disconnect();
 	}
 }

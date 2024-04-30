@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { utils } from "ethers";
-import { Address } from "#erdstall/ledger";
+import { ethers } from "ethers";
 
 export interface ABIEncodable {
 	asABI(): any;
@@ -10,22 +9,22 @@ export interface ABIEncodable {
 
 export class ABIPacked {
 	constructor(bytes: Uint8Array | string) {
-		this.bytes = utils.arrayify(bytes);
+		this.bytes = ethers.getBytes(bytes);
 	}
 
 	bytes: Uint8Array;
 
 	keccak256(): Uint8Array {
-		return utils.arrayify(utils.keccak256(this.bytes));
+		return ethers.getBytes(ethers.keccak256(this.bytes));
 	}
 
 	toString(): string {
-		return utils.hexlify(this.bytes);
+		return ethers.hexlify(this.bytes);
 	}
 }
 
 export interface ABITaggedPackable {
-	packTagged(contract: Address): ABIPacked;
+	packTagged(): ABIPacked;
 }
 
 export interface ABIValue {
@@ -56,10 +55,11 @@ export class ABIEncoder {
 	}
 
 	encode(...fields: EncoderArg[]): this {
-		return this.encodeTagged(undefined, ...fields);
+		return this.encodeTagged(...fields);
 	}
 
-	encodeTagged(contract?: Address, ...fields: EncoderArg[]): this {
+	// NOTE: CLEANUP.
+	encodeTagged(...fields: EncoderArg[]): this {
 		this.types = this.types.concat(
 			fields.map((f): string => {
 				if ((f as ABITaggedPackable).packTagged !== undefined)
@@ -78,7 +78,7 @@ export class ABIEncoder {
 		this.values = this.values.concat(
 			fields.map((f): any => {
 				if ((f as ABITaggedPackable).packTagged !== undefined)
-					return (f as ABITaggedPackable).packTagged(contract!).bytes;
+					return (f as ABITaggedPackable).packTagged().bytes;
 				if ((f as ABIEncodable).asABI !== undefined)
 					return (f as ABIEncodable).asABI();
 
@@ -98,14 +98,14 @@ export class ABIEncoder {
 
 	pack_noprefix(): ABIPacked {
 		return new ABIPacked(
-			utils.defaultAbiCoder.encode(this.types, this.values),
+			ethers.AbiCoder.defaultAbiCoder().encode(this.types, this.values),
 		);
 	}
 
-	pack(tag: string, contract: Address): ABIPacked {
-		const enc = new ABIEncoder(tag, contract);
+	pack(tag: string): ABIPacked {
+		const enc = new ABIEncoder(tag);
 		return new ABIPacked(
-			utils.defaultAbiCoder.encode(
+			ethers.AbiCoder.defaultAbiCoder().encode(
 				enc.types.concat(this.types),
 				enc.values.concat(this.values),
 			),

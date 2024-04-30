@@ -2,9 +2,9 @@
 "use strict";
 
 import {
-	jsonObject,
 	TypedJSON,
 	Serializable,
+	jsonObject,
 } from "#erdstall/export/typedjson";
 import { customJSON } from "./util";
 
@@ -34,7 +34,7 @@ export abstract class ErdstallObject {
 		return TypedJSON.parse(data, objectImpls.get(js.type)!)!;
 	}
 
-	static toJSON(me: ErdstallObject) {
+	static toJSON(me: ErdstallObject): any {
 		return {
 			type: me.objectTypeName(),
 			data: JSON.parse(TypedJSON.stringify(me, me.objectType())),

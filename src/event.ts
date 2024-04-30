@@ -10,16 +10,15 @@ import {
 	Frozen,
 	Challenged,
 	ChallengeResponded,
-	TokenTypeRegistered,
-	TokenRegistered,
 } from "./ledger";
 import { EnclaveEvent } from "./enclave/event";
 import {
 	ClientConfig,
 	TxReceipt,
-	BalanceProof,
+	BalanceProofs,
 	PhaseShift,
 } from "./api/responses";
+import { Backend } from "./ledger/backend";
 
 /**
  * ErdstallEvent is comprised of all the events related to Erdstall. These
@@ -30,22 +29,19 @@ export type ErdstallEvent = LedgerEvent | EnclaveEvent;
 
 export type { EnclaveEvent };
 
-type _eventHandlers = {
-	Frozen: (ev: Frozen) => void;
-	Deposited: (ev: Deposited) => void;
-	Withdrawn: (ev: Withdrawn) => void;
-	Challenged: (ev: Challenged) => void;
-	ChallengeResponded: (ev: ChallengeResponded) => void;
-	TokenTypeRegistered: (ev: TokenTypeRegistered) => void;
-	TokenRegistered: (ev: TokenRegistered) => void;
+type _eventHandlers<B extends Backend> = {
+	Frozen: (ev: Frozen<B>) => void;
+	Deposited: (ev: Deposited<B>) => void;
+	Withdrawn: (ev: Withdrawn<B>) => void;
+	Challenged: (ev: Challenged<B>) => void;
+	ChallengeResponded: (ev: ChallengeResponded<B>) => void;
 
 	open: () => void;
 	close: () => void;
 	config: (config: ClientConfig) => void;
 	receipt: (receipt: TxReceipt) => void;
 	phaseshift: (phaseShift: PhaseShift) => void;
-	proof: (proof: BalanceProof) => void;
-	exitproof: (exitProof: BalanceProof) => void;
+	proof: (proof: BalanceProofs) => void;
 	error: (error: string | Error) => void;
 };
 
@@ -56,7 +52,10 @@ type _eventHandlers = {
  * This is equivalent to checking the mapping:
  * `_eventHandlers` -> `ErdstallEvent`
  */
-export type ErdstallEventHandler<T extends ErdstallEvent> = _eventHandlers[T];
+export type ErdstallEventHandler<
+	T extends ErdstallEvent,
+	Bs extends Backend,
+> = _eventHandlers<Bs>[T];
 
 /**
  * `_requireBijectiveHandlers` double checks that no superfluous entries are
@@ -66,8 +65,11 @@ export type ErdstallEventHandler<T extends ErdstallEvent> = _eventHandlers[T];
  * This is equivalent of checking the mapping:
  * `ErdstallEvent` -> `_eventHandlers`
  */
-type _eventKeys = keyof _eventHandlers;
-type _requireBijectiveHandlers<T extends _eventKeys> = ErdstallEventHandler<T>;
+type _eventKeys<Bs extends Backend> = keyof _eventHandlers<Bs>;
+type _requireBijectiveHandlers<
+	T extends _eventKeys<Bs>,
+	Bs extends Backend,
+> = ErdstallEventHandler<T, Bs>;
 
 // `ErdstallEventHandler` and `_requireBijectiveHandlers` together ensure, that
 // all occurrences of events and the extension/removal of event names are
