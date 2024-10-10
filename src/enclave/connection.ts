@@ -117,6 +117,7 @@ export class Enclave implements EnclaveWriter {
 	private calls: Map<string, [Function, Function]>;
 	private id: number;
 
+	private opened: boolean = false;
 	private globallySubscribed: boolean;
 	private individuallySubscribed: Set<Address<Crypto>>;
 	private phaseShiftSubscribed: boolean;
@@ -380,16 +381,20 @@ export class Enclave implements EnclaveWriter {
 
 		this.callEvent("error", new Error("connection error"));
 
+		if(this.opened) {
+			setTimeout(() => {
+				try {
+					this.connect();
+				} catch {}
+			}, 1000);
+		}
+
 		this.provider.close();
-		setTimeout(() => {
-			try {
-				this.connect();
-			} catch {}
-		}, 1000);
 	}
 
 	private onOpen(_: Event) {
 		const calls = [];
+		this.opened = true;
 		if (this.globallySubscribed)
 			calls.push(new SubscribeTXs(), new SubscribeBalanceProofs());
 
@@ -408,6 +413,7 @@ export class Enclave implements EnclaveWriter {
 	}
 
 	private onClose(_: Event) {
+		this.opened = false;
 		this.callEvent("close", {} as any);
 	}
 }
