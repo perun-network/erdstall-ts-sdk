@@ -2,7 +2,7 @@
 "use strict";
 
 import { ErdstallEventHandler } from "#erdstall";
-import { AssetID, Address } from "#erdstall/crypto";
+import { AssetID, AssetType, Address } from "#erdstall/crypto";
 import { EthereumAddress } from "#erdstall/crypto/ethereum";
 import { LedgerEvent } from "#erdstall/ledger";
 import { LocalAsset } from "#erdstall/ledger/assets";
@@ -31,6 +31,7 @@ export class LedgerReadConn implements LedgerReader<"ethereum"> {
 		this.contract = contract;
 		this.eventCache = new Map();
 		this.tokenCache = tokenCache;
+		this.tokenCache.fetch_holders(this.contract);
 	}
 
 	on<T extends LedgerEvent>(
@@ -74,22 +75,20 @@ export class LedgerReadConn implements LedgerReader<"ethereum"> {
 		//		return Address.fromString(this.contract.address);
 	}
 
-	async getWrappedToken(token: AssetID): Promise<EthereumAddress> {
+	async getWrappedToken(token: AssetID): Promise<EthereumAddress | undefined> {
 		const provider = this.contract.runner!.provider!;
 		switch(token.type())
 		{
 		default: throw new Error(`unhandled token type ${token.type()}!`);
-		case 0:
+		case AssetType.Fungible:
 		{
-			const holder = await this.tokenCache.getERC20Holder(provider);
-			return EthereumAddress.fromString(
-				await holder.deployedToken(token.origin(), token.localID()));
+			return await this.tokenCache.getWrappedFungible(provider,
+				token.origin(), new LocalAsset(token.localID()));
 		}
-		case 1:
+		case AssetType.NFT:
 		{
-			const holder = await this.tokenCache.getERC721Holder(provider);
-			return EthereumAddress.fromString(
-				await holder.deployedToken(token.origin(), token.localID()));
+			return await this.tokenCache.getWrappedNFT(provider,
+				token.origin(), new LocalAsset(token.localID()));
 		}
 		}
 	}
