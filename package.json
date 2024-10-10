@@ -13,13 +13,17 @@
 		"./api/util": "./api/util/index.js",
 		"./ledger": "./ledger/index.js",
 		"./ledger/assets": "./ledger/assets/index.js",
-		"./ledger/backend/contracts": "./ledger/backend/contracts/index.js",
+		"./ledger/backend/ethereum": "./ledger/backend/ethereum/index.js",
 		"./test": "./test/index.js",
 		"./test/assets": "./test/assets/index.js",
 		"./test/ledger": "./test/ledger/index.js",
 		"./utils": "./utils/index.js",
 		"./utils/arrays": "./utils/arrays/index.js",
-		"./export/typedjson": "./export/typedjson.js"
+		"./utils/hexbytes": "./utils/hexbytes.js",
+		"./export/typedjson": "./export/typedjson.js",
+		"./crypto": "./crypto/index.js",
+		"./crypto/ethereum": "./crypto/ethereum/index.js",
+		"./crypto/substrate": "./crypto/substrate/index.js"
 	},
 	"imports": {
 		"#erdstall/*": "./*/index.js"
