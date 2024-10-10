@@ -2,6 +2,7 @@
 "use strict";
 
 import { isUint256 } from "#erdstall/api/util";
+import { AssetType } from "#erdstall/crypto";
 
 export const TypeTags = {
 	Amount: "uint",
@@ -29,6 +30,8 @@ export function registerAssetType(
 
 export abstract class Asset {
 	abstract toJSON(): any;
+
+	abstract assetType(): AssetType;
 
 	static fromJSON(json: any): Asset {
 		for (const key in json) {
