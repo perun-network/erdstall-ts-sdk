@@ -26,3 +26,21 @@ export enum Chain {
 	Ropsten = 0xffff - 1,
 	Rinkeby = 0xffff - 0,
 }
+
+export function getChainName(chain: Chain): string {
+	switch(chain) {
+	case Chain.Erdstall: return "Erdstall";
+	case Chain.EthereumMainnet: return "Ethereum";
+	case Chain.Ajuna: return "Ajuna";
+	case Chain.Bajun: return "Bajun";
+	case Chain.Goerli: return "Goerli";
+	case Chain.Ropsten: return "Ropsten";
+	case Chain.Rinkeby: return "Rinkeby";
+	default:{
+		if(chain >= Chain.TestChain0)
+			return `TestChain${chain - Chain.TestChain0}`;
+		else
+			return `Chain${chain}`;
+	}
+	}
+}
