@@ -88,6 +88,7 @@ export class Session<Bs extends Backend[]>
 	// Filled dynamically when we receive configs.
 	protected clients: Map<number, ErdstallBackendSession<Bs[number]>>;
 	private blockchainWriteCtors: BackendSessionConstructors;
+	private updatingNonce?: Promise<any>;
 
 	static async create<Bs extends Backend[]>(
 		l2signer: crypto.Signer<crypto.Crypto>,
@@ -145,13 +146,20 @@ export class Session<Bs extends Backend[]>
 		return this.nonce++;
 	}
 
-	// Fetches the current nonce from the enclave. Only overwrites the nonce if
-	// it has an invalid value, so this function can be called concurrently.
-	private async updateNonce(): Promise<void> {
+	private async updateNonceInternal(): Promise<void> {
 		const acc = await this.enclaveWriter.getAccount(this.address);
 		if (!this.nonce) {
 			this.nonce = acc.account.nonce + 1n;
 		}
+	}
+
+	// Fetches the current nonce from the enclave. Only overwrites the nonce if
+	// it has an invalid value, so this function can be called concurrently.
+	async updateNonce(): Promise<void> {
+		if(this.updatingNonce) return this.updatingNonce;
+		this.updatingNonce = this.updateNonceInternal();
+		await this.updatingNonce;
+		this.updatingNonce = undefined;
 	}
 
 	async onboard(): Promise<void> {
