@@ -17,6 +17,8 @@ export class EthereumAddress extends Address<"ethereum"> implements ABIValue {
 	private value: Uint8Array;
 	constructor(value: Uint8Array) {
 		super();
+		if(value.length !== 20)
+			throw new Error(`Invalid length (${value.length}/20)`);
 		this.value = value;
 	}
 

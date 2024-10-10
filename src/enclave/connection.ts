@@ -318,12 +318,11 @@ export class Enclave implements EnclaveWriter {
 			const [resolve, reject] = this.calls.get(msg.id)!;
 			this.calls.delete(msg.id);
 			if (msg.error) {
-				reject(msg.error);
-				this.callEvent("error", msg.error);
+				reject(new Error(msg.error));
+				return this.callEvent("error", msg.error);
 			} else {
-				resolve(msg.data);
+				return resolve(msg.data);
 			}
-			return
 		} else if(msg.error) {
 			console.error("unexpected error:", msg.error);
 			this.callEvent("error", msg.error);
