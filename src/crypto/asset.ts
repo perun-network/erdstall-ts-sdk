@@ -4,7 +4,22 @@
 import { Chain } from "#erdstall/ledger/chain";
 import { Address, Crypto } from "#erdstall/crypto";
 import { ethers } from "ethers";
+import { toHex } from "#erdstall/utils/hexbytes";
 
+
+export enum AssetType {
+	Fungible,
+	NFT
+}
+
+export function AssetTypeName(t: AssetType): string {
+	switch(t)
+	{
+	case AssetType.Fungible: return "FUN";
+	case AssetType.NFT: return "NFT";
+	}
+	throw new Error(`Unknown AssetType: ${t}`);
+}
 
 export class AssetID {
 	// [Origin Chain][AssetType][ID LocalAsset] packed into fixed-size array.
@@ -25,7 +40,7 @@ export class AssetID {
 
 	static fromMetadata(
 		chain: Chain,
-		type: number,
+		type: AssetType,
 		localID: Uint8Array,
 	): AssetID {
 		const bytes = new Uint8Array(3 + localID.length);
@@ -41,8 +56,8 @@ export class AssetID {
 		return origin as Chain;
 	}
 
-	type(): number {
-		return this.bytes[2];
+	type(): AssetType {
+		return this.bytes[2] as AssetType;
 	}
 
 	localID(): Uint8Array {
@@ -58,5 +73,13 @@ export class AssetID {
 			if(x) return x;
 		}
 		return 0;
+	}
+
+	toString(): string {
+		return `${
+			this.origin()
+		}/${
+			AssetTypeName(this.type())
+		}/${toHex(this.localID(), "")}`;
 	}
 }
