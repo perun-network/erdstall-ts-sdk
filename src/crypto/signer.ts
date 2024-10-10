@@ -8,6 +8,7 @@ import { Crypto, Address, Signature } from "#erdstall/crypto";
 const signatureImpls = new Map<string, Serializable<Signature<Crypto>>>();
 
 export abstract class Signer<B extends Crypto> {
+	abstract type(): B;
 	abstract address(): Promise<Address<B>>;
 	abstract sign(msg: Uint8Array): Promise<Signature<B>>;
 }

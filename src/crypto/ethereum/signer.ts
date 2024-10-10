@@ -18,6 +18,8 @@ export class EthereumSigner implements Signer<"ethereum"> {
 		this.#ethersSigner = ethersSigner;
 	}
 
+	type(): "ethereum" { return "ethereum"; }
+
 	async sign(message: Uint8Array): Promise<Signature<"ethereum">> {
 		const sig = await this.ethersSigner.signMessage(
 			ethers.getBytes(ethers.keccak256(message)));
