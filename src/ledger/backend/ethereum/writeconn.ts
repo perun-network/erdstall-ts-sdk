@@ -3,7 +3,8 @@
 
 import { ethers, Signer as EthersSigner } from "ethers";
 import * as common from "./contracts/common";
-import { Asset, ChainAssets, Amount } from "#erdstall/ledger/assets";
+import { Asset, ChainAssets, LocalAsset, Amount } from "#erdstall/ledger/assets";
+import { AssetID } from "#erdstall/crypto";
 import {
 	EthereumAddress as Address,
 	EthereumSigner as Signer,
@@ -15,8 +16,10 @@ import { LedgerReadConn } from "./readconn";
 import { depositors, Calls } from "./tokenmanager";
 import { EthereumTokenProvider } from "./tokencache";
 import { TransactionGenerator } from "#erdstall/utils";
-import { Chain } from "#erdstall/ledger/chain";
+import { Chain, getChainName } from "#erdstall/ledger/chain";
 import { encodePackedAssets } from "./ethwrapper";
+
+import { toHex } from "#erdstall/utils/hexbytes";
 
 type TransactionName = "approve" | "deposit" | "withdraw";
 
@@ -25,14 +28,15 @@ export class LedgerWriteConn
 	implements LedgerWriter<"ethereum">
 {
 	readonly signer: Signer;
-	readonly chain: number;
+	readonly chain: Chain;
 
 	constructor(
 		contract: Erdstall,
-		chain: number,
-		tokenCache: EthereumTokenProvider,
+		chain: Chain,
+		tokenCache?: EthereumTokenProvider,
 	) {
-		super(contract, tokenCache);
+		super(contract, tokenCache ?? new EthereumTokenProvider(chain));
+
 		if(!(contract.runner as any)?.signMessage)
 			throw new Error("LedgerWriteConn: expected a signer provider");
 		this.signer = new Signer(contract.runner! as EthersSigner);
@@ -78,10 +82,29 @@ export class LedgerWriteConn
 		// NOTE: We do not only support `Chain.EthereumMainnet`.
 
 		// TODO: handle wrapped assets?.
-		const addStage = async (tokenAddr: string, amount: Asset) => {
-			const tokenAddrAddr = Address.fromString(tokenAddr);
+		const addStage = async (chain: Chain, tokenAddr: LocalAsset, amount: Asset) => {
+			
+			let tokenAddrAddr: Address;
+			if(chain == this.chain)
+			{
+				// Native tokens are the last 20 bytes of the LocalAsset
+				tokenAddrAddr = new Address(tokenAddr.id.slice(-20));
+				if(!tokenAddr.id.slice(0,12).every(x => x == 0))
+					throw new Error(`Invalid localID: ${toHex(tokenAddr.id)}`);
+			}
+			else
+			{
+				const assetID = AssetID.fromMetadata(
+					chain,
+					amount.assetType(),
+					tokenAddr.id);
+				tokenAddrAddr = await this.getWrappedToken(assetID) ?? (() => {
+					throw new Error(`Wrapped token for ${assetID} not yet deployed on ${getChainName(this.chain)}`);
+				})();
+			}
+
 			const ttype = (amount instanceof Amount)
-				? tokenAddrAddr.isZero()
+				? tokenAddrAddr.isZero() && (chain === this.chain)
 					? "ETH"
 					: "ERC20"
 				: "ERC721";
@@ -96,12 +119,12 @@ export class LedgerWriteConn
 			calls.push(...depositCalls);
 		};
 
-		for (const [_chain, asset] of assets.assets) {
+		for (const [chain, asset] of assets.assets) {
 			for (const [tokenAddr, amount] of asset.fungibles.assets) {
-				await addStage(tokenAddr, amount);
+				await addStage(chain, LocalAsset.fromKey(tokenAddr), amount);
 			}
 			for (const [tokenAddr, nfts] of asset.nfts.assets) {
-				await addStage(tokenAddr, nfts);
+				await addStage(chain, LocalAsset.fromKey(tokenAddr), nfts);
 			}
 		}
 
