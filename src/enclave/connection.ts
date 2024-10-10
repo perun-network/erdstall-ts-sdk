@@ -232,7 +232,16 @@ export class Enclave implements EnclaveWriter {
 		const wiredata = TypedJSON.stringify(msg, Call);
 		this.provider.send(wiredata);
 
-		return p;
+		try { return await p; }
+		catch(e: unknown) {
+			// late error construction improves the stacktrace to something sensible.
+			if(typeof e === "string") {
+				e = new Error(e);
+			} else if(e instanceof Error) {
+				e = new Error(e.toString())
+			}
+			throw e;
+		}
 	}
 
 	public on<T extends EnclaveEvent>(
@@ -300,14 +309,24 @@ export class Enclave implements EnclaveWriter {
 		}
 
 		if (msg.id) {
+			if(!this.calls.has(msg.id)) {
+				console.error("received message for unknown call ID");
+				return;
+			}
+
 			const [resolve, reject] = this.calls.get(msg.id)!;
 			this.calls.delete(msg.id);
 			if (msg.error) {
-				reject(new Error(msg.error));
-				return this.callEvent("error", msg.error);
+				reject(msg.error);
+				this.callEvent("error", msg.error);
 			} else {
-				return resolve(msg.data);
+				resolve(msg.data);
 			}
+			return
+		} else if(msg.error) {
+			console.error("unexpected error:", msg.error);
+			this.callEvent("error", msg.error);
+			return;
 		}
 
 		const obj = msg.data!;
