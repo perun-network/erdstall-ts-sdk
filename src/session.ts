@@ -327,10 +327,20 @@ export class Session<Bs extends Backend[]>
 					continue;
 			}
 
+			if(this.l2signer.type() !== chainCfg.type)
+			{
+				console.warn(`No compatible signer for ${
+						chainCfg.type
+					} chain <${
+						chainCfg.id
+					}>: not creating a backend client.`);
+				continue;
+			}
+
 			const ctor = this.blockchainWriteCtors[chainCfg.type]!;
 			this.clients.set(
 				chainCfg.id,
-				(ctor.initializer as unknown as any)(chainCfg.data));
+				(ctor.initializer as unknown as any)(chainCfg, this.l2signer));
 		}
 
 		// Forward all cached events to respective clients.
