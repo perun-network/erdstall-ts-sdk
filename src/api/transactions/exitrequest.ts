@@ -30,9 +30,10 @@ const fullExitTypeName = "full";
 
 @jsonObject
 export class FullExit extends ExitMode {
-	chain: number;
+	@jsonMember(Number)
+	chain?: number;
 
-	constructor(chain: number, immediate: boolean) {
+	constructor(chain: number | undefined, immediate: boolean) {
 		super(immediate);
 		this.chain = chain;
 	}

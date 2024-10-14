@@ -15,6 +15,7 @@ import { Backend } from "#erdstall/ledger/backend";
 import { Amount } from "./amount";
 import { Tokens } from "./tokens";
 import { Chain } from "../chain";
+import { toHex, parseHex } from "#erdstall/utils/hexbytes";
 
 export const ETHZERO = "0x0000000000000000000000000000000000000000";
 
@@ -108,7 +109,7 @@ export class LocalFungibles {
 	}
 
 	addAsset(localID: Uint8Array, asset: Amount) {
-		const token = ethers.hexlify(localID);
+		const token = toHex(localID, "0x");
 		const a = this.assets.get(token);
 		if (a !== undefined) {
 			a.add(asset);
@@ -194,10 +195,17 @@ export class LocalAsset {
 	public id: Uint8Array;
 	constructor(id: Uint8Array) {
 		this.id = id;
+		if(this.id.length != 32)
+			throw new Error(`Invalid length (${this.id.length}/32)`);
 	}
 
-	get key(): string {
-		return this.id.toString();
+	get isZero() {
+		return Array.from(this.id).every(byte => byte === 0);
+	}
+
+	get key() { return toHex(this.id, ""); }
+	static fromKey(key: string): LocalAsset {
+		return new LocalAsset(parseHex(key));
 	}
 }
 

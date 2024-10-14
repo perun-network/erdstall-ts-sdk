@@ -1,18 +1,24 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { Signer as EthersSigner, ethers } from "ethers";
+import { Signer as EthersSigner, Provider, ethers } from "ethers";
 import { Signer, Address, Signature } from "#erdstall/crypto";
 import { EthereumSignature } from "./signature";
 import { EthereumAddress } from "./address";
 
 // Compile-time check that the EthersSigner implements the Signer interface.
 export class EthereumSigner implements Signer<"ethereum"> {
-	readonly ethersSigner: EthersSigner;
+	#ethersSigner: EthersSigner;
+
+	get ethersSigner(): EthersSigner { return this.#ethersSigner; }
+
+	connect(p: Provider) { this.#ethersSigner = this.#ethersSigner.connect(p); }
 
 	constructor(ethersSigner: EthersSigner) {
-		this.ethersSigner = ethersSigner;
+		this.#ethersSigner = ethersSigner;
 	}
+
+	type(): "ethereum" { return "ethereum"; }
 
 	async sign(message: Uint8Array): Promise<Signature<"ethereum">> {
 		const sig = await this.ethersSigner.signMessage(

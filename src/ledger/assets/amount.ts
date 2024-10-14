@@ -11,6 +11,7 @@ import {
 	assertUint256,
 	registerAssetType,
 } from "./asset";
+import { AssetType } from "#erdstall/crypto";
 import { bigTo0xEven } from "#erdstall/export/typedjson";
 
 /** Amount represents a currency amount in its smallest unit. */
@@ -23,6 +24,8 @@ export class Amount extends Asset {
 		this.value = v;
 	}
 
+	assetType(): AssetType.Fungible { return AssetType.Fungible; }
+
 	toJSON() {
 		return bigTo0xEven(this.value);
 	}
@@ -30,6 +33,8 @@ export class Amount extends Asset {
 	static fromJSON(hexString: string): Amount {
 		return new Amount(BigInt(hexString));
 	}
+
+	toString() { return this.value.toString(); }
 
 	typeTag(): TypeTagName {
 		return TypeTags.Amount;

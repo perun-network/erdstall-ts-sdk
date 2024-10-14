@@ -18,6 +18,9 @@ export class SubstrateSigner implements Signer<"substrate"> {
 		this.keyPair = keyPair;
 	}
 
+	type(): "substrate" { return "substrate"; }
+
+
 	async sign(message: Uint8Array): Promise<Signature<"substrate">> {
 		await cryptoWaitReady();
 		const sig = sr25519Sign(message, this.keyPair);

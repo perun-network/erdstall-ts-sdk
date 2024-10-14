@@ -16,11 +16,13 @@ export function registerAddressType(
 
 export abstract class Address<_C extends Crypto> {
 	abstract type(): _C;
-	get key(): string { return Address.toJSON(this); }
+	get key(): string { return JSON.stringify(Address.toJSON(this)); }
 	abstract equals(other: Address<_C>): boolean;
 	abstract toString(): string;
 	abstract toJSON(): string;
 	abstract get keyBytes(): Uint8Array;
+
+	clone(): Address<_C> { return Address.fromJSON(Address.toJSON(this)) as Address<_C>; }
 
 	static ensure(addr: string | Address<Crypto>): Address<Crypto> {
 		if (addr === undefined) return addr;

@@ -4,7 +4,10 @@
 import { ErdstallObject, registerErdstallType } from "#erdstall/api";
 import { jsonObject } from "#erdstall/export/typedjson";
 import { Backend, BackendChainConfig } from "#erdstall/ledger/backend";
+import { EthereumChainConfig } from "#erdstall/ledger/backend/ethereum/chainconfig";
+import { SubstrateChainConfig } from "#erdstall/ledger/backend/substrate/chainconfig";
 import { Address, Crypto } from "#erdstall/crypto";
+import { EthereumAddress } from "#erdstall/crypto/ethereum";
 import { Chain } from "#erdstall/ledger";
 import { customJSON } from "../util";
 
@@ -19,21 +22,25 @@ export class ChainConfig<B extends Backend> {
 		this.data = data;
 	}
 
+	clone(): ChainConfig<B> {
+		return new ChainConfig<B>(this.id, this.type, this.data!.clone());
+	}
+
 	static fromJSON(data: any): ChainConfig<Backend> {
-		const d = JSON.parse(data);
-		switch (d.type) {
+		switch (data.type) {
 			case "substrate":
-				return new ChainConfig(data.id, "substrate", {
-					blockStreamLAddr: d.data.blockStreamLAddr,
-				});
+				return new ChainConfig(data.id, "substrate",
+					new SubstrateChainConfig(data.data.blockStreamLAddr));
 			case "ethereum":
-				return new ChainConfig(d.id, "ethereum", {
-					contract: d.data.contract,
-					networkID: d.data.networkID,
-					powDepth: d.data.powDepth,
-				});
+				return new ChainConfig(data.id, "ethereum",
+					new EthereumChainConfig({
+						contract: EthereumAddress.fromJSON(data.data.contract),
+						nodeRPC: data.data.nodeRPC,
+						networkID: data.data.networkID,
+						powDepth: data.data.powDepth,
+					}));
 			default:
-				throw new Error(`unknown backend type: ${d.type}`);
+				throw new Error(`unknown backend type: ${data.type}`);
 		}
 	}
 
@@ -87,7 +94,7 @@ export class ClientConfig extends ErdstallObject {
 	static fromJSON(data: any): ClientConfig {
 		let chains: ChainConfig<Backend>[] = [];
 		for (const conf of data.chains as ChainConfig<Backend>[]) {
-			chains.push(ChainConfig.fromJSON(JSON.stringify(conf)));
+			chains.push(ChainConfig.fromJSON(conf));
 		}
 		let enc: Map<Chain, Address<Crypto>> = new Map();
 		for(const key in data.enclave ?? {}) {
@@ -112,6 +119,15 @@ export class ClientConfig extends ErdstallObject {
 
 	protected objectTypeName(): string {
 		return clientConfigTypeName;
+	}
+
+	clone(): ClientConfig {
+		return new ClientConfig(
+			this.chains.map(c => c.clone()),
+			new Map<Chain, Address<Crypto>>(
+				Array.from(this.enclave.entries()).map(([c,addr]) => [c, addr.clone()])),
+			this.enclaveNativeSigner.clone()
+		);
 	}
 }
 

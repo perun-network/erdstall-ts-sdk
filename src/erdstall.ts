@@ -243,7 +243,7 @@ export interface Exiter {
 	 * to use `Leaver.leave` over the individual `Exiter.exit` call, because the
 	 * latter has to be manually followed by a call to `Withdrawer.withdraw`.
 	 */
-	exit(): Promise<BalanceProofs>;
+	exit(chain?: number): Promise<BalanceProofs>;
 }
 
 /**
@@ -261,6 +261,7 @@ export interface Leaver<Bs extends Backend[]> extends Exiter {
 	 * more information about theh return type.
 	 */
 	leave(
+		chain?: number,
 		notify?: (message: string, stage: number, maxStages: number) => void,
 	): Promise< Map<number, TransactionGenerator<Bs[number]>> >;
 }

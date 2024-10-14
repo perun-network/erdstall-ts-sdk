@@ -12,6 +12,7 @@ import {
 } from "./asset";
 import { Amount } from "./amount";
 import { bigTo0xEven } from "#erdstall/export/typedjson";
+import { AssetType } from "#erdstall/crypto";
 
 export const ErrIDAlreadyContained = new Error(
 	"given ID already contained in tokens",
@@ -19,6 +20,8 @@ export const ErrIDAlreadyContained = new Error(
 
 export class Tokens extends Asset {
 	public value: bigint[];
+
+	assetType(): AssetType.NFT { return AssetType.NFT; }
 
 	constructor(v: bigint[]) {
 		super();
@@ -47,6 +50,8 @@ export class Tokens extends Asset {
 		}
 		return new Tokens(s);
 	}
+
+	toString() { return "[" + this.value.join(", ") + "]"; }
 
 	typeTag(): TypeTagName {
 		return TypeTags.Tokens;

@@ -11,7 +11,7 @@ import {
 import * as crypto from "#erdstall/crypto";
 import { AttestationResult, ClientConfig } from "#erdstall/api/responses";
 import { Enclave, isEnclaveEvent, EnclaveReader } from "#erdstall/enclave";
-import { Account, isLedgerEvent, LedgerEvent } from "#erdstall/ledger";
+import { Chain, Account, isLedgerEvent, LedgerEvent } from "#erdstall/ledger";
 import { LocalAsset } from "#erdstall/ledger/assets";
 import { Backend } from "#erdstall/ledger/backend";
 import { BackendChainConfig } from "#erdstall/ledger/backend/backends";
@@ -49,6 +49,15 @@ export class Client<Bs extends Backend[]> implements ErdstallClient<Bs> {
 	protected initialized: boolean = false;
 
 	private blockchainReadCtors: BackendClientConstructors;
+
+	#config?: ClientConfig;
+
+	get config(): ClientConfig | undefined { return this.#config?.clone(); }
+	get chainTypes() {
+		return new Map<Chain, string>(
+			this.#config!.chains.map(cfg => [cfg.id, cfg.type]));
+	}
+
 
 	constructor(
 		enclaveConn: (EnclaveReader & InternalEnclaveWatcher) | URL,
@@ -256,6 +265,8 @@ export class Client<Bs extends Backend[]> implements ErdstallClient<Bs> {
 
 			this.enclaveConn.once("error", reject);
 			this.enclaveConn.once("config", (config: ClientConfig) => {
+				this.#config = config;
+
 				onConfigHandler(config);
 
 				this.erdstallOneShotHandlerCache.clear();

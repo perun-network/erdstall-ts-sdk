@@ -12,6 +12,7 @@ import {
 	Transfer,
 	Mint,
 	ExitRequest,
+	FullExit,
 	TradeOffer,
 	Trade,
 	Burn,
@@ -87,6 +88,7 @@ export class Session<Bs extends Backend[]>
 	// Filled dynamically when we receive configs.
 	protected clients: Map<number, ErdstallBackendSession<Bs[number]>>;
 	private blockchainWriteCtors: BackendSessionConstructors;
+	private updatingNonce?: Promise<any>;
 
 	static async create<Bs extends Backend[]>(
 		l2signer: crypto.Signer<crypto.Crypto>,
@@ -144,13 +146,20 @@ export class Session<Bs extends Backend[]>
 		return this.nonce++;
 	}
 
-	// Fetches the current nonce from the enclave. Only overwrites the nonce if
-	// it has an invalid value, so this function can be called concurrently.
-	private async updateNonce(): Promise<void> {
+	private async updateNonceInternal(): Promise<void> {
 		const acc = await this.enclaveWriter.getAccount(this.address);
 		if (!this.nonce) {
 			this.nonce = acc.account.nonce + 1n;
 		}
+	}
+
+	// Fetches the current nonce from the enclave. Only overwrites the nonce if
+	// it has an invalid value, so this function can be called concurrently.
+	async updateNonce(): Promise<void> {
+		if(this.updatingNonce) return this.updatingNonce;
+		this.updatingNonce = this.updateNonceInternal();
+		await this.updatingNonce;
+		this.updatingNonce = undefined;
 	}
 
 	async onboard(): Promise<void> {
@@ -208,7 +217,7 @@ export class Session<Bs extends Backend[]>
 		return { receipt, accepted };
 	}
 
-	async exit(): Promise<BalanceProofs> {
+	async exit(chain?: number): Promise<BalanceProofs> {
 		if (!this.initialized) {
 			return Promise.reject(ErrUnitialisedClient);
 		}
@@ -217,12 +226,14 @@ export class Session<Bs extends Backend[]>
 			this.address,
 			await this.nextNonce(),
 			true,
+			new FullExit(chain, false)
 		);
 		await exittx.sign(this.l2signer);
 		return this.enclaveWriter.exit(exittx);
 	}
 
 	async leave(
+		chain?: number,
 		notify?: (message: string, stage: number, maxStages: number) => void,
 	): Promise< Map<number, TransactionGenerator<Bs[number]>> > {
 		let skipped = 0;
@@ -243,7 +254,7 @@ export class Session<Bs extends Backend[]>
 			this.on_internal("phaseshift", cb);
 		});
 		notify?.("awaiting exit proof", atStage++, maxStages);
-		const exitProof = (await this.exit()).accounts.get((this.address).key)!;
+		const exitProof = (await this.exit(chain)).accounts.get((this.address).key)!;
 
 		notify?.("awaiting epoch sealing", atStage++, maxStages);
 		await p.then(() => this.off_internal("phaseshift", cb));
@@ -253,8 +264,9 @@ export class Session<Bs extends Backend[]>
 		const transactions = new Map<number, TransactionGenerator<Bs[number]>>();
 		for(const [address, chains] of exitProof.proofs.entries())
 		{
-			for(const [chain, proofs] of chains.entries())
+			for(let [chain, proofs] of chains.entries())
 			{
+				chain = Number(chain);
 				transactions.set(chain, await this.withdraw(
 					chain,
 					exitProof.epoch,
@@ -315,10 +327,20 @@ export class Session<Bs extends Backend[]>
 					continue;
 			}
 
+			if(this.l2signer.type() !== chainCfg.type)
+			{
+				console.warn(`No compatible signer for ${
+						chainCfg.type
+					} chain <${
+						chainCfg.id
+					}>: not creating a backend client.`);
+				continue;
+			}
+
 			const ctor = this.blockchainWriteCtors[chainCfg.type]!;
 			this.clients.set(
 				chainCfg.id,
-				(ctor.initializer as unknown as any)(chainCfg.data));
+				(ctor.initializer as unknown as any)(chainCfg, this.l2signer));
 		}
 
 		// Forward all cached events to respective clients.
