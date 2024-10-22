@@ -13,6 +13,8 @@ export class EthereumSigner implements Signer<"ethereum"> {
 	get ethersSigner(): EthersSigner { return this.#ethersSigner; }
 
 	connect(p: Provider) { this.#ethersSigner = this.#ethersSigner.connect(p); }
+	// hack: if typescript makes trouble with a separate import of ethers, use this instead.
+	connect_any(p: any) { this.connect(p as Provider); }
 
 	constructor(ethersSigner: EthersSigner) {
 		this.#ethersSigner = ethersSigner;
