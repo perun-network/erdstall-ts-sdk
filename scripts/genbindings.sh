@@ -1,6 +1,8 @@
 #!/bin/bash
 # SPDX-License-Identifier: Apache-2.0
 
+#erdstall-ts-sdk$ bash scripts/genbindings.sh ~/.go/src/github.com/perun-network/erdstall-mono/ethereum/contracts/
+
 function checkInstalled() {
   allSet=true
   for cmd in "$@"; do
@@ -41,7 +43,7 @@ function compileTo() {
   # Clean up existing bindings.
   rm -rf "${2}"/contracts
   mkdir -p "${2}"/contracts/abi
-  yarn hardhat compile && cp -rl ./typechain-types/* "${2}"/contracts/ \
+  yarn hardhat compile && yarn hardhat typechain && cp -rl ./typechain-types/* "${2}"/contracts/ \
     && find ./artifacts/contracts/*.sol/ \
     | grep -v ".dbg" | grep ".json" | xargs cp -l -t "${2}"/contracts/abi/
   # Clean up typechain generated files.
