@@ -101,7 +101,7 @@
 		"axios": "^0.21.4",
 		"canonicalize": "^2.0.0",
 		"ethereum-waffle": "^3.4.0",
-		"ethers": "^6.11.1",
+		"ethers": "^6.13.5",
 		"isomorphic-ws": "^4.0.1",
 		"number-generator": "^4.0.5",
 		"reflect-metadata": "^0.1.13",
