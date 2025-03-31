@@ -10,52 +10,63 @@ import {
 import type { Signer, ContractDeployTransaction, ContractRunner } from "ethers";
 import type { NonPayableOverrides } from "../../../../common";
 import type {
-  Strings,
-  StringsInterface,
-} from "../../../../@openzeppelin/contracts/utils/Strings";
+  Errors,
+  ErrorsInterface,
+} from "../../../../@openzeppelin/contracts/utils/Errors";
 
 const _abi = [
+  {
+    inputs: [],
+    name: "FailedCall",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "FailedDeployment",
+    type: "error",
+  },
   {
     inputs: [
       {
         internalType: "uint256",
-        name: "value",
+        name: "balance",
         type: "uint256",
       },
       {
         internalType: "uint256",
-        name: "length",
+        name: "needed",
         type: "uint256",
       },
     ],
-    name: "StringsInsufficientHexLength",
+    name: "InsufficientBalance",
     type: "error",
   },
   {
-    inputs: [],
-    name: "StringsInvalidAddressFormat",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "StringsInvalidChar",
+    inputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+    ],
+    name: "MissingPrecompile",
     type: "error",
   },
 ] as const;
 
 const _bytecode =
-  "0x60566037600b82828239805160001a607314602a57634e487b7160e01b600052600060045260246000fd5b30600052607381538281f3fe73000000000000000000000000000000000000000030146080604052600080fdfea2646970667358221220b539084cbc74a0c14de013a1b18c7504c67b8e94be4c53bda81486488dd6001064736f6c634300081b0033";
+  "0x60566037600b82828239805160001a607314602a57634e487b7160e01b600052600060045260246000fd5b30600052607381538281f3fe73000000000000000000000000000000000000000030146080604052600080fdfea264697066735822122054abfdf55b3f7b07accd78d4de989b478dd8b8367e937682c83ac284b6ccc4a764736f6c634300081b0033";
 
-type StringsConstructorParams =
+type ErrorsConstructorParams =
   | [signer?: Signer]
   | ConstructorParameters<typeof ContractFactory>;
 
 const isSuperArgs = (
-  xs: StringsConstructorParams
+  xs: ErrorsConstructorParams
 ): xs is ConstructorParameters<typeof ContractFactory> => xs.length > 1;
 
-export class Strings__factory extends ContractFactory {
-  constructor(...args: StringsConstructorParams) {
+export class Errors__factory extends ContractFactory {
+  constructor(...args: ErrorsConstructorParams) {
     if (isSuperArgs(args)) {
       super(...args);
     } else {
@@ -70,21 +81,21 @@ export class Strings__factory extends ContractFactory {
   }
   override deploy(overrides?: NonPayableOverrides & { from?: string }) {
     return super.deploy(overrides || {}) as Promise<
-      Strings & {
+      Errors & {
         deploymentTransaction(): ContractTransactionResponse;
       }
     >;
   }
-  override connect(runner: ContractRunner | null): Strings__factory {
-    return super.connect(runner) as Strings__factory;
+  override connect(runner: ContractRunner | null): Errors__factory {
+    return super.connect(runner) as Errors__factory;
   }
 
   static readonly bytecode = _bytecode;
   static readonly abi = _abi;
-  static createInterface(): StringsInterface {
-    return new Interface(_abi) as StringsInterface;
+  static createInterface(): ErrorsInterface {
+    return new Interface(_abi) as ErrorsInterface;
   }
-  static connect(address: string, runner?: ContractRunner | null): Strings {
-    return new Contract(address, _abi, runner) as unknown as Strings;
+  static connect(address: string, runner?: ContractRunner | null): Errors {
+    return new Contract(address, _abi, runner) as unknown as Errors;
   }
 }

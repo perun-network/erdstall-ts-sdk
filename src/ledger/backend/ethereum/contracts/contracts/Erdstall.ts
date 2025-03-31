@@ -102,34 +102,48 @@ export declare namespace Erdstall {
 export interface ErdstallInterface extends Interface {
   getFunction(
     nameOrSignature:
-      | "bigBangTime"
+      | "abort"
+      | "announceTEELifetime"
       | "chainID"
       | "challenge"
-      | "challenges"
+      | "challengesLen"
+      | "challengesStart"
+      | "currentEnclave"
+      | "currentEpoch"
       | "deployBlockNum"
       | "deposit"
       | "deposits"
       | "encodeBalanceProof"
-      | "ensureFrozen"
       | "epochDuration"
-      | "frozenEpoch"
+      | "hasPendingFreeze"
       | "holderTypes"
+      | "lastOldEnclaveEpoch"
       | "metadataWasHandled"
-      | "numChallenges"
+      | "oldEnclaves"
       | "owner"
+      | "recover"
+      | "recoveringEnclave"
+      | "recoveringEndEpoch"
+      | "register"
+      | "registerDuration"
       | "registerTokenType"
+      | "registeredEnclave"
+      | "registeredEndTime"
       | "renounceOwnership"
       | "respondChallenge"
       | "respondZero"
+      | "startTime"
+      | "state"
       | "submitFreezeProof"
-      | "tee"
+      | "switchEnclave"
       | "tokenHolders"
       | "transferOwnership"
+      | "update"
       | "verifyBalance"
       | "verifyLightClientCert"
       | "verifyTeeSig"
+      | "verifyZeroBalanceProof"
       | "withdraw"
-      | "withdrawFrozen"
       | "withdrawFrozenDeposit"
       | "withdrawn"
   ): FunctionFragment;
@@ -143,21 +157,36 @@ export interface ErdstallInterface extends Interface {
       | "FirstTimeNFT"
       | "Frozen"
       | "OwnershipTransferred"
+      | "StateChange"
+      | "TEELifetime"
       | "TokenTypeRegistered"
       | "WithdrawalException"
       | "Withdrawn"
       | "ZeroResponded"
   ): EventFragment;
 
+  encodeFunctionData(functionFragment: "abort", values?: undefined): string;
   encodeFunctionData(
-    functionFragment: "bigBangTime",
-    values?: undefined
+    functionFragment: "announceTEELifetime",
+    values: [BytesLike]
   ): string;
   encodeFunctionData(functionFragment: "chainID", values?: undefined): string;
   encodeFunctionData(functionFragment: "challenge", values?: undefined): string;
   encodeFunctionData(
-    functionFragment: "challenges",
-    values: [BigNumberish, AddressLike]
+    functionFragment: "challengesLen",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "challengesStart",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "currentEnclave",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "currentEpoch",
+    values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "deployBlockNum",
@@ -176,15 +205,11 @@ export interface ErdstallInterface extends Interface {
     values: [Erdstall.BalanceChunkStruct]
   ): string;
   encodeFunctionData(
-    functionFragment: "ensureFrozen",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
     functionFragment: "epochDuration",
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "frozenEpoch",
+    functionFragment: "hasPendingFreeze",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -192,17 +217,46 @@ export interface ErdstallInterface extends Interface {
     values: [AddressLike]
   ): string;
   encodeFunctionData(
+    functionFragment: "lastOldEnclaveEpoch",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "metadataWasHandled",
     values: [AddressLike]
   ): string;
   encodeFunctionData(
-    functionFragment: "numChallenges",
+    functionFragment: "oldEnclaves",
     values: [BigNumberish]
   ): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
+  encodeFunctionData(functionFragment: "recover", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "recoveringEnclave",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "recoveringEndEpoch",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "register",
+    values: [AddressLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "registerDuration",
+    values?: undefined
+  ): string;
   encodeFunctionData(
     functionFragment: "registerTokenType",
     values: [AddressLike, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "registeredEnclave",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "registeredEndTime",
+    values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "renounceOwnership",
@@ -216,11 +270,16 @@ export interface ErdstallInterface extends Interface {
     functionFragment: "respondZero",
     values: [Erdstall.ZeroBalanceProofStruct, BytesLike]
   ): string;
+  encodeFunctionData(functionFragment: "startTime", values?: undefined): string;
+  encodeFunctionData(functionFragment: "state", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "submitFreezeProof",
     values: [Erdstall.FreezeProofStruct, BytesLike, BytesLike]
   ): string;
-  encodeFunctionData(functionFragment: "tee", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "switchEnclave",
+    values?: undefined
+  ): string;
   encodeFunctionData(
     functionFragment: "tokenHolders",
     values: [BigNumberish]
@@ -229,6 +288,7 @@ export interface ErdstallInterface extends Interface {
     functionFragment: "transferOwnership",
     values: [AddressLike]
   ): string;
+  encodeFunctionData(functionFragment: "update", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "verifyBalance",
     values: [Erdstall.BalanceChunkStruct, BytesLike]
@@ -239,14 +299,14 @@ export interface ErdstallInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "verifyTeeSig",
-    values: [BytesLike, BytesLike]
+    values: [BytesLike, BytesLike, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "verifyZeroBalanceProof",
+    values: [Erdstall.ZeroBalanceProofStruct, BytesLike]
   ): string;
   encodeFunctionData(
     functionFragment: "withdraw",
-    values: [Erdstall.BalanceChunkStruct, BytesLike]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "withdrawFrozen",
     values: [Erdstall.BalanceChunkStruct, BytesLike]
   ): string;
   encodeFunctionData(
@@ -258,13 +318,29 @@ export interface ErdstallInterface extends Interface {
     values: [BigNumberish, AddressLike]
   ): string;
 
+  decodeFunctionResult(functionFragment: "abort", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "bigBangTime",
+    functionFragment: "announceTEELifetime",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "chainID", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "challenge", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "challenges", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "challengesLen",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "challengesStart",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "currentEnclave",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "currentEpoch",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "deployBlockNum",
     data: BytesLike
@@ -276,15 +352,11 @@ export interface ErdstallInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "ensureFrozen",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
     functionFragment: "epochDuration",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "frozenEpoch",
+    functionFragment: "hasPendingFreeze",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -292,16 +364,42 @@ export interface ErdstallInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "lastOldEnclaveEpoch",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "metadataWasHandled",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "numChallenges",
+    functionFragment: "oldEnclaves",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "recover", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "recoveringEnclave",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "recoveringEndEpoch",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "register", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "registerDuration",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "registerTokenType",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "registeredEnclave",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "registeredEndTime",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -316,11 +414,16 @@ export interface ErdstallInterface extends Interface {
     functionFragment: "respondZero",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "startTime", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "state", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "submitFreezeProof",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "tee", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "switchEnclave",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "tokenHolders",
     data: BytesLike
@@ -329,6 +432,7 @@ export interface ErdstallInterface extends Interface {
     functionFragment: "transferOwnership",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "update", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "verifyBalance",
     data: BytesLike
@@ -341,11 +445,11 @@ export interface ErdstallInterface extends Interface {
     functionFragment: "verifyTeeSig",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "withdraw", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "withdrawFrozen",
+    functionFragment: "verifyZeroBalanceProof",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "withdraw", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "withdrawFrozenDeposit",
     data: BytesLike
@@ -497,6 +601,37 @@ export namespace OwnershipTransferredEvent {
   export type LogDescription = TypedLogDescription<Event>;
 }
 
+export namespace StateChangeEvent {
+  export type InputTuple = [state: BigNumberish];
+  export type OutputTuple = [state: bigint];
+  export interface OutputObject {
+    state: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace TEELifetimeEvent {
+  export type InputTuple = [
+    lifetime_uid: BytesLike,
+    epoch_to_restore_from: BigNumberish
+  ];
+  export type OutputTuple = [
+    lifetime_uid: string,
+    epoch_to_restore_from: bigint
+  ];
+  export interface OutputObject {
+    lifetime_uid: string;
+    epoch_to_restore_from: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
 export namespace TokenTypeRegisteredEvent {
   export type InputTuple = [assetType: BigNumberish, tokenHolder: AddressLike];
   export type OutputTuple = [assetType: bigint, tokenHolder: string];
@@ -613,17 +748,25 @@ export interface Erdstall extends BaseContract {
     event?: TCEvent
   ): Promise<this>;
 
-  bigBangTime: TypedContractMethod<[], [bigint], "view">;
+  abort: TypedContractMethod<[], [void], "nonpayable">;
+
+  announceTEELifetime: TypedContractMethod<
+    [lifetime_uid: BytesLike],
+    [void],
+    "nonpayable"
+  >;
 
   chainID: TypedContractMethod<[], [bigint], "view">;
 
   challenge: TypedContractMethod<[], [void], "nonpayable">;
 
-  challenges: TypedContractMethod<
-    [arg0: BigNumberish, arg1: AddressLike],
-    [bigint],
-    "view"
-  >;
+  challengesLen: TypedContractMethod<[], [bigint], "view">;
+
+  challengesStart: TypedContractMethod<[], [bigint], "view">;
+
+  currentEnclave: TypedContractMethod<[], [string], "view">;
+
+  currentEpoch: TypedContractMethod<[], [bigint], "view">;
 
   deployBlockNum: TypedContractMethod<[], [bigint], "view">;
 
@@ -651,13 +794,13 @@ export interface Erdstall extends BaseContract {
     "view"
   >;
 
-  ensureFrozen: TypedContractMethod<[], [void], "nonpayable">;
-
   epochDuration: TypedContractMethod<[], [bigint], "view">;
 
-  frozenEpoch: TypedContractMethod<[], [bigint], "view">;
+  hasPendingFreeze: TypedContractMethod<[], [boolean], "view">;
 
   holderTypes: TypedContractMethod<[arg0: AddressLike], [bigint], "view">;
+
+  lastOldEnclaveEpoch: TypedContractMethod<[], [bigint], "view">;
 
   metadataWasHandled: TypedContractMethod<
     [arg0: AddressLike],
@@ -665,15 +808,33 @@ export interface Erdstall extends BaseContract {
     "view"
   >;
 
-  numChallenges: TypedContractMethod<[arg0: BigNumberish], [bigint], "view">;
+  oldEnclaves: TypedContractMethod<
+    [arg0: BigNumberish],
+    [[bigint, string] & { last_epoch: bigint; enclave: string }],
+    "view"
+  >;
 
   owner: TypedContractMethod<[], [string], "view">;
+
+  recover: TypedContractMethod<[], [void], "nonpayable">;
+
+  recoveringEnclave: TypedContractMethod<[], [string], "view">;
+
+  recoveringEndEpoch: TypedContractMethod<[], [bigint], "view">;
+
+  register: TypedContractMethod<[enclave: AddressLike], [void], "nonpayable">;
+
+  registerDuration: TypedContractMethod<[], [bigint], "view">;
 
   registerTokenType: TypedContractMethod<
     [holder: AddressLike, localTokenType: BigNumberish],
     [void],
     "nonpayable"
   >;
+
+  registeredEnclave: TypedContractMethod<[], [string], "view">;
+
+  registeredEndTime: TypedContractMethod<[], [bigint], "view">;
 
   renounceOwnership: TypedContractMethod<[], [void], "nonpayable">;
 
@@ -689,13 +850,17 @@ export interface Erdstall extends BaseContract {
     "nonpayable"
   >;
 
+  startTime: TypedContractMethod<[], [bigint], "view">;
+
+  state: TypedContractMethod<[], [bigint], "view">;
+
   submitFreezeProof: TypedContractMethod<
     [proof: Erdstall.FreezeProofStruct, sig: BytesLike, certificate: BytesLike],
     [void],
     "nonpayable"
   >;
 
-  tee: TypedContractMethod<[], [string], "view">;
+  switchEnclave: TypedContractMethod<[], [void], "nonpayable">;
 
   tokenHolders: TypedContractMethod<[arg0: BigNumberish], [string], "view">;
 
@@ -704,6 +869,8 @@ export interface Erdstall extends BaseContract {
     [void],
     "nonpayable"
   >;
+
+  update: TypedContractMethod<[], [void], "nonpayable">;
 
   verifyBalance: TypedContractMethod<
     [balance: Erdstall.BalanceChunkStruct, sig: BytesLike],
@@ -718,18 +885,18 @@ export interface Erdstall extends BaseContract {
   >;
 
   verifyTeeSig: TypedContractMethod<
-    [abiCode: BytesLike, sig: BytesLike],
+    [abiCode: BytesLike, sig: BytesLike, epoch: BigNumberish],
     [boolean],
     "view"
   >;
 
-  withdraw: TypedContractMethod<
-    [balance: Erdstall.BalanceChunkStruct, sig: BytesLike],
+  verifyZeroBalanceProof: TypedContractMethod<
+    [proof: Erdstall.ZeroBalanceProofStruct, sig: BytesLike],
     [void],
-    "nonpayable"
+    "view"
   >;
 
-  withdrawFrozen: TypedContractMethod<
+  withdraw: TypedContractMethod<
     [balance: Erdstall.BalanceChunkStruct, sig: BytesLike],
     [void],
     "nonpayable"
@@ -748,8 +915,11 @@ export interface Erdstall extends BaseContract {
   ): T;
 
   getFunction(
-    nameOrSignature: "bigBangTime"
-  ): TypedContractMethod<[], [bigint], "view">;
+    nameOrSignature: "abort"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "announceTEELifetime"
+  ): TypedContractMethod<[lifetime_uid: BytesLike], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "chainID"
   ): TypedContractMethod<[], [bigint], "view">;
@@ -757,12 +927,17 @@ export interface Erdstall extends BaseContract {
     nameOrSignature: "challenge"
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
-    nameOrSignature: "challenges"
-  ): TypedContractMethod<
-    [arg0: BigNumberish, arg1: AddressLike],
-    [bigint],
-    "view"
-  >;
+    nameOrSignature: "challengesLen"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "challengesStart"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "currentEnclave"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "currentEpoch"
+  ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
     nameOrSignature: "deployBlockNum"
   ): TypedContractMethod<[], [bigint], "view">;
@@ -794,26 +969,45 @@ export interface Erdstall extends BaseContract {
     "view"
   >;
   getFunction(
-    nameOrSignature: "ensureFrozen"
-  ): TypedContractMethod<[], [void], "nonpayable">;
-  getFunction(
     nameOrSignature: "epochDuration"
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
-    nameOrSignature: "frozenEpoch"
-  ): TypedContractMethod<[], [bigint], "view">;
+    nameOrSignature: "hasPendingFreeze"
+  ): TypedContractMethod<[], [boolean], "view">;
   getFunction(
     nameOrSignature: "holderTypes"
   ): TypedContractMethod<[arg0: AddressLike], [bigint], "view">;
   getFunction(
+    nameOrSignature: "lastOldEnclaveEpoch"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
     nameOrSignature: "metadataWasHandled"
   ): TypedContractMethod<[arg0: AddressLike], [boolean], "view">;
   getFunction(
-    nameOrSignature: "numChallenges"
-  ): TypedContractMethod<[arg0: BigNumberish], [bigint], "view">;
+    nameOrSignature: "oldEnclaves"
+  ): TypedContractMethod<
+    [arg0: BigNumberish],
+    [[bigint, string] & { last_epoch: bigint; enclave: string }],
+    "view"
+  >;
   getFunction(
     nameOrSignature: "owner"
   ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "recover"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "recoveringEnclave"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "recoveringEndEpoch"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "register"
+  ): TypedContractMethod<[enclave: AddressLike], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "registerDuration"
+  ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
     nameOrSignature: "registerTokenType"
   ): TypedContractMethod<
@@ -821,6 +1015,12 @@ export interface Erdstall extends BaseContract {
     [void],
     "nonpayable"
   >;
+  getFunction(
+    nameOrSignature: "registeredEnclave"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "registeredEndTime"
+  ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
     nameOrSignature: "renounceOwnership"
   ): TypedContractMethod<[], [void], "nonpayable">;
@@ -839,6 +1039,12 @@ export interface Erdstall extends BaseContract {
     "nonpayable"
   >;
   getFunction(
+    nameOrSignature: "startTime"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "state"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
     nameOrSignature: "submitFreezeProof"
   ): TypedContractMethod<
     [proof: Erdstall.FreezeProofStruct, sig: BytesLike, certificate: BytesLike],
@@ -846,14 +1052,17 @@ export interface Erdstall extends BaseContract {
     "nonpayable"
   >;
   getFunction(
-    nameOrSignature: "tee"
-  ): TypedContractMethod<[], [string], "view">;
+    nameOrSignature: "switchEnclave"
+  ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "tokenHolders"
   ): TypedContractMethod<[arg0: BigNumberish], [string], "view">;
   getFunction(
     nameOrSignature: "transferOwnership"
   ): TypedContractMethod<[newOwner: AddressLike], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "update"
+  ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "verifyBalance"
   ): TypedContractMethod<
@@ -871,19 +1080,19 @@ export interface Erdstall extends BaseContract {
   getFunction(
     nameOrSignature: "verifyTeeSig"
   ): TypedContractMethod<
-    [abiCode: BytesLike, sig: BytesLike],
+    [abiCode: BytesLike, sig: BytesLike, epoch: BigNumberish],
     [boolean],
     "view"
   >;
   getFunction(
-    nameOrSignature: "withdraw"
+    nameOrSignature: "verifyZeroBalanceProof"
   ): TypedContractMethod<
-    [balance: Erdstall.BalanceChunkStruct, sig: BytesLike],
+    [proof: Erdstall.ZeroBalanceProofStruct, sig: BytesLike],
     [void],
-    "nonpayable"
+    "view"
   >;
   getFunction(
-    nameOrSignature: "withdrawFrozen"
+    nameOrSignature: "withdraw"
   ): TypedContractMethod<
     [balance: Erdstall.BalanceChunkStruct, sig: BytesLike],
     [void],
@@ -948,6 +1157,20 @@ export interface Erdstall extends BaseContract {
     OwnershipTransferredEvent.InputTuple,
     OwnershipTransferredEvent.OutputTuple,
     OwnershipTransferredEvent.OutputObject
+  >;
+  getEvent(
+    key: "StateChange"
+  ): TypedContractEvent<
+    StateChangeEvent.InputTuple,
+    StateChangeEvent.OutputTuple,
+    StateChangeEvent.OutputObject
+  >;
+  getEvent(
+    key: "TEELifetime"
+  ): TypedContractEvent<
+    TEELifetimeEvent.InputTuple,
+    TEELifetimeEvent.OutputTuple,
+    TEELifetimeEvent.OutputObject
   >;
   getEvent(
     key: "TokenTypeRegistered"
@@ -1054,6 +1277,28 @@ export interface Erdstall extends BaseContract {
       OwnershipTransferredEvent.InputTuple,
       OwnershipTransferredEvent.OutputTuple,
       OwnershipTransferredEvent.OutputObject
+    >;
+
+    "StateChange(uint8)": TypedContractEvent<
+      StateChangeEvent.InputTuple,
+      StateChangeEvent.OutputTuple,
+      StateChangeEvent.OutputObject
+    >;
+    StateChange: TypedContractEvent<
+      StateChangeEvent.InputTuple,
+      StateChangeEvent.OutputTuple,
+      StateChangeEvent.OutputObject
+    >;
+
+    "TEELifetime(bytes32,uint64)": TypedContractEvent<
+      TEELifetimeEvent.InputTuple,
+      TEELifetimeEvent.OutputTuple,
+      TEELifetimeEvent.OutputObject
+    >;
+    TEELifetime: TypedContractEvent<
+      TEELifetimeEvent.InputTuple,
+      TEELifetimeEvent.OutputTuple,
+      TEELifetimeEvent.OutputObject
     >;
 
     "TokenTypeRegistered(uint8,address)": TypedContractEvent<
