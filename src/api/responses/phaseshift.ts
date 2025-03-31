@@ -21,7 +21,7 @@ export class PhaseShift extends ErdstallObject {
 		return PhaseShift;
 	}
 
-	protected objectTypeName(): string {
+	override objectTypeName(): string {
 		return phaseShiftTypeName;
 	}
 }

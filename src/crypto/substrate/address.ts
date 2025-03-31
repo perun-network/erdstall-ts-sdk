@@ -3,7 +3,7 @@
 
 import { jsonObject } from "#erdstall/export/typedjson";
 import { customJSON } from "#erdstall/api/util";
-import { Address, registerAddressType } from "#erdstall/crypto/address";
+import { Address, registerAddressType } from "#erdstall/crypto";
 import { equalArray } from "#erdstall/utils/arrays";
 import { decodeAddress, encodeAddress } from "@polkadot/util-crypto";
 import { hexToU8a, u8aToHex } from "@polkadot/util"
@@ -14,13 +14,13 @@ import { hexToU8a, u8aToHex } from "@polkadot/util"
  */
 @jsonObject
 export class SubstrateAddress extends Address<"substrate"> {
-	private value: Uint8Array;
+	#value: Uint8Array;
 	constructor(value: Uint8Array) {
 		super();
-		this.value = value;
+		this.#value = new Uint8Array(value); // explicit deep copy!
 	}
 
-	get keyBytes(): Uint8Array { return new Uint8Array([...this.value]); }
+	get keyBytes(): Uint8Array { return new Uint8Array(this.#value); }
 
 	static fromJSON(val: any): SubstrateAddress {
 		if(typeof val !== "string") {
@@ -30,7 +30,7 @@ export class SubstrateAddress extends Address<"substrate"> {
 	}
 
 	toJSON(): string {
-		return u8aToHex(this.value);
+		return u8aToHex(this.#value);
 	}
 
 	static fromString(addr: string): SubstrateAddress {
@@ -48,12 +48,14 @@ export class SubstrateAddress extends Address<"substrate"> {
 	}
 
 	toString(): string {
-		return encodeAddress(this.value);
+		return encodeAddress(this.#value);
 	}
 
 	equals(other: SubstrateAddress): boolean {
-		return equalArray(this.value, other.value);
+		return equalArray(this.#value, other.#value);
 	}
+
+	override clone(): this { return new SubstrateAddress(this.#value) as this; }
 }
 
 registerAddressType("substrate", SubstrateAddress);

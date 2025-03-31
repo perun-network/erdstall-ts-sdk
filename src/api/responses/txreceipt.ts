@@ -23,9 +23,9 @@ export enum TxStatusCode {
 
 @jsonObject
 export class TxReceipt extends ErdstallObject {
-	@jsonMember(Transaction) tx: Transaction;
-	@jsonMember(TransactionOutput) output: TransactionOutput;
-	@jsonMember(Signature<Crypto>) sig: Signature<Crypto>;
+	@jsonMember(() => Transaction) tx: Transaction;
+	@jsonMember(() => TransactionOutput) output: TransactionOutput;
+	@jsonMember(() => Signature) sig: Signature;
 	@jsonMember(String) hash: string;
 
 	@jsonMapMember(String, () => Account, { shape: MapShape.OBJECT })
@@ -58,7 +58,7 @@ export class TxReceipt extends ErdstallObject {
 	public objectType(): any {
 		return TxReceipt;
 	}
-	protected objectTypeName(): string {
+	override objectTypeName(): string {
 		return txReceiptTypeName;
 	}
 	protected encodePayload(): Uint8Array {

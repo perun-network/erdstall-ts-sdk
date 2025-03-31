@@ -13,7 +13,7 @@ export class Attest extends ErdstallObject {
 	public objectType(): any {
 		return Attest;
 	}
-	protected objectTypeName(): string {
+	override objectTypeName(): string {
 		return "Attest";
 	}
 }

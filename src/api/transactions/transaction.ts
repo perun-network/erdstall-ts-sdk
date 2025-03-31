@@ -28,9 +28,9 @@ export function registerTransactionType(
 /** Transaction is the base class for all transactions. */
 @jsonObject
 export abstract class Transaction extends ErdstallObject {
-	@jsonMember(Address) sender: Address<Crypto>;
+	@jsonMember(() => Address) sender: Address<Crypto>;
 	@jsonU64Member() nonce: bigint;
-	@jsonMember(Signature) sig?: Signature<Crypto>;
+	@jsonMember(() => Signature) sig?: Signature<Crypto>;
 
 	constructor(sender: Address<Crypto>, nonce: bigint) {
 		super();
@@ -98,7 +98,7 @@ export abstract class Transaction extends ErdstallObject {
 	public objectType() {
 		return Transaction;
 	}
-	protected objectTypeName(): string {
+	override objectTypeName(): string {
 		return transactionTypeName;
 	}
 

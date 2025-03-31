@@ -18,7 +18,6 @@ import {
 	BalanceProofs,
 	PhaseShift,
 } from "./api/responses";
-import { Backend } from "./ledger/backend";
 
 /**
  * ErdstallEvent is comprised of all the events related to Erdstall. These
@@ -29,48 +28,165 @@ export type ErdstallEvent = LedgerEvent | EnclaveEvent;
 
 export type { EnclaveEvent };
 
-type _eventHandlers<B extends Backend> = {
-	Frozen: (ev: Frozen<B>) => void;
-	Deposited: (ev: Deposited<B>) => void;
-	Withdrawn: (ev: Withdrawn<B>) => void;
-	Challenged: (ev: Challenged<B>) => void;
-	ChallengeResponded: (ev: ChallengeResponded<B>) => void;
 
-	open: () => void;
-	close: () => void;
-	config: (config: ClientConfig) => void;
-	receipt: (receipt: TxReceipt) => void;
-	phaseshift: (phaseShift: PhaseShift) => void;
-	proof: (proof: BalanceProofs) => void;
-	error: (error: string | Error) => void;
+export class EventEmitter<Event> {
+	#always: ((e:Event) => void)[] = [];
+	#once: ((e:Event) => void)[] = [];
+	// called whenever we either start having subscriptions or stop having subscriptions.
+	#has_subscriptions?: (any: boolean) => void;
+	#had_subscriptions: boolean = false;
+
+	get has_subscriptions(): boolean { return this.#had_subscriptions; }
+
+	constructor(has_subscriptions?: (any: boolean) => void)
+		{ this.#has_subscriptions = has_subscriptions; }
+
+	// if required, notify the event producer that we are listening or not.
+	#update(): void
+	{
+		const has_subscriptions = !!(this.#always.length || this.#once.length);
+		if(this.#had_subscriptions != has_subscriptions)
+		{
+			this.#had_subscriptions = has_subscriptions;
+			this.#has_subscriptions?.(has_subscriptions);
+		}
+	}
+
+	emit(e: Event): void
+	{
+		let once = this.#once;
+		let always = this.#always;
+		this.#once = [];
+
+		for(let h of once) h(e);
+		for(let h of always) h(e);
+
+		this.#update();
+	}
+
+	once(h: (e:Event) => void): void
+	{
+		if(-1 === this.#once.indexOf(h))
+		{
+			this.#once.push(h);
+			this.#update();
+		}
+	}
+
+	on(h: (e:Event) => void): void
+	{
+		if(-1 === this.#always.indexOf(h))
+		{
+			this.#always.push(h);
+			this.#update();
+		}
+	}
+
+	off(h: (e:Event) => void): void
+	{
+		let i = this.#always.indexOf(h);
+		if(i !== -1) this.#always.splice(i, 1);
+
+		i = this.#once.indexOf(h);
+		if(i !== -1) this.#once.splice(i, 1);
+	}
+
+	removeAllListeners(): void
+	{
+		this.#once = [];
+		this.#always = [];
+		this.#update();
+	}
+
+	newHandler(): EventHandler<Event>
+		{ return new EventHandler<Event>(this); }
+}
+
+export class EventHandler<Event> {
+	#emitter: EventEmitter<Event>;
+
+	constructor(emitter: EventEmitter<Event>)
+		{ this.#emitter = emitter; }
+
+	on(h: (e: Event) => void): void
+		{ this.#emitter.on(h); }
+	off(h: (e: Event) => void): void
+		{ this.#emitter.off(h); }
+	once(h: (e: Event) => void): void
+		{ this.#emitter.once(h); }
+}
+
+export class LedgerEventEmitters {
+	Frozen = new EventEmitter<Frozen>;
+	Deposited = new EventEmitter<Deposited>;
+	Withdrawn = new EventEmitter<Withdrawn>;
+	Challenged = new EventEmitter<Challenged>;
+	ChallengeResponded = new EventEmitter<ChallengeResponded>;
+
+	subscription_mask(): LedgerEventMask {
+		return {
+			Frozen: this.Frozen.has_subscriptions,
+			Deposited: this.Deposited.has_subscriptions,
+			Withdrawn: this.Withdrawn.has_subscriptions,
+			Challenged: this.Challenged.has_subscriptions,
+			ChallengeResponded: this.ChallengeResponded.has_subscriptions
+		};
+	}
+}
+
+export interface LedgerEventMask {
+	Frozen: boolean;
+	Deposited: boolean;
+	Withdrawn: boolean;
+	Challenged: boolean;
+	ChallengeResponded: boolean;
+}
+
+
+export class LedgerEventHandlers {
+	Frozen: EventHandler<Frozen>;
+	Deposited: EventHandler<Deposited>;
+	Withdrawn: EventHandler<Withdrawn>;
+	Challenged: EventHandler<Challenged>;
+	ChallengeResponded: EventHandler<ChallengeResponded>;
+
+	constructor(e: LedgerEventEmitters)
+	{
+		this.Frozen = e.Frozen.newHandler();
+		this.Deposited = e.Deposited.newHandler();
+		this.Withdrawn = e.Withdrawn.newHandler();
+		this.Challenged = e.Challenged.newHandler();
+		this.ChallengeResponded = e.ChallengeResponded.newHandler();
+	}
+}
+
+export class EnclaveEventEmitters {
+	open = new EventEmitter<void>;
+	close = new EventEmitter<void>;
+	config = new EventEmitter<ClientConfig>;
+	receipt = new EventEmitter<TxReceipt>;
+	phaseshift = new EventEmitter<PhaseShift>;
+	proof = new EventEmitter<BalanceProofs>;
+	error = new EventEmitter<string | Error>;
 };
 
-/**
- * ErdstallEventHandler looks up the concretely typed handler from the
- * `_eventHandlers` type. If `enclave.Event` or `ledger.Event` get extended the
- * compiler will require that the `_eventHandlers` type will be extended too.
- * This is equivalent to checking the mapping:
- * `_eventHandlers` -> `ErdstallEvent`
- */
-export type ErdstallEventHandler<
-	T extends ErdstallEvent,
-	Bs extends Backend,
-> = _eventHandlers<Bs>[T];
+export class EnclaveEventHandlers {
+	open: EventHandler<void>;
+	close: EventHandler<void>;
+	config: EventHandler<ClientConfig>;
+	receipt: EventHandler<TxReceipt>;
+	phaseshift: EventHandler<PhaseShift>;
+	proof: EventHandler<BalanceProofs>;
+	error: EventHandler<string | Error>;
 
-/**
- * `_requireBijectiveHandlers` double checks that no superfluous entries are
- * registered in the `_eventHandlers` type, which do not belong in either
- * `LedgerEvent` or `EnclaveEvent`.
- *
- * This is equivalent of checking the mapping:
- * `ErdstallEvent` -> `_eventHandlers`
- */
-type _eventKeys<Bs extends Backend> = keyof _eventHandlers<Bs>;
-type _requireBijectiveHandlers<
-	T extends _eventKeys<Bs>,
-	Bs extends Backend,
-> = ErdstallEventHandler<T, Bs>;
-
-// `ErdstallEventHandler` and `_requireBijectiveHandlers` together ensure, that
-// all occurrences of events and the extension/removal of event names are
-// tracked at compile time.
+	constructor(e: EnclaveEventEmitters)
+	{
+		this.open = e.open.newHandler();
+		this.close = e.close.newHandler();
+		this.config = e.config.newHandler();
+		this.receipt = e.receipt.newHandler();
+		this.phaseshift = e.phaseshift.newHandler();
+		this.proof = e.proof.newHandler();
+		this.error = e.error.newHandler();
+	}
+};

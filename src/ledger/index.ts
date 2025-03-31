@@ -4,6 +4,3 @@
 export * from "./account";
 export * from "./chain";
 export * from "./event";
-export * from "./backend/backends";
-export * from "./backend/writer";
-export * from "./backend/reader";

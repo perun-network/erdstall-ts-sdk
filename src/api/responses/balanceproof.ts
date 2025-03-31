@@ -12,11 +12,9 @@ import {
 	TypedJSON,
 } from "#erdstall/export/typedjson";
 import { ChainAssets } from "#erdstall/ledger/assets";
-import * as crypto from "#erdstall/crypto";
+import { Address, Signature } from "#erdstall/crypto";
 import { ErdstallObject, registerErdstallType } from "#erdstall/api";
-import { Backend } from "#erdstall/ledger/backend";
-import { Chain } from "#erdstall/ledger/chain";
-import { BackendSignature, ErdstallSignature } from "#erdstall/erdstall";
+import { Chain } from "#erdstall/ledger";
 import canonicalize from "canonicalize";
 import { customJSON } from "#erdstall/api/util";
 
@@ -26,18 +24,18 @@ const balanceProofsTypeName = "BalanceProofs";
 @jsonObject
 export class Balance {
 	@jsonU64Member() epoch: bigint;
-	@jsonMember(crypto.Address) account: crypto.Address<crypto.Crypto>;
+	@jsonMember(() => Address) account: Address;
 	@jsonMember(Boolean) exit: boolean;
 	@jsonMember(() => ChainAssets) values: ChainAssets;
 
 	constructor(
 		epoch: bigint,
-		account: crypto.Address<crypto.Crypto> | string,
+		account: Address | string, // TODO: no strings.
 		exit: boolean,
 		values: ChainAssets,
 	) {
 		this.epoch = epoch;
-		this.account = crypto.Address.ensure(account);
+		this.account = Address.ensure(account);
 		this.exit = exit;
 		this.values = values;
 	}
@@ -70,7 +68,7 @@ export class BalanceProofs extends ErdstallObject {
 	public objectType() {
 		return BalanceProofs;
 	}
-	protected objectTypeName() {
+	override objectTypeName() {
 		return balanceProofsTypeName;
 	}
 
@@ -100,23 +98,23 @@ export class BalanceProof {
 	@jsonU64Member()
 	readonly epoch: bigint;
 
-	@jsonMember(crypto.Signature)
-	readonly sig?: crypto.Signature<crypto.Crypto>;
+	@jsonMember(() => Signature)
+	readonly sig?: Signature;
 
 	constructor(
 		proofs: Map<string, Map<Chain, ChainProof>>,
 		epoch: bigint,
-		sig?: ErdstallSignature,
+		sig?: Signature,
 	) {
 		this.proofs = proofs;
 		this.sig = sig;
 		this.epoch = epoch;
 	}
 
-	public verify(address: crypto.Address<crypto.Crypto>): boolean {
+	public verify(address: Address): boolean {
 		return this.sig?.verify(
 			this.encodePayload(),
-			address) ? true : false;
+			address) ?? false;
 	}
 
 	public encodePayload(): Uint8Array {
@@ -130,17 +128,19 @@ export class BalanceProof {
 
 @jsonObject
 export class ChainProofChunk {
-	@jsonMember(ChainAssets, { preserveNull: true })
+	@jsonMember(() => ChainAssets, { preserveNull: true })
 	funds: ChainAssets;
 
-	// ChainProofChunks are issued for specific chains, so the signature is
-	// specifically a BackendSignature.
-	@jsonMember(crypto.Signature, { preserveNull: true })
-	sig: BackendSignature<Backend>;
+	@jsonMember(() => Signature, { preserveNull: true })
+	sig: Signature;
 
-	constructor(funds: ChainAssets, sig: BackendSignature<Backend>) {
+	constructor(funds: ChainAssets, sig: Signature) {
 		this.funds = funds;
 		this.sig = sig;
+	}
+
+	clone(): ChainProofChunk {
+		return new ChainProofChunk(this.funds.clone(), this.sig.clone());
 	}
 }
 

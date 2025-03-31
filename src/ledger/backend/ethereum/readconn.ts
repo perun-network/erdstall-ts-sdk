@@ -1,15 +1,14 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { ErdstallEventHandler } from "#erdstall";
 import { AssetID, AssetType, Address } from "#erdstall/crypto";
 import { EthereumAddress } from "#erdstall/crypto/ethereum";
-import { LedgerEvent } from "#erdstall/ledger";
+import { Chain, LedgerEvent } from "#erdstall/ledger";
+import { LedgerEventMask, LedgerEventEmitters } from "#erdstall/event";
 import { LocalAsset } from "#erdstall/ledger/assets";
 import { Erdstall } from "./contracts/contracts/Erdstall";
 import { IERC721Metadata__factory } from "./contracts";
-import { ethCallbackShim, Listener } from "./ethwrapper";
-import { LedgerReader } from "#erdstall/ledger/backend";
+import { wrapLedgerEvent } from "./ethwrapper";
 import { EthereumTokenProvider } from "./tokencache";
 
 export const ErrUnsupportedLedgerEvent = new Error(
@@ -19,61 +18,65 @@ export const ErrErdstallContractNotConnected = new Error(
 	"erdstall contract not connected",
 );
 
-export class LedgerReadConn implements LedgerReader<"ethereum"> {
+export class LedgerReadConn
+{
 	readonly contract: Erdstall;
-	private eventCache: Map<
-		ErdstallEventHandler<LedgerEvent, "ethereum">,
-		Listener
-	>;
 	readonly tokenCache: EthereumTokenProvider;
+	#chain: Chain;
+	// for on/off removal.
+	#ledger_event_handlers: Record<string, (...data:any) => void>;
+	#last_mask?: LedgerEventMask;
+	#emitters: LedgerEventEmitters;
 
-	constructor(contract: Erdstall, tokenCache: EthereumTokenProvider) {
+	constructor(
+		contract: Erdstall,
+		tokenCache: EthereumTokenProvider,
+		emitters: LedgerEventEmitters
+	) {
 		this.contract = contract;
-		this.eventCache = new Map();
 		this.tokenCache = tokenCache;
 		this.tokenCache.fetch_holders(this.contract);
+		this.#emitters = emitters;
+		this.#chain = this.tokenCache.chain;
+
+		const handler = (name: keyof LedgerEventMask) => (...data: any) => {
+			const wrapped: LedgerEvent | undefined =
+				wrapLedgerEvent(name, this.#chain, ...data);
+			if(wrapped)
+				this.#emitters[name].emit(wrapped as any);
+		};
+		this.#ledger_event_handlers = {
+			Frozen: handler("Frozen"),
+			Deposited: handler("Deposited"),
+			Withdrawn: handler("Withdrawn"),
+			Challenged: handler("Challenged"),
+			ChallengeResponded: handler("ChallengeResponded")
+		};
 	}
 
-	on<T extends LedgerEvent>(
-		ev: T,
-		cb: ErdstallEventHandler<T, "ethereum">,
-	): void {
-		const wcb = ethCallbackShim(this.contract, ev, cb);
-		this.eventCache.set(cb, wcb);
-		this.contract.on(this.contract.filters[ev], wcb);
+	update_event_tracking(mask: LedgerEventMask): void {
+		for(let [k, v] of Object.entries(mask))
+			if(((this.#last_mask as any)?.[k] ?? false) !== v) {
+				if(v) this.#turn_on(k);
+				else this.#turn_off(k);
+			}
+		this.#last_mask = Object.assign({}, mask);
 	}
 
-	once<T extends LedgerEvent>(
-		ev: T,
-		cb: ErdstallEventHandler<T, "ethereum">,
-	): void {
-		this.contract.once(
-			this.contract.filters[ev],
-			ethCallbackShim(this.contract, ev, cb),
-		);
+	#turn_on(event: string) {
+		this.contract.on(
+			(this.contract.filters as any)[event],
+			(this.#ledger_event_handlers as any)[event]);
 	}
 
-	off<T extends LedgerEvent>(
-		ev: T,
-		cb: ErdstallEventHandler<T, "ethereum">,
-	): void {
-		if (!this.eventCache.has(cb)) {
-			return;
-		}
-		const wcb = this.eventCache.get(cb)!;
-		this.contract.off(this.contract.filters[ev], wcb);
-		this.eventCache.delete(cb);
+	#turn_off(event: string) {
+		this.contract.off(
+			(this.contract.filters as any)[event],
+			(this.#ledger_event_handlers as any)[event]);
 	}
 
-	removeAllListeners() {
-		this.eventCache.clear();
-		this.contract.removeAllListeners();
-	}
-
-	erdstall(): { chain: "ethereum"; address: Address<"ethereum"> }[] {
-		throw new Error("not implemented");
-		//		return Address.fromString(this.contract.address);
-	}
+	removeAllListeners(): void
+		{ this.contract.removeAllListeners(); }
 
 	async getWrappedToken(token: AssetID): Promise<EthereumAddress | undefined> {
 		const provider = this.contract.runner!.provider!;

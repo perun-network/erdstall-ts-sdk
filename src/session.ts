@@ -17,176 +17,108 @@ import {
 	Trade,
 	Burn,
 } from "#erdstall/api/transactions";
-import { InternalEnclaveWatcher } from "./internalenclavewatcher";
-import { EnclaveWriter } from "#erdstall/enclave";
-import { Account } from "#erdstall/ledger";
+import { Account, Chain, getChainName } from "#erdstall/ledger";
 import { ChainAssets } from "#erdstall/ledger/assets";
 import { Uint256 } from "#erdstall/api/util";
 import * as crypto from "#erdstall/crypto";
+import { Signer, Address } from "#erdstall/crypto";
 import { EthereumSigner } from "#erdstall/crypto/ethereum";
 import { SubstrateSigner } from "#erdstall/crypto/substrate";
-import {
-	BackendAddress,
-	ErdstallBackendSession,
-	ErdstallSession,
-} from "#erdstall";
-import { ErdstallEventHandler } from "./event";
-import {
-	Client,
-	BackendClientConstructors,
-} from "./client";
-import { TransactionGenerator } from "#erdstall/utils";
+import { LedgerEventEmitters, LedgerEventHandlers } from "./event";
+import { Enclave, EnclaveEvent } from "#erdstall/enclave";
 import { ReceiptDispatcher } from "./utils/receipt_dispatcher";
 import { PendingTransaction } from "./api/util/pending_transaction";
-import { Backend, RequestedBackends, Signer } from "#erdstall/ledger/backend";
-import { BackendChainConfig } from "#erdstall/ledger/backend/backends";
-import { EthereumSession } from "#erdstall/ledger/backend/ethereum";
-import { SubstrateSession } from "./ledger/backend/substrate/session";
+import { ChainConfig } from "#erdstall/api/responses";
+
+import { App, AppInternals } from "./app";
+
+import {
+	UnsignedTxBatch,
+	UnsignedTx,
+	SignedTxBatch,
+	SignedTx,
+	TxReceiptBatch,
+	TxReceipt
+} from "#erdstall/ledger/backend";
 
 export const ErrUnitialisedClient = new Error("client unitialised");
 
-// BackendSessionConstructorOverloads is a type-level map of the backend
-// session constructors. It might be necessary to have more/additional arguments
-// to construct the Session for a specific backend. This struct allows to
-// specify these additional arguments.
-//
-// NOTE: If there is a compiler error here, it is likely that a new backend
-// was added and has to be listed here.
+export abstract class ChainSession {
+	abstract withdraw(
+		epoch: bigint,
+		exitProof: ChainProofChunk[]): Promise<UnsignedTxBatch>;
+
+	abstract deposit(assets: ChainAssets): Promise<UnsignedTxBatch>;
+
+	abstract signTx(tx: UnsignedTx): Promise<SignedTx>;
+	abstract signTxBatch(txs: UnsignedTxBatch): Promise<SignedTxBatch>;
+
+	abstract sendTx(tx: SignedTx): Promise<TxReceipt>;
+	abstract sendTxBatch(txs: SignedTxBatch): Promise<TxReceiptBatch>;
+
+}
+
+
 export type BackendSessionConstructors = {
 	ethereum: {
 		type: "ethereum";
 		initializer: (
-			config: BackendChainConfig<"ethereum">,
+			config: ChainConfig,
 			signer: EthereumSigner,
-		) => EthereumSession;
+		) => ChainSession;
 	};
 	substrate: {
 		type: "substrate";
 		initializer: (
-			config: BackendChainConfig<"substrate">,
+			config: ChainConfig,
 			signer: SubstrateSigner,
-		) => SubstrateSession;
-	};
-	test: {
-		type: "test";
-		initializer: (
-			config: BackendChainConfig<"test">,
-			signer: Signer<"test">,
-		) => ErdstallBackendSession<"test">;
+		) => ChainSession;
 	};
 };
 
-export class Session<Bs extends Backend[]>
-	extends Client<Bs>
-	implements ErdstallSession<Bs>
-{
-	readonly address: crypto.Address<crypto.Crypto>;
-	readonly l2signer: crypto.Signer<crypto.Crypto>;
-	private nonce: bigint;
-	private readonly enclaveWriter: EnclaveWriter & InternalEnclaveWatcher;
-	readonly receiptDispatcher: ReceiptDispatcher;
-	// Filled dynamically when we receive configs.
-	protected clients: Map<number, ErdstallBackendSession<Bs[number]>>;
-	private blockchainWriteCtors: BackendSessionConstructors;
-	private updatingNonce?: Promise<any>;
+// L2-only read-write client that is associated with an L2 account.
+export class WritingApp extends App {
+	// L2 signing and nonce tracking.
+	#l2signer: Signer;
 
-	static async create<Bs extends Backend[]>(
-		l2signer: crypto.Signer<crypto.Crypto>,
-		enclaveConn: (EnclaveWriter & InternalEnclaveWatcher) | URL,
-		backendCtors: BackendSessionConstructors) {
-		const addr = await l2signer.address();
-		return new Session<Bs>(
-			addr,
-			l2signer,
-			enclaveConn,
-			backendCtors);
-	}
-	private constructor(
-		l2address: crypto.Address<crypto.Crypto>,
-		l2signer: crypto.Signer<crypto.Crypto>,
-		enclaveConn: (EnclaveWriter & InternalEnclaveWatcher) | URL,
-		backendCtors: BackendSessionConstructors
-	) {
-		// NOTE: It is safe to pass no arguments to the super constructor for the
-		// client here, since the Session and Client implementation both rely on
-		// initializing their backend{client|session} instances upon retrieving the
-		// config from the operator.
-		super(enclaveConn, {} as BackendClientConstructors);
+	#internals: AppInternals;
 
-		this.enclaveWriter = this.enclaveConn as EnclaveWriter &
-			InternalEnclaveWatcher;
-		// Start with an invalid nonce, so that it will be queried anew
-		// upon its next use.
-		this.nonce = 0n;
-		// When encountering any error, assume it might be a nonce mismatch. In
-		// this case, reset the nonce to an invalid value.
-		try { this.enclaveWriter.on("error", () => {
-			this.nonce = 0n;
-		});
-		} catch(e) { console.error(this.enclaveWriter, e); }
-		this.clients = new Map();
-		this.blockchainWriteCtors = backendCtors;
-		this.receiptDispatcher = new ReceiptDispatcher();
-		this.on_internal(
-			"receipt",
-			this.receiptDispatcher.watch.bind(this.receiptDispatcher),
-		);
-		this.l2signer = l2signer;
-		this.address = l2address;
-	}
+	// Start with an invalid nonce, so that it will be queried anew upon its next use.
+	#nonce: bigint = 0n;
+	#updatingNonce?: Promise<any>;
+	#receiptDispatcher = new ReceiptDispatcher;
 
-	// Queries the next nonce and increases the counter. If the nonce has an
-	// invalid value, queries the current nonce from the enclave. This function
-	// can be called concurrently.
-	private async nextNonce(): Promise<bigint> {
-		if (!this.nonce) {
-			await this.updateNonce();
-		}
+	get #enclave() { return this.#internals.enclave!; }
+	get address(): Address { return this.#l2signer.address(); }
 
-		return this.nonce++;
-	}
+	constructor(
+		enclaveConn: Enclave | URL,
+		l2_signer: Signer,
+		blockchainCtors: BackendSessionConstructors,
+		internals?: AppInternals)
+	{
+		internals ??= new AppInternals;
+		super(enclaveConn, internals);
 
-	private async updateNonceInternal(): Promise<void> {
-		const acc = await this.enclaveWriter.getAccount(this.address);
-		if (!this.nonce) {
-			this.nonce = acc.account.nonce + 1n;
-		}
-	}
-
-	// Fetches the current nonce from the enclave. Only overwrites the nonce if
-	// it has an invalid value, so this function can be called concurrently.
-	async updateNonce(): Promise<void> {
-		if(this.updatingNonce) return this.updatingNonce;
-		this.updatingNonce = this.updateNonceInternal();
-		await this.updatingNonce;
-		this.updatingNonce = undefined;
-	}
-
-	async onboard(): Promise<void> {
-		return this.enclaveWriter.onboard(this.address);
-	}
-
-	async subscribeSelf(): Promise<void> {
-		return this.subscribe(this.address);
-	}
-
-	async getOwnAccount(): Promise<Account> {
-		return this.getAccount(this.address);
+		this.#internals = internals;
+		this.#internals.l2.error.on(() => { this.#nonce = 0n; });
+		this.#internals.l2.receipt.on((r) => this.#receiptDispatcher.watch(r));
+		this.#l2signer = l2_signer;
 	}
 
 	async transferTo(
 		assets: ChainAssets,
-		to: crypto.Address<crypto.Crypto>,
+		to: Address,
 	): Promise<PendingTransaction> {
 		if (!this.initialized) {
 			throw ErrUnitialisedClient;
 		}
-		const nonce = await this.nextNonce();
+		const nonce = await this.#nextNonce();
 		const tx = new Transfer(this.address, nonce, to, assets);
-		await tx.sign(this.l2signer);
+		await tx.sign(this.#l2signer);
 		const hash = tx.hash();
-		const receipt = this.receiptDispatcher.register(hash);
-		const accepted = this.enclaveWriter.transfer(tx);
+		const receipt = this.#receiptDispatcher.register(hash);
+		const accepted = this.#enclave.transfer(tx);
 		return { receipt, accepted };
 	}
 
@@ -194,12 +126,12 @@ export class Session<Bs extends Backend[]>
 		if (!this.initialized) {
 			throw ErrUnitialisedClient;
 		}
-		const nonce = await this.nextNonce();
+		const nonce = await this.#nextNonce();
 		const tx = new Mint(this.address, nonce, token, id);
-		await tx.sign(this.l2signer);
+		await tx.sign(this.#l2signer);
 		const hash = tx.hash();
-		const receipt = this.receiptDispatcher.register(hash);
-		const accepted = this.enclaveWriter.mint(tx);
+		const receipt = this.#receiptDispatcher.register(hash);
+		const accepted = this.#enclave.mint(tx);
 		return { receipt, accepted };
 	}
 
@@ -208,12 +140,33 @@ export class Session<Bs extends Backend[]>
 			throw ErrUnitialisedClient;
 		}
 
-		const nonce = await this.nextNonce();
+		const nonce = await this.#nextNonce();
 		const tx = new Burn(this.address, nonce, assets);
-		await tx.sign(this.l2signer);
+		await tx.sign(this.#l2signer);
 		const hash = tx.hash();
-		const receipt = this.receiptDispatcher.register(hash);
-		const accepted = this.enclaveWriter.burn(tx);
+		const receipt = this.#receiptDispatcher.register(hash);
+		const accepted = this.#enclave.burn(tx);
+		return { receipt, accepted };
+	}
+
+	async createOffer(
+		offer: ChainAssets,
+		expect: ChainAssets,
+	): Promise<TradeOffer> {
+		const o = new TradeOffer(this.address, offer, expect);
+		return o.sign(this.#l2signer);
+	}
+
+	async acceptTrade(offer: TradeOffer): Promise<PendingTransaction> {
+		if (!this.initialized) {
+			throw ErrUnitialisedClient;
+		}
+		const nonce = await this.#nextNonce();
+		const tx = new Trade(this.address, nonce, offer);
+		await tx.sign(this.#l2signer);
+		const hash = tx.hash();
+		const receipt = this.#receiptDispatcher.register(hash);
+		const accepted = this.#enclave.trade(tx);
 		return { receipt, accepted };
 	}
 
@@ -224,44 +177,119 @@ export class Session<Bs extends Backend[]>
 
 		const exittx = new ExitRequest(
 			this.address,
-			await this.nextNonce(),
+			await this.#nextNonce(),
 			true,
 			new FullExit(chain, false)
 		);
-		await exittx.sign(this.l2signer);
-		return this.enclaveWriter.exit(exittx);
+		await exittx.sign(this.#l2signer);
+		return this.#enclave.exit(exittx);
+	}
+
+
+	// Queries the next nonce and increases the counter. If the nonce has an
+	// invalid value, queries the current nonce from the enclave. This function
+	// can be called concurrently.
+	async #nextNonce(): Promise<bigint> {
+		if (!this.#nonce) {
+			await this.updateNonce();
+		}
+
+		return this.#nonce++;
+	}
+
+	async #updateNonceInternal(): Promise<void> {
+		const acc = await this.#enclave.getAccount(this.address);
+		if (!this.#nonce) {
+			this.#nonce = acc.account.nonce + 1n;
+		}
+	}
+
+	// Fetches the current nonce from the enclave. Only overwrites the nonce if
+	// it has an invalid value, so this function can be called concurrently.
+	async updateNonce(): Promise<void> {
+		if(this.#updatingNonce) return this.#updatingNonce;
+		this.#updatingNonce = this.#updateNonceInternal();
+		await this.#updatingNonce;
+		this.#updatingNonce = undefined;
+	}
+
+	async subscribeSelf(): Promise<void> {
+		return this.#enclave.subscribe(this.address);
+	}
+
+	async getOwnAccount(): Promise<Account> {
+		return this.getAccount(this.address);
+	}
+}
+
+export class Session extends WritingApp
+{
+	#internals: AppInternals;
+
+	#l2_signer: Signer;
+	#address: Address;
+	get address(): Address { return this.#address; }
+
+	get #enclave() { return this.#internals.enclave!; }
+	// Filled dynamically when we receive configs.
+	#chains = new Map<Chain, ChainSession>();
+	#blockchainWriteCtors: BackendSessionConstructors;
+	#receiptDispatcher = new ReceiptDispatcher();
+
+
+	// Event handling.
+	#l1_event_emitters = new LedgerEventEmitters;
+	#internal_l1_events: LedgerEventHandlers =
+		new LedgerEventHandlers(this.#l1_event_emitters);
+	get l1_events(): LedgerEventHandlers
+		{ return new LedgerEventHandlers(this.#l1_event_emitters); }
+
+	constructor(
+		l2signer: Signer,
+		enclaveConn: Enclave | URL,
+		backendCtors: BackendSessionConstructors
+	) {
+		const internals = new AppInternals((cfg) => this.#on_config(cfg));
+		super(enclaveConn, l2signer, backendCtors, internals);
+		this.#internals = internals;
+
+		this.#l2_signer = l2signer;
+		this.#address = l2signer.address();
+		this.#blockchainWriteCtors = backendCtors;
+		this.#internals.l2.receipt.on((e) => this.#receiptDispatcher.watch(e));
 	}
 
 	async leave(
 		chain?: number,
 		notify?: (message: string, stage: number, maxStages: number) => void,
-	): Promise< Map<number, TransactionGenerator<Bs[number]>> > {
+	): Promise< Map<number, UnsignedTxBatch> > {
 		let skipped = 0;
-		let cb: ErdstallEventHandler<"phaseshift", never>;
 		let atStage = 1;
 		let maxStages = 3;
-		const p = new Promise<void>((accept) => {
-			cb = () => {
+		const sealed = new Promise<void>((accept) => {
+			let cb = () => {
 				// One Epoch when the current epoch ends for which we receive the ExitProof. (Challenge duration)
 				// One further epoch: response duration.
 				// One more epoch: Freeze enactment / propagation.
 				if (skipped < 3) {
 					skipped++;
 				} else {
+					this.#internals.l2.phaseshift.off(cb);
 					accept();
 				}
 			};
-			this.on_internal("phaseshift", cb);
+			// NOTE IMPROVE: unreliable if we are at an epoch shift. We should get the epoch the transaction happened in as part of the TX receipt to be completely race-free. And then we want to await for the balance proofs etc. Also, instead of awaiting phaseshift events, we would rather wait for a timestamp according to our time. That way, the phaseshift event becomes more of a "we just persisted" notification or something, but no longer required for this kind of stuff.
+			this.#internals.l2.phaseshift.on(cb);
 		});
 		notify?.("awaiting exit proof", atStage++, maxStages);
 		const exitProof = (await this.exit(chain)).accounts.get((this.address).key)!;
 
 		notify?.("awaiting epoch sealing", atStage++, maxStages);
-		await p.then(() => this.off_internal("phaseshift", cb));
+		await sealed;
 		notify?.("withdrawing", atStage++, maxStages);
 
 
-		const transactions = new Map<number, TransactionGenerator<Bs[number]>>();
+		const transactions = new Map<number, UnsignedTxBatch>();
 		for(const [address, chains] of exitProof.proofs.entries())
 		{
 			for(let [chain, proofs] of chains.entries())
@@ -280,82 +308,89 @@ export class Session<Bs extends Backend[]>
 		chain: number,
 		epoch: bigint,
 		exitProof: ChainProofChunk[],
-	): Promise<TransactionGenerator<Bs[number]>> {
-		return this.clients.get(chain)!.withdraw(epoch, exitProof);
+	): Promise<UnsignedTxBatch> {
+		return this.#chains.get(chain)!.withdraw(epoch, exitProof);
 	}
 
 	async deposit(
 		chain: number,
 		asset: ChainAssets,
-	): Promise<TransactionGenerator<Bs[number]>> {
-		return this.clients.get(chain)!.deposit(asset);
+	): Promise<UnsignedTxBatch> {
+		return this.#chains.get(chain)!.deposit(asset);
 	}
 
-	async createOffer(
-		offer: ChainAssets,
-		expect: ChainAssets,
-	): Promise<TradeOffer> {
-		const o = new TradeOffer(this.address, offer, expect);
-		return o.sign(this.l2signer);
+	async signTx(tx: UnsignedTx): Promise<SignedTx>
+	{
+		const chain = this.#chains.get(tx.chain);
+		if(!chain)
+			throw new Error(`Transaction is for unsupported chain ${
+				getChainName(tx.chain)
+			}`);
+
+		return await chain.signTx(tx);
 	}
 
-	async acceptTrade(offer: TradeOffer): Promise<PendingTransaction> {
-		if (!this.initialized) {
-			throw ErrUnitialisedClient;
-		}
-		const nonce = await this.nextNonce();
-		const tx = new Trade(this.address, nonce, offer);
-		await tx.sign(this.l2signer);
-		const hash = tx.hash();
-		const receipt = this.receiptDispatcher.register(hash);
-		const accepted = this.enclaveWriter.trade(tx);
-		return { receipt, accepted };
+	async signTxBatch(txs: UnsignedTxBatch): Promise<SignedTxBatch> {
+		const chain = this.#chains.get(txs.chain);
+		if(!chain)
+			throw new Error(`Transaction batch is for unsupported chain ${
+				getChainName(txs.chain)
+			}`);
+
+		return await chain.signTxBatch(txs);
 	}
 
-	private onConfigHandler: ErdstallEventHandler<"config", Bs[number]> = (
-		config,
-	) => {
+	async sendTx(tx: SignedTx): Promise<TxReceipt> {
+		const chain = this.#chains.get(tx.chain);
+		if(!chain)
+			throw new Error(`Transaction is for unsupported chain ${
+				getChainName(tx.chain)
+			}`);
+
+		return await chain.sendTx(tx);
+	}
+
+	async sendTxBatch(txs: SignedTxBatch): Promise<TxReceiptBatch> {
+		const chain = this.#chains.get(txs.chain);
+		if(!chain)
+			throw new Error(`Transaction batch is for unsupported chain ${
+				getChainName(txs.chain)
+			}`);
+
+		return await chain.sendTxBatch(txs);
+	}
+
+	#on_config(cfg: ClientConfig): void
+	{
 		// Construct all requested session backends.
-		for (const chainCfg of config.chains) {
-			if(!this.blockchainWriteCtors.hasOwnProperty(chainCfg.type))
+		for (const chainCfg of cfg.chains) {
+			if(!this.#blockchainWriteCtors.hasOwnProperty(chainCfg.data.type()))
 			{
 				console.warn(`No backend configured for ${
-						chainCfg.type
+						chainCfg.data.type()
 					} chain <${
 						chainCfg.id
 					}>: not creating a backend client.`);
 					continue;
 			}
 
-			if(this.l2signer.type() !== chainCfg.type)
+			if(this.#address.type() !== chainCfg.data.type())
 			{
 				console.warn(`No compatible signer for ${
-						chainCfg.type
+						chainCfg.data.type()
 					} chain <${
 						chainCfg.id
 					}>: not creating a backend client.`);
 				continue;
 			}
 
-			const ctor = this.blockchainWriteCtors[chainCfg.type]!;
-			this.clients.set(
+			const ctor = (this.#blockchainWriteCtors as any)[chainCfg.data.type()]!;
+			this.#chains.set(
 				chainCfg.id,
-				(ctor.initializer as unknown as any)(chainCfg, this.l2signer));
-		}
-
-		// Forward all cached events to respective clients.
-		for (const [_, session] of this.clients) {
-			for (const [ev, cbs] of this.erdstallEventHandlerCache) {
-				cbs.forEach((cb) => session.on(ev, cb));
-			}
-
-			for (const [ev, cbs] of this.erdstallOneShotHandlerCache) {
-				cbs.forEach((cb) => session.once(ev, cb));
-			}
+				(ctor.initializer as unknown as any)(
+					chainCfg,
+					this.#l2_signer,
+					this.#l1_event_emitters) as ChainSession);
 		}
 	};
-
-	initialize(_timeout?: number): Promise<void> {
-		return super.initialize(_timeout, this.onConfigHandler);
-	}
 }

@@ -17,7 +17,7 @@ export class TxAccepted extends ErdstallObject {
 	public objectType(): any {
 		return TxAccepted;
 	}
-	protected objectTypeName(): string {
+	override objectTypeName(): string {
 		return txAcceptedTypeName;
 	}
 }

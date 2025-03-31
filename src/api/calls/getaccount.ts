@@ -9,7 +9,7 @@ const getAccountTypeName = "GetAccount";
 
 @jsonObject
 export class GetAccount extends ErdstallObject {
-	@jsonMember(Address) who: Address<Crypto>;
+	@jsonMember(() => Address) who: Address<Crypto>;
 
 	constructor(who: Address<Crypto>) {
 		super();
@@ -19,7 +19,7 @@ export class GetAccount extends ErdstallObject {
 	public objectType(): any {
 		return GetAccount;
 	}
-	protected objectTypeName(): string {
+	override objectTypeName(): string {
 		return getAccountTypeName;
 	}
 }

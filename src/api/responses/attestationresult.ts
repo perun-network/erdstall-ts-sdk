@@ -10,24 +10,23 @@ import {
 } from "#erdstall/export/typedjson";
 import { ErdstallObject, registerErdstallType } from "#erdstall/api";
 import * as ledger from "#erdstall/ledger";
-import { Chain } from "#erdstall/ledger/chain";
-import * as crypto from "#erdstall/crypto";
-import { ProcessorInitReportData } from "#erdstall/ledger/backend/processor_data";
-import { BackendAddress } from "#erdstall/erdstall";
-import { Backend } from "#erdstall/ledger/backend";
+import { Chain } from "#erdstall/ledger";
+import { Address } from "#erdstall/crypto";
 
 const typeName = "AttestResponse";
+
+type ProcessorInitReportData = Uint8Array;
 
 @jsonObject
 export class Parameters {
 	@jsonU64Member() powDepth: bigint;
 	@jsonU64Member() epochDuration: bigint;
 	@jsonU64Member() initBlock: bigint;
-	@jsonMember(crypto.Address) tee: crypto.Address<crypto.Crypto>;
-	@jsonMember(crypto.Address) contract: crypto.Address<crypto.Crypto>;
+	@jsonMember(() => Address) tee: Address;
+	@jsonMember(() => Address) contract: Address;
 
-	@jsonMapMember(String, () => crypto.Address, { shape: MapShape.OBJECT })
-	tokenHolders: Map<string, crypto.Address<crypto.Crypto>>;
+	@jsonMapMember(String, () => Address, { shape: MapShape.OBJECT })
+	tokenHolders: Map<string, Address>;
 
 	@jsonMember(String) network: string;
 
@@ -35,9 +34,9 @@ export class Parameters {
 		powDepth: bigint,
 		epochDuration: bigint,
 		initBlock: bigint,
-		tee: crypto.Address<crypto.Crypto>,
-		contract: crypto.Address<crypto.Crypto>,
-		tokenHolders: Map<string, crypto.Address<crypto.Crypto>>,
+		tee: Address,
+		contract: Address,
+		tokenHolders: Map<string, Address>,
 		network: string,
 	) {
 		this.powDepth = powDepth;
@@ -51,14 +50,14 @@ export class Parameters {
 }
 
 @jsonObject
-export class AttestationReportChainData<B extends Backend> {
-	@jsonMember(() => crypto.Address)
-	address: BackendAddress<B>;
-	@jsonMember(() => ProcessorInitReportData)
-	processorData: ProcessorInitReportData<B>;
+export class AttestationReportChainData {
+	@jsonMember(() => Address)
+	address: Address;
+	//@jsonMember(() => ProcessorInitReportData)
+	processorData: ProcessorInitReportData;
 	constructor(
-		address: BackendAddress<B>,
-		processorData: ProcessorInitReportData<B>,
+		address: Address,
+		processorData: ProcessorInitReportData,
 	) {
 		this.address = address;
 		this.processorData = processorData;
@@ -67,16 +66,16 @@ export class AttestationReportChainData<B extends Backend> {
 
 @jsonObject
 export class AttestationReportData {
-	@jsonMember(Parameters) params: Parameters;
-	@jsonMapMember(Number, AttestationReportChainData) chains: Map<
+	@jsonMember(() => Parameters) params: Parameters;
+	@jsonMapMember(Number, () => AttestationReportChainData) chains: Map<
 		Chain,
-		AttestationReportChainData<Backend>
+		AttestationReportChainData
 	>;
 	@jsonU64Member() nonce: bigint;
 
 	constructor(
 		p: Parameters,
-		chains: Map<Chain, AttestationReportChainData<Backend>>,
+		chains: Map<Chain, AttestationReportChainData>,
 		nonce: bigint,
 	) {
 		this.params = p;
@@ -87,7 +86,7 @@ export class AttestationReportData {
 
 @jsonObject
 export class AttestationResult {
-	@jsonMember(AttestationReportData) data: AttestationReportData;
+	@jsonMember(() => AttestationReportData) data: AttestationReportData;
 	@jsonMember(String) report: string;
 
 	constructor(data: AttestationReportData, report: string) {
@@ -98,7 +97,7 @@ export class AttestationResult {
 
 @jsonObject
 export class AttestResponse extends ErdstallObject {
-	@jsonMember(AttestationResult) attestation: AttestationResult;
+	@jsonMember(() => AttestationResult) attestation: AttestationResult;
 
 	constructor(attestation: AttestationResult) {
 		super();
@@ -108,7 +107,7 @@ export class AttestResponse extends ErdstallObject {
 	public objectType(): any {
 		return AttestResponse;
 	}
-	protected objectTypeName(): string {
+	override objectTypeName(): string {
 		return typeName;
 	}
 }

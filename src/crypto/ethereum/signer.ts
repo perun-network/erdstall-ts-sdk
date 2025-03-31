@@ -1,36 +1,53 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { Signer as EthersSigner, Provider, ethers } from "ethers";
-import { Signer, Address, Signature } from "#erdstall/crypto";
+import {
+	Signer as EthersSigner,
+	Provider,
+	VoidSigner,
+	Wallet,
+	BaseWallet,
+	TransactionRequest,
+	ethers
+} from "ethers";
+import { Signer, Address, Signature, Crypto } from "#erdstall/crypto";
 import { EthereumSignature } from "./signature";
 import { EthereumAddress } from "./address";
+import { EthTxSigner } from "#erdstall/ledger/backend/ethereum/transaction";
+import { Chain } from "#erdstall/ledger";
 
-// Compile-time check that the EthersSigner implements the Signer interface.
-export class EthereumSigner implements Signer<"ethereum"> {
-	#ethersSigner: EthersSigner;
+export abstract class EthereumSigner extends Signer<"ethereum">
+{
+	#address: EthereumAddress;
 
-	get ethersSigner(): EthersSigner { return this.#ethersSigner; }
+	// For populating a transaction without signing.
+	voidSigner(p?: Provider): VoidSigner
+		{ return new VoidSigner(this.#address.toString(), p); }
 
-	connect(p: Provider) { this.#ethersSigner = this.#ethersSigner.connect(p); }
-	// hack: if typescript makes trouble with a separate import of ethers, use this instead.
-	connect_any(p: any) { this.connect(p as Provider); }
+	address(): EthereumAddress { return this.#address; }
 
-	constructor(ethersSigner: EthersSigner) {
-		this.#ethersSigner = ethersSigner;
+	constructor(address: EthereumAddress) {
+		super();
+		this.#address = address;
 	}
 
-	type(): "ethereum" { return "ethereum"; }
+	override type(): "ethereum" { return "ethereum"; }
 
-	async sign(message: Uint8Array): Promise<Signature<"ethereum">> {
-		const sig = await this.ethersSigner.signMessage(
-			ethers.getBytes(ethers.keccak256(message)));
-		return new EthereumSignature(ethers.getBytes(sig));
+	static async fromEthersSigner(s: EthersSigner): Promise<EthereumSigner>
+	{
+		return new EthereumEthersSigner(
+			s,
+			EthereumAddress.fromString(await s.getAddress()));
 	}
 
-	async address(): Promise<EthereumAddress> {
-		return EthereumAddress.fromString(await this.ethersSigner.getAddress());
-	}
+
+	// TODO: make sure this does not allow us to sign L1 transactions.
+	abstract sign(message: Uint8Array): Promise<EthereumSignature>;
+	// NOTE IMPROVE SECURITY: might want to move that to a #private function that gets passed to EthTxSigner instead.
+	abstract signTransaction(tx: TransactionRequest): Promise<string>;
+
+	toTxSigner(chain: Chain, p: Provider): EthTxSigner
+		{ return new EthTxSigner(chain, this, p); }
 
 	// Generates a unique random custodial account. Returns a signer, its
 	// associated account's address, and the private key used for restoring
@@ -41,7 +58,7 @@ export class EthereumSigner implements Signer<"ethereum"> {
 	} {
 		let wallet = ethers.Wallet.createRandom();
 		return {
-			signer: new EthereumSigner(wallet),
+			signer: new EthereumCustodialSigner(wallet),
 			privateKey: wallet.privateKey,
 		};
 	}
@@ -49,9 +66,54 @@ export class EthereumSigner implements Signer<"ethereum"> {
 	// Restores a custodial account from its private key, as returned by
 	// `generateCustodialAccount()`. Returns a signer and the associated
 	// account's address.
-	static restoreCustodialAccount(privateKey: string): EthereumSigner {
-		let signer = new ethers.Wallet(privateKey);
-		return new EthereumSigner(signer);
+	static restoreCustodialAccount(privateKey: string): EthereumSigner
+	{
+		let wallet = new ethers.Wallet(privateKey);
+		return new EthereumCustodialSigner(wallet);
 	}
 }
 
+export class EthereumCustodialSigner extends EthereumSigner {
+	#wallet: BaseWallet;
+
+	constructor(wallet: BaseWallet)
+	{
+		super(EthereumAddress.fromString(wallet.address));
+		this.#wallet = wallet;
+	}
+
+	override async sign(message: Uint8Array): Promise<EthereumSignature>
+	{
+		const sig = await this.#wallet.signMessage(
+			ethers.getBytes(ethers.keccak256(message)));
+		return new EthereumSignature(ethers.getBytes(sig));
+	}
+
+	override async signTransaction(tx: TransactionRequest): Promise<string>
+		{ return await this.#wallet.signTransaction(tx); }
+}
+
+export class EthereumEthersSigner extends EthereumSigner {
+	#ethersSigner: EthersSigner;
+
+	constructor(signer: EthersSigner, address: EthereumAddress)
+	{
+		super(address);
+		this.#ethersSigner = signer;
+	}
+
+	override async sign(message: Uint8Array): Promise<EthereumSignature>
+	{
+		const sig = await this.#ethersSigner.signMessage(
+			ethers.getBytes(ethers.keccak256(message)));
+		return new EthereumSignature(ethers.getBytes(sig));
+	}
+
+	override async signTransaction(tx: TransactionRequest): Promise<string>
+		{ return await this.#ethersSigner.signTransaction(tx); }
+}
+
+/* TODO: Injected signers are not so simple to use properly:
+	- Signer needs to handle disconnects, (re-)connection prompts, and ensuring the injected signer has the right active account and chain.
+	- We want to have a proper utility for querying various injected wallets, and letting the user choose them. */
+//export class EthereumInjectedSigner extends EthereumSigner { }

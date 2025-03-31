@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { BackendAddress } from "#erdstall/erdstall";
+import { EthereumAddress } from "#erdstall/crypto/ethereum";
 import {
 	Amount,
 	Asset,
@@ -13,16 +13,20 @@ import {
 	EncodedChainProof,
 	Encoder,
 } from "#erdstall/ledger/backend/encoder";
-import { Chain } from "#erdstall/ledger/chain";
+import { Chain } from "#erdstall/ledger";
 import { Erdstall } from "#erdstall/ledger/backend/ethereum/contracts/contracts/Erdstall";
 import { ABIEncoder } from "#erdstall/api/util";
 
 import { encodePackedAssets } from "./ethwrapper";
 
-export class EthereumEncoder implements Encoder<"ethereum"> {
-	encode(desc: ChainProofDesc<"ethereum">): EncodedChainProof {
+export class EthereumEncoder implements Encoder {
+	encode(desc: ChainProofDesc): EncodedChainProof {
 		const exitValues = new Array<ChainAssets>();
 		const recoveryValues = new Array<ChainAssets>();
+
+		if(!(desc.address instanceof EthereumAddress))
+			throw new Error("wrong address type in balance proof");
+		let addr = desc.address.toString();
 
 		for (const val of desc.proofs.exit) {
 			exitValues.push(val.funds);
@@ -62,7 +66,7 @@ export class EthereumEncoder implements Encoder<"ethereum"> {
 function abiEncodeChainProofs(
 	epoch: bigint,
 	chain: Chain,
-	user: BackendAddress<"ethereum">,
+	user: EthereumAddress,
 	startIdx: number,
 	count: number,
 	exit: boolean,

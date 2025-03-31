@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { Chain } from "#erdstall/ledger/chain";
+import { Chain } from "#erdstall/ledger";
 import { Address, Crypto } from "#erdstall/crypto";
 import { ethers } from "ethers";
 import { toHex } from "#erdstall/utils/hexbytes";

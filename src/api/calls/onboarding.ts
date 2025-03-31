@@ -7,7 +7,7 @@ import { Address, Crypto } from "#erdstall/crypto";
 
 @jsonObject
 export class Onboarding extends ErdstallObject {
-	@jsonMember(Address) who: Address<Crypto>;
+	@jsonMember(() => Address) who: Address<Crypto>;
 
 	constructor(who: Address<Crypto>) {
 		super();
@@ -17,7 +17,7 @@ export class Onboarding extends ErdstallObject {
 	public objectType(): any {
 		return Onboarding;
 	}
-	protected objectTypeName(): string {
+	override objectTypeName(): string {
 		return "Onboarding";
 	}
 }

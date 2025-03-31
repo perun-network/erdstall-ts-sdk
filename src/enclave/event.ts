@@ -12,12 +12,4 @@ const event = [
 	"error",
 ] as const;
 
-/**
- * All event names which can be listened for and are emitted by the enclave
- * running Erdstall.
- */
-export type EnclaveEvent = typeof event[number];
-
-export function isEnclaveEvent(v: any): v is EnclaveEvent {
-	return event.includes(v);
-}
+export abstract class EnclaveEvent {}

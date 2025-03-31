@@ -1,32 +1,76 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { ChainProofChunk, ClientConfig } from "#erdstall/api/responses";
-import { ErdstallBackendSession } from "#erdstall/erdstall";
+import { ChainProofChunk, ClientConfig, ChainConfig } from "#erdstall/api/responses";
+import { ChainSession } from "#erdstall/session";
+import { LedgerEventEmitters } from "#erdstall/event";
 import { ChainAssets, Amount, Tokens } from "#erdstall/ledger/assets";
-import { StageName, StageTransaction, TransactionGenerator } from "#erdstall/utils";
+import { Chain, getChainName } from "#erdstall/ledger";
 import { SubstrateSigner } from "#erdstall/crypto/substrate";
 import { SubstrateClient } from "./client";
+import { SubstrateChainConfig } from "./chainconfig";
 
-import { ApiPromise } from "@polkadot/api";
+import {
+	UnsignedTx,
+	UnsignedTxBatch,
+	SignedTx,
+	SignedTxBatch,
+	TxReceipt,
+	TxReceiptBatch
+} from "#erdstall/ledger/backend";
+import {
+	SubstrateTxSigner,
+	UnsignedSubstrateTransaction,
+	SubstrateTxSender,
+	SignedSubstrateTransaction
+} from "./txs";
 
-export class SubstrateSession
-	extends SubstrateClient
-	implements ErdstallBackendSession<"substrate">
-{
-	private signer: SubstrateSigner;
-	private api: Promise<ApiPromise>;
-	private chain: number;
+import { ApiPromise, WsProvider } from "@polkadot/api";
+import { API } from "./txs";
+
+export class SubstrateSession extends ChainSession {
+	#signer: SubstrateSigner;
+	#api: Promise<API>;
+	#chain: Chain;
+	#events: LedgerEventEmitters;
+
+	#txsender: Promise<SubstrateTxSender>;
+	#txsigner: Promise<SubstrateTxSigner>;
 
 	constructor(
 		signer: SubstrateSigner,
-		chain: number,
+		chain: Chain,
 		wsProvider: URL,
+		events: LedgerEventEmitters
 	) {
-		super(wsProvider);
-		this.signer = signer;
-		this.api = ApiPromise.create({ provider: this.provider });
-		this.chain = chain;
+		super();
+		this.#chain = chain;
+		this.#signer = signer;
+		this.#events = events;
+		const api = ApiPromise.create({
+			provider: new WsProvider(wsProvider.toString())
+		});
+		this.#api = api.then(api => new API(chain, (api.tx as any).wildcard));
+		this.#txsigner = (async() => {
+			return new SubstrateTxSigner(chain, await api, signer);
+		})();
+		// TODO: ???
+		this.#txsender = Promise.resolve(new SubstrateTxSender(chain));
+	}
+
+	static fromConfig(
+		config: ChainConfig,
+		signer: SubstrateSigner,
+		events: LedgerEventEmitters): SubstrateSession
+	{
+		if(!(config.data instanceof SubstrateChainConfig))
+			throw new Error(`Config must be substrate config, is ${config.data.type()}`);
+
+		return new SubstrateSession(
+			signer,
+			config.id,
+			new URL(config.data.blockStreamLAddr),
+			events);
 	}
 
 	static bigintABI(v: bigint): Uint8Array {
@@ -38,108 +82,89 @@ export class SubstrateSession
 		return ret;
 	}
 
-	private async chunk_txs(txs: any[]): Promise<any[]> {
-		let api = await this.api;
-		const ret = [];
+	override async signTx(tx: UnsignedTx): Promise<SignedTx>
+	{
+		if(!(tx instanceof UnsignedSubstrateTransaction))
+			throw new Error("Invalid transaction type, expected ethereum transaction");
+		return await (await this.#txsigner).signing_session(async(session: any) => {
+			return await tx.sign(await this.#txsigner, session);
+		});
+	}
 
-		const batchSize = 16;
+	override async signTxBatch(txs: UnsignedTxBatch): Promise<SignedTxBatch>
+	{
+		/*if(!(txs instanceof UnsignedSubstrateTransaction))
+			throw new Error("Invalid transaction type, expected ethereum transaction");*/
+		return await (await this.#txsigner).signing_session(async(session: any) => {
+			return await txs.sign(await this.#txsigner, session);
+		});
+	}
 
+	/* NOTE IMPROVE: we can do TX batching like this, but for now it's needlessly complicating our efforts:
 		while(txs.length)
 		{
 			const batch = api.tx.utility.batch(txs.slice(0, batchSize));
 			ret.push(batch);
 			txs = txs.slice(batchSize);
 		}
-
-		return ret;
-	}
+	*/
 
 	async deposit(
 		assets: ChainAssets,
-	): Promise<TransactionGenerator<"substrate">> {
-		let api = await this.api;
-		const txs: any[] = [];
-		for(let [assetID, asset] of assets.ordered())
-		{
-			let calls: Object[];
-			if(asset instanceof Amount) {
-				calls = [{
-					origin: assetID.origin(),
-					asset_type: assetID.type(),
-					primary_id: assetID.localID(),
-					secondary_id: (asset as Amount).toJSON(),
-				}];
-			} else {
-				calls = (asset as Tokens).value.map(id => ({
-					origin: assetID.origin(),
-					asset_type: assetID.type(),
-					primary_id: assetID.localID(),
-					secondary_id: id,
-				}));
-			}
+	): Promise<UnsignedTxBatch> {
+		let ordered = assets.ordered();
+		let api = await this.#api;
+		
+		let txs: UnsignedTx[] = [];
+		for(const [asset, amount] of ordered)
+			txs.push(...api.deposit(asset, amount));
 
-			for(let call of calls)
-				txs.push(api.tx.erdstall.deposit(call));
-		}
-		let chunks = await this.chunk_txs(txs);
-		return { stages: this.issueTXs(chunks), numStages: chunks.length };
+		return new UnsignedTxBatch(txs);
 	}
 	async withdraw(
 		epoch: bigint,
 		exitProof: ChainProofChunk[],
-	): Promise<TransactionGenerator<"substrate">> {
-		let api = await this.api;
+	): Promise<UnsignedTxBatch> {
+		let api = await this.#api;
 		const txs: any[] = [];
 		for (let i = 0; i <  exitProof.length; i++) {
-			const chunk = exitProof[i];
-			const funds = chunk.funds.ordered();
-			if(funds.length != 1) throw new Error("expected chunks for substrate to have only one asset per chunk.");
-			let [assetID, asset] = funds[0];
-			let call: any = {
-				epoch: epoch,
-				origin: this.chain,
-				account: (await this.signer.address()).toJSON(),
-				exit_flag: true,
-
-				chunk_index: i,
-				chunk_last: exitProof.length-1,
-
-				asset_origin: assetID.origin(),
-				asset_type: assetID.type(),
-				primary_id: assetID.localID(),
-			};
-
-			if(asset instanceof Amount) {
-				call.secondary_id = (asset as Amount).toJSON();
-			} else {
-				if((asset as Tokens).value.length != 1)
-					throw new Error(`expected single NFT, got ${
-						(asset as Tokens).value.length
-					} NFTs in one chunk`);
-				call.secondary_id = (asset as Tokens).value[0];
-			}
-
-			txs.push(["withdraw", api.tx.erdstall.withdraw(
-				call,
-				chunk.sig.toBytes())]);
+			txs.push(...api.withdraw({
+				proofs: exitProof,
+				chunk: i,
+				user: this.#signer.address(),
+				exit: true,
+				epoch: epoch
+			}));
 		}
 
-		let chunks = await this.chunk_txs(txs);
-		return { stages: this.issueTXs(chunks), numStages: chunks.length };
+		return new UnsignedTxBatch(txs);
 	}
 
-	private async *issueTXs(
+	override async sendTx(tx: SignedTx): Promise<TxReceipt>
+	{
+		if(!(tx instanceof SignedSubstrateTransaction))
+			throw new Error("Invalid transaction type, expected substrate transaction");
+		console.log(`SubstrateSession.sendTx() on ${getChainName(this.#chain)}`);
+		return await tx.send(await this.#txsender);
+	}
+
+	override async sendTxBatch(txs: SignedTxBatch): Promise<TxReceiptBatch>
+	{
+		return await txs.send(await this.#txsigner, await this.#txsender);
+	}
+
+	/*private async *issueTXs(
 		txs: [StageName<"substrate">, any][]
 	): AsyncGenerator<[
 		StageName<"substrate">,
 		StageTransaction<"substrate">
 	], void, void> {
-		const api = await(this.api);
+		const api = await(this.#api);
 		for(let i = 0; i < txs.length; ++i)
 		{
 			const [name, batch] = txs[i];
 			const status = new Promise<void>((accept, reject) => {
-				batch.signAndSend(this.signer.keyPair, ({status, events}: {
+				batch.signAndSend(this.signer.keyPair, {nonce: 0}, ({status, events}: {
 					status: any,
 					events: any
 				}) => {
@@ -177,25 +202,5 @@ export class SubstrateSession
 			}
 		}
 		throw new Error("no transactions to be sent!");
-	}
-}
-
-export function mkDefaultSubstrateSessionConstructor(): {
-	backend: "substrate";
-	arg: { provider: URL; signer: SubstrateSigner };
-	initializer: (c: ClientConfig) => SubstrateSession;
-} {
-	const ret: {
-		backend: "substrate";
-		arg: { provider: URL; signer: SubstrateSigner };
-		initializer: (c: ClientConfig) => SubstrateSession;
-	} = {
-		backend: "substrate",
-		arg: {
-			provider: new URL("wss://rpc-rococo.bajun.network"),
-			signer: (() => { throw new Error("not implemented"); })()
-		},
-		initializer: (_c: ClientConfig) =>
-			new SubstrateSession(ret.arg.signer, 1337, ret.arg.provider),
-	};
+	}*/
 }

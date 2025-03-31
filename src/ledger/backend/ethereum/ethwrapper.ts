@@ -10,8 +10,15 @@ import {
 	TypedDeferredTopicFilter as TypedEventFilter,
 	TypedContractEvent as TypedEvent,
 } from "./contracts/common";
-import { ErdstallEventHandler } from "#erdstall";
-import { LedgerEvent, Chain } from "#erdstall/ledger";
+import {
+	LedgerEvent,
+	Chain,
+	Frozen,
+	Deposited,
+	Withdrawn,
+	Challenged,
+	ChallengeResponded
+} from "#erdstall/ledger";
 import { Asset, ChainAssets, Amount, Tokens } from "#erdstall/ledger/assets";
 import { AssetID } from "#erdstall/crypto";
 import { TokenType } from "./tokentype";
@@ -22,135 +29,75 @@ import {
 	EthereumSignature as Signature,
 } from "#erdstall/crypto/ethereum";
 
-// Listener is used internally by Typechain but is not exposed.
-export type Listener = (...args: Array<any>) => void;
-export function ethCallbackShim<T extends LedgerEvent>(
-	erdstall: Erdstall,
-	ev: T,
-	cb: ErdstallEventHandler<typeof ev, "ethereum">,
-): Listener;
-export function ethCallbackShim(
-	erdstall: Erdstall,
-	ev: LedgerEvent,
-	cb: ErdstallEventHandler<typeof ev, "ethereum">,
-): Listener {
-	type EEH<T extends LedgerEvent> = ErdstallEventHandler<T, "ethereum">;
-	switch (ev) {
-		case "Frozen":
-			return wrapFrozen(erdstall, cb as EEH<typeof ev>);
-		case "Deposited":
-			return wrapDeposited(erdstall, cb as EEH<typeof ev>);
-		case "Withdrawn":
-			return wrapWithdrawn(erdstall, cb as EEH<typeof ev>);
-		case "Challenged":
-			return wrapChallenged(erdstall, cb as EEH<typeof ev>);
-		case "ChallengeResponded":
-			return wrapChallengeResponded(
-				erdstall,
-				cb as EEH<typeof ev>,
-			);
+
+export function wrapLedgerEvent(
+	event: string,
+	chain: Chain,
+	...data: any
+): LedgerEvent|undefined {
+	switch(event) {
+	case "Frozen":
+		return wrapFrozen(chain, ...data);
+	case "Deposited":
+		return wrapDeposited(chain, ...data);
+	case "Withdrawn":
+		return wrapWithdrawn(chain, ...data);
+	case "Challenged":
+		return wrapChallenged(chain, ...data);
+	case "ChallengeResponded":
+		return wrapChallengeResponded(chain, ...data);
+	default:
+		console.error("unhandled event type", event, ...data);
 	}
 }
 
 function wrapFrozen(
-	erdstall: Erdstall,
-	cb: ErdstallEventHandler<"Frozen", "ethereum">,
-): Listener {
-	type tp = InstanceTypes<typeof erdstall.filters.Frozen>;
-	const wcb: TypedListener<TypedEvent<tp[0], tp[1]>> = async (epoch) => {
-		return cb({ source: "ethereum", epoch });
-	};
-	return wcb;
+	chain: Chain,
+	...args: any
+): Frozen {
+	const [epoch] = args;
+	return new Frozen(chain, BigInt(epoch));
 }
 
-function wrapDeposited(
-	erdstall: Erdstall,
-	cb: ErdstallEventHandler<"Deposited", "ethereum">,
-): Listener {
-	type tp = InstanceTypes<typeof erdstall.filters.Deposited>;
-	const wcb: TypedListener<TypedEvent<tp[0], tp[1]>> = async (
-		epoch,
-		account,
-		tokenValue,
-	) => {
-		const assets = decodePackedAssets([tokenValue]);
-		return cb({
-			source: "ethereum",
-			epoch,
-			address: EthereumAddress.fromString(account),
-			assets: assets,
-		});
-	};
-	return wcb;
+function wrapDeposited(chain: Chain, ...args: any): Deposited {
+	const [epoch, account, tokenValue] = args;
+	return new Deposited(
+		chain,
+		BigInt(epoch),
+		EthereumAddress.fromString(account),
+		decodePackedAssets([tokenValue]));
 }
 
-function wrapWithdrawn(
-	erdstall: Erdstall,
-	cb: ErdstallEventHandler<"Withdrawn", "ethereum">,
-): Listener {
-	type tp = InstanceTypes<typeof erdstall.filters.Withdrawn>;
-	const wcb: TypedListener<TypedEvent<tp[0], tp[1]>> = async (
-		epoch,
-		account,
-		tokenValues,
-	) => {
-		const assets = decodePackedAssets(tokenValues);
-		return cb({
-			source: "ethereum",
-			epoch,
-			address: EthereumAddress.fromString(account),
-			tokens: assets,
-		});
-	};
-	return wcb;
+function wrapWithdrawn(chain: Chain, ...args: any): Withdrawn {
+	const [epoch, account, tokenValues] = args;
+	return new Withdrawn(
+		chain,
+		BigInt(epoch),
+		EthereumAddress.fromString(account),
+		decodePackedAssets(tokenValues));
 }
 
-function wrapChallenged(
-	erdstall: Erdstall,
-	cb: ErdstallEventHandler<"Challenged", "ethereum">,
-): Listener {
-	type tp = InstanceTypes<typeof erdstall.filters.Challenged>;
-	const wcb: TypedListener<TypedEvent<tp[0], tp[1]>> = async (
-		epoch,
-		account,
-	) => {
-		return cb({
-			source: "ethereum",
-			epoch,
-			address: EthereumAddress.fromString(account),
-		});
-	};
-	return wcb;
+function wrapChallenged(chain: Chain, ...args: any): Challenged
+{
+	const [epoch, account] = args;
+	return new Challenged(
+		chain,
+		BigInt(epoch),
+		EthereumAddress.fromString(account));
 }
 
-function wrapChallengeResponded(
-	erdstall: Erdstall,
-	cb: ErdstallEventHandler<"ChallengeResponded", "ethereum">,
-): Listener {
-	type tp = InstanceTypes<typeof erdstall.filters.ChallengeResponded>;
-	const wcb: TypedListener<TypedEvent<tp[0], tp[1]>> = async (
-		epoch,
-		account,
-		id,
-		count,
-		tokenValues,
-		exit,
-		sig,
-	) => {
-		const assets = decodePackedAssets(tokenValues);
-		const address = EthereumAddress.fromString(account);
-		const sigBytes = ethers.getBytes(sig);
-		return cb({
-			source: "ethereum",
-			epoch,
-			address: address,
-			tokens: assets,
-			sig: new Signature(sigBytes),
-		});
-	};
-	return wcb;
+function wrapChallengeResponded(chain: Chain, ...args: any): ChallengeResponded
+{
+	const [epoch, account, id, count, tokenValues, exit, sig] = args;
+	return new ChallengeResponded(
+		chain,
+		BigInt(epoch),
+		{index: Number(id), count: Number(count)},
+		EthereumAddress.fromString(account),
+		decodePackedAssets(tokenValues),
+		new Signature(ethers.getBytes(sig)),
+	);
 }
-
 
 function decodePackedAssetID(packed: Erdstall.AssetStructOutput): AssetID {
 	return AssetID.fromMetadata(
@@ -211,23 +158,3 @@ function decodePackedAsset(data: bigint[], type: number): Asset {
 		throw new Error(`decode: unhandled asset type: ${type}`);
 	}
 }
-
-// Typechain forces us to parse the polymorphic type arguments for the
-// `TypedListener` callback from the `TypedEventFilter`. The specific
-// interfaces and arrays containing types are not exposed. To keep this
-// futureproof we retrieve the necessary polymorphic type parameters from the
-// concrete `TypedEventFilter` instantiations.
-
-// Infer the concrete typeparameters for a given concrete `TypedEventFilter`
-// and return them as a tuple type [X, Y].
-type PolymorphicTypeParameters<T> = T extends TypedEventFilter<
-	TypedEvent<infer X, infer Y>
->
-	? [X, Y]
-	: never;
-
-// Compose both operations to retrieve the necessary types from a
-// `TypedEventFilter`.
-type InstanceTypes<T extends (...args: any) => any> = PolymorphicTypeParameters<
-	ReturnType<T>
->;

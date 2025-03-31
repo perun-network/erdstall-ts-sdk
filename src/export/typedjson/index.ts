@@ -36,4 +36,4 @@ export const JSONCfg: ITypedJSONSettings = {
 	errorHandler(e: Error): void { throw e; }
 }
 
-TypedJSON.setGlobalConfig(JSONCfg)
+TypedJSON.setGlobalConfig(JSONCfg);

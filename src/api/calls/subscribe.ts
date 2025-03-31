@@ -11,7 +11,7 @@ const subPhaseShiftName = "SubscribePhaseShifts";
 
 @jsonObject
 export class SubscribeBalanceProofs extends ErdstallObject {
-	@jsonMember(Address) who?: Address<Crypto>;
+	@jsonMember(() => Address) who?: Address<Crypto>;
 	@jsonMember(Boolean) cancel?: boolean;
 
 	constructor(who?: Address<Crypto>, cancel?: boolean) {
@@ -24,7 +24,7 @@ export class SubscribeBalanceProofs extends ErdstallObject {
 		return SubscribeBalanceProofs;
 	}
 
-	protected objectTypeName(): string {
+	override objectTypeName(): string {
 		return subBPsTypeName;
 	}
 
@@ -46,7 +46,7 @@ export class SubscribeBalanceProofs extends ErdstallObject {
 
 @jsonObject
 export class SubscribeTXs extends ErdstallObject {
-	@jsonMember(Address) who?: Address<Crypto>;
+	@jsonMember(() => Address) who?: Address<Crypto>;
 	@jsonMember(Boolean) cancel?: boolean;
 
 	constructor(who?: Address<Crypto>, cancel?: boolean) {
@@ -58,7 +58,7 @@ export class SubscribeTXs extends ErdstallObject {
 	public objectType(): any {
 		return SubscribeTXs;
 	}
-	protected objectTypeName(): string {
+	override objectTypeName(): string {
 		return subTXsTypeName;
 	}
 
@@ -90,7 +90,7 @@ export class SubscribePhaseShifts extends ErdstallObject {
 	public objectType(): any {
 		return SubscribePhaseShifts;
 	}
-	protected objectTypeName(): string {
+	override objectTypeName(): string {
 		return subPhaseShiftName;
 	}
 }
