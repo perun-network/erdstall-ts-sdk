@@ -47,6 +47,7 @@ let publishPackageJSON = {
 	version: basePackageJSON.version,
 	description: basePackageJSON.description,
 	main: basePackageJSON.main,
+	types: basePackageJSON.types,
 	exports: basePackageJSON.exports,
 	imports: basePackageJSON.imports,
 	repository: basePackageJSON.repository,
