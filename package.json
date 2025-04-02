@@ -1,6 +1,6 @@
 {
 	"name": "@polycrypt/erdstall",
-	"version": "0.3.1",
+	"version": "0.4.0",
 	"description": "SDK to interact with Erdstall Layer-2 Networks",
 	"main": "./index.js",
 	"exports": {
@@ -51,6 +51,7 @@
 	"keywords": [
 		"blockchain",
 		"ethereum",
+		"polkadot",
 		"plasma",
 		"scaling",
 		"TypeScript"
