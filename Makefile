@@ -2,10 +2,16 @@ all: ts
 
 .PHONY: test integration
 
+clean:
+	@rm -rf dist
+
 ts:
 	@yarn install -s
 	@yarn run build
 	@echo "Built erdstall-ts-sdk."
+	@if [ ! -s dist/package.json ]; \
+	then yarn run devpub; \
+	fi
 
 bindings:
 	@./scripts/genbindings.sh deps/erdstall-contracts

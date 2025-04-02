@@ -24,9 +24,9 @@ export class Amount extends Asset {
 		this.value = v;
 	}
 
-	assetType(): AssetType.Fungible { return AssetType.Fungible; }
+	override assetType(): AssetType.Fungible { return AssetType.Fungible; }
 
-	toJSON() {
+	override toJSON() {
 		return bigTo0xEven(this.value);
 	}
 
@@ -34,9 +34,9 @@ export class Amount extends Asset {
 		return new Amount(BigInt(hexString));
 	}
 
-	toString() { return this.value.toString(); }
+	override toString() { return this.value.toString(); }
 
-	typeTag(): TypeTagName {
+	override typeTag(): TypeTagName {
 		return TypeTags.Amount;
 	}
 
@@ -44,21 +44,12 @@ export class Amount extends Asset {
 		return this.value === 0n;
 	}
 
-	clone(): Asset {
-		return new Amount(BigInt(this.value));
-	}
+	override clone(): this
+		{ return new Amount(this.value) as this; }
 
-	isCompatible(asset: Asset): boolean {
-		return this.typeTag() === asset.typeTag();
-	}
-
-	sub(asset: Asset): void {
+	sub(asset: this): void {
 		if (!this.isCompatible(asset)) {
 			throw ErrIncompatibleAssets;
-		}
-
-		if (this.cmp(asset) == "lt") {
-			throw Error("subtrahend larger than minuend");
 		}
 
 		const res = this.value - (asset as Amount).value;
@@ -67,7 +58,7 @@ export class Amount extends Asset {
 		this.value = res;
 	}
 
-	add(asset: Asset): void {
+	add(asset: this): void {
 		if (!this.isCompatible(asset)) {
 			throw ErrIncompatibleAssets;
 		}
@@ -78,19 +69,15 @@ export class Amount extends Asset {
 		this.value = res;
 	}
 
-	cmp(asset: Asset): "lt" | "eq" | "gt" | "uncomparable" {
-		if (!this.isCompatible(asset)) {
-			return "uncomparable";
-		}
-
+	cmp(asset: this): -1 | 0 | 1 {
 		const x = this.value;
 		const y = (asset as Amount).value;
 		if (x < y) {
-			return "lt";
+			return -1;
 		} else if (x > y) {
-			return "gt";
+			return 1;
 		} else {
-			return "eq";
+			return 0;
 		}
 	}
 }

@@ -2,122 +2,134 @@
 "use strict";
 
 import { ErdstallObject, registerErdstallType } from "#erdstall/api";
-import { jsonObject } from "#erdstall/export/typedjson";
-import { Backend, BackendChainConfig } from "#erdstall/ledger/backend";
+import { jsonObject, jsonMember, AnyT, TypedJSON } from "#erdstall/export/typedjson";
 import { EthereumChainConfig } from "#erdstall/ledger/backend/ethereum/chainconfig";
 import { SubstrateChainConfig } from "#erdstall/ledger/backend/substrate/chainconfig";
 import { Address, Crypto } from "#erdstall/crypto";
+import { SubstrateAddress } from "#erdstall/crypto/substrate";
 import { EthereumAddress } from "#erdstall/crypto/ethereum";
 import { Chain } from "#erdstall/ledger";
 import { customJSON } from "../util";
 
-export class ChainConfig<B extends Backend> {
-	id: number;
-	type: B;
-	data: BackendChainConfig<B>;
+export class ChainConfig {
+	id: Chain;
+	data: EthereumChainConfig | SubstrateChainConfig;
 
-	constructor(id: number, type: B, data: BackendChainConfig<B>) {
+	constructor(
+		id: Chain,
+		type: string,
+		data: EthereumChainConfig | SubstrateChainConfig)
+	{
 		this.id = id;
-		this.type = type;
+		if(data.type() !== type)
+			throw new Error(`Chain config: type: "${type}", should be "${data.type()}".`);
 		this.data = data;
 	}
 
-	clone(): ChainConfig<B> {
-		return new ChainConfig<B>(this.id, this.type, this.data!.clone());
+	clone(): ChainConfig {
+		return new ChainConfig(this.id, this.data!.type(), this.data!.clone());
 	}
 
-	static fromJSON(data: any): ChainConfig<Backend> {
+	static fromJSON(data: any): ChainConfig {
 		switch (data.type) {
 			case "substrate":
-				return new ChainConfig(data.id, "substrate",
+				return new ChainConfig(data.id, data.type,
 					new SubstrateChainConfig(data.data.blockStreamLAddr));
 			case "ethereum":
-				return new ChainConfig(data.id, "ethereum",
-					new EthereumChainConfig({
-						contract: EthereumAddress.fromJSON(data.data.contract),
-						nodeRPC: data.data.nodeRPC,
-						networkID: data.data.networkID,
-						powDepth: data.data.powDepth,
-					}));
+				return new ChainConfig(data.id, data.type,
+					EthereumChainConfig.fromJSON(data.data));
 			default:
 				throw new Error(`unknown backend type: ${data.type}`);
 		}
 	}
 
-	static toJSON(me: ChainConfig<Backend>) {
-		switch (me.type) {
-			case "substrate": {
-				const _me = me as ChainConfig<"substrate">;
-				return {
-					id: me.id,
-					type: me.type,
-					data: {
-						blockStreamLAddr: _me.data.blockStreamLAddr,
-					},
-				};
-			}
-			case "ethereum": {
-				const _me = me as ChainConfig<"ethereum">;
-				return {
-					id: me.id,
-					type: me.type,
-					data: {
-						contract: _me.data.contract,
-						networkID: _me.data.networkID,
-						powDepth: _me.data.powDepth,
-					},
-				};
-			}
-		}
+	static toJSON(me: ChainConfig) {
+		return {
+			id: me.id,
+			type: me.data.type(),
+			data: me.data.toJSON()
+		};
 	}
 }
+customJSON(ChainConfig);
+
 
 const clientConfigTypeName = "ClientConfig";
 
 @jsonObject
 export class ClientConfig extends ErdstallObject {
-	chains: ChainConfig<Backend>[];
-	enclave: Map<Chain, Address<Crypto>>;
-	enclaveNativeSigner: Address<Crypto>;
+	chains: ChainConfig[];
+	enclave: Map<Chain, Address>;
+	enclaveNativeSigner: Address;
+	genesis: Date;
+	epochDuration: number;
 
 	constructor(
-		chains: ChainConfig<Backend>[],
-		enclave: Map<Chain, Address<Crypto>>,
-		enclaveNativeSigner: Address<Crypto>,
+		chains: ChainConfig[],
+		enclave: Map<Chain, Address>,
+		enclaveNativeSigner: Address,
+		genesis: Date,
+		epochDuration: number
 	) {
 		super();
 		this.chains = chains;
 		this.enclave = enclave;
 		this.enclaveNativeSigner = enclaveNativeSigner;
+		this.genesis = genesis;
+		this.epochDuration = epochDuration;
 	}
 
 	static fromJSON(data: any): ClientConfig {
-		let chains: ChainConfig<Backend>[] = [];
-		for (const conf of data.chains as ChainConfig<Backend>[]) {
+		let chains: ChainConfig[] = [];
+		for (const conf of data.chains as any[]) {
 			chains.push(ChainConfig.fromJSON(conf));
 		}
-		let enc: Map<Chain, Address<Crypto>> = new Map();
+		let enc: Map<Chain, Address> = new Map();
 		for(const key in data.enclave ?? {}) {
 			enc.set(parseInt(key), Address.fromJSON(data.enclave[key]));
 		}
 		const native = enc.get(Chain.Erdstall)!;
 		enc.delete(Chain.Erdstall);
 
-		return new ClientConfig(chains, enc, native);
+		// Workaround: defaulting settings for substrate.
+		for(const [chain, addr] of enc) {
+			if(addr instanceof SubstrateAddress) {
+				if(!chains.find(c => c.id === chain))
+				{
+					const chainCfg = new ChainConfig(
+						chain, "substrate",
+						new SubstrateChainConfig(
+							"wss://zombienet.perun.network:9999"));
+					chains.push(chainCfg);
+				}
+			}
+		}
+
+		const genesis = new Date(data.genesis);
+		const epochDuration = Number(BigInt(data.epochDuration) / 1_000_000_000n);
+
+		return new ClientConfig(chains, enc, native, genesis, epochDuration);
 	}
 
-	static toJSON(me: ClientConfig) {
-		// NOTE: Why is this hack necessary?
+	static toJSON(me: ClientConfig): any
+	{
+		let enclave: any = {};
+		for(let [chain, addr] of me.enclave.entries())
+			enclave[chain] = Address.toJSON(addr);
 		return {
-			chains: me.chains.map((ccfg) => ChainConfig.toJSON(ccfg)),
-		} as any;
+			chains: me.chains.map(ChainConfig.toJSON),
+			enclave,
+			enclaveNativeSigner: Address.toJSON(me.enclaveNativeSigner),
+			genesis: me.genesis.toISOString(),
+			epochDuration: me.epochDuration * 1_000_000_000
+		};
 	}
 
 	public objectType(): any {
 		return ClientConfig;
 	}
 
-	protected objectTypeName(): string {
+	override objectTypeName(): string {
 		return clientConfigTypeName;
 	}
 
@@ -126,7 +138,9 @@ export class ClientConfig extends ErdstallObject {
 			this.chains.map(c => c.clone()),
 			new Map<Chain, Address<Crypto>>(
 				Array.from(this.enclave.entries()).map(([c,addr]) => [c, addr.clone()])),
-			this.enclaveNativeSigner.clone()
+			this.enclaveNativeSigner.clone(),
+			this.genesis,
+			this.epochDuration
 		);
 	}
 }

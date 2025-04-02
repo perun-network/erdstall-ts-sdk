@@ -136,7 +136,13 @@ export interface ForeignAssetHolder extends BaseContract {
 
   foreignAssets: TypedContractMethod<
     [arg0: AddressLike],
-    [[string, bigint] & { localID: string; origin: bigint }],
+    [
+      [bigint, boolean, string] & {
+        origin: bigint;
+        exists: boolean;
+        localID: string;
+      }
+    ],
     "view"
   >;
 
@@ -171,7 +177,13 @@ export interface ForeignAssetHolder extends BaseContract {
     nameOrSignature: "foreignAssets"
   ): TypedContractMethod<
     [arg0: AddressLike],
-    [[string, bigint] & { localID: string; origin: bigint }],
+    [
+      [bigint, boolean, string] & {
+        origin: bigint;
+        exists: boolean;
+        localID: string;
+      }
+    ],
     "view"
   >;
   getFunction(

@@ -14,7 +14,7 @@ import canonicalize from "canonicalize";
 
 @jsonObject
 export class TradeFees {
-	@jsonMember(Address) market: Address<Crypto>;
+	@jsonMember(() => Address) market: Address<Crypto>;
 	@jsonMember(() => assets.ChainAssets) fee: assets.ChainAssets;
 
 	constructor(market: Address<Crypto>, fee: assets.ChainAssets) {
@@ -35,12 +35,12 @@ const tradeTypeName = "Trade";
 
 @jsonObject
 export class TradeOffer {
-	@jsonMember(Address) owner: Address<Crypto>;
+	@jsonMember(() => Address) owner: Address<Crypto>;
 	@jsonMember(() => assets.ChainAssets) offer: assets.ChainAssets;
 	@jsonMember(() => assets.ChainAssets) request: assets.ChainAssets;
 	@jsonU64Member() expiry: bigint;
-	@jsonMember(TradeFees) fees?: TradeFees;
-	@jsonMember(Signature) sig?: Signature<Crypto>;
+	@jsonMember(() => TradeFees) fees?: TradeFees;
+	@jsonMember(() => Signature) sig?: Signature<Crypto>;
 
 	constructor(
 		owner: Address<Crypto>,
@@ -82,7 +82,7 @@ export class TradeOffer {
 
 @jsonObject
 export class Trade extends Transaction {
-	@jsonMember(TradeOffer) offer: TradeOffer;
+	@jsonMember(() => TradeOffer) offer: TradeOffer;
 
 	constructor(sender: Address<Crypto>, nonce: bigint, offer: TradeOffer) {
 		super(sender, nonce);

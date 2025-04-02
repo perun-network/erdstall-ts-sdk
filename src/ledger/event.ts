@@ -2,9 +2,9 @@
 // by the ledger backends.
 "use strict";
 
-import { BackendAddress, BackendSignature } from "#erdstall/erdstall";
 import { ChainAssets } from "./assets";
-import { Backend } from "#erdstall/ledger/backend";
+import { Signature, Address } from "#erdstall/crypto";
+import { Chain } from "#erdstall/ledger";
 
 const event = [
 	"Frozen",
@@ -14,81 +14,92 @@ const event = [
 	"ChallengeResponded",
 ] as const;
 
-/**
- * All event names which can be listened for and are emitted by the Erdstall
- * contract.
- */
-export type LedgerEvent = (typeof event)[number];
-
-export function isLedgerEvent(v: any): v is LedgerEvent {
-	return event.includes(v);
+export abstract class LedgerEvent {
+	constructor(
+		public chain: Chain
+	) {}
 }
 
 /**
  * Deposited event struct emitted by the Erdstall contract.
  */
-export interface Deposited<Bs extends Backend[][number]> {
-	source: Bs;
-	epoch: bigint;
-	address: BackendAddress<Bs>;
-	assets: ChainAssets;
+export class Deposited extends LedgerEvent {
+	constructor(
+		chain: Chain,
+		public epoch: bigint,
+		public address: Address,
+		public assets: ChainAssets
+	) { super(chain); }
 }
 
 /**
  * Frozen event struct emitted by the Erdstall contract.
  */
-export interface Frozen<Bs extends Backend[][number]> {
-	source: Bs;
-	epoch: bigint;
+export class Frozen extends LedgerEvent {
+	constructor(
+		chain: Chain,
+		public epoch: bigint
+	) { super(chain); }
 }
 
 /**
- * OwnershipTransferrerd event struct emitted by the Erdstall contract.
+ * OwnershipTransferred event struct emitted by the Erdstall contract.
  */
-export interface OwnershipTransferrerd<Bs extends Backend[][number]> {
-	source: Bs;
-	previousOwner: BackendAddress<Bs>;
-	newOwner: BackendAddress<Bs>;
+export class OwnershipTransferred extends LedgerEvent {
+	constructor(
+		chain: Chain,
+		public previousOwner: Address,
+		public newOwner: Address
+	) { super(chain); }
 }
 
 /**
  * WithdrawalException event struct emitted by the Erdstall contract.
  */
-export interface WithdrawalException<Bs extends Backend[][number]> {
-	source: Bs;
-	epoch: bigint;
-	address: BackendAddress<Bs>;
-	token: BackendAddress<Bs>;
-	value: ChainAssets;
-	error: string;
+export class WithdrawalException extends LedgerEvent {
+	constructor(
+		chain: Chain,
+		public epoch: bigint,
+		public address: Address,
+		public token: Address,
+		public value: ChainAssets,
+		public error: string
+	) { super(chain); }
 }
 
 /**
  * Withdrawn event struct emitted by the Erdstall contract.
  */
-export interface Withdrawn<Bs extends Backend[][number]> {
-	source: Bs;
-	epoch: bigint;
-	address: BackendAddress<Bs>;
-	tokens: ChainAssets;
+export class Withdrawn extends LedgerEvent {
+	constructor(
+		chain: Chain,
+		public epoch: bigint,
+		public address: Address,
+		public tokens: ChainAssets
+	) { super(chain); }
 }
 
 /**
  * Challenged event struct emitted by the Erdstall contract.
  */
-export interface Challenged<Bs extends Backend[][number]> {
-	source: Bs;
-	epoch: bigint;
-	address: BackendAddress<Bs>;
+export class Challenged extends LedgerEvent {
+	constructor(
+		chain: Chain,
+		public epoch: bigint,
+		public address: Address
+	) { super(chain); }
 }
 
 /**
  * ChallengeResponded event struct emitted by the Erdstall contract.
  */
-export interface ChallengeResponded<Bs extends Backend[][number]> {
-	source: Bs;
-	epoch: bigint;
-	address: BackendAddress<Bs>;
-	tokens: ChainAssets;
-	sig: BackendSignature<Bs>;
+export class ChallengeResponded extends LedgerEvent {
+	constructor(
+		chain: Chain,
+		public epoch: bigint,
+		public chunks: { index: number, count: number},
+		public address: Address,
+		public tokens: ChainAssets,
+		public sig: Signature
+	) { super(chain); }
 }

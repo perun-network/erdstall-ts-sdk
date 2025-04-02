@@ -10,11 +10,11 @@ import { Keypair } from "@polkadot/util-crypto/types";
 import { SubstrateSignature } from "./signature";
 import { SubstrateAddress } from "./address";
 
-// Compile-time check that the EthersSigner implements the Signer interface.
-export class SubstrateSigner implements Signer<"substrate"> {
+export class SubstrateSigner extends Signer<"substrate"> {
 	readonly keyPair: Keypair;
 
 	constructor(keyPair: Keypair) {
+		super();
 		this.keyPair = keyPair;
 	}
 
@@ -27,14 +27,14 @@ export class SubstrateSigner implements Signer<"substrate"> {
 		return new SubstrateSignature(sig);
 	}
 
-	async address(): Promise<Address<"substrate">> {
-		return new SubstrateAddress(this.keyPair.publicKey);
-	}
+	address(): SubstrateAddress
+		{ return new SubstrateAddress(this.keyPair.publicKey); }
 
 	// Generates a unique random custodial account. Returns a signer, its
 	// associated account's address, and the private key used for restoring
 	// that account later using `restoreCustodialAccount()`.
 	// WARNING: the randomness used to generate this account is insecure.
+	// TODO: use unchecked code to access the crypto API.
 	static async generateCustodialAccount(): Promise<{
 		signer: SubstrateSigner;
 		seed: Uint8Array;
@@ -57,6 +57,14 @@ export class SubstrateSigner implements Signer<"substrate"> {
 	static restoreCustodialAccount(seed: string): SubstrateSigner {
 		let keys = sr25519PairFromSeed(seed)
 		return new SubstrateSigner(keys);
+	}
+
+	static async Alice(): Promise<SubstrateSigner> {
+		return SubstrateSigner.restoreCustodialAccount("0xe5be9a5092b81bca64be81d212e7f2f9eba183bb7a90954f7b76361f6edb5c0a");
+	}
+
+	static async Bob(): Promise<SubstrateSigner> {
+		return SubstrateSigner.restoreCustodialAccount("0x398f0c28f98885e046333d4a41c19cee4c37368a9832c6502f6cfd182e2aef89");
 	}
 }
 

@@ -13,7 +13,7 @@ const accountTypeName = "AccountResponse";
 
 @jsonObject
 export class Account extends ErdstallObject {
-	@jsonMember(ledger.Account) account: ledger.Account;
+	@jsonMember(() => ledger.Account) account: ledger.Account;
 	@jsonU64Member() epoch: bigint;
 
 	constructor(account: ledger.Account, epoch: bigint) {
@@ -26,7 +26,7 @@ export class Account extends ErdstallObject {
 		return Account;
 	}
 
-	protected objectTypeName(): string {
+	override objectTypeName(): string {
 		return accountTypeName;
 	}
 }

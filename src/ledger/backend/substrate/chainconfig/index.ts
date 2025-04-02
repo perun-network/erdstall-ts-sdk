@@ -11,4 +11,10 @@ export class SubstrateChainConfig {
 	clone() {
 		return new SubstrateChainConfig(this.blockStreamLAddr);
 	}
+
+	type(): string { return "substrate"; }
+
+	toJSON(): any {
+		return { blockStreamLAddr: this.blockStreamLAddr };
+	}
 }

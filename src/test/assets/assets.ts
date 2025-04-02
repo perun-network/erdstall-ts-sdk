@@ -14,7 +14,7 @@ import {
 } from "#erdstall/ledger/assets";
 import { newRandomTokens } from "./tokens";
 import { newRandomAmount } from "./amount";
-import { Chain } from "#erdstall/ledger/chain";
+import { Chain } from "#erdstall/ledger";
 
 // newRandomChainAssets creates an Assets type. The size is limited by `size` and
 // all included `Tokens`, if any, have a maximum size of `size`.

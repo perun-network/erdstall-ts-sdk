@@ -14,7 +14,7 @@ export function registerAddressType(
 	addressImpls.set(typeName, typeClass);
 }
 
-export abstract class Address<_C extends Crypto> {
+export abstract class Address<_C extends Crypto = Crypto> {
 	abstract type(): _C;
 	get key(): string { return JSON.stringify(Address.toJSON(this)); }
 	abstract equals(other: Address<_C>): boolean;
@@ -22,7 +22,7 @@ export abstract class Address<_C extends Crypto> {
 	abstract toJSON(): string;
 	abstract get keyBytes(): Uint8Array;
 
-	clone(): Address<_C> { return Address.fromJSON(Address.toJSON(this)) as Address<_C>; }
+	abstract clone(): this;
 
 	static ensure(addr: string | Address<Crypto>): Address<Crypto> {
 		if (addr === undefined) return addr;

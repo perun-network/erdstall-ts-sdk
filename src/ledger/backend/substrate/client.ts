@@ -1,38 +1,22 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { ErdstallBackendClient } from "#erdstall";
 import { AttestationResult, ClientConfig } from "#erdstall/api/responses";
-import { ErdstallEvent, ErdstallEventHandler } from "#erdstall/event";
+import { ErdstallEvent, LedgerEventMask } from "#erdstall/event";
 import { Account } from "#erdstall/ledger/account";
 import { Address } from "#erdstall/crypto";
-import { Backend } from "#erdstall/ledger/backend/backends";
 import { LocalAsset } from "#erdstall/ledger/assets";
+import { ChainClient } from "#erdstall/client";
 import { WsProvider } from "@polkadot/api";
 
-export class SubstrateClient implements ErdstallBackendClient<"substrate"> {
+export class SubstrateClient extends ChainClient {
 	protected readonly provider: WsProvider;
 
 	constructor(wsProvider: URL) {
+		super();
 		this.provider = new WsProvider(wsProvider.toString());
 	}
 
-	on<EV extends ErdstallEvent>(
-		ev: EV,
-		cb: ErdstallEventHandler<EV, "substrate">,
-	): void {}
-	once<EV extends ErdstallEvent>(
-		ev: EV,
-		cb: ErdstallEventHandler<EV, "substrate">,
-	): void {}
-	off<EV extends ErdstallEvent>(
-		ev: EV,
-		cb: ErdstallEventHandler<EV, "substrate">,
-	): void {}
-	removeAllListeners(): void {}
-	erdstall(): { chain: "substrate"; address: Address<"substrate"> }[] {
-		throw new Error("Method not implemented.");
-	}
 	initialize(): Promise<void> {
 		throw new Error("Method not implemented.");
 	}
@@ -44,6 +28,11 @@ export class SubstrateClient implements ErdstallBackendClient<"substrate"> {
 	}
 	attest(): Promise<AttestationResult> {
 		throw new Error("Method not implemented.");
+	}
+
+	override update_event_tracking(mask: LedgerEventMask): void
+	{
+		throw new Error("not implemented");
 	}
 }
 

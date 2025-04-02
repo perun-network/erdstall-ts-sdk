@@ -41,7 +41,7 @@ export class FullExit extends ExitMode {
 	public objectType(): Serializable<ErdstallObject> {
 		return FullExit;
 	}
-	protected objectTypeName(): string {
+	override objectTypeName(): string {
 		return fullExitTypeName;
 	}
 }
@@ -53,7 +53,7 @@ export class PartialExit extends ExitMode {
 	public objectType(): Serializable<ErdstallObject> {
 		return PartialExit;
 	}
-	protected objectTypeName(): string {
+	override objectTypeName(): string {
 		return partialExitTypeName;
 	}
 }
@@ -63,7 +63,7 @@ registerErdstallType(partialExitTypeName, PartialExit);
 
 @jsonObject
 export class ExitRequest extends Transaction {
-	@jsonMember(ExitMode)
+	@jsonMember(() => ExitMode)
 	mode?: ExitMode;
 
 	@jsonMember(Boolean)

@@ -11,7 +11,6 @@ import {
 import { Asset } from "./asset";
 import { customJSON } from "#erdstall/api/util";
 import { Address, addressKey, Crypto, AssetID } from "#erdstall/crypto";
-import { Backend } from "#erdstall/ledger/backend";
 import { Amount } from "./amount";
 import { Tokens } from "./tokens";
 import { Chain } from "../chain";
@@ -44,6 +43,9 @@ export class ChainAssets {
 		return obj;
 	}
 
+	clone(): ChainAssets
+		{ return ChainAssets.fromJSON(ChainAssets.toJSON(this)); }
+
 	addAsset(chain: Chain, localID: Uint8Array, asset: Asset) {
 		if(!this.assets.has(chain))
 			this.assets.set(chain, new LocalAssets());
@@ -54,8 +56,50 @@ export class ChainAssets {
 		} else throw new Error("Unhandled asset type");
 	}
 
-	cmp(other: ChainAssets): boolean {
-		throw new Error("Method not implemented.");
+	cmp(other: ChainAssets): -1 | 0 | 1 | undefined {
+		const lhs = this.ordered();
+		const rhs = other.ordered();
+
+		const min = lhs.length < rhs.length ? lhs : rhs;
+		const max = lhs.length < rhs.length ? rhs : lhs;
+		const minsz = min.length;
+		const maxsz = max.length;
+		const flip_sign = lhs.length < rhs.length ? 1 : -1;
+
+		let bigger = false;
+		let smaller = false;
+		for(let i = 0; i < minsz; i++)
+		{
+			let sign: number | undefined = min[i][0].cmp(max[i][0]);
+			if(sign < 0) smaller = true;
+			else if(sign > 0) bigger = true;
+			else
+			{
+				let a = min[i][1];
+				let b = max[i][1];
+
+				if(a instanceof Tokens)
+					sign = (a as Tokens).cmp(b as Tokens);
+				else
+					sign = (a as Amount).cmp(b as Amount);
+
+				if(sign === undefined)
+					return undefined;
+
+				if(sign < 0) smaller = true;
+				else if(sign > 0) bigger = true;
+			}
+
+			if(bigger && smaller)
+				return undefined;
+		}
+
+		if(minsz != maxsz)
+			smaller = true;
+
+		if(bigger && smaller) return undefined;
+
+		return (smaller ? -flip_sign : bigger ? flip_sign : 0) as any;
 	}
 
 	ordered(): [AssetID, Asset][] {
@@ -110,12 +154,14 @@ export class LocalFungibles {
 
 	addAsset(localID: Uint8Array, asset: Amount) {
 		const token = toHex(localID, "0x");
-		const a = this.assets.get(token);
+		let a = this.assets.get(token);
 		if (a !== undefined) {
 			a.add(asset);
+		} else {
+			a = asset.clone();
 		}
 
-		this.assets.set(token, asset);
+		this.assets.set(token, a);
 	}
 }
 
@@ -145,20 +191,22 @@ export class LocalNonFungibles {
 
 	addAsset(localID: Uint8Array, asset: Tokens) {
 		const token = ethers.hexlify(localID);
-		const a = this.assets.get(token);
+		let a = this.assets.get(token);
 		if (a !== undefined) {
 			a.add(asset);
+		} else {
+			a = asset.clone();
 		}
 
-		this.assets.set(token, asset);
+		this.assets.set(token, a);
 	}
 }
 
 @jsonObject
 export class LocalAssets {
-	@jsonMember(LocalFungibles)
+	@jsonMember(() => LocalFungibles)
 	public fungibles: LocalFungibles;
-	@jsonMember(LocalNonFungibles)
+	@jsonMember(() => LocalNonFungibles)
 	public nfts: LocalNonFungibles;
 	constructor(fungibles?: LocalFungibles, nfts?: LocalNonFungibles) {
 		this.fungibles = fungibles ?? new LocalFungibles();

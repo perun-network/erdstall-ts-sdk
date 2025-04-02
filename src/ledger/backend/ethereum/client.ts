@@ -1,88 +1,60 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { ErdstallBackendClient, ErdstallEventHandler } from "#erdstall";
-import { Chain, LedgerEvent } from "#erdstall/ledger";
+import { Provider } from "ethers";
+import { ChainClient } from "#erdstall/client";
+import { LedgerEventEmitters, LedgerEventMask } from "#erdstall/event";
+import { Chain, getChainName } from "#erdstall/ledger";
 import { Address } from "#erdstall/crypto";
-import { ethers, Signer } from "ethers";
-import { LocalAsset } from "#erdstall/ledger/assets";
+import { EthereumAddress } from "#erdstall/crypto/ethereum";
+import { ethers } from "ethers";
 import {
 	Erdstall__factory,
-	LedgerReadConn,
+	Erdstall,
+	EthereumChainConfig
 } from "#erdstall/ledger/backend/ethereum";
-import { ChainConfig, ClientConfig } from "#erdstall/api/responses";
-import { EthereumTokenProvider } from "./tokencache";
+import { LedgerConn } from "./writeconn";
+import { ChainConfig } from "#erdstall/api/responses";
 
-export class EthereumClient implements ErdstallBackendClient<"ethereum"> {
-	protected provider: ethers.Provider | Signer;
-	protected erdstallConn: LedgerReadConn;
+export class EthereumClient extends ChainClient
+{
+	#events: LedgerEventEmitters;
+	#conn: LedgerConn;
+
+	get chain(): Chain { return this.#conn.chain; }
+
+	static fromConfig(config: ChainConfig, events: LedgerEventEmitters)
+	{
+		if(!(config.data instanceof EthereumChainConfig))
+			throw new Error("Expected an ethereum chain config");
+
+		let network: string;
+		if(config.data.nodeRPC) network = config.data.nodeRPC;
+		else if(config.data.networkID) network = config.data.networkID;
+		else throw new Error("config does not specify a connectable node");
+
+		console.info(`Connecting to ${getChainName(config.id)} at "${network}"`);
+
+		const provider = ethers.getDefaultProvider(network);
+
+		return new EthereumClient(
+			config.data.contract,
+			provider,
+			config.id,
+			events);
+	}
 
 	constructor(
-		provider: ethers.Provider | Signer,
-		erdstallConn: LedgerReadConn,
+		contract: EthereumAddress,
+		provider: Provider,
+		chain: Chain,
+		events: LedgerEventEmitters
 	) {
-		this.provider = provider;
-		this.erdstallConn = erdstallConn;
+		super();
+		this.#events = events;
+		this.#conn = LedgerConn.readonly(contract, provider, chain, events);
 	}
 
-	erdstall() {
-		return this.erdstallConn.erdstall();
-	}
-
-	on<T extends LedgerEvent>(
-		ev: T,
-		cb: ErdstallEventHandler<T, "ethereum">,
-	): void {
-		this.erdstallConn.on(ev, cb);
-	}
-
-	once<T extends LedgerEvent>(
-		ev: T,
-		cb: ErdstallEventHandler<T, "ethereum">,
-	): void {
-		this.erdstallConn.once(ev, cb);
-	}
-
-	off<T extends LedgerEvent>(
-		ev: T,
-		cb: ErdstallEventHandler<T, "ethereum">,
-	): void {
-		this.erdstallConn.off(ev, cb);
-	}
-
-	removeAllListeners(): void {
-		this.erdstallConn.removeAllListeners();
-	}
-}
-
-export function defaultEthereumClientInitializer(
-	config: ClientConfig,
-	provider: ethers.Provider | Signer,
-): EthereumClient {
-	const ethCfg = config.chains.find(c => c.id == Chain.EthereumMainnet)
-		?? config.chains.find(c => c.type === "ethereum");
-
-	const erdstallAddr = (ethCfg! as ChainConfig<"ethereum">).data.contract;
-	const erdstall = Erdstall__factory.connect(erdstallAddr.toString(), provider);
-	const ledgerReader = new LedgerReadConn(erdstall,
-		new EthereumTokenProvider(ethCfg!.id));
-
-	return new EthereumClient(provider, ledgerReader);
-}
-
-export function mkDefaultEthereumClientConstructor(
-	provider: ethers.Provider | Signer,
-): {
-	backend: "ethereum";
-	provider: ethers.Provider | Signer;
-	initializer: (
-		config: ClientConfig,
-		provider: ethers.Provider | Signer,
-	) => EthereumClient;
-} {
-	return {
-		backend: "ethereum",
-		provider: provider,
-		initializer: defaultEthereumClientInitializer,
-	};
+	override update_event_tracking(mask: LedgerEventMask)
+		{ this.#conn.update_event_tracking(mask); }
 }

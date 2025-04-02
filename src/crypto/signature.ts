@@ -14,7 +14,7 @@ export function registerSignatureType(
 	signatureImpls.set(typeName, typeClass);
 }
 
-export abstract class Signature<B extends Crypto> {
+export abstract class Signature<B extends Crypto = Crypto> {
 	abstract toString(): string;
 
 	abstract toJSON(): any;
@@ -24,6 +24,8 @@ export abstract class Signature<B extends Crypto> {
 	abstract type(): B;
 
 	abstract verify(msg: Uint8Array, addr: Address<B>): boolean;
+
+	abstract clone(): this;
 
 	static toJSON(me: Signature<Crypto>) {
 		return {

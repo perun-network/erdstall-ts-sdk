@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { Signature, registerSignatureType } from "#erdstall/crypto/signature";
-import { Address } from "#erdstall/crypto/address";
+import { Signature, registerSignatureType } from "#erdstall/crypto";
+import { Address } from "#erdstall/crypto";
 import { parseHex, toHex } from "#erdstall/utils/hexbytes";
 import { signatureVerify } from "@polkadot/util-crypto";
 import { jsonObject } from "#erdstall/export/typedjson";
@@ -14,8 +14,11 @@ export class SubstrateSignature extends Signature<"substrate"> {
 
 	constructor(bytes: Uint8Array) {
 		super();
-		this.bytes = bytes;
+		this.bytes = new Uint8Array(bytes); // explicit deep copy!
 	}
+
+	override clone(): this
+		{ return new SubstrateSignature(this.bytes) as this; }
 
 	static fromJSON(data: any): Signature<"substrate"> {
 		if(typeof data !== "string") {

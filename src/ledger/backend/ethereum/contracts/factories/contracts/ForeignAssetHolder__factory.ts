@@ -16,12 +16,28 @@ const _abi = [
   },
   {
     inputs: [],
-    name: "ERC1167FailedCreateClone",
+    name: "EmptyDeposit",
     type: "error",
   },
   {
     inputs: [],
-    name: "EmptyDeposit",
+    name: "FailedDeployment",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "balance",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "needed",
+        type: "uint256",
+      },
+    ],
+    name: "InsufficientBalance",
     type: "error",
   },
   {
@@ -97,14 +113,19 @@ const _abi = [
     name: "foreignAssets",
     outputs: [
       {
-        internalType: "bytes32",
-        name: "localID",
-        type: "bytes32",
-      },
-      {
         internalType: "uint16",
         name: "origin",
         type: "uint16",
+      },
+      {
+        internalType: "bool",
+        name: "exists",
+        type: "bool",
+      },
+      {
+        internalType: "bytes32",
+        name: "localID",
+        type: "bytes32",
       },
     ],
     stateMutability: "view",

@@ -3,3 +3,5 @@
 
 export * from "./readconn";
 export * from "./client";
+export * from "./chainconfig";
+export * from "./session";

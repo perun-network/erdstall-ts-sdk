@@ -20,7 +20,7 @@ export class TestAddress extends Address<"test"> {
 
 	constructor(value: Uint8Array) {
 		super();
-		this.value = value;
+		this.value = new Uint8Array(value);
 	}
 
 	get keyBytes(): Uint8Array { return new Uint8Array([...this.value]); }
@@ -56,6 +56,8 @@ export class TestAddress extends Address<"test"> {
 	type(): "test" {
 		return "test";
 	}
+
+	override clone(): this { return new TestAddress(this.value) as this; }
 }
 
 registerAddressType("test", TestAddress);

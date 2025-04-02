@@ -21,7 +21,7 @@ export function registerErdstallType(
 @jsonObject
 export abstract class ErdstallObject {
 	public abstract objectType(): Serializable<ErdstallObject>;
-	protected abstract objectTypeName(): string;
+	public abstract objectTypeName(): string;
 
 	static fromJSON(js: any): ErdstallObject {
 		let data = JSON.stringify(js.data);

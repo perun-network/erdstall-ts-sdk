@@ -10,7 +10,7 @@ const transferTypeName = "Transfer";
 
 @jsonObject
 export class Transfer extends Transaction {
-	@jsonMember(Address) recipient: Address<Crypto>;
+	@jsonMember(() => Address) recipient: Address<Crypto>;
 	@jsonMember(() => ChainAssets) values: ChainAssets;
 
 	constructor(

@@ -5,7 +5,7 @@ import { ethers } from "ethers";
 import { Address, AssetID, AssetType } from "#erdstall/crypto";
 import { EthereumAddress } from "#erdstall/crypto/ethereum";
 import { TokenType } from "./tokentype";
-import { Chain } from "#erdstall/ledger";
+import { Chain, getChainName } from "#erdstall/ledger";
 import { LocalAsset } from "#erdstall/ledger/assets";
 import {
 	Erdstall,
@@ -39,6 +39,8 @@ export class EthereumTokenProvider {
 		this.fail_holders = undefined;
 		this.set_holders = undefined;
 		set_holders!(holders);
+
+		console.info(Array.from(holders.entries()).map(([name, addr]) => `${getChainName(this.chain)} ${name} holder: ${addr.toString()}`).join("\n"));
 	}
 
 	async fetch_holders(
@@ -52,12 +54,13 @@ export class EthereumTokenProvider {
 
 		try {
 			const holders = new Map<TokenType, EthereumAddress>();
-			holders.set("ERC20", EthereumAddress.fromString(
-				await contract.tokenHolders(0)));
-			holders.set("ERC721", EthereumAddress.fromString(
-				await contract.tokenHolders(1)));
-			holders.set("ETH", EthereumAddress.fromString(
-				await contract.tokenHolders(2)));
+			const ERC20 = contract.tokenHolders(0);
+			const ERC721 = contract.tokenHolders(1);
+			const ETH = contract.tokenHolders(2);
+
+			holders.set("ERC20", EthereumAddress.fromString(await ERC20));
+			holders.set("ERC721", EthereumAddress.fromString(await ERC721));
+			holders.set("ETH", EthereumAddress.fromString(await ETH));
 			this.resolve_holders(holders);
 		} catch(e) { this.set_holders = undefined; this.fail_holders!(e); }
 	}
@@ -85,19 +88,31 @@ export class EthereumTokenProvider {
 		});
 	}
 
-	async getERC20Holder(provider: ethers.Provider): Promise<ERC20Holder> {
-		const holder = await this.tokenHolderFor("ERC20");
+	async getERC20Holder(provider: ethers.Provider | ethers.Signer): Promise<ERC20Holder> {
+		const holder = await this.getERC20HolderAddress();
 		return ERC20Holder__factory.connect(holder.toString(), provider);
 	}
 
-	async getERC721Holder(provider: ethers.Provider): Promise<ERC721Holder> {
-		const holder = await this.tokenHolderFor("ERC721");
+	async getERC20HolderAddress(): Promise<EthereumAddress> {
+		return await this.tokenHolderFor("ERC20");
+	}
+
+	async getERC721Holder(provider: ethers.Provider | ethers.Signer): Promise<ERC721Holder> {
+		const holder = await this.getERC721HolderAddress();
 		return ERC721Holder__factory.connect(holder.toString(), provider);
 	}
 
-	async getEthHolder(provider: ethers.Provider): Promise<ETHHolder> {
-		const holder = await this.tokenHolderFor("ETH");
+	async getERC721HolderAddress(): Promise<EthereumAddress> {
+		return await this.tokenHolderFor("ERC721");
+	}
+
+	async getEthHolder(provider: ethers.Provider | ethers.Signer): Promise<ETHHolder> {
+		const holder = await this.getEthHolderAddress();
 		return ETHHolder__factory.connect(holder.toString(), provider);
+	}
+
+	async getEthHolderAddress(): Promise<EthereumAddress> {
+		return await this.tokenHolderFor("ETH");
 	}
 
 	async getWrappedFungible(provider: ethers.Provider, origin: Chain, local: LocalAsset): Promise<EthereumAddress | undefined> {

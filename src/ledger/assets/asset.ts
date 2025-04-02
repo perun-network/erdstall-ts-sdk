@@ -62,13 +62,13 @@ export abstract class Asset {
 	}
 
 	// clone returns a clone of the asset.
-	abstract clone(): Asset;
+	abstract clone(): this;
 
 	// add adds the passed asset to the called-on asset and returns itself. The
 	// value is modified in-place.
 	//
 	// add throws an error if the assets are not compatible.
-	abstract add(asset: Asset): void;
+	abstract add(asset: this): void;
 
 	// sub removes the passed asset from the called-on asset. The asset is
 	// modified in-place.
@@ -78,17 +78,10 @@ export abstract class Asset {
 	// contained in the original asset.
 	//
 	// sub throws an error if the assets are not compatible.
-	abstract sub(asset: Asset): void;
+	abstract sub(asset: this): void;
 
-	// cmp compares the two assets. It returns the comparison result and whether
-	// the assets are comparable.
-	//
-	// The first value of x.Cmp(y) is
-	//    -1 if x <  y
-	//     0 if x == y
-	//     1 if x >  y
-	// where the meaning of <, > and == depends on the specific value type.
-	abstract cmp(asset: Asset): "lt" | "eq" | "gt" | "uncomparable";
+	// cmp compares the two assets. It returns the sign of the result if comparison is possible.
+	abstract cmp(asset: this): -1 | 0 | 1 | undefined;
 
 	// zero returns true if the asset is zero, e.g., it is 0 or the empty
 	// set.
@@ -98,10 +91,10 @@ export abstract class Asset {
 // assertSubtractable asserts that the two given values are substractable. It
 // throws an error if this is not the case.
 export function assertSubtractable(minuend: Asset, subtrahend: Asset): void {
-	const res = minuend.cmp(subtrahend);
-	if (res === "uncomparable") {
+	const sign = minuend.cmp(subtrahend);
+	if(sign === undefined) {
 		throw ErrUncomparableAssets;
-	} else if (res === "lt") {
+	} else if (sign === -1) {
 		throw ErrSubtrahendLargerThanMinuend;
 	}
 }

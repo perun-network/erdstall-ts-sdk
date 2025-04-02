@@ -10,13 +10,17 @@ export class TestSignature extends Signature<"test"> {
 	@jsonMember(String)
 	msg: string;
 
-	@jsonMember(TestAddress)
+	@jsonMember(() => TestAddress)
 	address: TestAddress | null;
 
 	constructor(msg: string, address: TestAddress | null) {
 		super();
 		this.msg = msg;
 		this.address = address;
+	}
+
+	override clone(): this {
+		return new TestSignature(this.msg, this.address?.clone() ?? null) as this;
 	}
 
 	asABI(): Uint8Array {

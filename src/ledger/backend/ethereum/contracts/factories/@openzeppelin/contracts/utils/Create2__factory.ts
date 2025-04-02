@@ -8,33 +8,33 @@ import {
   Interface,
 } from "ethers";
 import type { Signer, ContractDeployTransaction, ContractRunner } from "ethers";
-import type { NonPayableOverrides } from "../../../../../common";
+import type { NonPayableOverrides } from "../../../../common";
 import type {
-  Math,
-  MathInterface,
-} from "../../../../../@openzeppelin/contracts/utils/math/Math";
+  Create2,
+  Create2Interface,
+} from "../../../../@openzeppelin/contracts/utils/Create2";
 
 const _abi = [
   {
     inputs: [],
-    name: "MathOverflowedMulDiv",
+    name: "Create2EmptyBytecode",
     type: "error",
   },
 ] as const;
 
 const _bytecode =
-  "0x60566037600b82828239805160001a607314602a57634e487b7160e01b600052600060045260246000fd5b30600052607381538281f3fe73000000000000000000000000000000000000000030146080604052600080fdfea26469706673582212201db6ffe7ebf819c17881b61e020fabb00cf73e9b72e68a28cdb33f47f09ad72e64736f6c63430008180033";
+  "0x60566037600b82828239805160001a607314602a57634e487b7160e01b600052600060045260246000fd5b30600052607381538281f3fe73000000000000000000000000000000000000000030146080604052600080fdfea264697066735822122041950c115651f77388fad6644c09e1b1179190c780a6ec07b13c3e1cf7d83e7d64736f6c634300081b0033";
 
-type MathConstructorParams =
+type Create2ConstructorParams =
   | [signer?: Signer]
   | ConstructorParameters<typeof ContractFactory>;
 
 const isSuperArgs = (
-  xs: MathConstructorParams
+  xs: Create2ConstructorParams
 ): xs is ConstructorParameters<typeof ContractFactory> => xs.length > 1;
 
-export class Math__factory extends ContractFactory {
-  constructor(...args: MathConstructorParams) {
+export class Create2__factory extends ContractFactory {
+  constructor(...args: Create2ConstructorParams) {
     if (isSuperArgs(args)) {
       super(...args);
     } else {
@@ -49,21 +49,21 @@ export class Math__factory extends ContractFactory {
   }
   override deploy(overrides?: NonPayableOverrides & { from?: string }) {
     return super.deploy(overrides || {}) as Promise<
-      Math & {
+      Create2 & {
         deploymentTransaction(): ContractTransactionResponse;
       }
     >;
   }
-  override connect(runner: ContractRunner | null): Math__factory {
-    return super.connect(runner) as Math__factory;
+  override connect(runner: ContractRunner | null): Create2__factory {
+    return super.connect(runner) as Create2__factory;
   }
 
   static readonly bytecode = _bytecode;
   static readonly abi = _abi;
-  static createInterface(): MathInterface {
-    return new Interface(_abi) as MathInterface;
+  static createInterface(): Create2Interface {
+    return new Interface(_abi) as Create2Interface;
   }
-  static connect(address: string, runner?: ContractRunner | null): Math {
-    return new Contract(address, _abi, runner) as unknown as Math;
+  static connect(address: string, runner?: ContractRunner | null): Create2 {
+    return new Contract(address, _abi, runner) as unknown as Create2;
   }
 }
