@@ -85,7 +85,7 @@ export class SubstrateSession extends ChainSession {
 	override async signTx(tx: UnsignedTx): Promise<SignedTx>
 	{
 		if(!(tx instanceof UnsignedSubstrateTransaction))
-			throw new Error("Invalid transaction type, expected ethereum transaction");
+			throw new Error("Invalid transaction type, expected substrate transaction");
 		return await (await this.#txsigner).signing_session(async(session: any) => {
 			return await tx.sign(await this.#txsigner, session);
 		});
