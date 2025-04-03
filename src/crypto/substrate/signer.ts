@@ -54,7 +54,8 @@ export class SubstrateSigner extends Signer<"substrate"> {
 	// Restores a custodial account from its private key, as returned by
 	// `generateCustodialAccount()`. Returns a signer and the associated
 	// account's address.
-	static restoreCustodialAccount(seed: string): SubstrateSigner {
+	static async restoreCustodialAccount(seed: string): Promise<SubstrateSigner> {
+		await cryptoWaitReady();
 		let keys = sr25519PairFromSeed(seed)
 		return new SubstrateSigner(keys);
 	}
