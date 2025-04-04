@@ -94,7 +94,6 @@ export class WritingApp extends App {
 	constructor(
 		enclaveConn: Enclave | URL,
 		l2_signer: Signer,
-		blockchainCtors: BackendSessionConstructors,
 		internals?: AppInternals)
 	{
 		internals ??= new AppInternals;
@@ -250,7 +249,7 @@ export class Session extends WritingApp
 		backendCtors: BackendSessionConstructors
 	) {
 		const internals = new AppInternals((cfg) => this.#on_config(cfg));
-		super(enclaveConn, l2signer, backendCtors, internals);
+		super(enclaveConn, l2signer, internals);
 		this.#internals = internals;
 
 		this.#l2_signer = l2signer;
