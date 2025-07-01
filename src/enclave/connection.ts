@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { Address } from "#erdstall/crypto";
+import { Address, SigVerifier } from "#erdstall/crypto";
 import { Call, Result } from "#erdstall/api";
 import { ErdstallObject } from "#erdstall/api";
 import { EnclaveEventEmitters } from "#erdstall/event";
@@ -10,34 +10,81 @@ import {
 	SubscribeBalanceProofs,
 	SubscribePhaseShifts,
 	GetAccount,
-	Onboarding,
-	Attest,
+	GetAccount_Output
 } from "#erdstall/api/calls";
 import {
+	SignedTransaction,
 	Mint,
 	Transfer,
-	ExitRequest,
-	Trade,
+	FullExit,
 	Burn,
+	SetPrivacy,
+	SetPrivacy_Output
 } from "#erdstall/api/transactions";
 import {
 	ClientConfig,
-	TxReceipt,
-	BalanceProofs,
+	DirectTxReceipt,
+	SignedDirectTxReceipt,
+	PublicTxReceipt,
+	SignedPublicTxReceipt,
+	SignedBalanceProof,
+	BalanceProof,
 	Account,
-	PhaseShift,
-	TxAccepted,
-	AttestationResult,
-	AttestResponse,
+	PhaseShift
 } from "#erdstall/api/responses";
 import { TypedJSON } from "#erdstall/export/typedjson";
 import { EnclaveEvent } from "./event";
 import { EnclaveProvider, EnclaveWSProvider } from "./provider";
 
+export class CallResponse<T = any>
+{
+		constructor(
+	public accepted: Promise<void>,
+	public result:   Promise<T>
+		) { }
+
+	map<U>(fn: (v: T) => Promise<U>): CallResponse<U>
+	{
+		return new CallResponse<U>(
+			this.accepted,
+			(async(): Promise<U> => { return await fn(await this.result); })()
+		);
+	}
+}
+
+class CallPromise<T extends ErdstallObject = ErdstallObject> {
+		constructor(
+	public acknowledged: () => void,
+	public success: (v: T) => void,
+	public error: (e: Error) => void
+		) { }
+
+	static make<T extends ErdstallObject = ErdstallObject>():
+		{ handlers: CallPromise<T>, response: CallResponse<T> }
+	{
+		let result_acc: (v: T) => void;
+		let result_rej: (e: Error) => void;
+		const result = new Promise<T>((res_acc, res_rej) =>
+			{ result_acc = res_acc; result_rej = res_rej; });
+		let ack_acc: () => void;
+		let ack_rej: (e: Error) => void;
+		const ack = new Promise<void>((acc, rej) =>
+			{ ack_acc = acc; ack_rej = rej; });
+
+		return {
+			handlers: new CallPromise<T>(
+				ack_acc!,
+				(v: T) => { ack_acc(); result_acc(v); },
+				(e: Error) => { ack_rej(e); result_rej(e); }),
+			response: new CallResponse(ack, result)
+		};
+	}
+}
+
 export class Enclave
 {
 	#provider: EnclaveProvider;
-	#calls = new Map<string, {resolve: Function, reject: Function}>();
+	#calls = new Map<number, CallPromise<ErdstallObject>>();
 	#id: number = 0;
 
 	#opened: boolean = false;
@@ -46,11 +93,13 @@ export class Enclave
 	#phaseShiftSubscribed: boolean = false;
 
 	#emitters?: EnclaveEventEmitters;
-	set emitters(e: EnclaveEventEmitters)
+	#sigVerifier?: SigVerifier;
+	set emitters([e,vrfy]: [EnclaveEventEmitters, SigVerifier])
 	{
-		if(this.#emitters)
+		if(this.#emitters || this.#sigVerifier)
 			throw new Error("Attempted to override event emitters");
 		this.#emitters = e;
+		this.#sigVerifier = vrfy;
 	}
 
 	static dial(operator: URL): Enclave
@@ -75,69 +124,101 @@ export class Enclave
 
 	public async subscribe(who?: Address): Promise<void>
 	{
-		if (who) {
+		// TODO: this is quite brittle, it is currently only really tested for single accounts. We also assume that all balance proofs we receive are for our owned account when exiting.
+		if(who) {
 			this.#individuallySubscribed.add(who);
 		} else {
 			this.#globallySubscribed = true;
 		}
 
-		const subTXs = new SubscribeTXs(who);
-		const subBPs = new SubscribeBalanceProofs(who);
-		await this.sendCall(subTXs);
-		await this.sendCall(subBPs);
+		await this.sendCall(new SubscribeTXs(who)).result;
+		if(who)
+			await this.sendCall(new SubscribeBalanceProofs(who)).result;
+
 		if(!this.#phaseShiftSubscribed)
 		{
 			this.#phaseShiftSubscribed = true;
 			const subPSs = new SubscribePhaseShifts();
-			await this.sendCall(subPSs);
+			await this.sendCall(subPSs).result;
 		}
 		return;
 	}
 
-	public async attest(): Promise<AttestationResult> {
+	/*public async attest(): Promise<AttestationResult> {
 		let call = new Attest();
 		let res = (await this.sendCall(call)) as AttestResponse;
 		if (res.attestation) return res.attestation;
 		else throw new Error("attestation not yet issued");
+	}*/
+
+	public transfer(tx: SignedTransaction<Transfer>): CallResponse<void>
+	{
+		return this.sendCall<SignedDirectTxReceipt>(tx).map(async(r) =>
+			{ (await r.verify(this.#sigVerifier!))!.ok(); });
 	}
 
-	public async transfer(tx: Transfer): Promise<TxAccepted>
-		{ return this.sendCall(tx) as Promise<TxAccepted>; }
+	public mint(tx: SignedTransaction<Mint>): CallResponse<void>
+	{
+		return this.sendCall<SignedDirectTxReceipt>(tx).map(async(r) =>
+			{ (await r.verify(this.#sigVerifier!))!.ok(); });
+	}
 
-	public async mint(tx: Mint): Promise<TxAccepted>
-		{ return this.sendCall(tx) as Promise<TxAccepted>; }
+	public burn(tx: SignedTransaction<Burn>): CallResponse<void>
+	{
+		return this.sendCall<SignedDirectTxReceipt>(tx).map(async(r) =>
+			{ (await r.verify(this.#sigVerifier!))!.ok(); });
+	}
 
-	public async burn(tx: Burn): Promise<TxAccepted>
-		{ return this.sendCall(tx) as Promise<TxAccepted>; }
-
-	public async trade(tx: Trade): Promise<TxAccepted>
-		{ return this.sendCall(tx) as Promise<TxAccepted>; }
-
-	public async exit(exitRequest: ExitRequest): Promise<BalanceProofs> {
-		const p = new Promise<BalanceProofs>((resolve, reject) => {
+	public exit(exitRequest: SignedTransaction<FullExit>): {
+		response: CallResponse<void>,
+		proof:    Promise<BalanceProof>
+	}
+	{
+		let response = this.sendCall<SignedDirectTxReceipt>(exitRequest).map(async(r) =>
+			{ (await r.verify(this.#sigVerifier!))!.ok(); });
+		const proof = new Promise<BalanceProof>((resolve, reject) => {
 			// NOTE RACE if a proof is received before the exit request is processed. Would need more elaborate logic to harden against that. It would be better to handle tracking of balance proofs in a different manner.
 			this.#emitters!.proof.once(resolve);
-			this.sendCall(exitRequest).catch(reject);
+			response.result.catch(reject);
 		});
 
-		return p;
+		return { response, proof };
 	}
 
-	public async getAccount(acc: Address): Promise<Account>
-		{ return this.sendCall(new GetAccount(acc)) as Promise<Account>; }
+	public getAccount(tx: SignedTransaction<GetAccount>): CallResponse<GetAccount_Output>
+	{
+		return this.sendCall<SignedDirectTxReceipt>(tx).map(async (r) =>
+			GetAccount_Output.decode(
+				(await r.verify(this.#sigVerifier!))!.ok().reader())
+		);
+	}
 
-	private async sendCall(data: ErdstallObject): Promise<ErdstallObject> {
-		const id = this.nextID().toString();
+	public setPrivacy(tx: SignedTransaction<SetPrivacy>): CallResponse<SetPrivacy_Output>
+	{
+		return this.sendCall<SignedDirectTxReceipt>(tx).map(async (r) =>
+			SetPrivacy_Output.decode(
+				(await r.verify(this.#sigVerifier!))!.ok().reader())
+		);
+	}
 
-		const p = new Promise<ErdstallObject>((resolve, reject) => {
-			this.#calls.set(id, {resolve, reject});
-		});
+	private sendCall<T extends ErdstallObject = ErdstallObject>(
+		data: ErdstallObject
+	): CallResponse<T>
+	{
+		const id = this.nextID();
+
+		const { handlers, response } = CallPromise.make<T>();
+		// We lose some type precision here but that's OK.
+		this.#calls.set(id, handlers as CallPromise<ErdstallObject>);
 
 		const msg = new Call(id, data);
 		const wiredata = TypedJSON.stringify(msg, Call);
 		this.#provider.send(wiredata);
 
-		try { return await p; }
+		return response;
+
+		// Disabled: doesn't fit the multi-response / ack+response model anymore.
+		/*try { return await p; }
 		catch(e: unknown) {
 			// late error construction improves the stacktrace to something sensible.
 			if(typeof e === "string") {
@@ -146,12 +227,12 @@ export class Enclave
 				e = new Error(e.toString())
 			}
 			throw e;
-		}
+		}*/
 	}
 
 	private nextID(): number { return this.#id++; }
 
-	private onMessage(ev: MessageEvent)
+	private async onMessage(ev: MessageEvent)
 	{
 		let om: Result | undefined;
 		try {
@@ -166,20 +247,27 @@ export class Enclave
 			return;
 		}
 
+		// handle responses.
 		if (msg.id) {
 			if(!this.#calls.has(msg.id)) {
 				console.error("received message for unknown call ID");
 				return;
 			}
 
-			const {resolve, reject} = this.#calls.get(msg.id)!;
-			this.#calls.delete(msg.id);
+			const call = this.#calls.get(msg.id)!;
+			if(!msg.isPending()) // is this a "pending" message or an actual result?
+				this.#calls.delete(msg.id);
+
 			if (msg.error) {
-				reject(new Error(msg.error));
-				return this.#emitters!.error.emit(msg.error);
+				call.error(new Error(msg.error));
+				this.#emitters!.error.emit(msg.error);
 			} else {
-				return resolve(msg.data);
+				if(msg.isPending())
+					call.acknowledged();
+				else
+					call.success(msg.data as any);
 			}
+			return;
 		} else if(msg.error) {
 			console.error("unexpected error:", msg.error);
 			this.#emitters!.error.emit(msg.error);
@@ -192,6 +280,8 @@ export class Enclave
 			return;
 		}
 
+		// handle push-messages.
+
 		console.log("received event: ", obj.objectTypeName(), obj);
 
 		switch(obj.objectType())
@@ -199,17 +289,21 @@ export class Enclave
 		case ClientConfig:
 			this.#emitters!.config.emit(obj as ClientConfig);
 			break;
-		case TxReceipt:
-			this.#emitters!.receipt.emit(obj as TxReceipt);
+		case SignedPublicTxReceipt:
+			this.#emitters!.receipt.emit([
+				(obj as SignedPublicTxReceipt).target,
+				(await (obj as SignedPublicTxReceipt).verify(this.#sigVerifier!))!
+			]);
 			break;
-		case BalanceProofs:
-			this.#emitters!.proof.emit(obj as BalanceProofs);
+		case SignedBalanceProof:
+			this.#emitters!.proof.emit(
+				(await (obj as SignedBalanceProof).verify(this.#sigVerifier!))!);
 			break;
 		case PhaseShift:
 			this.#emitters!.phaseshift.emit(obj as PhaseShift);
 			break;
 		default:
-			console.log("Object type: ", obj.objectType());
+			console.warn("Unhandled Object type: ", obj.objectType());
 		}
 	}
 
@@ -233,7 +327,7 @@ export class Enclave
 		const calls = [];
 		this.#opened = true;
 		if (this.#globallySubscribed)
-			calls.push(new SubscribeTXs(), new SubscribeBalanceProofs());
+			calls.push(new SubscribeTXs());
 
 		this.#individuallySubscribed.forEach((addr) =>
 			calls.push(

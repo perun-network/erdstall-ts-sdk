@@ -40,7 +40,7 @@ export class EthereumChainConfig {
 		});
 	}
 
-	type(): string { return "ethereum"; }
+	type(): "ethereum" { return "ethereum"; }
 
 	toJSON(): any {
 		return {

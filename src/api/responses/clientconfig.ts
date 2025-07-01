@@ -2,14 +2,13 @@
 "use strict";
 
 import { ErdstallObject, registerErdstallType } from "#erdstall/api";
-import { jsonObject, jsonMember, AnyT, TypedJSON } from "#erdstall/export/typedjson";
 import { EthereumChainConfig } from "#erdstall/ledger/backend/ethereum/chainconfig";
 import { SubstrateChainConfig } from "#erdstall/ledger/backend/substrate/chainconfig";
 import { Address, Crypto } from "#erdstall/crypto";
 import { SubstrateAddress } from "#erdstall/crypto/substrate";
 import { EthereumAddress } from "#erdstall/crypto/ethereum";
 import { Chain } from "#erdstall/ledger";
-import { customJSON } from "../util";
+import { CodecReader, CodecWriter } from "#erdstall/utils";
 
 export class ChainConfig {
 	id: Chain;
@@ -51,12 +50,9 @@ export class ChainConfig {
 		};
 	}
 }
-customJSON(ChainConfig);
-
 
 const clientConfigTypeName = "ClientConfig";
 
-@jsonObject
 export class ClientConfig extends ErdstallObject {
 	chains: ChainConfig[];
 	enclave: Map<Chain, Address>;
@@ -143,7 +139,16 @@ export class ClientConfig extends ErdstallObject {
 			this.epochDuration
 		);
 	}
+
+	override encode(w: CodecWriter): void {
+		w.bytes(new TextEncoder().encode(
+			JSON.stringify(ClientConfig.toJSON(this))));
+	}
+
+	static decode(r: CodecReader): ClientConfig {
+		return ClientConfig.fromJSON(
+			JSON.parse(new TextDecoder().decode(r.rest())));
+	}
 }
 
 registerErdstallType(clientConfigTypeName, ClientConfig);
-customJSON(ClientConfig);

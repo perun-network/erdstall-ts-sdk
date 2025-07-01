@@ -5,6 +5,7 @@ import { Chain } from "#erdstall/ledger";
 import { Address, Crypto } from "#erdstall/crypto";
 import { ethers } from "ethers";
 import { toHex } from "#erdstall/utils/hexbytes";
+import { CodecReader, CodecWriter } from "#erdstall/utils";
 
 
 export enum AssetType {
@@ -23,10 +24,11 @@ export function AssetTypeName(t: AssetType): string {
 
 export class AssetID {
 	// [Origin Chain][AssetType][ID LocalAsset] packed into fixed-size array.
-	bytes: Uint8Array;
+	bytes: Uint8Array & {length: 35};
 
-	constructor(bytes: Uint8Array) {
+	constructor(bytes: Uint8Array & {length: 35}) {
 		this.bytes = bytes;
+		if(bytes.length != 35) throw new Error("Invalid byte length");
 	}
 
 	static erdstallUserToken(
@@ -43,12 +45,11 @@ export class AssetID {
 		type: AssetType,
 		localID: Uint8Array,
 	): AssetID {
-		const bytes = new Uint8Array(3 + localID.length);
-		bytes[0] = chain & 0xff;
-		bytes[1] = chain >> 8;
+		const bytes = new Uint8Array(35);
+		new DataView(bytes).setUint16(0, chain, true);
 		bytes[2] = type;
 		bytes.set(localID, 3);
-		return new AssetID(bytes);
+		return new AssetID(bytes as (Uint8Array & {length: 35}));
 	}
 
 	origin(): Chain {
@@ -82,4 +83,9 @@ export class AssetID {
 			AssetTypeName(this.type())
 		}/${toHex(this.localID(), "")}`;
 	}
+
+	encode(w: CodecWriter): void
+		{ w.bytes(this.bytes);	}
+	static decode(r: CodecReader): AssetID
+		{ return new AssetID(r.bytes(35)); }
 }

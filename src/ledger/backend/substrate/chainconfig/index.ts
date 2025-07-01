@@ -4,17 +4,14 @@
 export class SubstrateChainConfig {
 	blockStreamLAddr: string;
 
-	constructor(blockStreamLAddr: string) {
-		this.blockStreamLAddr = blockStreamLAddr;
-	}
+	constructor(blockStreamLAddr: string)
+		{ this.blockStreamLAddr = blockStreamLAddr; }
 
-	clone() {
-		return new SubstrateChainConfig(this.blockStreamLAddr);
-	}
+	clone(): this
+		{ return new SubstrateChainConfig(this.blockStreamLAddr) as this; }
 
-	type(): string { return "substrate"; }
+	type(): "substrate" { return "substrate"; }
 
-	toJSON(): any {
-		return { blockStreamLAddr: this.blockStreamLAddr };
-	}
+	toJSON(): { blockStreamLAddr: string }
+		{ return { blockStreamLAddr: this.blockStreamLAddr }; }
 }

@@ -6,10 +6,10 @@ import { jsonObject, jsonMember } from "#erdstall/export/typedjson";
 
 @jsonObject
 export class Call {
-	@jsonMember(String) id: string;
+	@jsonMember(Number) id: number;
 	@jsonMember(() => ErdstallObject) data: ErdstallObject;
 
-	constructor(id: string, data: ErdstallObject) {
+	constructor(id: number, data: ErdstallObject) {
 		this.id = id;
 		this.data = data;
 	}

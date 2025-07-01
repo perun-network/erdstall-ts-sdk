@@ -5,5 +5,6 @@ export * from "./transaction";
 export * from "./exitrequest";
 export * from "./mint";
 export * from "./transfer";
-export * from "./trade";
 export * from "./burn";
+export * from "./registerwatcher";
+export * from "./setprivacy";

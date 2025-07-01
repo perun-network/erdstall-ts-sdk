@@ -10,9 +10,11 @@ import {
 	ErrIncompatibleAssets,
 	assertUint256,
 	registerAssetType,
+	_assetDecoders
 } from "./asset";
 import { AssetType } from "#erdstall/crypto";
 import { bigTo0xEven } from "#erdstall/export/typedjson";
+import { CodecReader, CodecWriter } from "#erdstall/utils";
 
 /** Amount represents a currency amount in its smallest unit. */
 export class Amount extends Asset {
@@ -33,6 +35,9 @@ export class Amount extends Asset {
 	static fromJSON(hexString: string): Amount {
 		return new Amount(BigInt(hexString));
 	}
+
+	static decode(r: CodecReader): Amount { return new Amount(r.u256()); }
+	encode(w: CodecWriter): void { w.u256(this.value); }
 
 	override toString() { return this.value.toString(); }
 
@@ -83,3 +88,4 @@ export class Amount extends Asset {
 }
 
 registerAssetType(TypeTags.Amount, Amount.fromJSON);
+_assetDecoders.set(AssetType.Fungible, Amount.decode);

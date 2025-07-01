@@ -2,92 +2,28 @@
 "use strict";
 
 import {
-	jsonMember,
-	jsonObject,
-	Serializable,
-} from "#erdstall/export/typedjson";
-import { customJSON } from "#erdstall/api/util";
-import { Transaction, registerTransactionType } from "./transaction";
-import { Address, Crypto } from "#erdstall/crypto";
-import { ErdstallObject, registerErdstallType } from "#erdstall/api";
+	Transaction,
+	TransactionType,
+	NonceCheck,
+	_transactionDecoders,
+	TxCore
+} from "./transaction";
+import { Address } from "#erdstall/crypto";
+import { Chain } from "#erdstall/ledger";
+import { CodecReader, CodecWriter } from "#erdstall/utils";
 
-const exitTypeName = "ExitRequest";
+export class FullExit extends Transaction {
+		constructor(
+			core: TxCore,
+	public destination?: Chain
+		) { super(core); }
 
-@jsonObject
-export abstract class ExitMode extends ErdstallObject {
-	@jsonMember(Boolean)
-	immediate: boolean;
-
-	constructor(immediate: boolean) {
-		super();
-		this.immediate = immediate;
-	}
+	override transactionType(): TransactionType
+		{ return TransactionType.FullExit; }
+	override encode_impl(w: CodecWriter): void
+		{ w.u16(this.destination ?? 0); }
+	static decode_impl(r: CodecReader, core: TxCore): FullExit
+		{ return new FullExit(core, r.u16() || undefined); }
 }
 
-customJSON(ExitMode);
-
-const fullExitTypeName = "full";
-
-@jsonObject
-export class FullExit extends ExitMode {
-	@jsonMember(Number)
-	chain?: number;
-
-	constructor(chain: number | undefined, immediate: boolean) {
-		super(immediate);
-		this.chain = chain;
-	}
-
-	public objectType(): Serializable<ErdstallObject> {
-		return FullExit;
-	}
-	override objectTypeName(): string {
-		return fullExitTypeName;
-	}
-}
-
-const partialExitTypeName = "partial";
-
-@jsonObject
-export class PartialExit extends ExitMode {
-	public objectType(): Serializable<ErdstallObject> {
-		return PartialExit;
-	}
-	override objectTypeName(): string {
-		return partialExitTypeName;
-	}
-}
-
-registerErdstallType(fullExitTypeName, FullExit);
-registerErdstallType(partialExitTypeName, PartialExit);
-
-@jsonObject
-export class ExitRequest extends Transaction {
-	@jsonMember(() => ExitMode)
-	mode?: ExitMode;
-
-	@jsonMember(Boolean)
-	override: boolean;
-
-	constructor(
-		sender: Address<Crypto>,
-		nonce: bigint,
-		override: boolean,
-		mode?: FullExit | PartialExit,
-	) {
-		super(sender, nonce);
-
-		this.override = override;
-		this.mode = mode;
-	}
-
-	public txType() {
-		return ExitRequest;
-	}
-
-	protected txTypeName(): string {
-		return exitTypeName;
-	}
-}
-
-registerTransactionType(exitTypeName, ExitRequest);
+_transactionDecoders.set(TransactionType.FullExit, FullExit.decode_impl);

@@ -1,36 +1,44 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-//import { Signer as EthereumSigner } from "ethers";
 import {
-	BalanceProofs,
+	BalanceProof,
 	ChainProof,
 	ChainProofChunk,
 	ClientConfig,
+	DirectTxReceipt,
+	SignedDirectTxReceipt,
+	PublicTxReceipt,
+	SignedPublicTxReceipt
 } from "#erdstall/api/responses";
 import {
+	StrictNonceCheck,
+	NoNonceCheck,
+	SignedTransaction,
+	Transaction,
+	TxCore,
 	Transfer,
 	Mint,
-	ExitRequest,
 	FullExit,
-	TradeOffer,
-	Trade,
 	Burn,
+	SetPrivacy
 } from "#erdstall/api/transactions";
+import { GetAccount } from "#erdstall/api/calls";
 import { Account, Chain, getChainName } from "#erdstall/ledger";
-import { ChainAssets } from "#erdstall/ledger/assets";
+import { ChainAssets, Asset } from "#erdstall/ledger/assets";
 import { Uint256 } from "#erdstall/api/util";
 import * as crypto from "#erdstall/crypto";
-import { Signer, Address } from "#erdstall/crypto";
-import { EthereumSigner } from "#erdstall/crypto/ethereum";
-import { SubstrateSigner } from "#erdstall/crypto/substrate";
+import { Signer, Address, AddressType } from "#erdstall/crypto";
+import { EthereumSigner, EthereumAddress } from "#erdstall/crypto/ethereum";
+import { SubstrateSigner, SubstrateAddress } from "#erdstall/crypto/substrate";
+import { AESGCMKey, DHPair, WildcardAddress } from "#erdstall/crypto/wildcard";
 import { LedgerEventEmitters, LedgerEventHandlers } from "./event";
-import { Enclave, EnclaveEvent } from "#erdstall/enclave";
-import { ReceiptDispatcher } from "./utils/receipt_dispatcher";
+import { Enclave, EnclaveEvent, CallResponse } from "#erdstall/enclave";
 import { PendingTransaction } from "./api/util/pending_transaction";
 import { ChainConfig } from "#erdstall/api/responses";
+import { CodecWriter } from "#erdstall/utils";
 
-import { App, AppInternals } from "./app";
+import { App, AppInternals, L2Identity } from "./app";
 
 import {
 	UnsignedTxBatch,
@@ -38,7 +46,7 @@ import {
 	SignedTxBatch,
 	SignedTx,
 	TxReceiptBatch,
-	TxReceipt
+	TxReceipt,
 } from "#erdstall/ledger/backend";
 
 export const ErrUnitialisedClient = new Error("client unitialised");
@@ -81,109 +89,89 @@ export type BackendSessionConstructors = {
 // L2-only read-write client that is associated with an L2 account.
 export class WritingApp extends App {
 	// L2 signing and nonce tracking.
-	#l2signer: Signer;
-
 	#internals: AppInternals;
 
 	// Start with an invalid nonce, so that it will be queried anew upon its next use.
 	#nonce: bigint = 0n;
 	#updatingNonce?: Promise<any>;
-	#receiptDispatcher = new ReceiptDispatcher;
 
 	get #enclave() { return this.#internals.enclave!; }
-	get address(): Address { return this.#l2signer.address(); }
+	get address(): Address { return this.#internals.identity!.address; }
 
 	constructor(
 		enclaveConn: Enclave | URL,
-		l2_signer: Signer,
-		internals?: AppInternals)
+		internals: L2Identity | AppInternals)
 	{
-		internals ??= new AppInternals;
+		if(internals instanceof L2Identity)
+			internals = new AppInternals(internals);
+		if(!internals.identity!.has_auth)
+			throw new Error("Wildcard identity needs an authentication mechanism");
 		super(enclaveConn, internals);
 
 		this.#internals = internals;
 		this.#internals.l2.error.on(() => { this.#nonce = 0n; });
-		this.#internals.l2.receipt.on((r) => this.#receiptDispatcher.watch(r));
-		this.#l2signer = l2_signer;
+	}
+
+	// Returns the encoding of the signed transaction.
+	async #signTx<Tx extends Transaction>(tx: Tx): Promise<SignedTransaction<Tx>> {
+		let id = this.#internals.identity!;
+		let w = new CodecWriter();
+		tx.encodePayload(w)
+		let signedMsg = await id.signForEnclave<Tx>(w.get());
+		return new SignedTransaction(id.address, signedMsg);
 	}
 
 	async transferTo(
 		assets: ChainAssets,
 		to: Address,
-	): Promise<PendingTransaction> {
+	): Promise<CallResponse<void>> {
 		if (!this.initialized) {
 			throw ErrUnitialisedClient;
 		}
-		const nonce = await this.#nextNonce();
-		const tx = new Transfer(this.address, nonce, to, assets);
-		await tx.sign(this.#l2signer);
-		const hash = tx.hash();
-		const receipt = this.#receiptDispatcher.register(hash);
-		const accepted = this.#enclave.transfer(tx);
-		return { receipt, accepted };
+		const nonce = new StrictNonceCheck(await this.#nextNonce());
+		const tx = new Transfer(
+			new TxCore(this.address, nonce, false),
+			to, assets);
+		return this.#enclave.transfer(await this.#signTx(tx));
 	}
 
-	async mint(token: Uint8Array, id: Uint256): Promise<PendingTransaction> {
+	async mint(token: Uint8Array, amount: Asset): Promise<CallResponse<void>> {
 		if (!this.initialized) {
 			throw ErrUnitialisedClient;
 		}
-		const nonce = await this.#nextNonce();
-		const tx = new Mint(this.address, nonce, token, id);
-		await tx.sign(this.#l2signer);
-		const hash = tx.hash();
-		const receipt = this.#receiptDispatcher.register(hash);
-		const accepted = this.#enclave.mint(tx);
-		return { receipt, accepted };
+		const nonce = new StrictNonceCheck(await this.#nextNonce());
+		const tx = new Mint(
+			new TxCore(this.address, nonce, false),
+			token as (Uint8Array & {length: 32}), amount);
+		let signed = await this.#signTx(tx);
+		return (this.#enclave.mint(signed));
 	}
 
-	async burn(assets: ChainAssets): Promise<PendingTransaction> {
+	async burn(assets: ChainAssets): Promise<CallResponse<void>> {
 		if (!this.initialized) {
 			throw ErrUnitialisedClient;
 		}
 
-		const nonce = await this.#nextNonce();
-		const tx = new Burn(this.address, nonce, assets);
-		await tx.sign(this.#l2signer);
-		const hash = tx.hash();
-		const receipt = this.#receiptDispatcher.register(hash);
-		const accepted = this.#enclave.burn(tx);
-		return { receipt, accepted };
+		const nonce = new StrictNonceCheck(await this.#nextNonce());
+		const tx = new Burn(
+			new TxCore(this.address, nonce, false),
+			assets);
+		return this.#enclave.burn(await this.#signTx(tx));
 	}
 
-	async createOffer(
-		offer: ChainAssets,
-		expect: ChainAssets,
-	): Promise<TradeOffer> {
-		const o = new TradeOffer(this.address, offer, expect);
-		return o.sign(this.#l2signer);
-	}
-
-	async acceptTrade(offer: TradeOffer): Promise<PendingTransaction> {
-		if (!this.initialized) {
-			throw ErrUnitialisedClient;
-		}
-		const nonce = await this.#nextNonce();
-		const tx = new Trade(this.address, nonce, offer);
-		await tx.sign(this.#l2signer);
-		const hash = tx.hash();
-		const receipt = this.#receiptDispatcher.register(hash);
-		const accepted = this.#enclave.trade(tx);
-		return { receipt, accepted };
-	}
-
-	async exit(chain?: number): Promise<BalanceProofs> {
+	async exit(chain?: number): Promise<BalanceProof> {
 		if (!this.initialized) {
 			return Promise.reject(ErrUnitialisedClient);
 		}
 
-		const exittx = new ExitRequest(
-			this.address,
-			await this.#nextNonce(),
-			true,
-			new FullExit(chain, false)
+		let nonce = new StrictNonceCheck(await this.#nextNonce());
+		const exittx = new FullExit(
+			new TxCore(this.address, nonce, false),
+			chain ?? 0
 		);
-		await exittx.sign(this.#l2signer);
-		return this.#enclave.exit(exittx);
+		let { response, proof } = this.#enclave.exit(await this.#signTx(exittx));
+		await response.result;
+		return proof;
 	}
 
 
@@ -199,9 +187,14 @@ export class WritingApp extends App {
 	}
 
 	async #updateNonceInternal(): Promise<void> {
-		const acc = await this.#enclave.getAccount(this.address);
+		let tx = new GetAccount(
+			new TxCore(this.address, new NoNonceCheck(), true),
+			undefined,
+			undefined
+		);
+		const acc = await this.#enclave.getAccount(tx.unsigned()).result;
 		if (!this.#nonce) {
-			this.#nonce = acc.account.nonce + 1n;
+			this.#nonce = acc.nonce + 1n;
 		}
 	}
 
@@ -210,16 +203,56 @@ export class WritingApp extends App {
 	async updateNonce(): Promise<void> {
 		if(this.#updatingNonce) return this.#updatingNonce;
 		this.#updatingNonce = this.#updateNonceInternal();
-		await this.#updatingNonce;
-		this.#updatingNonce = undefined;
+		try { await this.#updatingNonce; }
+		// make sure it always clears out properly...
+		finally { this.#updatingNonce = undefined; }
 	}
 
 	async subscribeSelf(): Promise<void> {
 		return this.#enclave.subscribe(this.address);
 	}
 
-	async getOwnAccount(): Promise<Account> {
-		return this.getAccount(this.address);
+
+	get hasEncryption(): boolean { return this.#internals.identity!.has_aes; }
+
+	// Fetches the privacy key and remembers it. Returns whether we have a privacy key.
+	async fetchPrivacyKey(): Promise<boolean>
+	{
+		let tx = new GetAccount(
+			new TxCore(
+				this.address,
+				new NoNonceCheck(),
+				true), // force plaintext receipt
+			await DHPair.generate(),
+			undefined);
+
+		let result = this.#enclave.getAccount(await this.#signTx(tx)).result;
+		let { sk } = await tx.decrypt_output(await result);
+		this.#internals.identity!.aes = sk;
+		return sk !== undefined;
+	}
+
+	async setPrivacy(enabled: boolean): Promise<void> {
+		const nonce = new StrictNonceCheck(await this.#nextNonce());
+		let tx = new SetPrivacy(
+			new TxCore(this.address, nonce, true),
+			enabled ? await DHPair.generate() : undefined);
+
+		let result = this.#enclave.setPrivacy(await this.#signTx(tx)).result;
+		this.#internals.identity!.aes = await tx.decrypt_output(await result);
+	}
+
+	// Will fail if you have a private account, but did not supply the privacy key to the session. In that case, you can fetch it via fetchPrivacyKey().
+	async fetchBalance(): Promise<ChainAssets>
+	{
+		let tx = new GetAccount(
+			new TxCore(this.address, new NoNonceCheck(), false),
+			undefined,
+			this.#internals.identity!.has_aes ? "maybe_encrypted" : "plain");
+
+		let result = await this.#enclave.getAccount(tx.unsigned()).result;
+		let { balances } = await tx.decrypt_output(result);
+		return balances!;
 	}
 }
 
@@ -227,15 +260,12 @@ export class Session extends WritingApp
 {
 	#internals: AppInternals;
 
-	#l2_signer: Signer;
-	#address: Address;
-	get address(): Address { return this.#address; }
+	get address(): Address { return this.#internals.identity!.address; }
 
 	get #enclave() { return this.#internals.enclave!; }
 	// Filled dynamically when we receive configs.
 	#chains = new Map<Chain, ChainSession>();
 	#blockchainWriteCtors: BackendSessionConstructors;
-	#receiptDispatcher = new ReceiptDispatcher();
 
 
 	// Event handling.
@@ -246,18 +276,15 @@ export class Session extends WritingApp
 		{ return new LedgerEventHandlers(this.#l1_event_emitters); }
 
 	constructor(
+		identity: L2Identity,
 		enclaveConn: Enclave | URL,
-		l2signer: Signer,
 		backendCtors: BackendSessionConstructors
 	) {
-		const internals = new AppInternals((cfg) => this.#on_config(cfg));
-		super(enclaveConn, l2signer, internals);
+		const internals = new AppInternals(identity, (cfg) => this.#on_config(cfg));
+		super(enclaveConn, internals);
 		this.#internals = internals;
 
-		this.#l2_signer = l2signer;
-		this.#address = l2signer.address();
 		this.#blockchainWriteCtors = backendCtors;
-		this.#internals.l2.receipt.on((e) => this.#receiptDispatcher.watch(e));
 	}
 
 	async leave(
@@ -283,7 +310,8 @@ export class Session extends WritingApp
 			this.#internals.l2.phaseshift.on(cb);
 		});
 		notify?.("awaiting exit proof", atStage++, maxStages);
-		const exitProof = (await this.exit(chain)).accounts.get((this.address).key)!;
+		// TODO: currently, this only really works for single-account subscriptions. We should add an address field to the message.
+		const exitProof = (await this.exit(chain)) /*.accounts.get((this.address).key)!*/;
 
 		notify?.("awaiting epoch sealing", atStage++, maxStages);
 		await sealed;
@@ -374,8 +402,9 @@ export class Session extends WritingApp
 					}>: not creating a backend client.`);
 					continue;
 			}
+			let s = this.#internals.identity!.l1_signer_for(chainCfg.data.type());
 
-			if(this.#address.type() !== chainCfg.data.type())
+			if(!s)
 			{
 				console.warn(`No compatible signer for ${
 						chainCfg.data.type()
@@ -390,7 +419,7 @@ export class Session extends WritingApp
 				chainCfg.id,
 				(ctor.initializer as unknown as any)(
 					chainCfg,
-					this.#l2_signer,
+					s,
 					this.#l1_event_emitters) as ChainSession);
 		}
 	};

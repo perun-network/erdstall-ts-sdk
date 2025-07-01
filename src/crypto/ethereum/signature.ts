@@ -2,12 +2,18 @@
 "use strict";
 
 import { ethers } from "ethers";
-import { registerSignatureType, Signature } from "#erdstall/crypto";
+import {
+	registerSignatureType,
+	Signature,
+	SignatureType,
+	_signatureDecoders
+} from "#erdstall/crypto";
 import { EthereumAddress } from "./address";
 import { Address } from "#erdstall/crypto";
 import { jsonObject } from "#erdstall/export/typedjson";
 import { parseHex, toHex } from "#erdstall/utils/hexbytes";
 import { customJSON } from "#erdstall/api/util";
+import { CodecReader, CodecWriter } from "#erdstall/utils";
 
 @jsonObject
 export class EthereumSignature extends Signature<"ethereum"> {
@@ -15,6 +21,8 @@ export class EthereumSignature extends Signature<"ethereum"> {
 
 	constructor(value: Uint8Array) {
 		super();
+		if(value.length !== 65)
+			throw new Error(`Expected 65 bytes, got ${value.length}`);
 		this.bytes = new Uint8Array(value); // explicit deep copy!
 	}
 
@@ -41,10 +49,16 @@ export class EthereumSignature extends Signature<"ethereum"> {
 
 	asABI() { return this.bytes; }
 
+	override signatureType(): SignatureType { return SignatureType.Ethereum; }
+	override encode_impl(w: CodecWriter): void { w.bytes(this.bytes); }
+	static decode_impl(r: CodecReader): EthereumSignature
+		{ return new EthereumSignature(r.bytes(65)); }
+
 	ABIType(): string { return "bytes"; }
 
 	type(): "ethereum" { return "ethereum"; }
 }
 
 registerSignatureType("ethereum", EthereumSignature);
+_signatureDecoders.set(SignatureType.Ethereum, EthereumSignature.decode_impl);
 customJSON(EthereumSignature);

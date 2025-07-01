@@ -9,7 +9,7 @@ import {
 	LedgerEventMask
 } from "./event";
 import { Address } from "#erdstall/crypto";
-import { AttestationResult, ClientConfig, ChainConfig } from "#erdstall/api/responses";
+import { ClientConfig, ChainConfig } from "#erdstall/api/responses";
 import { Enclave, EnclaveEvent } from "#erdstall/enclave";
 import { Chain, Account, LedgerEvent, getChainName } from "#erdstall/ledger";
 import { LocalAsset } from "#erdstall/ledger/assets";
@@ -48,7 +48,7 @@ export class Client extends App
 		enclaveConn: (Enclave) | URL,
 		blockchainReadCtors: BackendClientConstructors,
 	) {
-		const internals = new AppInternals((cfg) => this.#on_config(cfg));
+		const internals = new AppInternals(undefined, (cfg) => this.#on_config(cfg));
 		super(enclaveConn, internals);
 		this.#internals = internals;
 

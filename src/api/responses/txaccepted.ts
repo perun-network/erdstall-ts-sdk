@@ -2,24 +2,21 @@
 "use strict";
 
 import { ErdstallObject, registerErdstallType } from "#erdstall/api";
-import { jsonObject, jsonMember } from "#erdstall/export/typedjson";
+import { CodecReader, CodecWriter } from "#erdstall/utils";
 
 const txAcceptedTypeName = "TxAccepted";
 
-@jsonObject
 export class TxAccepted extends ErdstallObject {
-	@jsonMember(String) hash: string;
-	constructor(hash: string) {
-		super();
-		this.hash = hash;
-	}
+		constructor(
+	public call: bigint
+		) { super(); }
 
-	public objectType(): any {
-		return TxAccepted;
-	}
-	override objectTypeName(): string {
-		return txAcceptedTypeName;
-	}
+	override objectType(): any { return TxAccepted; }
+	override objectTypeName(): string { return txAcceptedTypeName; }
+
+	override encode(w: CodecWriter): void { w.u64(this.call); }
+	static decode(r: CodecReader): TxAccepted
+		{ return new TxAccepted(r.u64()); }
 }
 
 registerErdstallType(txAcceptedTypeName, TxAccepted);

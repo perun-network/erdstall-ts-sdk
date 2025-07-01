@@ -1,35 +1,33 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { Transaction, registerTransactionType } from "./transaction";
+import {
+	Transaction,
+	TransactionType,
+	NonceCheck,
+	_transactionDecoders,
+	TxCore
+} from "./transaction";
 import { ChainAssets } from "#erdstall/ledger/assets";
-import { jsonObject, jsonMember } from "#erdstall/export/typedjson";
-import { Address, Crypto } from "#erdstall/crypto";
+import { Address } from "#erdstall/crypto";
+import { CodecReader, CodecWriter } from "#erdstall/utils";
 
-const transferTypeName = "Transfer";
-
-@jsonObject
 export class Transfer extends Transaction {
-	@jsonMember(() => Address) recipient: Address<Crypto>;
-	@jsonMember(() => ChainAssets) values: ChainAssets;
+		constructor(
+			core: TxCore,
+	public recipient: Address,
+	public values: ChainAssets,
+		) { super(core); }
 
-	constructor(
-		sender: Address<Crypto>,
-		nonce: bigint,
-		recipient: Address<Crypto>,
-		values: ChainAssets,
-	) {
-		super(sender, nonce);
-		this.recipient = recipient;
-		this.values = values;
-	}
-
-	public txType() {
-		return Transfer;
-	}
-	protected txTypeName(): string {
-		return transferTypeName;
+	override transactionType(): TransactionType
+		{ return TransactionType.Transfer; }
+	override encode_impl(w: CodecWriter): void
+		{ this.recipient.encode(w); this.values.encode(w); }
+	static decode_impl(r: CodecReader, core: TxCore): Transfer
+	{
+		return new Transfer(core,
+			Address.decode(r),
+			ChainAssets.decode(r));
 	}
 }
-
-registerTransactionType(transferTypeName, Transfer);
+_transactionDecoders.set(TransactionType.Transfer, Transfer.decode_impl);

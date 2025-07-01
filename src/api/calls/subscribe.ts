@@ -3,96 +3,60 @@
 
 import { ErdstallObject, registerErdstallType } from "#erdstall/api";
 import { Address, Crypto } from "#erdstall/crypto";
-import { jsonObject, jsonMember } from "#erdstall/export/typedjson";
+import { CodecReader, CodecWriter } from "#erdstall/utils";
 
 const subBPsTypeName = "SubscribeBalanceProofs";
 const subTXsTypeName = "SubscribeTXs";
 const subPhaseShiftName = "SubscribePhaseShifts";
 
-@jsonObject
 export class SubscribeBalanceProofs extends ErdstallObject {
-	@jsonMember(() => Address) who?: Address<Crypto>;
-	@jsonMember(Boolean) cancel?: boolean;
+		constructor(
+	public who: Address,
+	public cancel: boolean = false
+		) { super(); }
 
-	constructor(who?: Address<Crypto>, cancel?: boolean) {
-		super();
-		this.who = who;
-		this.cancel = cancel;
+	override objectType(): any { return SubscribeBalanceProofs; }
+	override objectTypeName(): string { return subBPsTypeName; }
+
+	override encode(w: CodecWriter): void {
+		Address.encode(w, this.who);
+		w.bool(this.cancel);
 	}
-
-	public objectType(): any {
-		return SubscribeBalanceProofs;
-	}
-
-	override objectTypeName(): string {
-		return subBPsTypeName;
-	}
-
-	public static fromJSON(json: any): SubscribeBalanceProofs {
-		if (!json.who) {
-			throw new Error("expected who field in subscribe balance proofs");
-		}
-		const who = Address.ensure(json.who);
-		return new SubscribeBalanceProofs(who, json.cancel);
-	}
-
-	public static toJSON(obj: SubscribeBalanceProofs): any {
-		return {
-			who: obj.who?.toJSON(),
-			cancel: obj.cancel,
-		};
+	static decode(r: CodecReader): SubscribeBalanceProofs {
+		return new SubscribeBalanceProofs(
+			Address.decode(r),
+			r.bool());
 	}
 }
 
-@jsonObject
 export class SubscribeTXs extends ErdstallObject {
-	@jsonMember(() => Address) who?: Address<Crypto>;
-	@jsonMember(Boolean) cancel?: boolean;
+		constructor(
+	public who?: Address,
+	public cancel: boolean = false
+		) { super(); }
 
-	constructor(who?: Address<Crypto>, cancel?: boolean) {
-		super();
-		this.who = who;
-		this.cancel = cancel;
+	override objectType(): any { return SubscribeTXs; }
+	override objectTypeName(): string { return subTXsTypeName; }
+
+	override encode(w: CodecWriter): void {
+		w.opt(this.who);
+		w.bool(this.cancel);
 	}
-
-	public objectType(): any {
-		return SubscribeTXs;
-	}
-	override objectTypeName(): string {
-		return subTXsTypeName;
-	}
-
-	// public static fromJSON(json: any): SubscribeTXs {
-	// 	if (!json.who) {
-	// 		throw new Error("expected who field in subscribe transaction");
-	// 	}
-	// 	const who = Address.ensure(json.who);
-	// 	return new SubscribeTXs(who, json.cancel);
-	// }
-
-	// public static toJSON(obj: SubscribeTXs): any {
-	// 	return {
-	// 		who: obj.who?.toJSON(),
-	// 		cancel: obj.cancel,
-	// 	};
-	// }
+	static decode(r: CodecReader): SubscribeTXs
+		{ return new SubscribeTXs(r.opt(() => Address.decode(r)), r.bool()); }
 }
 
-@jsonObject
 export class SubscribePhaseShifts extends ErdstallObject {
-	@jsonMember(Boolean) cancel?: boolean;
+		constructor(
+	public cancel: boolean = false
+		) { super(); }
 
-	constructor(cancel?: boolean) {
-		super();
-		this.cancel = cancel;
-	}
+	override objectType(): any { return SubscribePhaseShifts; }
+	override objectTypeName(): string { return subPhaseShiftName; }
 
-	public objectType(): any {
-		return SubscribePhaseShifts;
-	}
-	override objectTypeName(): string {
-		return subPhaseShiftName;
-	}
+	override encode(w: CodecWriter): void { w.bool(this.cancel); }
+	static decode(r: CodecReader): SubscribePhaseShifts
+		{ return new SubscribePhaseShifts(r.bool()); }
 }
 
 registerErdstallType(subBPsTypeName, SubscribeBalanceProofs);

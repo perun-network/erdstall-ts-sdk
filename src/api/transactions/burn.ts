@@ -1,28 +1,31 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { Transaction, registerTransactionType } from "./transaction";
+import {
+	Transaction,
+	TransactionType,
+	NonceCheck,
+	_transactionDecoders,
+	TxCore
+} from "./transaction";
 import { Address, Crypto } from "#erdstall/crypto";
 import { ChainAssets } from "#erdstall/ledger/assets";
-import { jsonObject, jsonMember } from "#erdstall/export/typedjson";
+import { CodecReader, CodecWriter } from "#erdstall/utils";
 
 const burnTypeName = "Burn";
 
-@jsonObject
 export class Burn extends Transaction {
-	@jsonMember(() => ChainAssets) values: ChainAssets;
+		constructor(
+			core: TxCore,
+	public values: ChainAssets
+		) { super(core); }
 
-	constructor(sender: Address<Crypto>, nonce: bigint, values: ChainAssets) {
-		super(sender, nonce);
-		this.values = values;
-	}
-
-	public txType() {
-		return Burn;
-	}
-	protected txTypeName(): string {
-		return burnTypeName;
-	}
+	override transactionType(): TransactionType
+		{ return TransactionType.Burn; }
+	override encode_impl(w: CodecWriter): void
+		{ this.values.encode(w); }
+	static decode_impl(r: CodecReader, core: TxCore): Burn
+		{ return new Burn(core, ChainAssets.decode(r)); }
 }
 
-registerTransactionType(burnTypeName, Burn);
+_transactionDecoders.set(TransactionType.Burn, Burn.decode_impl);

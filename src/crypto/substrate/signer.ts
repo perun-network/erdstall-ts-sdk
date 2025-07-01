@@ -9,6 +9,7 @@ import {
 import { Keypair } from "@polkadot/util-crypto/types";
 import { SubstrateSignature } from "./signature";
 import { SubstrateAddress } from "./address";
+import { getRandomValues } from "#erdstall/crypto/wildcard";
 
 export class SubstrateSigner extends Signer<"substrate"> {
 	readonly keyPair: Keypair;
@@ -39,9 +40,7 @@ export class SubstrateSigner extends Signer<"substrate"> {
 		signer: SubstrateSigner;
 		seed: Uint8Array;
 	}> {
-		let seed = new Uint8Array(32);
-		for(let i = 0; i < seed.length; i++)
-			seed[i] = (Math.random() * 512) & 0xff; // NOTE SECURITY: unsafe, but portable. The web crypto API is not available on node.js until v19.
+		let seed = getRandomValues(new Uint8Array(32));
 
 		await cryptoWaitReady();
 		let keys = sr25519PairFromSeed(seed)

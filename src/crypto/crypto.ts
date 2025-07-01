@@ -14,6 +14,8 @@ type _supportedCryptos = {
 	ethereum: [];
 	// Crypto used for substrate: SR25519.
 	substrate: [];
+	// Does not have signatures, but has addresses (u64), and encryption.
+	wildcard: [];
 
 	test: [];
 };

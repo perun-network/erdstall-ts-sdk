@@ -1,6 +1,6 @@
-import { TxAccepted, TxReceipt } from "#erdstall/api/responses";
+import { TxAccepted, DirectTxReceipt } from "#erdstall/api/responses";
 
 export interface PendingTransaction {
-	accepted: Promise<TxAccepted>;
-	receipt: Promise<TxReceipt>;
+	accepted: Promise<void>;
+	receipt: Promise<DirectTxReceipt>;
 }

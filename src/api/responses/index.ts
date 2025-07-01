@@ -7,4 +7,5 @@ export * from "./clientconfig";
 export * from "./txreceipt";
 export * from "./phaseshift";
 export * from "./txaccepted";
-export * from "./attestationresult";
+// disable for now.
+//export * from "./attestationresult";

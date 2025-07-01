@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { AttestationResult, ClientConfig } from "#erdstall/api/responses";
+import { ClientConfig } from "#erdstall/api/responses";
 import { ErdstallEvent, LedgerEventMask } from "#erdstall/event";
 import { Account } from "#erdstall/ledger/account";
 import { Address } from "#erdstall/crypto";
@@ -15,19 +15,6 @@ export class SubstrateClient extends ChainClient {
 	constructor(wsProvider: URL) {
 		super();
 		this.provider = new WsProvider(wsProvider.toString());
-	}
-
-	initialize(): Promise<void> {
-		throw new Error("Method not implemented.");
-	}
-	subscribe(who?: Address<"substrate"> | undefined): Promise<void> {
-		throw new Error("Method not implemented.");
-	}
-	getAccount(who: Address<"substrate">): Promise<Account> {
-		throw new Error("Method not implemented.");
-	}
-	attest(): Promise<AttestationResult> {
-		throw new Error("Method not implemented.");
 	}
 
 	override update_event_tracking(mask: LedgerEventMask): void

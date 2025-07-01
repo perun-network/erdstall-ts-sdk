@@ -7,12 +7,15 @@ import {
 	jsonObject,
 } from "#erdstall/export/typedjson";
 import { customJSON } from "./util";
+import { CodecReader, CodecWriter } from "#erdstall/utils";
 
-const objectImpls = new Map<string, Serializable<ErdstallObject>>();
+const objectImpls = new Map<string, Serializable<ErdstallObject> & Decoder>();
+
+interface Decoder { decode(r: CodecReader): ErdstallObject; }
 
 export function registerErdstallType(
 	typeName: string,
-	typeClass: Serializable<ErdstallObject>,
+	typeClass: Serializable<ErdstallObject> & Decoder,
 ) {
 	objectImpls.set(typeName, typeClass);
 }
@@ -20,26 +23,29 @@ export function registerErdstallType(
 /** Base type for all Erdstall messages. */
 @jsonObject
 export abstract class ErdstallObject {
-	public abstract objectType(): Serializable<ErdstallObject>;
+	public abstract objectType(): Serializable<ErdstallObject> & Decoder;
 	public abstract objectTypeName(): string;
 
 	static fromJSON(js: any): ErdstallObject {
-		let data = JSON.stringify(js.data);
-
-		if (!objectImpls.has(js.type)) {
+		let desc = objectImpls.get(js.type);
+		if(!desc)
 			throw new Error(`unknown erdstall object type "${js.type}"`);
-		}
+		if(typeof js.data !== "string")
+			throw new Error(`expected string payload in ${js.type} json`);
 
-		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-		return TypedJSON.parse(data, objectImpls.get(js.type)!)!;
+		return desc.decode(CodecReader.fromString(js.data));
 	}
 
 	static toJSON(me: ErdstallObject): any {
+		const w = new CodecWriter();
+		me.encode(w);
 		return {
 			type: me.objectTypeName(),
-			data: JSON.parse(TypedJSON.stringify(me, me.objectType())),
+			data: w.getAsString(),
 		};
 	}
+
+	abstract encode(w: CodecWriter): void;
 }
 
 customJSON(ErdstallObject);

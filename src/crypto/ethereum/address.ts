@@ -5,12 +5,21 @@ import { ethers } from "ethers";
 import { jsonObject } from "#erdstall/export/typedjson";
 import { equalArray } from "#erdstall/utils/arrays";
 import { ABIValue, customJSON } from "#erdstall/api/util";
-import { Address, registerAddressType } from "#erdstall/crypto";
+import {
+	Address,
+	AddressType,
+	registerAddressType,
+	_addressDecoders,
+	SigVerifier,
+	SignedMessage
+} from "#erdstall/crypto";
 import { toHex, parseHex } from "#erdstall/utils/hexbytes";
 import { LocalAsset } from "#erdstall/ledger/assets";
+import { CodecReader, CodecWriter } from "#erdstall/utils";
+import { EthereumSignature } from "./signature";
 
 @jsonObject
-export class EthereumAddress extends Address<"ethereum"> implements ABIValue {
+export class EthereumAddress extends Address<"ethereum"> implements ABIValue, SigVerifier {
 	#value: Uint8Array;
 	constructor(value: Uint8Array) {
 		super();
@@ -57,7 +66,12 @@ export class EthereumAddress extends Address<"ethereum"> implements ABIValue {
 		return EthereumAddress.fromString(addr);
 	}
 
+	override encode_impl(w: CodecWriter): void { w.bytes(this.#value); }
+	static decode_impl(r: CodecReader): EthereumAddress
+		{ return new EthereumAddress(r.bytes(20)); }
+
 	type(): "ethereum" { return "ethereum"; }
+	override addressType(): AddressType { return AddressType.Ethereum; }
 
 	override clone(): this { return new EthereumAddress(this.#value) as this; }
 
@@ -73,9 +87,19 @@ export class EthereumAddress extends Address<"ethereum"> implements ABIValue {
 
 	equals(other: EthereumAddress): boolean
 		{ return equalArray(this.#value, other.#value); }
+
+	async verifySig(s: SignedMessage): Promise<Uint8Array | undefined> {
+		if(!(s.signature instanceof EthereumSignature))
+			return undefined;
+
+		if(s.signature.verify(s.message, this))
+			return s.message;
+		else return undefined;
+	}
 }
 
 registerAddressType("ethereum", EthereumAddress);
+_addressDecoders.set(AddressType.Ethereum, EthereumAddress.decode_impl);
 customJSON(EthereumAddress);
 
 export function addressKey(addr: EthereumAddress | string): string {
