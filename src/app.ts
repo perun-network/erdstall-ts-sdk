@@ -76,6 +76,7 @@ export class AppInternals implements SigVerifier {
 
 // L2 Identity: addresses, signers, account ID and encryption.
 // TODO: move this somewhere else maybe? crypto? ledger?
+// TODO: what is the exact security model here? Some transactions want to modify state in here. => might have to re-think the encapsulation.
 export class L2Identity {
 	#wildcardId?: WildcardAddress;
 	#encryption?: AESGCMKey;
@@ -83,6 +84,8 @@ export class L2Identity {
 	#subst?: SubstrateSigner | SubstrateAddress;
 
 	set aes(v: AESGCMKey | undefined) { this.#encryption = v; }
+
+	set wildcardId(w: WildcardAddress) { this.#wildcardId = w; }
 
 	constructor(
 		wildcard: WildcardAddress | undefined,

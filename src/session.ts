@@ -21,7 +21,9 @@ import {
 	Mint,
 	FullExit,
 	Burn,
-	SetPrivacy
+	SetPrivacy,
+	LinkAccount,
+	LinkAccount_Output
 } from "#erdstall/api/transactions";
 import { GetAccount } from "#erdstall/api/calls";
 import { Account, Chain, getChainName } from "#erdstall/ledger";
@@ -97,6 +99,12 @@ export class WritingApp extends App {
 
 	get #enclave() { return this.#internals.enclave!; }
 	get address(): Address { return this.#internals.identity!.address; }
+	get eth_addr(): EthereumAddress | undefined
+		{ return this.#internals.identity!.eth_addr; }
+	get subst_addr(): SubstrateAddress | undefined
+		{ return this.#internals.identity!.subst_addr; }
+	get wildcard_addr(): WildcardAddress | undefined
+		{ return this.#internals.identity!.wildcard_addr; }
 
 	constructor(
 		enclaveConn: Enclave | URL,
@@ -210,6 +218,28 @@ export class WritingApp extends App {
 
 	async subscribeSelf(): Promise<void> {
 		return this.#enclave.subscribe(this.address);
+	}
+
+	// Link all keys in the current L2 Identity together.
+	async linkAccount(
+		eth: EthereumSigner | undefined,
+		subst: SubstrateSigner | undefined,
+		accountID: WildcardAddress | "create account ID"
+	): Promise<CallResponse<LinkAccount_Output>> {
+		const nonce = new StrictNonceCheck(await this.#nextNonce());
+		let tx = new LinkAccount(
+			new TxCore(this.address, nonce, false),
+			eth?.address(),
+			subst?.address(),
+			accountID);
+
+		await tx.authorise_link(eth, subst);
+
+		return this.#enclave.linkAccount(await this.#signTx(tx)).map(async r => {
+			this.#internals.identity!.wildcardId = r.accountID;
+			return r;
+		});
+
 	}
 
 

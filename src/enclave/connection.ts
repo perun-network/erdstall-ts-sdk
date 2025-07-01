@@ -19,7 +19,9 @@ import {
 	FullExit,
 	Burn,
 	SetPrivacy,
-	SetPrivacy_Output
+	SetPrivacy_Output,
+	LinkAccount,
+	LinkAccount_Output
 } from "#erdstall/api/transactions";
 import {
 	ClientConfig,
@@ -197,6 +199,14 @@ export class Enclave
 	{
 		return this.sendCall<SignedDirectTxReceipt>(tx).map(async (r) =>
 			SetPrivacy_Output.decode(
+				(await r.verify(this.#sigVerifier!))!.ok().reader())
+		);
+	}
+
+	public linkAccount(tx: SignedTransaction<LinkAccount>): CallResponse<LinkAccount_Output>
+	{
+		return this.sendCall<SignedDirectTxReceipt>(tx).map(async (r) =>
+			LinkAccount_Output.decode(
 				(await r.verify(this.#sigVerifier!))!.ok().reader())
 		);
 	}

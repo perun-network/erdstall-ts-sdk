@@ -22,7 +22,7 @@ export class SubstrateSigner extends Signer<"substrate"> {
 	type(): "substrate" { return "substrate"; }
 
 
-	async sign(message: Uint8Array): Promise<Signature<"substrate">> {
+	async sign(message: Uint8Array): Promise<SubstrateSignature> {
 		await cryptoWaitReady();
 		const sig = sr25519Sign(message, this.keyPair);
 		return new SubstrateSignature(sig);
