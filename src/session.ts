@@ -256,8 +256,10 @@ export class WritingApp extends App {
 			await DHPair.generate(),
 			undefined);
 
-		let result = this.#enclave.getAccount(await this.#signTx(tx)).result;
-		let { sk } = await tx.decrypt_output(await result);
+		let res = await this.#enclave.getAccount(await this.#signTx(tx)).result;
+		if(res.id)
+			this.#internals.identity!.wildcardId = res.id;
+		let { sk } = await tx.decrypt_output(res);
 		this.#internals.identity!.aes = sk;
 		return sk !== undefined;
 	}
@@ -273,7 +275,7 @@ export class WritingApp extends App {
 	}
 
 	// Will fail if you have a private account, but did not supply the privacy key to the session. In that case, you can fetch it via fetchPrivacyKey().
-	async fetchBalance(): Promise<ChainAssets>
+	async fetchOwnBalance(): Promise<ChainAssets>
 	{
 		let tx = new GetAccount(
 			new TxCore(this.address, new NoNonceCheck(), false),
@@ -306,8 +308,8 @@ export class Session extends WritingApp
 		{ return new LedgerEventHandlers(this.#l1_event_emitters); }
 
 	constructor(
-		identity: L2Identity,
 		enclaveConn: Enclave | URL,
+		identity: L2Identity,
 		backendCtors: BackendSessionConstructors
 	) {
 		const internals = new AppInternals(identity, (cfg) => this.#on_config(cfg));

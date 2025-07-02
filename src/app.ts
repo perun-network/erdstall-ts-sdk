@@ -33,7 +33,7 @@ import {
 import { CodecWriter } from "#erdstall/utils";
 import { Enclave, EnclaveEvent } from "#erdstall/enclave";
 import { Chain, Account, LedgerEvent, getChainName } from "#erdstall/ledger";
-import { LocalAsset } from "#erdstall/ledger/assets";
+import { LocalAsset, ChainAssets } from "#erdstall/ledger/assets";
 import { EthereumChainConfig } from "#erdstall/ledger/backend/ethereum/chainconfig";
 import { SubstrateChainConfig } from "#erdstall/ledger/backend/substrate/chainconfig";
 
@@ -233,13 +233,14 @@ export class App {
 	async subscribe(who?: Address): Promise<void>
 		{ return await this.#enclave.subscribe(who); }
 
-	async getAccount(who: Address): Promise<GetAccount_Output>
+	async fetchBalanceOf(who: Address): Promise<ChainAssets | undefined>
 	{
 		let tx = new GetAccount(
 			new TxCore(who, new NoNonceCheck(), false),
 			undefined,
 			"if_plain");
-		return this.#enclave.getAccount(tx.unsigned()).result;
+		let result = await this.#enclave.getAccount(tx.unsigned()).result;
+		return (await tx.decrypt_output(result)).balances;
 	}
 
 	/*async attest(): Promise<AttestationResult>

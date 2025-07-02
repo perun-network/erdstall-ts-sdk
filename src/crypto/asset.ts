@@ -2,7 +2,7 @@
 "use strict";
 
 import { Chain } from "#erdstall/ledger";
-import { Address, Crypto } from "#erdstall/crypto";
+import { WildcardAddress } from "#erdstall/crypto/wildcard";
 import { ethers } from "ethers";
 import { toHex } from "#erdstall/utils/hexbytes";
 import { CodecReader, CodecWriter } from "#erdstall/utils";
@@ -32,7 +32,7 @@ export class AssetID {
 	}
 
 	static erdstallUserToken(
-		user: Address<Crypto>,
+		user: WildcardAddress,
 		name32: Uint8Array,
 	): Uint8Array {
 		return ethers.getBytes(ethers.keccak256(
