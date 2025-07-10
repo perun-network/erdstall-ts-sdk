@@ -60,18 +60,20 @@ export abstract class ChainSession {
 
 
 export type BackendSessionConstructors = {
-	ethereum: {
+	ethereum?: {
 		type: "ethereum";
 		initializer: (
 			config: ChainConfig,
 			signer: EthereumSigner,
+			events: LedgerEventEmitters
 		) => ChainSession;
 	};
-	substrate: {
+	substrate?: {
 		type: "substrate";
 		initializer: (
 			config: ChainConfig,
 			signer: SubstrateSigner,
+			events: LedgerEventEmitters
 		) => ChainSession;
 	};
 };

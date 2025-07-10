@@ -275,7 +275,7 @@ const signer = await (new BrowserProvider(window.ethereum)).getSigner();
 
 const wildcard = new WritingApp(
     new URL("ws://127.0.0.1:1337/ws"), // local Wildcard operator
-    EthereumSigner.fromEthersSigner(signer),
+    await EthereumSigner.fromEthersSigner(signer),
 );
 
 await wildcard.initialize(); // connects to the operator
