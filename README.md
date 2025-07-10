@@ -274,14 +274,12 @@ import { EthereumSigner } from "@polycrypt/erdstall/crypto/ethereum";
 const signer = await (new BrowserProvider(window.ethereum)).getSigner();
 
 const wildcard = new WritingApp(
+    new URL("ws://127.0.0.1:1337/ws"), // local Wildcard operator
     EthereumSigner.fromEthersSigner(signer),
-    new URL("ws://127.0.0.1:1337/ws"); // local Wildcard operator
+);
 
 await wildcard.initialize(); // connects to the operator
 await wildcard.subscribe(); // subscribes to all receipts and balance proofs
-
-// Start your dApp with the Wildcard connection
-myDApp.run(wildcard);
 ```
 
 **Setting up a server-side dApp**&emsp; Additionally, for example when writing a server-side application for node.js, you can set up a custodial wallet session (locally managed keys without an external signer) using the following code:
@@ -307,6 +305,37 @@ const wildcard = new WritingApp(signer, wildcardURL);
 This may be useful for running Wildcard in a setting where no external wallet provider (such as MetaMask) exists, e.g. in a node.js server or when using custodial or throwaway wallets in a website.
 
 
+**Setting up wildcard with L1 features**&emsp; For deposits, withdrawals, bridging and other L1 related features you need `Session` instead of `WritingApp`:
+```ts
+import { BrowserProvider } from "ethers";
+import { Session } from "@polycrypt/erdstall";
+import { EthereumSigner } from "@polycrypt/erdstall/crypto/ethereum";
+import { EthereumSession } from "@polycrypt/erdstall/ledger/backend/ethereum";
+import { SubstrateSession } from "@polycrypt/erdstall/ledger/backend/substrate";
+
+const signer = await (new BrowserProvider(window.ethereum)).getSigner();
+
+const wildcard = new Session(
+    new URL("ws://127.0.0.1:1337/ws"), // local Wildcard operator
+    EthereumSigner.fromEthersSigner(signer),
+    {
+	// You can also only list one chain, but name and type must match.
+	// Multiple chains of the same type are not supported, yet.
+	ethereum: {
+	    type: "ethereum",
+	    initializer: EthereumSession.fromConfig,
+	},
+	substrate: {
+	    type: "substrate",
+	    initializer: SubstrateSession.fromConfig,
+	},
+    }
+);
+
+await wildcard.initialize(); // connects to the operator
+await wildcard.subscribe(); // subscribes to all receipts and balance proofs
+
+```
 
 
 
