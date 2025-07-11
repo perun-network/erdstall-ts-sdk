@@ -244,8 +244,8 @@ export class Session extends WritingApp
 		{ return new LedgerEventHandlers(this.#l1_event_emitters); }
 
 	constructor(
-		l2signer: Signer,
 		enclaveConn: Enclave | URL,
+		l2signer: Signer,
 		backendCtors: BackendSessionConstructors
 	) {
 		const internals = new AppInternals((cfg) => this.#on_config(cfg));

@@ -299,28 +299,20 @@ else
     signer = acc.signer;
 }
 
-const wildcard = new WritingApp(signer, wildcardURL);
+const wildcard = new WritingApp(wildcardURL, signer);
 ```
 
 This may be useful for running Wildcard in a setting where no external wallet provider (such as MetaMask) exists, e.g. in a node.js server or when using custodial or throwaway wallets in a website.
 
 
-**Setting up wildcard with L1 features**&emsp; For deposits, withdrawals, bridging and other L1 related features you need `Session` instead of `WritingApp`:
+**Setting up wildcard with L1 features**&emsp; For deposits, withdrawals, bridging and other L1 related features you need `Session` instead of `WritingApp`, which additionally takes as argument the desired L1 backend constructors we want to make use of. The signer passed to the Session constructor is also used to sign L1 transactions.
 ```ts
-import { BrowserProvider } from "ethers";
 import { Session } from "@polycrypt/erdstall";
-import { EthereumSigner } from "@polycrypt/erdstall/crypto/ethereum";
 import { EthereumSession } from "@polycrypt/erdstall/ledger/backend/ethereum";
 import { SubstrateSession } from "@polycrypt/erdstall/ledger/backend/substrate";
 
-const signer = await (new BrowserProvider(window.ethereum)).getSigner();
-
-const wildcard = new Session(
-    new URL("ws://127.0.0.1:1337/ws"), // local Wildcard operator
-    EthereumSigner.fromEthersSigner(signer),
-    {
-	// You can also only list one chain, but name and type must match.
-	// Multiple chains of the same type are not supported, yet.
+// You can also only list one or no backend types, but name and type must match.
+const l1BackendCtors = {
 	ethereum: {
 	    type: "ethereum",
 	    initializer: EthereumSession.fromConfig,
@@ -329,13 +321,13 @@ const wildcard = new Session(
 	    type: "substrate",
 	    initializer: SubstrateSession.fromConfig,
 	},
-    }
-);
+};
 
-await wildcard.initialize(); // connects to the operator
-await wildcard.subscribe(); // subscribes to all receipts and balance proofs
-
+const wildcard = new Session(wildcardURL, signer, l1BackendCtors);
 ```
+
+> [!NOTE]
+> Currently, we only instantiate backends that are compatible with the provided signer. In a later version, this restriction will be removed, when we switch to multi-signer sessions.
 
 
 
@@ -347,12 +339,18 @@ await wildcard.subscribe(); // subscribes to all receipts and balance proofs
 The `AssetID` has already been explained in detail in §[The multi-chain asset model](#the-multi-chain-asset-model).
 The other part of asset handling is the `ChainAssets` class. It is fairly straightforward to use. You create an empty `ChainAssets` instance via its constructor, and then add more via `.addAsset(Chain, LocalID, Asset)`, where `LocalID` is the 32-byte array part of the AssetID. This lets us construct ChainAssets in a piecewise manner and then pass them to the relevant functions. ChainAssets are a tree structure that groups assets by origin chain and by kind (fungible / NFT), but via the `.ordered()` function, a neat iterable representation `[AssetID, Asset]` is returned, which is more convenient for displaying them. 
 
+**Ethereum-native assets**&emsp; You can create ethereum-local asset IDs via `EthereumAddress.toLocalAsset()`, where the address is the contract address of the token. It returns a 32-byte LocalID.
 
+**Substrate-native assets**&emsp; You can create substrate-local asset IDs via helpers in the package `ledger/backend/substrate`: `.fungibleAsset(id)` and `.nftAsset(id)` take a 16-bit unsigned bigint as asset ID and returns a 32-byte LocalID.
 
+For example:
 
+```ts
+import { nftAsset } from "@polycrypt/erdstall/backend/substrate";
 
-
-
+let substNFT = new ChainAssets();
+substNFT.addAsset(chain, nftAsset(1n), new Tokens([12356n]));
+```
 
 ### Deposits and withdrawing
 
