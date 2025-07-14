@@ -23,7 +23,7 @@ import { CodecReader, CodecWriter } from "#erdstall/utils";
 
 const getAccountTypeName = "GetAccount";
 
-const balance_fetch_modes = ["if_plain", "maybe_encrypted", "plain"] as const;
+const balance_fetch_modes = ["only_if_plaintext", "always"] as const;
 
 export class GetAccount extends Transaction {
 		constructor(
@@ -31,8 +31,14 @@ export class GetAccount extends Transaction {
 	// fetches the encrypted secret key via DH exchange. If so, the response of the transaction is in plaintext.
 	public aes_secret: DHPair | undefined,
 	// whether to fetch the balances, and whether to send them in plaintext. If in plaintext, or the secret key is requested, the response of the transaction is in plaintext.
-	public balances: typeof balance_fetch_modes[number] | undefined
-		) { super(core); }
+			balances: typeof balance_fetch_modes[number] | boolean | undefined
+		) {
+		super(core);
+		if(typeof balances === 'boolean')
+			balances = balances ? "always" : undefined;
+		this.balances = balances;
+	}
+	public balances: typeof balance_fetch_modes[number] | undefined;
 
 	override transactionType() { return TransactionType.GetAccount; }
 
@@ -46,7 +52,12 @@ export class GetAccount extends Transaction {
 		return new GetAccount(
 			core,
 			r.opt(() => { throw new Error("Cannot decode a DH pair"); }),
-			r.opt(() => (r.bool() ? "maybe_encrypted" : "plain")));
+			r.opt(() => {
+				let mode = balance_fetch_modes[r.u8()];
+				if(mode === undefined)
+					throw new Error(`Unknown balance fetch mode ${mode}`);
+				return mode;
+			}));
 	}
 
 	// The output is already decrypted, if it was previously encrypted. But if it wasn't, it might still contain encrypted sections (balances).

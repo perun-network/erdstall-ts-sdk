@@ -280,7 +280,7 @@ export class WritingApp extends App {
 		let tx = new GetAccount(
 			new TxCore(this.address, new NoNonceCheck(), false),
 			undefined,
-			this.#internals.identity!.has_aes ? "maybe_encrypted" : "plain");
+			this.#internals.identity!.has_aes ? "always" : "only_if_plaintext");
 
 		let result = await this.#enclave.getAccount(tx.unsigned()).result;
 		let { balances } = await tx.decrypt_output(result);

@@ -238,7 +238,7 @@ export class App {
 		let tx = new GetAccount(
 			new TxCore(who, new NoNonceCheck(), false),
 			undefined,
-			"if_plain");
+			"only_if_plaintext");
 		let result = await this.#enclave.getAccount(tx.unsigned()).result;
 		return (await tx.decrypt_output(result)).balances;
 	}

@@ -213,6 +213,7 @@ export class AESGCMKey implements SigVerifier {
 		));
 	}
 
+	/*override - SigVerifier.verifySig - no 'override' for interfaces.*/
 	async verifySig(sig: SignedMessage): Promise<Uint8Array | undefined> {
 		if(!(sig.signature instanceof InitVector))
 			return undefined;
