@@ -9,10 +9,12 @@ import {
 	assertSubtractable,
 	ErrIncompatibleAssets,
 	registerAssetType,
+	_assetDecoders
 } from "./asset";
 import { Amount } from "./amount";
 import { bigTo0xEven } from "#erdstall/export/typedjson";
 import { AssetType } from "#erdstall/crypto";
+import { CodecReader, CodecWriter } from "#erdstall/utils";
 
 export const ErrIDAlreadyContained = new Error(
 	"given ID already contained in tokens",
@@ -44,6 +46,9 @@ export class Tokens extends Asset {
 			s[i] = BigInt(idset[i]);
 		return new Tokens(s);
 	}
+
+	static decode(r: CodecReader): Tokens { return new Tokens(r.u256_array()); }
+	encode(w: CodecWriter) { w.u256_array(this.value); }
 
 	toString() { return "[" + this.value.join(", ") + "]"; }
 
@@ -249,6 +254,7 @@ export class Tokens extends Asset {
 }
 
 registerAssetType(TypeTags.Tokens, Tokens.fromJSON);
+_assetDecoders.set(AssetType.NFT, Tokens.decode);
 
 export function mapNFTs<T>(
 	a: Map<string, Asset>,

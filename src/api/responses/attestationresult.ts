@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
+/* Disabled for now. Implement later, after checking which of these are actually needed.
+
 import {
 	jsonU64Member,
 	jsonObject,
@@ -113,3 +115,4 @@ export class AttestResponse extends ErdstallObject {
 }
 
 registerErdstallType(typeName, AttestResponse);
+*/

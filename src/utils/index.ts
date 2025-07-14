@@ -3,3 +3,4 @@
 
 export * from "./bigint";
 export * from "./helpers";
+export * from "./codec";

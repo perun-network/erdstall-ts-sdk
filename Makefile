@@ -6,7 +6,21 @@ clean:
 	@rm -rf dist
 
 ts:
-	@yarn install -s
+	@if [ ! -s node_modules ]; then \
+		mkdir -p /tmp/$(PWD)/node_modules; \
+		ln -s /tmp/$(PWD)/node_modules node_modules; \
+		echo "Created node_modules folder in /tmp/$(PWD)/node_modules"; \
+	fi
+
+	@if [ ! -s dist ]; then \
+		mkdir -p /tmp/$(PWD)/dist; \
+		ln -s /tmp/$(PWD)/dist dist; \
+		echo "Created dist folder in /tmp/$(PWD)/dist"; \
+		\
+		yarn install -s; \
+		echo "Initialised yarn"; \
+	fi
+
 	@yarn run build
 	@echo "Built erdstall-ts-sdk."
 	@if [ ! -s dist/package.json ]; \

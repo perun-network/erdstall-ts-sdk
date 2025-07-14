@@ -14,10 +14,11 @@ import {
 import { EnclaveEvent } from "./enclave/event";
 import {
 	ClientConfig,
-	TxReceipt,
-	BalanceProofs,
+	PublicTxReceipt,
+	BalanceProof,
 	PhaseShift,
 } from "./api/responses";
+import { Address } from "#erdstall/crypto";
 
 /**
  * ErdstallEvent is comprised of all the events related to Erdstall. These
@@ -55,7 +56,7 @@ export class EventEmitter<Event> {
 	emit(e: Event): void
 	{
 		let once = this.#once;
-		let always = this.#always;
+		let always = Array.from(this.#always); // shallow copy.
 		this.#once = [];
 
 		for(let h of once) h(e);
@@ -164,9 +165,9 @@ export class EnclaveEventEmitters {
 	open = new EventEmitter<void>;
 	close = new EventEmitter<void>;
 	config = new EventEmitter<ClientConfig>;
-	receipt = new EventEmitter<TxReceipt>;
+	receipt = new EventEmitter<[Address | undefined, PublicTxReceipt]>;
 	phaseshift = new EventEmitter<PhaseShift>;
-	proof = new EventEmitter<BalanceProofs>;
+	proof = new EventEmitter<BalanceProof>;
 	error = new EventEmitter<string | Error>;
 };
 
@@ -174,9 +175,9 @@ export class EnclaveEventHandlers {
 	open: EventHandler<void>;
 	close: EventHandler<void>;
 	config: EventHandler<ClientConfig>;
-	receipt: EventHandler<TxReceipt>;
+	receipt: EventHandler<[Address | undefined, PublicTxReceipt]>;
 	phaseshift: EventHandler<PhaseShift>;
-	proof: EventHandler<BalanceProofs>;
+	proof: EventHandler<BalanceProof>;
 	error: EventHandler<string | Error>;
 
 	constructor(e: EnclaveEventEmitters)

@@ -1,29 +1,20 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import {
-	jsonObject,
-	jsonMember,
-	jsonU64Member,
-} from "#erdstall/export/typedjson";
 import { ChainAssets } from "#erdstall/ledger/assets";
+import { CodecReader, CodecWriter } from "#erdstall/utils";
 
 /**
  * Account is the state of a user within Erdstall, including the last nonce and
  * free locked assets. It is returned by an `EnclaveReader.getAccount` query.
  */
-@jsonObject
 export class Account {
-	@jsonU64Member() nonce: bigint;
-	@jsonMember(() => ChainAssets) values: ChainAssets;
-	@jsonMember(() => ChainAssets) locked: ChainAssets;
+		constructor(
+	public nonce: bigint,
+	public values: ChainAssets
+		) {}
 
-	constructor(nonce: bigint, values: ChainAssets, locked?: ChainAssets) {
-		this.nonce = nonce;
-		this.values = values;
-		if (locked === undefined) {
-			locked = new ChainAssets(new Map());
-		}
-		this.locked = locked;
-	}
+	encode(w: CodecWriter): void { w.u64(this.nonce); this.values.encode(w); }
+	static decode(r: CodecReader): Account
+		{ return new Account(r.u64(), ChainAssets.decode(r)); }
 }

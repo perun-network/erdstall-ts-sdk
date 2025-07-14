@@ -19,17 +19,19 @@ You can install the SDK from [npm](https://www.npmjs.com/package/@polycrypt/erds
 >    * [Design goals](#design-goals)
 >    * [The multi-chain asset model](#the-multi-chain-asset-model)
 >    * [The multi-chain account model](#the-multi-chain-account-model)
+>    * [Privacy](#privacy)
 >    * [Wildcard-native asset collections](#wildcard-native-asset-collections)
 >    * [Finality and security model](#finality-and-security-model)
 >* [Using the SDK](#using-the-sdk)
 >    * [Connecting to Wildcard](#connecting-to-wildcard)
+>    * [Handling private accounts](#handling-private-accounts)
+>    * [Linking addresses](#linking-addresses)
 >    * [Handling assets](#handling-assets)
 >    * [Deposits and withdrawing](#deposits-and-withdrawing)
 >    * [Account queries](#account-queries)
 >    * [Event Subscriptions & Callbacks](#event-subscriptions--callbacks)
 >    * [Handling pending L2 transactions](#handling-pending-l2-transactions)
 >    * [Transfers](#transfers)
->    * [Trading](#trading)
 >    * [NFT minting](#nft-minting)
 >    * [Token burning](#token-burning)
 >* [Development](#development)
@@ -61,21 +63,27 @@ You can install the SDK from [npm](https://www.npmjs.com/package/@polycrypt/erds
 * `Client`&emsp; A L1 & L2 connection to Wildcard that is not associated with an account. It extends `App` with functionality for observing chains. This is useful for building a chain explorer.
 * `Session`&emsp; A L1 & L2 connection to Wildcard that is associated with an account. It inherits from `WritingApp`, extending it with functionality for depositing and withdrawing funds from/to the various connected chains. This option offers the full functionality of the Wildcard SDK. Only dApps that want to directly integrate the deposit/withdraw workflow might need this; other dApps can outsource that functionality to our general frontend.
 
+Additionally, the package contains the type:
+
+* `L2Identity`&emsp; Represents a collection of addresses or signers, as well as an encryption key. This type manages encryption, signatures, and associating linked addresses. It is required to construct `WritingApp` and `Session` instances.
+
+
 **Sub-package `api`**&emsp; In `@polycrypt/erdstall/api`, we implemented the Wildcard-specific message types. Some of these are not relevant for dApps, while others are exposed as return values or event types.
 * **Sub-package `api/calls`**&emsp; Contains non-transaction commands from the client to the Wildcard operator.
 * **Sub-package `api/responses`**&emsp; Contains any messages the Wildcard operator sends to the client, most of which are for internal use only. The most important types here are:
     * `ClientConfig`&emsp; Gets sent to a dApp connection when first connecting. It contains the genesis time of the Wildcard L2, its epoch duration (i.e., the balance proof issuance frequency), and the various connected L1 chains, as well as the cryptographic identities of the Wildcard TEE.
-    * `TxReceipt`&emsp; _(Not to be confused with `ledger/backend.TxReceipt`)_ A receipt for a processed transaction. Contains a `.status` field (see `TxStatusCode` enum accompanying the `TxReceipt` class for all the possible status codes) for checking the success of the transaction, and a `.error` field containing an error string in case the transaction failed.
-* **Sub-package `api/transactions`**&emsp; Contains the L2 transaction types, most of these are not directly used by wildcard dApps. Instead, direct commands on the session object are used to send transactions. The exception is:
-    * `TradeOffer`&emsp; Not a transaction by itself, but is used in the `Trade` transaction. It contains a signed offer of a seller for an exchange of funds, offering the exchange of two baskets of assets. A buyer can then agree to the exchange by sending a `Trade` transaction containing the seller's offer.
+    * `PublicTxReceipt`&emsp; _(Not to be confused with `ledger/backend.TxReceipt`)_ A receipt for a processed transaction. It contains the transaction and the associated output of the TEE (if any). Only successful transactions produce a receipt. The receipt proves the execution of a transaction.
+* **Sub-package `api/transactions`**&emsp; Contains the L2 transaction types, most of these are not directly used by wildcard dApps. Instead, direct commands on the session object are used to send transactions. Transactions are represented as a `SignedTransaction` after signing, which holds their encoded (or encrypted) form and signature.
 
-**Sub-package `crypto`**&emsp; In `@polycrypt/erdstall/crypto`, we have the generic types for account addresses, signatures, and signers, while the subdirectories `crypto/ethereum` and `crypto/substrate` contain the various specific implementations.
+**Sub-package `crypto`**&emsp; In `@polycrypt/erdstall/crypto`, we have the generic types for account addresses, signatures, and signers, while the subdirectories `crypto/ethereum` and `crypto/substrate` contain the various specific implementations. `crypto/wildcard` contains the Wildcard L2's cryptography: Diffie-Hellman key exchange primitives, encryption primitives, and the `WildcardAddress` account ID type.
 * `Address`&emsp; An address representing an account associated with a cryptographic signer. It is used to identify an account and to verify signatures from that account. Addresses are not considered to be bound to any chain, so the same ethereum address represents the same account on all ethereum chains and on the native L2 ledger. The native ledger supports all address types, while the various L1 chains usually only support a single address type. As we add more chains employing diverse cryptographic schemes, more address types will be added.
 * `Signer`&emsp; A signer controlling an account. Signers are used to send L2 transactions, as well as L1 transactions (on associated chains). Just like addresses, signers are not inherently bound to a specific chain, and only represent the cryptographic key pair that defines an account.
 * `Signature`&emsp; A signature issued by a signer of any type. Given an address, this can verify the authenticity of a message. The Wildcard TEE uses these to authenticate transaction receipts and balance proofs. They are also used to authenticate L2 transactions and L2 trade offers. The Wildcard TEE has an address of the appropriate type associated with every connected chain, as well as one native address for L2-only messages.
+* `SignedMessage`&emsp; The encoding of a message and an accompanying signature. This type is used to generally represent a message that is authenticated in some way, either via a signature or via authenticated encryption (in which case it stores the ciphertext and an IV for decryption). May also not contain a signature, in case a message is only optionally authenticated. This type is only used internally to represent various encoded payloads that may or may not be signed or encrypted, such as balance proofs, transaction receipts, and transactions.
 * `AssetID`&emsp; The multi-chain asset descriptor. See §[The multi-chain asset model](#the-multi-chain-asset-model).
 
 **Sub-package `enclave`**&emsp; Contains the internal implementation of the Wildcard RPC protocol. It is not intended for direct third-party use.
+* `CallResponse`&emsp; A future handle that lets users track the progress of a transaction or query. Its `.accepted` promise allows to wait for a preliminary acknowledgement of the RPC, while its `.result` lets the user await the confirmation or result of a call. If an error occurs, the promises throw. Not all requests have a separate acknowledge message before the final result, but it is generally recommended to make use of the `.accepted` event for better responsiveness.
 
 **Sub-package `export`**&emsp; Currently only re-exports the global `typedjson` instance we are using for our JSON serialisation. Third-party applications that for some reason want to access this functionality manually, should use this package to ensure that they operate on the same global state configuration. See §[TypedJSON](#typedjson).
 
@@ -90,16 +98,14 @@ You can install the SDK from [npm](https://www.npmjs.com/package/@polycrypt/erds
 * `Amount`&emsp; A fungible currency amount. An amount is a `uint256`. Inherits from Asset.
 
 **Sub-package `ledger/backend`**&emsp; Contains chain-independent abstractions for the various L1 transactions issued by Wildcard.
-* `WildcardTx`&&emsp; Abstract base class semantically representing the contents of an actual chain-specific L1 transaction in a chain-agnostic manner, allowing for easier generic handling of transactions by an application without forcing the developer to write chain-specific code.
+* `WildcardTx`&emsp; Abstract base class semantically representing the contents of an actual chain-specific L1 transaction in a chain-agnostic manner, allowing for easier generic handling of transactions by an application without forcing the developer to write chain-specific code.
 * `UnsignedTx`&emsp; A prepared L1 transaction that has not yet been signed. Via `.description`, a trusted and tamperproof `WildcardTx` instance can be retrieved (as long as the origin of the `UnsignedTx` is trustworthy). These can be signed via `Session.signTx()`.
 * `SignedTx`&emsp; A L1 transaction that has been signed but not yet been sent. Also has the `.description` field. These can be sent using `Session.sendTx()`.
 * `TxReceipt`&emsp; (not to be confused with `api/responses.TxReceipt`) A receipt to a L1 transaction that can be used to check up on its completion and status (success / revert). Has an awaitable `success: Promise<boolean>` field indicating the eventual finalisation and status code of the transaction.
 * `TxSigner`, `TxSender`&emsp; Internal objects standardising the way in which the various chains' L1 transactions are signed and sent, respectively.
 * `UnsignedTxBatch`, `SignedTxBatch`, `TxReceiptBatch`&emsp; These allow a batch of transactions to be treated as one cohesive unit, allowing for batch signing and batch sending, as well as more robust nonce management. Since single Wildcard actions might have to be broken down into multiple on-chain transactions depending on the target chain, this helps us create more robust treatment of such actions. Batch versions of session transaction commands exist: `Session.signTxBatch` and `Session.sendTxBatch()`.
 
-**Sub-package `test`**&emsp; Contains internal helpers for testing.
-
-**Sub-package `utils`**&emsp; Contains mostly internal helpers for various tasks, such as encoding hexadecimal numbers, call/response message matching, and more. It is not intended for direct use by third-party projects, but exposed nonetheless. One exception is the `PendingTransaction` interface: it contains two promises: `.accepted` to query that the Wildcard operator has received a L2 transaction, and `.receipt`, which is a promise to a `TxReceipt`, which lets us verify the execution of the L2 transaction and whether it succeeded or failed.
+**Sub-package `utils`**&emsp; Contains mostly internal helpers for various tasks, such as encoding hexadecimal numbers, call/response message matching, and more. It is not intended for direct use by third-party projects, but exposed nonetheless.
 
 
 
@@ -197,12 +203,10 @@ Individual assets are represented by the `erdstall/ledger/assets.ChainAssets` ty
 ### The multi-chain account model
 
 
+In Wildcard, there are two kinds of accounts:
 
-Currently, accounts are determined by the address associated with a secret key of any of the account schemes of the various supported chains.
-This means that to move funds between two address-incompatible chains (such as ethereum and substrate), one first needs to transfer the funds to an account that is address-compatible with the destination chain, and then withdraw.
-In the near future, addresses of multiple types can be linked together to form one multi-chain account.
-Additionally, such an account will receive a short unique ID (8 bytes), which can be used within Wildcard's L2 ledger, making payments more convenient.
-However, for now, each account only has a single signer and a single address.
+1. "traditional" accounts represented by the address associated with a secret key of any of the account schemes of the various supported chains: since they are bound to a single address, and not all chains support each address type, they can only withdraw funds to chains that support the address type (as balance proofs for each chain are bound to chain-native addresses). This means that to move funds between two address-incompatible chains (such as ethereum and substrate), one would first need to transfer the funds to an account that is address-compatible with the destination chain, and then withdraw. All accounts start out as this type.
+1. "extended", multi-address accounts: the "Link Account" transaction is used to turn a traditional account into an extended account, associating multiple addresses with a single account. A signature for any of the associated addresses authorises the use of this account. These can withdraw funds to all chains for which they are associated with a compatible address. Additionally, extended accounts also receive a short unique Wildcard Account ID (8 bytes), which can be used as recipient address within Wildcard's L2 ledger, making sending and receiving payments more convenient, especially when replacing keys.
 
 
 **Balance proofs**&emsp; Balance proofs are issued at the end of each epoch to all users that currently hold a balance within Wildcard.
@@ -212,7 +216,29 @@ This ensures that funds are always recoverable, even if Wildcard were to be term
 Additionally, when a user requests to exit, he receives a special balance proof that is also redeemable even without a freeze.
 
 **Owning assets for incompatible chains**&emsp; By default, all assets owned on the L2 ledger will be allocated in the recovery balance proofs to be withdrawable to their chain of origin.
-In the case where an account owns assets originating on a chain that is address-incompatible with the account, the assets get allocated to the first supported address-compatible chain. In the near future, this problem will be eliminated when we have the unified account model with multiple addresses for the same account.
+In the case where an account owns assets originating on a chain that is address-incompatible with the account, the assets get allocated to the first supported address-compatible chain. It is therefore strongly encouraged to make use of multi-address / extended accounts.
+
+
+
+
+
+
+
+
+### Privacy
+
+To respect the financial privacy of its users, Wildcard offers encryption of balances and transactions as an optional feature for extended accounts.
+This feature allows the use of the "Set Privacy" transaction to securely associate an AES-GCM encryption key with the account.
+Accounts with privacy enabled can send ecrypted transactions, and also receive encrypted transaction receipts and balance proofs to protect their financial privacy from third parties.
+For private accounts, querying balances will also return encrypted balances.
+Privacy can be turned on and off at any time.
+
+
+
+
+
+
+
 
 
 
@@ -222,7 +248,7 @@ In the case where an account owns assets originating on a chain that is address-
 
 Wildcard-native collections can be created via the `Mint` transaction, which receives an arbitrary 32-byte collection ID, and calculates the actual collection name within Wildcard's asset descriptor scheme by hashing the account address of the owner and the collection name.
 
-`crypto.AssetID.erdstallUserToken(Address, Uint8Array(32))` computes the ID of a user-minted asset collection.
+`crypto.AssetID.erdstallUserToken(WildcardAddress, Uint8Array(32))` computes the ID of a user-minted asset collection. Note that only extended accounts can mint assets, as their Wildcard Account ID is used to determine the asset collection hash. This is so that collections are still mintable by their creator even after changing his secret keys.
 
 
 
@@ -261,24 +287,33 @@ After the rework, the new security model will be that at any moment, world-wide,
 
 To connect to Wildcard, we first need to select the suitable connector type from the root package (see §[Repository structure](#repository-structure)). They are constructed using the following constructor arguments (in the given order; arguments that are not present are to be completely omitted):
 
-* `l2signer: Signer`&emsp; The account associated with the connection. Only present for `WritingApp` and `Session`. You can create it using either `erdstall/crypto/ethereum.EthereumSigner` or `erdstall/crypto/substrate.SubstrateSigner`. An ethereum signer can be created from an ethers.js `Signer` using `.fromEthersSigner()`, or via `.generateCustodialAccount()` and `.restoreCustodialAccount()`. There is not yet a way to inject a Wildcard signer in a generic way.
 * `enclaveConn: URL`&emsp; The URL of the Wildcard operator. Present in all cases. We are not yet operating a public test instance. You can contact us directly if you want to gain access.
+* `identity: L2Identity`&emsp; The account associated with the connection. Only present for `WritingApp` and `Session`. It takes the following constructor arguments (each one can also be `undefined`):
+    * `wildcard: erdstall/crypto/wildcard.WildcardAddress`&emsp; The Wildcard account ID to use.
+    * `encryption: erdstall/crypto/wildcard.AESGCMKey`&emsp; The privacy key to use.
+    * `keys: {...}`&emsp; An object containing any signers or addresses you want to use. This is a collection of values in one argument to not cause compilation errors when we later add a new backend type. The keys inside the object are optional.
+        * `eth: EthereumSigner | EthereumAddress`&emsp; You can describe an identity for ethereum using `erdstall/crypto/ethereum.EthereumSigner` and `.EthereumAddress`. An ethereum signer can be created from an ethers.js `Signer` using `.fromEthersSigner()`, or via `.generateCustodialAccount()` and `.restoreCustodialAccount()`.
+        * `subst: SubstrateSigner | SubstrateAddress`&emsp; Use `crypto/substrate.SubstrateSigner` and `.SubstrateAddress`.
+    There is not yet a way to inject a Wildcard signer in a generic way. Addresses can be created using the static `.fromString()` methods on the classes.
 * `backendCtors`&emsp; An object injecting constructors for L1 chain connection objects. This lets you control which chains you want to connect to, and how. The intended values are the various `ChainSession.fromConfig()` (or `ChainClient.fromConfig()`, respectively) constructors that can be found on the backend-specific types found in `erdstall/ledger/backend/<ethereum|substrate>`. This field is only present for `Client` and `Session`.
 
 **Setting up a browser dApp**&emsp; An example of how to set up a `WritingApp` using an injected ethereum signer:
 ```ts
 import { BrowserProvider } from "ethers";
-import { WritingApp } from "@polycrypt/erdstall";
+import { WritingApp, L2Identity } from "@polycrypt/erdstall";
 import { EthereumSigner } from "@polycrypt/erdstall/crypto/ethereum";
 
 const signer = await (new BrowserProvider(window.ethereum)).getSigner();
 
 const wildcard = new WritingApp(
-    EthereumSigner.fromEthersSigner(signer),
-    new URL("ws://127.0.0.1:1337/ws"); // local Wildcard operator
+    new URL("ws://127.0.0.1:1337/ws"), // local Wildcard operator
+    new L2Identity(
+        undefined, // wildcard ID
+        undefined, // encryption
+        { eth: await EthereumSigner.fromEthersSigner(signer) }));
 
 await wildcard.initialize(); // connects to the operator
-await wildcard.subscribe(); // subscribes to all receipts and balance proofs
+await wildcard.subscribeSelf(); // subscribes to receipts and balance proofs
 
 // Start your dApp with the Wildcard connection
 myDApp.run(wildcard);
@@ -287,7 +322,7 @@ myDApp.run(wildcard);
 **Setting up a server-side dApp**&emsp; Additionally, for example when writing a server-side application for node.js, you can set up a custodial wallet session (locally managed keys without an external signer) using the following code:
 
 ```ts
-import { WritingApp } from "@polycrypt/erdstall";
+import { WritingApp, L2Identity } from "@polycrypt/erdstall";
 import { EthereumSigner } from "@polycrypt/erdstall/crypto/ethereum";
 
 let signer: EthereumSigner;
@@ -301,14 +336,83 @@ else
     signer = acc.signer;
 }
 
-const wildcard = new WritingApp(signer, wildcardURL);
+const wildcard = new WritingApp(
+    wildcardURL,
+    new L2Identity(
+        undefined,
+        undefined,
+        { eth: signer }));
 ```
 
 This may be useful for running Wildcard in a setting where no external wallet provider (such as MetaMask) exists, e.g. in a node.js server or when using custodial or throwaway wallets in a website.
 
 
+**Setting up wildcard with L1 features**&emsp; For deposits, withdrawals, bridging and other L1 related features you need `Session` instead of `WritingApp`, which additionally takes as argument the desired L1 backend constructors we want to make use of. The signer passed to the Session constructor is also used to sign L1 transactions.
+```ts
+import { Session } from "@polycrypt/erdstall";
+import { EthereumSession } from "@polycrypt/erdstall/ledger/backend/ethereum";
+import { SubstrateSession } from "@polycrypt/erdstall/ledger/backend/substrate";
+
+// You can also only list one or no backend types, but name and type must match.
+const l1BackendCtors = {
+	ethereum: {
+	    type: "ethereum",
+	    initializer: EthereumSession.fromConfig,
+	},
+	substrate: {
+	    type: "substrate",
+	    initializer: SubstrateSession.fromConfig,
+	},
+};
+
+const wildcard = new Session(wildcardURL, signer, l1BackendCtors);
+```
+
+> [!NOTE]
+> Currently, we only instantiate backends that are compatible with the provided signer. In a later version, this restriction will be removed, when we switch to multi-signer sessions.
 
 
+
+
+### Handling private accounts
+
+
+**Fetching the full account identity**&emsp; You can fetch the account's privacy key and wildcard ID from just a signer by using:
+
+```ts
+const wildcard: WritingApp;
+const hasPrivacy = await wildcard.fetchPrivacyKey();
+```
+
+This sends an authenticated request to the Wildcard enclave and securely retrieves the privacy key (using X25519 key exchange). It returns whether the account had a privacy key to begin with, but does not expose the privacy key to the user code for security reasons: it remembers the key internally and will from then on be able to decode messages received from the Wildcard TEE (such as encrypted receipts, and encrypted balance proofs, balance queries, etc.).
+
+You can see whether a session has an encryption key via `.hasEncryption`. This does not fetch information remotely, though.
+
+**Enabling/disabling account privacy**&emsp; Using `await WritingApp.setPrivacy(enabled: boolean)`, one can toggle privacy on and off permanently. Enabling privacy on an already private account will generate a new privacy key.
+
+
+
+
+
+
+
+### Linking addresses
+
+You can link addresses using the `WritingApp.linkAccount()` transaction. This transaction also promotes an account to an extended account, and assigns it a Wildcard account ID. Its result is a `erdstall/api/transactions.LinkAccount_Output`, which currently just contains the field `accountID: WildcardAddress`.
+
+```ts
+async linkAccount(
+    eth: EthereumSigner | undefined,
+    subst: SubstrateSigner | undefined,
+    accountID: WildcardAddress | "create account ID"
+): Promise<CallResponse<LinkAccount_Output>>
+```
+
+This transaction expects that you pass all signers you want to link, as well as a security parameter that prevents you from accidentally creating two separate Wildcard account IDs for addresses you wanted to link together.
+It is legal to call this transaction with just a single signer, which allows you to turn a traditional single-address account into an extended Wildcard account, allowing it to benefit from privacy and a Wildcard account ID even without having to specify a second signer.
+When first upgrading an account to an extended account, you must set the account ID parameter to `"create account ID"`, and when adding a new address to an existing extended account, you must pass its account ID as a safety measure.
+Addresses can also be removed from an account by leaving the corresponding argument empty.
+At least one signer that is already associated with the account must be specified.
 
 
 
@@ -318,12 +422,18 @@ This may be useful for running Wildcard in a setting where no external wallet pr
 The `AssetID` has already been explained in detail in §[The multi-chain asset model](#the-multi-chain-asset-model).
 The other part of asset handling is the `ChainAssets` class. It is fairly straightforward to use. You create an empty `ChainAssets` instance via its constructor, and then add more via `.addAsset(Chain, LocalID, Asset)`, where `LocalID` is the 32-byte array part of the AssetID. This lets us construct ChainAssets in a piecewise manner and then pass them to the relevant functions. ChainAssets are a tree structure that groups assets by origin chain and by kind (fungible / NFT), but via the `.ordered()` function, a neat iterable representation `[AssetID, Asset]` is returned, which is more convenient for displaying them. 
 
+**Ethereum-native assets**&emsp; You can create ethereum-local asset IDs via `EthereumAddress.toLocalAsset()`, where the address is the contract address of the token. It returns a 32-byte LocalID.
 
+**Substrate-native assets**&emsp; You can create substrate-local asset IDs via helpers in the package `ledger/backend/substrate`: `.fungibleAsset(id)` and `.nftAsset(id)` take a 16-bit unsigned bigint as asset ID and returns a 32-byte LocalID.
 
+For example:
 
+```ts
+import { nftAsset } from "@polycrypt/erdstall/backend/substrate";
 
-
-
+let substNFT = new ChainAssets();
+substNFT.addAsset(chain, nftAsset(1n), new Tokens([12356n]));
+```
 
 ### Deposits and withdrawing
 
@@ -349,7 +459,9 @@ More fine-grained control can be exerted by directly calling `Session.exit()` an
 
 
 
-The current L2 balance of any account can be queried using `App.getAccount(Address)` or `WritingApp.getOwnAccount()`. These functions both return a promise to a `ledger.Account`, which contains the current balance, latest balance proofs, and current transaction nonce on the L2 ledger.
+The current L2 balance of any account can be queried using `App.fetchBalanceOf(Address)` or `WritingApp.fetchOwnBalance()`.
+These functions both return a promise to a `ChainAssets` describing the current balance of the queried account.
+Note that `App.fetchBalanceOf()` only works on accounts that do not have privacy enabled, and `fetchOwnBalance()` will throw an exception if the account is private and the key has not yet been fetched.
 
 
 
@@ -370,7 +482,7 @@ After creating a Wildcard connection, event handlers can be set up using `.l2_ev
 
 ```ts
 app.l2_events["receipt"].on((rec) => {
-    console.log(`Transaction by ${rec.tx.sender}`);
+    console.log(`Transaction by ${rec.transaction.sender}`);
 });
 ```
 
@@ -381,9 +493,6 @@ the list of handlers. Both type of handlers can also be removed by calling
 
 Once all event handlers are setup, first `await app.initialize()` to initialize the client, then `await app.subscribe()` to subscribe to all balance proofs and transaction receipts for all users, or filter to a specific user with address by calling `App.subscribe(Address)`. `WritingApp.subscribeSelf()` is a shortcut for subscribing a session to the own user.
 Note that handlers can also be added or removed after the client has already been initialized and subscribed.
-
-> [!WARNING]
-> If you do not set up a subscription for your own account, you will not receive transaction receipts, even for transactions you yourself send.
 
 <details><summary>The following <code>EnclaveEvent</code> events exist (emitted event types are written in parentheses):</summary>
 
@@ -397,9 +506,9 @@ Note that handlers can also be added or removed after the client has already bee
 
 -   **`"error"(string | Error)`** is triggered when an error occurres within the Wildcard client.
 
--   **`"receipt"(TxReceipt)`** is triggered when a receipt is received from a transaction subscription.
+-   **`"receipt"(PublicTxReceipt)`** is triggered when a receipt is received from a transaction subscription.
     This does not include transaction receipts directly received as a response when issuing transactions.
-    A transaction receipt contains the transaction itself and the changed balances of all affected parties.
+    The receipt contains the transaction and its result, if any. Only successful transactions generate a receipt.
 
 -   **`"proof"(BalanceProof)`** is triggered when a balance proof is received from a proof subscription.
 
@@ -416,10 +525,10 @@ Note that handlers can also be added or removed after the client has already bee
 
 
 
-All transaction commands are asynchronous because they involve signing (which might prompt a popup, if an injected signer is used) and sending of messages. They return a `PendingTransaction` the moment the transaction has been signed and sent / queued for sending. To confirm that it has been received by the operator, await `.accepted`. To access the transaction's receipt (the proof that it has been processed, as well as the result of its execution), await `.receipt`.
+All transaction commands are asynchronous because they involve signing (which might prompt a popup, if an injected signer is used) and sending of messages. They return a `CallResponse<T>` the moment the transaction has been signed and sent / queued for sending. To confirm that it has been received by the operator, await `.accepted` (`void`). To await the transaction's successful execution (as well as the result of its execution), await `.result` (`T`, depending on the transaction type, but mostly `void`). Some transactions generate a result message that is sent back to the sender, such as transactions that query some data, or transactions that form an interactive cryptographic protocol (for example, the "Set Privacy" transaction performs an X25519 Diffie-Hellman key exchange, with the reply being in the transaction result).
 
-> [!WARNING]
-> To be able to receive transaction receipts, currently, you need to make sure to have called `WritingApp.subscribeSelf()`. As part of the upcoming privacy features, we will overhaul transaction receipts and subscriptions, and then you will no longer need to call this function, as it might no longer even exist. This is still an old legacy behaviour from 4 years ago…
+> [!NOTE]
+> In earlier versions, one needed to make sure to be subscribed to transaction receipts concerning one's own account in order to receive confirmations / proofs that a transaction got executed. In the newest version, this is no longer the case, as Wildcard now always sends a receipt in reply to a transaction, even when one is not subscribed. Transaction receipt subscriptions are now solely for the purpose of being notified of activity on an account.
 
 
 
@@ -430,28 +539,13 @@ All transaction commands are asynchronous because they involve signing (which mi
 ### Transfers
 
 
-To transfer assets within Wildcard's L2 ledger, use `WritingApp.transferTo(ChainAssets, Address)`. This transaction transfers the specified assets to the specified recipient account. If the owner does not have enough funds, none are sent, and the transaction fails. If the recipient account does not yet exist, it is silently created.
-
-> [!CAUTION]
-> As is common practice in the cryptocurrency space, if you send funds to the wrong address, you cannot recover them. Sending to a non-existent account will render the funds unusable forever.
-
-
-
-
-
-
-
-
-### Trading
-
-
-
-Wildcard natively supports (basket) trading of tokens and NFTs. Currently, simple two-step offer and accept trading is supported. Some external marketplace infrastructure needs to be in place to present trade offers to potential buyers, who can then execute a trade on the Wildcard L2 without having to interact with the proposer of the trade.
-
-A trade offer can be created using `WritingApp.createOffer(offer: ChainAssets, expect: ChainAssets)`. The returned `TradeOffer` needs the external marketplace infrastructure to reach potential buyers. An interested buyer can then execute the trade by calling `WritingApp.acceptTrade(offer)`, which will send a `Trade` transaction to the Wildcard network, atomically exchanging the assets between the two accounts.
+To transfer assets within Wildcard's L2 ledger, use `WritingApp.transferTo(ChainAssets, Address)`. This transaction transfers the specified assets to the specified recipient account. If the owner does not have enough funds, none are sent, and the transaction fails. 
 
 > [!NOTE]
-> This will be experimented with and reworked in the future to figure out the optimal API and functionality for non-custodial / decentralised exchange of assets.
+> Unlike the common practice in the cryptocurrency space, if you send funds to an address that does not have an account associated with it, it does not silently create that account. Instead, the transaction simply fails.
+
+
+
 
 
 
@@ -475,7 +569,7 @@ A trade offer can be created using `WritingApp.createOffer(offer: ChainAssets, e
 You can burn tokens with a `WritingApp.burn(ChainAssets)` transaction call.
 
 > [!WARNING]
-> If the a token was deposited into Wildcard, it will not be burned on-chain, but will indefinitely be locked-up and be held by the asset holder contract. This transaction is therefore unsuitable for interacting
+> If the a token was deposited into Wildcard, it will not be burned on-chain, but will indefinitely be locked-up and be held by the asset holder contract. This transaction is therefore unsuitable for interacting with on-chain protocols that want funds to be burned.
 
 > [!CAUTION]
 > Burning funds, well… can be dangerous. However, in the cryptocurrencies space, burning funds is seen as a legitimate and desirable act under certain circumstances. Only call this if you really intend to, and only on the assets you really want to burn. It would probably be good to separate funds into a separate account before burning them, just to make sure.

@@ -15,6 +15,7 @@ import { Amount } from "./amount";
 import { Tokens } from "./tokens";
 import { Chain } from "../chain";
 import { toHex, parseHex } from "#erdstall/utils/hexbytes";
+import { CodecReader, CodecWriter } from "#erdstall/utils";
 
 export const ETHZERO = "0x0000000000000000000000000000000000000000";
 
@@ -125,6 +126,27 @@ export class ChainAssets {
 		res.sort((a, b) => a[0][0].origin() - b[0][0].origin());
 
 		return res.flat();
+	}
+
+	encode(w: CodecWriter): void {
+		w.array_with(this.ordered(), ([id, asset]) => {
+			id.encode(w);
+			asset.encode(w);
+		});
+	}
+
+	static decode(r: CodecReader): ChainAssets {
+		let ordered = r.array<[AssetID, Asset]>(() => {
+			let id = AssetID.decode(r);
+			let asset = Asset.decode_a(r, id.type());
+			return [id, asset];
+		});
+
+		let ret = new ChainAssets();
+		for(let [id, asset] of ordered)
+			ret.addAsset(id.origin(), id.localID(), asset);
+
+		return ret;
 	}
 }
 

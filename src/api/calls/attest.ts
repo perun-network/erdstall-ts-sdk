@@ -2,18 +2,14 @@
 "use strict";
 
 import { jsonObject } from "#erdstall/export/typedjson";
-import { ErdstallObject } from "#erdstall/api";
+import { ErdstallObject, registerErdstallType } from "#erdstall/api";
+import { CodecReader, CodecWriter } from "#erdstall/utils";
 
-@jsonObject
 export class Attest extends ErdstallObject {
-	constructor() {
-		super();
-	}
+	override objectType(): any { return Attest; }
+	override objectTypeName(): string { return "Attest"; }
 
-	public objectType(): any {
-		return Attest;
-	}
-	override objectTypeName(): string {
-		return "Attest";
-	}
+	override encode(): void { }
+	static decode(): Attest { return new Attest(); }
 }
+registerErdstallType("Attest", Attest);

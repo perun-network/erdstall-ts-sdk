@@ -9,6 +9,7 @@ import {
 import { Keypair } from "@polkadot/util-crypto/types";
 import { SubstrateSignature } from "./signature";
 import { SubstrateAddress } from "./address";
+import { getRandomValues } from "#erdstall/crypto/wildcard";
 
 export class SubstrateSigner extends Signer<"substrate"> {
 	readonly keyPair: Keypair;
@@ -21,7 +22,7 @@ export class SubstrateSigner extends Signer<"substrate"> {
 	type(): "substrate" { return "substrate"; }
 
 
-	async sign(message: Uint8Array): Promise<Signature<"substrate">> {
+	async sign(message: Uint8Array): Promise<SubstrateSignature> {
 		await cryptoWaitReady();
 		const sig = sr25519Sign(message, this.keyPair);
 		return new SubstrateSignature(sig);
@@ -39,9 +40,7 @@ export class SubstrateSigner extends Signer<"substrate"> {
 		signer: SubstrateSigner;
 		seed: Uint8Array;
 	}> {
-		let seed = new Uint8Array(32);
-		for(let i = 0; i < seed.length; i++)
-			seed[i] = (Math.random() * 512) & 0xff; // NOTE SECURITY: unsafe, but portable. The web crypto API is not available on node.js until v19.
+		let seed = getRandomValues(new Uint8Array(32));
 
 		await cryptoWaitReady();
 		let keys = sr25519PairFromSeed(seed)
@@ -54,7 +53,8 @@ export class SubstrateSigner extends Signer<"substrate"> {
 	// Restores a custodial account from its private key, as returned by
 	// `generateCustodialAccount()`. Returns a signer and the associated
 	// account's address.
-	static restoreCustodialAccount(seed: string): SubstrateSigner {
+	static async restoreCustodialAccount(seed: string): Promise<SubstrateSigner> {
+		await cryptoWaitReady();
 		let keys = sr25519PairFromSeed(seed)
 		return new SubstrateSigner(keys);
 	}

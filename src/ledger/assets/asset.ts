@@ -3,6 +3,7 @@
 
 import { isUint256 } from "#erdstall/api/util";
 import { AssetType } from "#erdstall/crypto";
+import { CodecReader, CodecWriter } from "#erdstall/utils";
 
 export const TypeTags = {
 	Amount: "uint",
@@ -28,10 +29,28 @@ export function registerAssetType(
 	assetImpls.set(typeTag, valueParser);
 }
 
+export const _assetDecoders = new Map<AssetType, (r: CodecReader) => Asset>();
+
 export abstract class Asset {
 	abstract toJSON(): any;
 
 	abstract assetType(): AssetType;
+
+	abstract encode(w: CodecWriter): void;
+
+	static encode(w: CodecWriter, v: Asset): void {
+		w.u8(v.assetType());
+		v.encode(w);
+	}
+	static decode(r: CodecReader): Asset {
+		let type = r.u8() as AssetType;
+		return Asset.decode_a(r, type);
+	}
+	static decode_a(r: CodecReader, t: AssetType): Asset {
+		let dec = _assetDecoders.get(t);
+		if(dec) return dec(r);
+		else throw new Error(`Unknown asset type ${t}`);
+	}
 
 	static fromJSON(json: any): Asset {
 		for (const key in json) {

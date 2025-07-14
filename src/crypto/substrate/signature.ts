@@ -1,12 +1,18 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { Signature, registerSignatureType } from "#erdstall/crypto";
+import {
+	Signature,
+	SignatureType,
+	registerSignatureType,
+	_signatureDecoders
+} from "#erdstall/crypto";
 import { Address } from "#erdstall/crypto";
 import { parseHex, toHex } from "#erdstall/utils/hexbytes";
 import { signatureVerify } from "@polkadot/util-crypto";
 import { jsonObject } from "#erdstall/export/typedjson";
 import { customJSON } from "#erdstall/api/util";
+import { CodecReader, CodecWriter } from "#erdstall/utils";
 
 @jsonObject
 export class SubstrateSignature extends Signature<"substrate"> {
@@ -34,22 +40,20 @@ export class SubstrateSignature extends Signature<"substrate"> {
 		).isValid;
 	}
 
-	toJSON() {
-		return toHex(this.bytes, "0x");
-	}
+	toJSON() { return toHex(this.bytes, "0x"); }
 
-	toString(): string {
-		return toHex(this.bytes, "0x")
-	}
+	toString(): string { return toHex(this.bytes, "0x") }
 
-	toBytes(): Uint8Array {
-		return this.bytes;
-	}
+	toBytes(): Uint8Array { return this.bytes; }
 
-	type(): "substrate" {
-		return "substrate";
-	}
+	type(): "substrate" { return "substrate"; }
+
+	override signatureType(): SignatureType { return SignatureType.Substrate; }
+	override encode_impl(w: CodecWriter): void { w.bytes(this.bytes); }
+	static decode_impl(r: CodecReader): SubstrateSignature
+		{ return new SubstrateSignature(r.bytes(64)); }
 }
 
 registerSignatureType("substrate", SubstrateSignature);
+_signatureDecoders.set(SignatureType.Substrate, SubstrateSignature.decode_impl);
 customJSON(SubstrateSignature);
