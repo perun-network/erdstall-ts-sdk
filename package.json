@@ -49,6 +49,9 @@
 		"devpub": "yarn prepack",
 		"doc": "typedoc ./src ./src/api ./src/enclave ./src/ledger ./src/ledger/backend ./src/test ./src/utils"
 	},
+	"prettier": {
+		"useTabs": true
+	},
 	"repository": "github:perun-network/erdstall-ts-sdk",
 	"keywords": [
 		"blockchain",
