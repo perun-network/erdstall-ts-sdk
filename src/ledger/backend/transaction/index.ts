@@ -275,7 +275,7 @@ export abstract class TxSigner {
 	protected require(id: any, chain: Chain): void {
 		if (!this.#signing.owned(id))
 			throw new Error(
-				`Logic error: operation only valid in a signing session.`,
+				"Logic error: operation only valid in a signing session.",
 			);
 
 		if (this.#chain !== chain)
@@ -415,7 +415,7 @@ export class SignedTxBatch {
 					"Signed tranaction batch contains transactions for multiple chains",
 				);
 			if (tx.nonce !== nonce)
-				throw new Error(`Non-consecutive nonces in batch.`);
+				throw new Error("Non-consecutive nonces in batch.");
 
 			if (!tx.sender.equals(sender))
 				throw new Error(

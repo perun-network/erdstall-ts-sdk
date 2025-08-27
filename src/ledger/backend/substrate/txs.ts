@@ -287,7 +287,7 @@ export class API {
 			case AssetType.Fungible:
 				{
 					if (!(amount instanceof Amount))
-						throw new Error(`Amount has wrong type.`);
+						throw new Error("Amount has wrong type.");
 
 					let asset_deposit = {
 						...shared,
@@ -307,7 +307,7 @@ export class API {
 			case AssetType.NFT:
 				{
 					if (!(amount instanceof Tokens))
-						throw new Error(`Amount has wrong type.`);
+						throw new Error("Amount has wrong type.");
 
 					for (let id of amount.value) {
 						let asset_deposit = { ...shared, secondaryId: bigintToH256(id) };
@@ -381,7 +381,7 @@ export class API {
 			case AssetType.Fungible:
 				{
 					if (!(amount instanceof Amount))
-						throw new Error(`Amount has wrong type.`);
+						throw new Error("Amount has wrong type.");
 
 					let balance_proof = {
 						...shared,
@@ -402,7 +402,7 @@ export class API {
 			case AssetType.NFT:
 				{
 					if (!(amount instanceof Tokens))
-						throw new Error(`Amount has wrong type.`);
+						throw new Error("Amount has wrong type.");
 
 					if (amount.value.length != 1)
 						throw new Error(

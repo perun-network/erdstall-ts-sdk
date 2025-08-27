@@ -142,7 +142,7 @@ export function encodePackedAssets(
 				asset: id,
 				value: value.value,
 			});
-		else throw new Error(`Unhandled asset type`);
+		else throw new Error("Unhandled asset type");
 	}
 	return values;
 }
