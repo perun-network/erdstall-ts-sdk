@@ -18,6 +18,7 @@ import {
 	DHPK,
 } from "#erdstall/crypto/wildcard";
 import { CodecReader, CodecWriter } from "#erdstall/utils";
+import { SignedMessage } from "#erdstall/crypto";
 
 const balance_fetch_modes = ["only_if_plaintext", "always"] as const;
 
