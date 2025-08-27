@@ -15,9 +15,7 @@ const event = [
 ] as const;
 
 export abstract class LedgerEvent {
-	constructor(
-		public chain: Chain
-	) {}
+	constructor(public chain: Chain) {}
 }
 
 /**
@@ -28,8 +26,10 @@ export class Deposited extends LedgerEvent {
 		chain: Chain,
 		public epoch: bigint,
 		public address: Address,
-		public assets: ChainAssets
-	) { super(chain); }
+		public assets: ChainAssets,
+	) {
+		super(chain);
+	}
 }
 
 /**
@@ -38,8 +38,10 @@ export class Deposited extends LedgerEvent {
 export class Frozen extends LedgerEvent {
 	constructor(
 		chain: Chain,
-		public epoch: bigint
-	) { super(chain); }
+		public epoch: bigint,
+	) {
+		super(chain);
+	}
 }
 
 /**
@@ -49,8 +51,10 @@ export class OwnershipTransferred extends LedgerEvent {
 	constructor(
 		chain: Chain,
 		public previousOwner: Address,
-		public newOwner: Address
-	) { super(chain); }
+		public newOwner: Address,
+	) {
+		super(chain);
+	}
 }
 
 /**
@@ -63,8 +67,10 @@ export class WithdrawalException extends LedgerEvent {
 		public address: Address,
 		public token: Address,
 		public value: ChainAssets,
-		public error: string
-	) { super(chain); }
+		public error: string,
+	) {
+		super(chain);
+	}
 }
 
 /**
@@ -75,8 +81,10 @@ export class Withdrawn extends LedgerEvent {
 		chain: Chain,
 		public epoch: bigint,
 		public address: Address,
-		public tokens: ChainAssets
-	) { super(chain); }
+		public tokens: ChainAssets,
+	) {
+		super(chain);
+	}
 }
 
 /**
@@ -86,8 +94,10 @@ export class Challenged extends LedgerEvent {
 	constructor(
 		chain: Chain,
 		public epoch: bigint,
-		public address: Address
-	) { super(chain); }
+		public address: Address,
+	) {
+		super(chain);
+	}
 }
 
 /**
@@ -97,9 +107,11 @@ export class ChallengeResponded extends LedgerEvent {
 	constructor(
 		chain: Chain,
 		public epoch: bigint,
-		public chunks: { index: number, count: number},
+		public chunks: { index: number; count: number },
 		public address: Address,
 		public tokens: ChainAssets,
-		public sig: Signature
-	) { super(chain); }
+		public sig: Signature,
+	) {
+		super(chain);
+	}
 }

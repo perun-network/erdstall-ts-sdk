@@ -9,11 +9,15 @@ import { Chain, getChainName } from "#erdstall/ledger";
 import { LocalAsset } from "#erdstall/ledger/assets";
 import {
 	Erdstall,
-	ERC20__factory, ERC20Holder, ERC20Holder__factory,
-	ERC721__factory, ERC721Holder, ERC721Holder__factory,
-	ETHHolder, ETHHolder__factory,
+	ERC20__factory,
+	ERC20Holder,
+	ERC20Holder__factory,
+	ERC721__factory,
+	ERC721Holder,
+	ERC721Holder__factory,
+	ETHHolder,
+	ETHHolder__factory,
 } from "#erdstall/ledger/backend/ethereum/contracts";
-
 
 // Gets created with unresolved holders. Call resolve_holders() to pass the actual holders. Access token holders via tokenHolderFor().
 export class EthereumTokenProvider {
@@ -26,12 +30,10 @@ export class EthereumTokenProvider {
 
 	constructor(chain: Chain) {
 		this.chain = chain;
-		this.holders = new Promise<Map<TokenType, EthereumAddress>>(
-			(acc, rej) => {
+		this.holders = new Promise<Map<TokenType, EthereumAddress>>((acc, rej) => {
 			this.set_holders = acc;
 			this.fail_holders = rej;
-			}
-		);
+		});
 	}
 
 	resolve_holders(holders: Map<TokenType, EthereumAddress>) {
@@ -40,14 +42,18 @@ export class EthereumTokenProvider {
 		this.set_holders = undefined;
 		set_holders!(holders);
 
-		console.info(Array.from(holders.entries()).map(([name, addr]) => `${getChainName(this.chain)} ${name} holder: ${addr.toString()}`).join("\n"));
+		console.info(
+			Array.from(holders.entries())
+				.map(
+					([name, addr]) =>
+						`${getChainName(this.chain)} ${name} holder: ${addr.toString()}`,
+				)
+				.join("\n"),
+		);
 	}
 
-	async fetch_holders(
-		contract: Erdstall,
-	): Promise<void> {
-		if(!this.set_holders)
-		{
+	async fetch_holders(contract: Erdstall): Promise<void> {
+		if (!this.set_holders) {
 			await this.holders;
 			return;
 		}
@@ -62,13 +68,14 @@ export class EthereumTokenProvider {
 			holders.set("ERC721", EthereumAddress.fromString(await ERC721));
 			holders.set("ETH", EthereumAddress.fromString(await ETH));
 			this.resolve_holders(holders);
-		} catch(e) { this.set_holders = undefined; this.fail_holders!(e); }
+		} catch (e) {
+			this.set_holders = undefined;
+			this.fail_holders!(e);
+		}
 	}
 
 	// query token holder for a token type. Fails if none is configured within a reasonable timeout. Remember to call fetch_holders()!
-	async tokenHolderFor(
-		ttype: TokenType,
-	): Promise<EthereumAddress> {
+	async tokenHolderFor(ttype: TokenType): Promise<EthereumAddress> {
 		return await new Promise<EthereumAddress>(async (accept, reject) => {
 			const timeout = setTimeout(() => {
 				const fail_holders = this.fail_holders;
@@ -80,7 +87,7 @@ export class EthereumTokenProvider {
 
 			try {
 				accept((await this.holders).get(ttype)!);
-			} catch(e: any) {
+			} catch (e: any) {
 				reject(e);
 			} finally {
 				clearTimeout(timeout);
@@ -88,7 +95,9 @@ export class EthereumTokenProvider {
 		});
 	}
 
-	async getERC20Holder(provider: ethers.Provider | ethers.Signer): Promise<ERC20Holder> {
+	async getERC20Holder(
+		provider: ethers.Provider | ethers.Signer,
+	): Promise<ERC20Holder> {
 		const holder = await this.getERC20HolderAddress();
 		return ERC20Holder__factory.connect(holder.toString(), provider);
 	}
@@ -97,7 +106,9 @@ export class EthereumTokenProvider {
 		return await this.tokenHolderFor("ERC20");
 	}
 
-	async getERC721Holder(provider: ethers.Provider | ethers.Signer): Promise<ERC721Holder> {
+	async getERC721Holder(
+		provider: ethers.Provider | ethers.Signer,
+	): Promise<ERC721Holder> {
 		const holder = await this.getERC721HolderAddress();
 		return ERC721Holder__factory.connect(holder.toString(), provider);
 	}
@@ -106,7 +117,9 @@ export class EthereumTokenProvider {
 		return await this.tokenHolderFor("ERC721");
 	}
 
-	async getEthHolder(provider: ethers.Provider | ethers.Signer): Promise<ETHHolder> {
+	async getEthHolder(
+		provider: ethers.Provider | ethers.Signer,
+	): Promise<ETHHolder> {
 		const holder = await this.getEthHolderAddress();
 		return ETHHolder__factory.connect(holder.toString(), provider);
 	}
@@ -115,41 +128,47 @@ export class EthereumTokenProvider {
 		return await this.tokenHolderFor("ETH");
 	}
 
-	async getWrappedFungible(provider: ethers.Provider, origin: Chain, local: LocalAsset): Promise<EthereumAddress | undefined> {
-		if(origin === this.chain) {
+	async getWrappedFungible(
+		provider: ethers.Provider,
+		origin: Chain,
+		local: LocalAsset,
+	): Promise<EthereumAddress | undefined> {
+		if (origin === this.chain) {
 			throw new Error("not a wrapped token…");
 		}
 		const asset = AssetID.fromMetadata(origin, AssetType.Fungible, local.id);
 		const key = asset.toString();
 		let addr: EthereumAddress | undefined;
-		if(addr = this.cache.get(key))
-			return addr!.clone() as EthereumAddress;
+		if ((addr = this.cache.get(key))) return addr!.clone() as EthereumAddress;
 
 		const holder = await this.getERC20Holder(provider);
 		addr = EthereumAddress.fromString(
-			await holder.deployedToken(origin, local.id));
-		if(addr.isZero())
-			return undefined;
-		this.cache.set(key, addr.clone() as EthereumAddress)
+			await holder.deployedToken(origin, local.id),
+		);
+		if (addr.isZero()) return undefined;
+		this.cache.set(key, addr.clone() as EthereumAddress);
 		return addr!;
 	}
 
-	async getWrappedNFT(provider: ethers.Provider, origin: Chain, local: LocalAsset): Promise<EthereumAddress | undefined> {
-		if(origin === this.chain) {
+	async getWrappedNFT(
+		provider: ethers.Provider,
+		origin: Chain,
+		local: LocalAsset,
+	): Promise<EthereumAddress | undefined> {
+		if (origin === this.chain) {
 			throw new Error("not a wrapped token…");
 		}
 		const asset = AssetID.fromMetadata(origin, AssetType.NFT, local.id);
-		const key = asset.toString()
+		const key = asset.toString();
 		let addr: EthereumAddress | undefined;
-		if(addr = this.cache.get(key))
-			return addr!.clone() as EthereumAddress;
+		if ((addr = this.cache.get(key))) return addr!.clone() as EthereumAddress;
 
 		const holder = await this.getERC721Holder(provider);
 		addr = EthereumAddress.fromString(
-			await holder.deployedToken(origin, local.id));
-		if(addr.isZero())
-			return undefined;
-		this.cache.set(key, addr.clone() as EthereumAddress)
+			await holder.deployedToken(origin, local.id),
+		);
+		if (addr.isZero()) return undefined;
+		this.cache.set(key, addr.clone() as EthereumAddress);
 		return addr;
 	}
 }

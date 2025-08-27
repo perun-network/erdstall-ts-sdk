@@ -25,9 +25,7 @@ describe("Amount", () => {
 		let t1 = new Amount(124n);
 		let t2 = new Amount(123n);
 		t1.sub(t2);
-		expect(t1.value, "subtracting compatible tokens should work").to.eql(
-			1n,
-		);
+		expect(t1.value, "subtracting compatible tokens should work").to.eql(1n);
 
 		expect(() => {
 			t1.sub(t2);

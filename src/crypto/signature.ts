@@ -15,13 +15,16 @@ export function registerSignatureType(
 	signatureImpls.set(typeName, typeClass);
 }
 
-export const _signatureDecoders = new Map<SignatureType, (r: CodecReader) => Signature>();
+export const _signatureDecoders = new Map<
+	SignatureType,
+	(r: CodecReader) => Signature
+>();
 
 export enum SignatureType {
 	Ethereum,
 	Substrate,
-	Wildcard
-};
+	Wildcard,
+}
 
 export abstract class Signature<B extends Crypto = Crypto> {
 	abstract toString(): string;
@@ -36,17 +39,17 @@ export abstract class Signature<B extends Crypto = Crypto> {
 
 	abstract signatureType(): SignatureType;
 	abstract encode_impl(w: CodecWriter): void;
-	encode(w: CodecWriter): void { Signature.encode(w, this); }
-	static encode(w: CodecWriter, v: Signature): void
-	{
+	encode(w: CodecWriter): void {
+		Signature.encode(w, this);
+	}
+	static encode(w: CodecWriter, v: Signature): void {
 		w.u8(v.signatureType());
 		v.encode_impl(w);
 	}
-	static decode(r: CodecReader): Signature
-	{
+	static decode(r: CodecReader): Signature {
 		let t = r.u8() as SignatureType;
 		let dec = _signatureDecoders.get(t);
-		if(dec) return dec(r);
+		if (dec) return dec(r);
 		else throw new Error(`Unknown signature type ${t}`);
 	}
 
@@ -76,10 +79,10 @@ export interface SigVerifier {
 
 // Either signed or encrypted with integrity protection, depending on the implementation.
 export class SignedMessage<T = any> {
-		constructor(
-	public message: Uint8Array, // the potentially encrypted message
-	public signature: Signature | undefined // the signature on the message (the IV for AES-GCM)
-		) {}
+	constructor(
+		public message: Uint8Array, // the potentially encrypted message
+		public signature: Signature | undefined, // the signature on the message (the IV for AES-GCM)
+	) {}
 
 	encode(w: CodecWriter): void {
 		w.opt_with(this.signature, (s) => Signature.encode(w, s));
@@ -93,10 +96,10 @@ export class SignedMessage<T = any> {
 	}
 
 	assert_signed(): void {
-		if(!this.signature)
-			throw new Error("Message was expected to be signed");
+		if (!this.signature) throw new Error("Message was expected to be signed");
 	}
 
-	static unsigned<T = any>(message: Uint8Array): SignedMessage<T>
-		{ return new SignedMessage<T>(message, undefined); }
+	static unsigned<T = any>(message: Uint8Array): SignedMessage<T> {
+		return new SignedMessage<T>(message, undefined);
+	}
 }

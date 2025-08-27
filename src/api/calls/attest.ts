@@ -6,10 +6,16 @@ import { ErdstallObject, registerErdstallType } from "#erdstall/api";
 import { CodecReader, CodecWriter } from "#erdstall/utils";
 
 export class Attest extends ErdstallObject {
-	override objectType(): any { return Attest; }
-	override objectTypeName(): string { return "Attest"; }
+	override objectType(): any {
+		return Attest;
+	}
+	override objectTypeName(): string {
+		return "Attest";
+	}
 
-	override encode(): void { }
-	static decode(): Attest { return new Attest(); }
+	override encode(): void {}
+	static decode(): Attest {
+		return new Attest();
+	}
 }
 registerErdstallType("Attest", Attest);

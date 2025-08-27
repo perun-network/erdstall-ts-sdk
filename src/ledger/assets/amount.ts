@@ -10,7 +10,7 @@ import {
 	ErrIncompatibleAssets,
 	assertUint256,
 	registerAssetType,
-	_assetDecoders
+	_assetDecoders,
 } from "./asset";
 import { AssetType } from "#erdstall/crypto";
 import { bigTo0xEven } from "#erdstall/export/typedjson";
@@ -26,7 +26,9 @@ export class Amount extends Asset {
 		this.value = v;
 	}
 
-	override assetType(): AssetType.Fungible { return AssetType.Fungible; }
+	override assetType(): AssetType.Fungible {
+		return AssetType.Fungible;
+	}
 
 	override toJSON() {
 		return bigTo0xEven(this.value);
@@ -36,10 +38,16 @@ export class Amount extends Asset {
 		return new Amount(BigInt(hexString));
 	}
 
-	static decode(r: CodecReader): Amount { return new Amount(r.u256()); }
-	encode(w: CodecWriter): void { w.u256(this.value); }
+	static decode(r: CodecReader): Amount {
+		return new Amount(r.u256());
+	}
+	encode(w: CodecWriter): void {
+		w.u256(this.value);
+	}
 
-	override toString() { return this.value.toString(); }
+	override toString() {
+		return this.value.toString();
+	}
 
 	override typeTag(): TypeTagName {
 		return TypeTags.Amount;
@@ -49,8 +57,9 @@ export class Amount extends Asset {
 		return this.value === 0n;
 	}
 
-	override clone(): this
-		{ return new Amount(this.value) as this; }
+	override clone(): this {
+		return new Amount(this.value) as this;
+	}
 
 	sub(asset: this): void {
 		if (!this.isCompatible(asset)) {

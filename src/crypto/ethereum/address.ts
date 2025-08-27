@@ -11,7 +11,7 @@ import {
 	registerAddressType,
 	_addressDecoders,
 	SigVerifier,
-	SignedMessage
+	SignedMessage,
 } from "#erdstall/crypto";
 import { toHex, parseHex } from "#erdstall/utils/hexbytes";
 import { LocalAsset } from "#erdstall/ledger/assets";
@@ -19,22 +19,27 @@ import { CodecReader, CodecWriter } from "#erdstall/utils";
 import { EthereumSignature } from "./signature";
 
 @jsonObject
-export class EthereumAddress extends Address<"ethereum"> implements ABIValue, SigVerifier {
+export class EthereumAddress
+	extends Address<"ethereum">
+	implements ABIValue, SigVerifier
+{
 	#value: Uint8Array;
 	constructor(value: Uint8Array) {
 		super();
-		if(value.length !== 20)
+		if (value.length !== 20)
 			throw new Error(`Invalid length (${value.length}/20)`);
 		this.#value = new Uint8Array(value); // explicit deep copy!
 	}
 
-	get keyBytes(): Uint8Array { return new Uint8Array([...this.#value]); }
+	get keyBytes(): Uint8Array {
+		return new Uint8Array([...this.#value]);
+	}
 
 	static fromLocalAsset(asset: LocalAsset): EthereumAddress {
 		// Native tokens are the last 20 bytes of the LocalAsset
 		let addr = new EthereumAddress(asset.id.slice(-20));
-		if(!asset.id.slice(0,12).every(x => x == 0))
-			throw new Error(`Invalid ethereum LocalAsset: ${toHex(asset.id)}`)
+		if (!asset.id.slice(0, 12).every((x) => x == 0))
+			throw new Error(`Invalid ethereum LocalAsset: ${toHex(asset.id)}`);
 		return addr;
 	}
 
@@ -51,14 +56,17 @@ export class EthereumAddress extends Address<"ethereum"> implements ABIValue, Si
 		return new EthereumAddress(parseHex(val, "0x"));
 	}
 
-	static toJSON(me: EthereumAddress): any
-		{ return me.toJSON(); }
+	static toJSON(me: EthereumAddress): any {
+		return me.toJSON();
+	}
 
-	public toJSON(): any
-		{ return toHex(this.#value, "0x"); }
+	public toJSON(): any {
+		return toHex(this.#value, "0x");
+	}
 
-	static fromString(addr: string): EthereumAddress
-		{ return EthereumAddress.fromJSON(addr); }
+	static fromString(addr: string): EthereumAddress {
+		return EthereumAddress.fromJSON(addr);
+	}
 
 	static ensure(addr: string | EthereumAddress): EthereumAddress {
 		if (addr === undefined) return addr;
@@ -66,34 +74,48 @@ export class EthereumAddress extends Address<"ethereum"> implements ABIValue, Si
 		return EthereumAddress.fromString(addr);
 	}
 
-	override encode_impl(w: CodecWriter): void { w.bytes(this.#value); }
-	static decode_impl(r: CodecReader): EthereumAddress
-		{ return new EthereumAddress(r.bytes(20)); }
+	override encode_impl(w: CodecWriter): void {
+		w.bytes(this.#value);
+	}
+	static decode_impl(r: CodecReader): EthereumAddress {
+		return new EthereumAddress(r.bytes(20));
+	}
 
-	type(): "ethereum" { return "ethereum"; }
-	override addressType(): AddressType { return AddressType.Ethereum; }
+	type(): "ethereum" {
+		return "ethereum";
+	}
+	override addressType(): AddressType {
+		return AddressType.Ethereum;
+	}
 
-	override clone(): this { return new EthereumAddress(this.#value) as this; }
+	override clone(): this {
+		return new EthereumAddress(this.#value) as this;
+	}
 
-	toString(): string
-		{ return ethers.getAddress(ethers.hexlify(this.#value)); }
+	toString(): string {
+		return ethers.getAddress(ethers.hexlify(this.#value));
+	}
 
-	asABI(): any
-		{ return this.toString(); }
+	asABI(): any {
+		return this.toString();
+	}
 
-	ABIType(): string { return "address"; }
+	ABIType(): string {
+		return "address";
+	}
 
-	isZero(): boolean { return this.#value.every((x) => x === 0); }
+	isZero(): boolean {
+		return this.#value.every((x) => x === 0);
+	}
 
-	equals(other: EthereumAddress): boolean
-		{ return equalArray(this.#value, other.#value); }
+	equals(other: EthereumAddress): boolean {
+		return equalArray(this.#value, other.#value);
+	}
 
 	async verifySig(s: SignedMessage): Promise<Uint8Array | undefined> {
-		if(!(s.signature instanceof EthereumSignature))
-			return undefined;
+		if (!(s.signature instanceof EthereumSignature)) return undefined;
 
-		if(s.signature.verify(s.message, this))
-			return s.message;
+		if (s.signature.verify(s.message, this)) return s.message;
 		else return undefined;
 	}
 }

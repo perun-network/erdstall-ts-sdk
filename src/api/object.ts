@@ -11,7 +11,9 @@ import { CodecReader, CodecWriter } from "#erdstall/utils";
 
 const objectImpls = new Map<string, Serializable<ErdstallObject> & Decoder>();
 
-interface Decoder { decode(r: CodecReader): ErdstallObject; }
+interface Decoder {
+	decode(r: CodecReader): ErdstallObject;
+}
 
 export function registerErdstallType(
 	typeName: string,
@@ -28,9 +30,8 @@ export abstract class ErdstallObject {
 
 	static fromJSON(js: any): ErdstallObject {
 		let desc = objectImpls.get(js.type);
-		if(!desc)
-			throw new Error(`unknown erdstall object type "${js.type}"`);
-		if(typeof js.data !== "string")
+		if (!desc) throw new Error(`unknown erdstall object type "${js.type}"`);
+		if (typeof js.data !== "string")
 			throw new Error(`expected string payload in ${js.type} json`);
 
 		return desc.decode(CodecReader.fromString(js.data));

@@ -6,7 +6,7 @@ import {
 	LedgerEventEmitters,
 	EnclaveEventHandlers,
 	EnclaveEventEmitters,
-	LedgerEventMask
+	LedgerEventMask,
 } from "./event";
 import { Address } from "#erdstall/crypto";
 import { ClientConfig, ChainConfig } from "#erdstall/api/responses";
@@ -32,23 +32,27 @@ export abstract class ChainClient {
 
 // The Erdstall multi-client. It is a convenience client giving a uniform
 // interface for all backends requested.
-export class Client extends App
-{
+export class Client extends App {
 	#internals: AppInternals;
 	#clients = new Map<Chain, ChainClient>();
 	#blockchainReadCtors: BackendClientConstructors;
-	#l1_event_emitters = new LedgerEventEmitters;
+	#l1_event_emitters = new LedgerEventEmitters();
 	#internal_l1_events: LedgerEventHandlers;
-	get l1_events(): LedgerEventHandlers
-		{ return new LedgerEventHandlers(this.#l1_event_emitters); }
+	get l1_events(): LedgerEventHandlers {
+		return new LedgerEventHandlers(this.#l1_event_emitters);
+	}
 
-	get #enclave() { return this.#internals.enclave!; }
+	get #enclave() {
+		return this.#internals.enclave!;
+	}
 
 	constructor(
-		enclaveConn: (Enclave) | URL,
+		enclaveConn: Enclave | URL,
 		blockchainReadCtors: BackendClientConstructors,
 	) {
-		const internals = new AppInternals(undefined, (cfg) => this.#on_config(cfg));
+		const internals = new AppInternals(undefined, (cfg) =>
+			this.#on_config(cfg),
+		);
 		super(enclaveConn, internals);
 		this.#internals = internals;
 
@@ -56,34 +60,33 @@ export class Client extends App
 		// implementation of ErdstallSessions.
 		this.#blockchainReadCtors = blockchainReadCtors;
 
-		this.#internal_l1_events =
-			new LedgerEventHandlers(this.#l1_event_emitters);
+		this.#internal_l1_events = new LedgerEventHandlers(this.#l1_event_emitters);
 	}
 
-	#on_config(config: ClientConfig): void
-	{
-		for(const chainCfg of config.chains)
-		{
-			if(!this.#blockchainReadCtors?.[chainCfg.data.type() as ("ethereum" | "substrate")]?.initializer)
-			{
-				console.warn(`No backend configured for ${
-					getChainName(chainCfg.id)
-				} (${
-					chainCfg.data.type()
-				}): not creating a chain client.`);
+	#on_config(config: ClientConfig): void {
+		for (const chainCfg of config.chains) {
+			if (
+				!this.#blockchainReadCtors?.[
+					chainCfg.data.type() as "ethereum" | "substrate"
+				]?.initializer
+			) {
+				console.warn(
+					`No backend configured for ${getChainName(
+						chainCfg.id,
+					)} (${chainCfg.data.type()}): not creating a chain client.`,
+				);
 				continue;
 			}
-			
-			const ctor =
-				(this.#blockchainReadCtors as any)[chainCfg.data.type()]!;
+
+			const ctor = (this.#blockchainReadCtors as any)[chainCfg.data.type()]!;
 			this.#clients.set(
 				chainCfg.id,
-				(ctor.initializer! as unknown as any)(chainCfg.data));
+				(ctor.initializer! as unknown as any)(chainCfg.data),
+			);
 		}
 
 		// Track requested events on all clients.
 		let mask = this.#l1_event_emitters.subscription_mask();
-		for (const [_, client] of this.#clients)
-			client.update_event_tracking(mask);
+		for (const [_, client] of this.#clients) client.update_event_tracking(mask);
 	}
 }

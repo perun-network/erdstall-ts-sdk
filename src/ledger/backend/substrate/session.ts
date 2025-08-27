@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 "use strict";
 
-import { ChainProofChunk, ClientConfig, ChainConfig } from "#erdstall/api/responses";
+import {
+	ChainProofChunk,
+	ClientConfig,
+	ChainConfig,
+} from "#erdstall/api/responses";
 import { ChainSession } from "#erdstall/session";
 import { LedgerEventEmitters } from "#erdstall/event";
 import { ChainAssets, Amount, Tokens } from "#erdstall/ledger/assets";
@@ -16,13 +20,13 @@ import {
 	SignedTx,
 	SignedTxBatch,
 	TxReceipt,
-	TxReceiptBatch
+	TxReceiptBatch,
 } from "#erdstall/ledger/backend";
 import {
 	SubstrateTxSigner,
 	UnsignedSubstrateTransaction,
 	SubstrateTxSender,
-	SignedSubstrateTransaction
+	SignedSubstrateTransaction,
 } from "./txs";
 
 import { ApiPromise, WsProvider } from "@polkadot/api";
@@ -41,17 +45,17 @@ export class SubstrateSession extends ChainSession {
 		signer: SubstrateSigner,
 		chain: Chain,
 		wsProvider: URL,
-		events: LedgerEventEmitters
+		events: LedgerEventEmitters,
 	) {
 		super();
 		this.#chain = chain;
 		this.#signer = signer;
 		this.#events = events;
 		const api = ApiPromise.create({
-			provider: new WsProvider(wsProvider.toString())
+			provider: new WsProvider(wsProvider.toString()),
 		});
-		this.#api = api.then(api => new API(chain, (api.tx as any).wildcard));
-		this.#txsigner = (async() => {
+		this.#api = api.then((api) => new API(chain, (api.tx as any).wildcard));
+		this.#txsigner = (async () => {
 			return new SubstrateTxSigner(chain, await api, signer);
 		})();
 		// TODO: ???
@@ -61,41 +65,48 @@ export class SubstrateSession extends ChainSession {
 	static fromConfig(
 		config: ChainConfig,
 		signer: SubstrateSigner,
-		events: LedgerEventEmitters): SubstrateSession
-	{
-		if(!(config.data instanceof SubstrateChainConfig))
-			throw new Error(`Config must be substrate config, is ${config.data.type()}`);
+		events: LedgerEventEmitters,
+	): SubstrateSession {
+		if (!(config.data instanceof SubstrateChainConfig))
+			throw new Error(
+				`Config must be substrate config, is ${config.data.type()}`,
+			);
 
 		return new SubstrateSession(
 			signer,
 			config.id,
 			new URL(config.data.blockStreamLAddr),
-			events);
+			events,
+		);
 	}
 
 	static bigintABI(v: bigint): Uint8Array {
 		let ret = new Uint8Array(32);
 
-		for(let i = 0n; i < 32n; i++) {
-			ret[Number(i)] = Number((v >> (8n*i)) & 0xffn);
+		for (let i = 0n; i < 32n; i++) {
+			ret[Number(i)] = Number((v >> (8n * i)) & 0xffn);
 		}
 		return ret;
 	}
 
-	override async signTx(tx: UnsignedTx): Promise<SignedTx>
-	{
-		if(!(tx instanceof UnsignedSubstrateTransaction))
-			throw new Error("Invalid transaction type, expected substrate transaction");
-		return await (await this.#txsigner).signing_session(async(session: any) => {
+	override async signTx(tx: UnsignedTx): Promise<SignedTx> {
+		if (!(tx instanceof UnsignedSubstrateTransaction))
+			throw new Error(
+				"Invalid transaction type, expected substrate transaction",
+			);
+		return await (
+			await this.#txsigner
+		).signing_session(async (session: any) => {
 			return await tx.sign(await this.#txsigner, session);
 		});
 	}
 
-	override async signTxBatch(txs: UnsignedTxBatch): Promise<SignedTxBatch>
-	{
+	override async signTxBatch(txs: UnsignedTxBatch): Promise<SignedTxBatch> {
 		/*if(!(txs instanceof UnsignedSubstrateTransaction))
 			throw new Error("Invalid transaction type, expected ethereum transaction");*/
-		return await (await this.#txsigner).signing_session(async(session: any) => {
+		return await (
+			await this.#txsigner
+		).signing_session(async (session: any) => {
 			return await txs.sign(await this.#txsigner, session);
 		});
 	}
@@ -109,14 +120,12 @@ export class SubstrateSession extends ChainSession {
 		}
 	*/
 
-	async deposit(
-		assets: ChainAssets,
-	): Promise<UnsignedTxBatch> {
+	async deposit(assets: ChainAssets): Promise<UnsignedTxBatch> {
 		let ordered = assets.ordered();
 		let api = await this.#api;
-		
+
 		let txs: UnsignedTx[] = [];
-		for(const [asset, amount] of ordered)
+		for (const [asset, amount] of ordered)
 			txs.push(...api.deposit(asset, amount));
 
 		return new UnsignedTxBatch(txs);
@@ -127,29 +136,31 @@ export class SubstrateSession extends ChainSession {
 	): Promise<UnsignedTxBatch> {
 		let api = await this.#api;
 		const txs: any[] = [];
-		for (let i = 0; i <  exitProof.length; i++) {
-			txs.push(...api.withdraw({
-				proofs: exitProof,
-				chunk: i,
-				user: this.#signer.address(),
-				exit: true,
-				epoch: epoch
-			}));
+		for (let i = 0; i < exitProof.length; i++) {
+			txs.push(
+				...api.withdraw({
+					proofs: exitProof,
+					chunk: i,
+					user: this.#signer.address(),
+					exit: true,
+					epoch: epoch,
+				}),
+			);
 		}
 
 		return new UnsignedTxBatch(txs);
 	}
 
-	override async sendTx(tx: SignedTx): Promise<TxReceipt>
-	{
-		if(!(tx instanceof SignedSubstrateTransaction))
-			throw new Error("Invalid transaction type, expected substrate transaction");
+	override async sendTx(tx: SignedTx): Promise<TxReceipt> {
+		if (!(tx instanceof SignedSubstrateTransaction))
+			throw new Error(
+				"Invalid transaction type, expected substrate transaction",
+			);
 		console.log(`SubstrateSession.sendTx() on ${getChainName(this.#chain)}`);
 		return await tx.send(await this.#txsender);
 	}
 
-	override async sendTxBatch(txs: SignedTxBatch): Promise<TxReceiptBatch>
-	{
+	override async sendTxBatch(txs: SignedTxBatch): Promise<TxReceiptBatch> {
 		return await txs.send(await this.#txsigner, await this.#txsender);
 	}
 

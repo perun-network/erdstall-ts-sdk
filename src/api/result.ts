@@ -12,7 +12,12 @@ export class Result {
 	@jsonMember(Boolean) pending?: true;
 	@jsonMember(String) error?: string;
 
-	constructor(id?: number, data?: ErdstallObject, pending?: boolean, error?: string) {
+	constructor(
+		id?: number,
+		data?: ErdstallObject,
+		pending?: boolean,
+		error?: string,
+	) {
 		this.id = id;
 		this.data = data;
 		this.pending = pending || undefined;
@@ -20,9 +25,13 @@ export class Result {
 	}
 
 	// Messages marked as pending mean that there is still a pending reply with the same id to be waited for.
-	isPending(): boolean { return this.pending ?? false; }
+	isPending(): boolean {
+		return this.pending ?? false;
+	}
 
-	isResponse(): boolean { return this.id !== undefined; }
+	isResponse(): boolean {
+		return this.id !== undefined;
+	}
 	payload(): ErdstallObject {
 		if (this.error) throw new Error(this.error!);
 		return this.data!;

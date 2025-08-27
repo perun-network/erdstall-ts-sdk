@@ -9,7 +9,7 @@ import {
 	assertSubtractable,
 	ErrIncompatibleAssets,
 	registerAssetType,
-	_assetDecoders
+	_assetDecoders,
 } from "./asset";
 import { Amount } from "./amount";
 import { bigTo0xEven } from "#erdstall/export/typedjson";
@@ -23,7 +23,9 @@ export const ErrIDAlreadyContained = new Error(
 export class Tokens extends Asset {
 	public value: bigint[];
 
-	assetType(): AssetType.NFT { return AssetType.NFT; }
+	assetType(): AssetType.NFT {
+		return AssetType.NFT;
+	}
 
 	constructor(v: bigint[]) {
 		super();
@@ -32,7 +34,8 @@ export class Tokens extends Asset {
 		// validate that all fields are positive and do not have duplicates.
 		for (let k = 0; k < this.value.length - 1; k++) {
 			if (this.value[k] < 0n) throw new Error("invalid token id in token set");
-			if (this.value[k] === v[k + 1]) throw new Error("token entries not unique");
+			if (this.value[k] === v[k + 1])
+				throw new Error("token entries not unique");
 		}
 	}
 
@@ -42,20 +45,28 @@ export class Tokens extends Asset {
 
 	static fromJSON(idset: string[]): Tokens {
 		const s = new Array<bigint>(idset.length);
-		for (const i in idset)
-			s[i] = BigInt(idset[i]);
+		for (const i in idset) s[i] = BigInt(idset[i]);
 		return new Tokens(s);
 	}
 
-	static decode(r: CodecReader): Tokens { return new Tokens(r.u256_array()); }
-	encode(w: CodecWriter) { w.u256_array(this.value); }
+	static decode(r: CodecReader): Tokens {
+		return new Tokens(r.u256_array());
+	}
+	encode(w: CodecWriter) {
+		w.u256_array(this.value);
+	}
 
-	toString() { return "[" + this.value.join(", ") + "]"; }
+	toString() {
+		return "[" + this.value.join(", ") + "]";
+	}
 
-	typeTag(): TypeTagName { return TypeTags.Tokens; }
+	typeTag(): TypeTagName {
+		return TypeTags.Tokens;
+	}
 
-	zero(): boolean
-		{ return this.value.length === 0; }
+	zero(): boolean {
+		return this.value.length === 0;
+	}
 
 	clone(): this {
 		let t = new Tokens([]);
@@ -64,7 +75,7 @@ export class Tokens extends Asset {
 	}
 
 	cmp(asset: this): -1 | 0 | 1 | undefined {
-		if(!(asset instanceof Tokens))
+		if (!(asset instanceof Tokens))
 			throw new Error("Type error: expected Tokens");
 
 		const lhs = this.value;
@@ -78,39 +89,34 @@ export class Tokens extends Asset {
 		let bigger = false;
 		let smaller = false;
 
-		let min_i = 0, max_i = 0;
-		for (; min_i !== minsz && max_i !== maxsz;) {
+		let min_i = 0,
+			max_i = 0;
+		for (; min_i !== minsz && max_i !== maxsz; ) {
 			let sign = min[min_i] - max[max_i];
-			if(sign < 0n)
-			{
-                // we had a smaller NFT ID in min that is not in max.
+			if (sign < 0n) {
+				// we had a smaller NFT ID in min that is not in max.
 				bigger = true;
 				min_i++;
-			}
-			else if(sign > 0n)
-			{
-                // we had a smaller NFT ID in max that is not in min.
-                smaller = true;
-                max_i++;
-			} else
-			{
+			} else if (sign > 0n) {
+				// we had a smaller NFT ID in max that is not in min.
+				smaller = true;
+				max_i++;
+			} else {
 				// both have the same token.
 				++min_i;
 				++max_i;
 			}
 
-			if(bigger && smaller) break;
+			if (bigger && smaller) break;
 		}
-		if(minsz !== maxsz)
-			smaller = true;
+		if (minsz !== maxsz) smaller = true;
 		if (bigger && smaller) return undefined;
 
 		return (smaller ? -flip_sign : bigger ? flip_sign : 0) as any;
 	}
 
-	#sub(asset: this): bigint[] | undefined
-	{
-		if(asset.value.length > this.value.length) return undefined;
+	#sub(asset: this): bigint[] | undefined {
+		if (asset.value.length > this.value.length) return undefined;
 
 		let ret = new Array<bigint>(this.value.length - asset.value.length);
 
@@ -118,15 +124,12 @@ export class Tokens extends Asset {
 		let this_i = 0;
 		let asset_i = 0;
 
-		for(; this_i !== this.value.length && asset_i !== asset.value.length;)
-		{
+		for (; this_i !== this.value.length && asset_i !== asset.value.length; ) {
 			let sign = this.value[this_i] - asset.value[asset_i];
-			if(sign < 0n)
-			{
+			if (sign < 0n) {
 				// we have an NFT ID that comes before the one to subtract.
 				ret[ret_i++] = this.value[this_i++];
-			} else if(sign > 0n)
-			{
+			} else if (sign > 0n) {
 				// we tried to subtract an NFT ID that was not present.
 				return undefined;
 			} else {
@@ -137,12 +140,10 @@ export class Tokens extends Asset {
 		}
 
 		// not all NFT IDs to remove were removed?
-		if(asset_i !== asset.value.length)
-			return undefined;
+		if (asset_i !== asset.value.length) return undefined;
 
 		// add all remaining NFT IDs.
-		while(this_i !== this.value.length)
-			ret[ret_i++] = this.value[this_i++];
+		while (this_i !== this.value.length) ret[ret_i++] = this.value[this_i++];
 
 		return ret;
 	}
@@ -150,7 +151,7 @@ export class Tokens extends Asset {
 	// Implements the -= operator for NFT collections. Throws on absent tokens.
 	sub(asset: this): void {
 		let ret = this.#sub(asset);
-		if(ret === undefined)
+		if (ret === undefined)
 			throw new Error("Subtracting NFT collections: token not present.");
 		this.value = ret;
 	}
@@ -158,7 +159,7 @@ export class Tokens extends Asset {
 	// The non-modifying - operator for NFT collections. Throws on duplicate tokens.
 	static sub(lhs: Tokens, rhs: Tokens): Tokens {
 		let value = lhs.#sub(rhs);
-		if(value === undefined)
+		if (value === undefined)
 			throw new Error("Subtracting NFT collections: token not present.");
 		const ret = new Tokens([]);
 		ret.value = value;
@@ -168,15 +169,13 @@ export class Tokens extends Asset {
 	// Non-throwing, non-modifying - operator for NFT collections. Returns undefined on duplicate tokens.
 	static sub_nothrow(lhs: Tokens, rhs: Tokens): Tokens | undefined {
 		let value = lhs.#sub(rhs);
-		if(value === undefined)
-			return undefined;
+		if (value === undefined) return undefined;
 		const ret = new Tokens([]);
 		ret.value = value;
 		return ret;
 	}
 
-	#add(asset: this): bigint[] | undefined
-	{
+	#add(asset: this): bigint[] | undefined {
 		if (!this.isCompatible(asset)) {
 			throw ErrIncompatibleAssets;
 		}
@@ -187,14 +186,11 @@ export class Tokens extends Asset {
 		let this_i = 0;
 		let asset_i = 0;
 		// interleave/zipper both NFT ID arrays.
-		for(; this_i !== this.value.length && asset_i !== asset.value.length;)
-		{
+		for (; this_i !== this.value.length && asset_i !== asset.value.length; ) {
 			let sign = this.value[this_i] - asset.value[asset_i];
-			if(sign < 0n)
-			{
+			if (sign < 0n) {
 				ret[ret_i++] = this.value[this_i++];
-			} else if(sign > 0n)
-			{
+			} else if (sign > 0n) {
 				ret[ret_i++] = asset.value[asset_i++];
 			} else {
 				return undefined;
@@ -202,10 +198,9 @@ export class Tokens extends Asset {
 		}
 
 		// add the rest of the longer array.
-		while(this_i !== this.value.length)
-			ret[ret_i++] = this.value[this_i++];
+		while (this_i !== this.value.length) ret[ret_i++] = this.value[this_i++];
 
-		while(asset_i !== asset.value.length)
+		while (asset_i !== asset.value.length)
 			ret[ret_i++] = asset.value[asset_i++];
 
 		return ret;
@@ -214,16 +209,20 @@ export class Tokens extends Asset {
 	// Implements the += operator for NFT collections. Throws on duplicate tokens.
 	add(asset: this): void {
 		let ret = this.#add(asset);
-		if(ret === undefined)
-			throw new Error("Adding two NFT collections: duplicate token encountered.");
+		if (ret === undefined)
+			throw new Error(
+				"Adding two NFT collections: duplicate token encountered.",
+			);
 		this.value = ret;
 	}
 
 	// The non-modifying + operator for NFT collections. Throws on duplicate tokens.
 	static add(lhs: Tokens, rhs: Tokens): Tokens {
 		let value = lhs.#add(rhs);
-		if(value === undefined)
-			throw new Error("Adding two NFT collections: duplicate token encountered.");
+		if (value === undefined)
+			throw new Error(
+				"Adding two NFT collections: duplicate token encountered.",
+			);
 		const ret = new Tokens([]);
 		ret.value = value;
 		return ret;
@@ -232,8 +231,7 @@ export class Tokens extends Asset {
 	// Non-throwing, non-modifying + operator for NFT collections. Returns undefined on duplicate tokens.
 	static add_nothrow(lhs: Tokens, rhs: Tokens): Tokens | undefined {
 		let value = lhs.#add(rhs);
-		if(value === undefined)
-			return undefined;
+		if (value === undefined) return undefined;
 		const ret = new Tokens([]);
 		ret.value = value;
 		return ret;

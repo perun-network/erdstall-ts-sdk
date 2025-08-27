@@ -48,7 +48,7 @@ export abstract class Asset {
 	}
 	static decode_a(r: CodecReader, t: AssetType): Asset {
 		let dec = _assetDecoders.get(t);
-		if(dec) return dec(r);
+		if (dec) return dec(r);
 		else throw new Error(`Unknown asset type ${t}`);
 	}
 
@@ -59,16 +59,12 @@ export abstract class Asset {
 				return assetImpls.get(key)!(json[key]);
 			}
 			throw new Error(
-				`Asset.fromJSON: invalid key ${key}, obj=${JSON.stringify(
-					json,
-				)}`,
+				`Asset.fromJSON: invalid key ${key}, obj=${JSON.stringify(json)}`,
 			);
 		}
 
 		throw new Error(
-			`empty object is not a valid Asset encoding: ${JSON.stringify(
-				json,
-			)}`,
+			`empty object is not a valid Asset encoding: ${JSON.stringify(json)}`,
 		);
 	}
 
@@ -111,7 +107,7 @@ export abstract class Asset {
 // throws an error if this is not the case.
 export function assertSubtractable(minuend: Asset, subtrahend: Asset): void {
 	const sign = minuend.cmp(subtrahend);
-	if(sign === undefined) {
+	if (sign === undefined) {
 		throw ErrUncomparableAssets;
 	} else if (sign === -1) {
 		throw ErrSubtrahendLargerThanMinuend;

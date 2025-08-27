@@ -11,26 +11,26 @@ import { ethers } from "ethers";
 import {
 	Erdstall__factory,
 	Erdstall,
-	EthereumChainConfig
+	EthereumChainConfig,
 } from "#erdstall/ledger/backend/ethereum";
 import { LedgerConn } from "./writeconn";
 import { ChainConfig } from "#erdstall/api/responses";
 
-export class EthereumClient extends ChainClient
-{
+export class EthereumClient extends ChainClient {
 	#events: LedgerEventEmitters;
 	#conn: LedgerConn;
 
-	get chain(): Chain { return this.#conn.chain; }
+	get chain(): Chain {
+		return this.#conn.chain;
+	}
 
-	static fromConfig(config: ChainConfig, events: LedgerEventEmitters)
-	{
-		if(!(config.data instanceof EthereumChainConfig))
+	static fromConfig(config: ChainConfig, events: LedgerEventEmitters) {
+		if (!(config.data instanceof EthereumChainConfig))
 			throw new Error("Expected an ethereum chain config");
 
 		let network: string;
-		if(config.data.nodeRPC) network = config.data.nodeRPC;
-		else if(config.data.networkID) network = config.data.networkID;
+		if (config.data.nodeRPC) network = config.data.nodeRPC;
+		else if (config.data.networkID) network = config.data.networkID;
 		else throw new Error("config does not specify a connectable node");
 
 		console.info(`Connecting to ${getChainName(config.id)} at "${network}"`);
@@ -41,20 +41,22 @@ export class EthereumClient extends ChainClient
 			config.data.contract,
 			provider,
 			config.id,
-			events);
+			events,
+		);
 	}
 
 	constructor(
 		contract: EthereumAddress,
 		provider: Provider,
 		chain: Chain,
-		events: LedgerEventEmitters
+		events: LedgerEventEmitters,
 	) {
 		super();
 		this.#events = events;
 		this.#conn = LedgerConn.readonly(contract, provider, chain, events);
 	}
 
-	override update_event_tracking(mask: LedgerEventMask)
-		{ this.#conn.update_event_tracking(mask); }
+	override update_event_tracking(mask: LedgerEventMask) {
+		this.#conn.update_event_tracking(mask);
+	}
 }

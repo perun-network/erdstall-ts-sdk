@@ -17,8 +17,7 @@ export class SubstrateClient extends ChainClient {
 		this.provider = new WsProvider(wsProvider.toString());
 	}
 
-	override update_event_tracking(mask: LedgerEventMask): void
-	{
+	override update_event_tracking(mask: LedgerEventMask): void {
 		throw new Error("not implemented");
 	}
 }

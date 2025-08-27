@@ -5,7 +5,7 @@ import {
 	Signature,
 	SignatureType,
 	registerSignatureType,
-	_signatureDecoders
+	_signatureDecoders,
 } from "#erdstall/crypto";
 import { Address } from "#erdstall/crypto";
 import { parseHex, toHex } from "#erdstall/utils/hexbytes";
@@ -23,35 +23,45 @@ export class SubstrateSignature extends Signature<"substrate"> {
 		this.bytes = new Uint8Array(bytes); // explicit deep copy!
 	}
 
-	override clone(): this
-		{ return new SubstrateSignature(this.bytes) as this; }
+	override clone(): this {
+		return new SubstrateSignature(this.bytes) as this;
+	}
 
 	static fromJSON(data: any): Signature<"substrate"> {
-		if(typeof data !== "string") {
-			throw new Error("Expected to decode address from a string")
+		if (typeof data !== "string") {
+			throw new Error("Expected to decode address from a string");
 		}
 		return new SubstrateSignature(parseHex(data, "0x"));
 	}
 	verify(msg: Uint8Array, addr: Address<"substrate">) {
-		return signatureVerify(
-			msg,
-			this.toBytes(),
-			addr.toString(),
-		).isValid;
+		return signatureVerify(msg, this.toBytes(), addr.toString()).isValid;
 	}
 
-	toJSON() { return toHex(this.bytes, "0x"); }
+	toJSON() {
+		return toHex(this.bytes, "0x");
+	}
 
-	toString(): string { return toHex(this.bytes, "0x") }
+	toString(): string {
+		return toHex(this.bytes, "0x");
+	}
 
-	toBytes(): Uint8Array { return this.bytes; }
+	toBytes(): Uint8Array {
+		return this.bytes;
+	}
 
-	type(): "substrate" { return "substrate"; }
+	type(): "substrate" {
+		return "substrate";
+	}
 
-	override signatureType(): SignatureType { return SignatureType.Substrate; }
-	override encode_impl(w: CodecWriter): void { w.bytes(this.bytes); }
-	static decode_impl(r: CodecReader): SubstrateSignature
-		{ return new SubstrateSignature(r.bytes(64)); }
+	override signatureType(): SignatureType {
+		return SignatureType.Substrate;
+	}
+	override encode_impl(w: CodecWriter): void {
+		w.bytes(this.bytes);
+	}
+	static decode_impl(r: CodecReader): SubstrateSignature {
+		return new SubstrateSignature(r.bytes(64));
+	}
 }
 
 registerSignatureType("substrate", SubstrateSignature);

@@ -17,11 +17,13 @@ export class ChainConfig {
 	constructor(
 		id: Chain,
 		type: string,
-		data: EthereumChainConfig | SubstrateChainConfig)
-	{
+		data: EthereumChainConfig | SubstrateChainConfig,
+	) {
 		this.id = id;
-		if(data.type() !== type)
-			throw new Error(`Chain config: type: "${type}", should be "${data.type()}".`);
+		if (data.type() !== type)
+			throw new Error(
+				`Chain config: type: "${type}", should be "${data.type()}".`,
+			);
 		this.data = data;
 	}
 
@@ -32,11 +34,17 @@ export class ChainConfig {
 	static fromJSON(data: any): ChainConfig {
 		switch (data.type) {
 			case "substrate":
-				return new ChainConfig(data.id, data.type,
-					new SubstrateChainConfig(data.data.blockStreamLAddr));
+				return new ChainConfig(
+					data.id,
+					data.type,
+					new SubstrateChainConfig(data.data.blockStreamLAddr),
+				);
 			case "ethereum":
-				return new ChainConfig(data.id, data.type,
-					EthereumChainConfig.fromJSON(data.data));
+				return new ChainConfig(
+					data.id,
+					data.type,
+					EthereumChainConfig.fromJSON(data.data),
+				);
 			default:
 				throw new Error(`unknown backend type: ${data.type}`);
 		}
@@ -46,7 +54,7 @@ export class ChainConfig {
 		return {
 			id: me.id,
 			type: me.data.type(),
-			data: me.data.toJSON()
+			data: me.data.toJSON(),
 		};
 	}
 }
@@ -65,7 +73,7 @@ export class ClientConfig extends ErdstallObject {
 		enclave: Map<Chain, Address>,
 		enclaveNativeSigner: Address,
 		genesis: Date,
-		epochDuration: number
+		epochDuration: number,
 	) {
 		super();
 		this.chains = chains;
@@ -81,21 +89,21 @@ export class ClientConfig extends ErdstallObject {
 			chains.push(ChainConfig.fromJSON(conf));
 		}
 		let enc: Map<Chain, Address> = new Map();
-		for(const key in data.enclave ?? {}) {
+		for (const key in data.enclave ?? {}) {
 			enc.set(parseInt(key), Address.fromJSON(data.enclave[key]));
 		}
 		const native = enc.get(Chain.Erdstall)!;
 		enc.delete(Chain.Erdstall);
 
 		// Workaround: defaulting settings for substrate.
-		for(const [chain, addr] of enc) {
-			if(addr instanceof SubstrateAddress) {
-				if(!chains.find(c => c.id === chain))
-				{
+		for (const [chain, addr] of enc) {
+			if (addr instanceof SubstrateAddress) {
+				if (!chains.find((c) => c.id === chain)) {
 					const chainCfg = new ChainConfig(
-						chain, "substrate",
-						new SubstrateChainConfig(
-							"wss://zombienet.perun.network:9999"));
+						chain,
+						"substrate",
+						new SubstrateChainConfig("wss://zombienet.perun.network:9999"),
+					);
 					chains.push(chainCfg);
 				}
 			}
@@ -107,17 +115,16 @@ export class ClientConfig extends ErdstallObject {
 		return new ClientConfig(chains, enc, native, genesis, epochDuration);
 	}
 
-	static toJSON(me: ClientConfig): any
-	{
+	static toJSON(me: ClientConfig): any {
 		let enclave: any = {};
-		for(let [chain, addr] of me.enclave.entries())
+		for (let [chain, addr] of me.enclave.entries())
 			enclave[chain] = Address.toJSON(addr);
 		return {
 			chains: me.chains.map(ChainConfig.toJSON),
 			enclave,
 			enclaveNativeSigner: Address.toJSON(me.enclaveNativeSigner),
 			genesis: me.genesis.toISOString(),
-			epochDuration: me.epochDuration * 1_000_000_000
+			epochDuration: me.epochDuration * 1_000_000_000,
 		};
 	}
 
@@ -131,23 +138,29 @@ export class ClientConfig extends ErdstallObject {
 
 	clone(): ClientConfig {
 		return new ClientConfig(
-			this.chains.map(c => c.clone()),
+			this.chains.map((c) => c.clone()),
 			new Map<Chain, Address<Crypto>>(
-				Array.from(this.enclave.entries()).map(([c,addr]) => [c, addr.clone()])),
+				Array.from(this.enclave.entries()).map(([c, addr]) => [
+					c,
+					addr.clone(),
+				]),
+			),
 			this.enclaveNativeSigner.clone(),
 			this.genesis,
-			this.epochDuration
+			this.epochDuration,
 		);
 	}
 
 	override encode(w: CodecWriter): void {
-		w.bytes(new TextEncoder().encode(
-			JSON.stringify(ClientConfig.toJSON(this))));
+		w.bytes(
+			new TextEncoder().encode(JSON.stringify(ClientConfig.toJSON(this))),
+		);
 	}
 
 	static decode(r: CodecReader): ClientConfig {
 		return ClientConfig.fromJSON(
-			JSON.parse(new TextDecoder().decode(r.rest())));
+			JSON.parse(new TextDecoder().decode(r.rest())),
+		);
 	}
 }
 

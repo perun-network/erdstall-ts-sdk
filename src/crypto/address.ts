@@ -14,19 +14,26 @@ export function registerAddressType(
 ) {
 	addressImpls.set(typeName, typeClass);
 }
-export const _addressDecoders = new Map<AddressType, (r: CodecReader) => Address>();
+export const _addressDecoders = new Map<
+	AddressType,
+	(r: CodecReader) => Address
+>();
 
 export enum AddressType {
 	Wildcard,
 	Ethereum,
-	Substrate
-};
+	Substrate,
+}
 
 export abstract class Address<_C extends Crypto = Crypto> {
 	abstract type(): _C;
 	abstract addressType(): AddressType;
-	get key(): string { return JSON.stringify(Address.toJSON(this)); }
-	static fromKey(key: string) { return Address.fromJSON(JSON.parse(key)); }
+	get key(): string {
+		return JSON.stringify(Address.toJSON(this));
+	}
+	static fromKey(key: string) {
+		return Address.fromJSON(JSON.parse(key));
+	}
 	abstract equals(other: Address<_C>): boolean;
 	abstract toString(): string;
 	abstract toJSON(): string;
@@ -38,14 +45,16 @@ export abstract class Address<_C extends Crypto = Crypto> {
 	static decode(r: CodecReader): Address {
 		let t = r.u8() as AddressType;
 		let dec = _addressDecoders.get(t);
-		if(dec) return dec(r);
+		if (dec) return dec(r);
 		else throw new Error(`Unknown address type ${t}`);
 	}
 	static encode(w: CodecWriter, v: Address): void {
 		w.u8(v.addressType());
 		v.encode_impl(w);
 	}
-	encode(w: CodecWriter): void { Address.encode(w, this); }
+	encode(w: CodecWriter): void {
+		Address.encode(w, this);
+	}
 
 	static ensure(addr: string | Address<Crypto>): Address<Crypto> {
 		if (addr === undefined) return addr;
@@ -53,7 +62,13 @@ export abstract class Address<_C extends Crypto = Crypto> {
 		return Address.fromJSON(JSON.parse(addr));
 	}
 
-	static fromJSON({data, type}: {data: any, type: string}): Address<Crypto> {
+	static fromJSON({
+		data,
+		type,
+	}: {
+		data: any;
+		type: string;
+	}): Address<Crypto> {
 		if (!addressImpls.has(type)) {
 			throw new Error(`unknown address type ${type}`);
 		}

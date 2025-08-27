@@ -9,11 +9,11 @@ import {
 	registerAddressType,
 	_addressDecoders,
 	SigVerifier,
-	SignedMessage
+	SignedMessage,
 } from "#erdstall/crypto";
 import { equalArray } from "#erdstall/utils/arrays";
 import { decodeAddress, encodeAddress } from "@polkadot/util-crypto";
-import { hexToU8a, u8aToHex } from "@polkadot/util"
+import { hexToU8a, u8aToHex } from "@polkadot/util";
 import { CodecReader, CodecWriter } from "#erdstall/utils";
 import { SubstrateSignature } from "./signature";
 
@@ -22,17 +22,22 @@ import { SubstrateSignature } from "./signature";
  * wherever an address is required.
  */
 @jsonObject
-export class SubstrateAddress extends Address<"substrate"> implements SigVerifier {
+export class SubstrateAddress
+	extends Address<"substrate">
+	implements SigVerifier
+{
 	#value: Uint8Array;
 	constructor(value: Uint8Array) {
 		super();
 		this.#value = new Uint8Array(value); // explicit deep copy!
 	}
 
-	get keyBytes(): Uint8Array { return new Uint8Array(this.#value); }
+	get keyBytes(): Uint8Array {
+		return new Uint8Array(this.#value);
+	}
 
 	static fromJSON(val: any): SubstrateAddress {
-		if(typeof val !== "string") {
+		if (typeof val !== "string") {
 			throw new Error("Expected to decode address from a string");
 		}
 		return new SubstrateAddress(decodeAddress(hexToU8a(val)));
@@ -42,9 +47,12 @@ export class SubstrateAddress extends Address<"substrate"> implements SigVerifie
 		return u8aToHex(this.#value);
 	}
 
-	override encode_impl(w: CodecWriter): void { w.bytes(this.#value); }
-	static decode_impl(r: CodecReader): SubstrateAddress
-		{ return new SubstrateAddress(r.bytes(32)); }
+	override encode_impl(w: CodecWriter): void {
+		w.bytes(this.#value);
+	}
+	static decode_impl(r: CodecReader): SubstrateAddress {
+		return new SubstrateAddress(r.bytes(32));
+	}
 
 	static fromString(addr: string): SubstrateAddress {
 		return new SubstrateAddress(decodeAddress(addr));
@@ -56,8 +64,12 @@ export class SubstrateAddress extends Address<"substrate"> implements SigVerifie
 		return SubstrateAddress.fromString(addr);
 	}
 
-	type(): "substrate" { return "substrate"; }
-	override addressType(): AddressType { return AddressType.Substrate; }
+	type(): "substrate" {
+		return "substrate";
+	}
+	override addressType(): AddressType {
+		return AddressType.Substrate;
+	}
 
 	toString(): string {
 		return encodeAddress(this.#value);
@@ -67,14 +79,14 @@ export class SubstrateAddress extends Address<"substrate"> implements SigVerifie
 		return equalArray(this.#value, other.#value);
 	}
 
-	override clone(): this { return new SubstrateAddress(this.#value) as this; }
+	override clone(): this {
+		return new SubstrateAddress(this.#value) as this;
+	}
 
 	async verifySig(s: SignedMessage): Promise<Uint8Array | undefined> {
-		if(!(s.signature instanceof SubstrateSignature))
-			return undefined;
+		if (!(s.signature instanceof SubstrateSignature)) return undefined;
 
-		if(s.signature.verify(s.message, this))
-			return s.message;
+		if (s.signature.verify(s.message, this)) return s.message;
 		else return undefined;
 	}
 }

@@ -7,37 +7,37 @@ import { ethers } from "ethers";
 import { toHex } from "#erdstall/utils/hexbytes";
 import { CodecReader, CodecWriter } from "#erdstall/utils";
 
-
 export enum AssetType {
 	Fungible,
-	NFT
+	NFT,
 }
 
 export function AssetTypeName(t: AssetType): string {
-	switch(t)
-	{
-	case AssetType.Fungible: return "FUN";
-	case AssetType.NFT: return "NFT";
+	switch (t) {
+		case AssetType.Fungible:
+			return "FUN";
+		case AssetType.NFT:
+			return "NFT";
 	}
 	throw new Error(`Unknown AssetType: ${t}`);
 }
 
 export class AssetID {
 	// [Origin Chain][AssetType][ID LocalAsset] packed into fixed-size array.
-	bytes: Uint8Array & {length: 35};
+	bytes: Uint8Array & { length: 35 };
 
-	constructor(bytes: Uint8Array & {length: 35}) {
+	constructor(bytes: Uint8Array & { length: 35 }) {
 		this.bytes = bytes;
-		if(bytes.length != 35) throw new Error("Invalid byte length");
+		if (bytes.length != 35) throw new Error("Invalid byte length");
 	}
 
 	static erdstallUserToken(
 		user: WildcardAddress,
 		name32: Uint8Array,
 	): Uint8Array {
-		return ethers.getBytes(ethers.keccak256(
-			new Uint8Array([...user.keyBytes, ...name32]),
-		));
+		return ethers.getBytes(
+			ethers.keccak256(new Uint8Array([...user.keyBytes, ...name32])),
+		);
 	}
 
 	static fromMetadata(
@@ -49,7 +49,7 @@ export class AssetID {
 		new DataView(bytes).setUint16(0, chain, true);
 		bytes[2] = type;
 		bytes.set(localID, 3);
-		return new AssetID(bytes as (Uint8Array & {length: 35}));
+		return new AssetID(bytes as Uint8Array & { length: 35 });
 	}
 
 	origin(): Chain {
@@ -66,26 +66,26 @@ export class AssetID {
 	}
 
 	cmp(other: AssetID): number {
-		if(this.bytes.length != 35) throw new Error("Invalid AssetID size!");
-		if(other.bytes.length != 35) throw new Error("Invalid AssetID size!");
+		if (this.bytes.length != 35) throw new Error("Invalid AssetID size!");
+		if (other.bytes.length != 35) throw new Error("Invalid AssetID size!");
 
-		for(let i = 0; i < this.bytes.length; i++) {
+		for (let i = 0; i < this.bytes.length; i++) {
 			const x = this.bytes[i] - other.bytes[i];
-			if(x) return x;
+			if (x) return x;
 		}
 		return 0;
 	}
 
 	toString(): string {
-		return `${
-			this.origin()
-		}/${
-			AssetTypeName(this.type())
-		}/${toHex(this.localID(), "")}`;
+		return `${this.origin()}/${AssetTypeName(
+			this.type(),
+		)}/${toHex(this.localID(), "")}`;
 	}
 
-	encode(w: CodecWriter): void
-		{ w.bytes(this.bytes);	}
-	static decode(r: CodecReader): AssetID
-		{ return new AssetID(r.bytes(35)); }
+	encode(w: CodecWriter): void {
+		w.bytes(this.bytes);
+	}
+	static decode(r: CodecReader): AssetID {
+		return new AssetID(r.bytes(35));
+	}
 }
