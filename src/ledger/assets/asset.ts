@@ -55,7 +55,7 @@ export abstract class Asset {
 	static fromJSON(json: any): Asset {
 		for (const key in json) {
 			if (assetImpls.has(key)) {
-				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+				 
 				return assetImpls.get(key)!(json[key]);
 			}
 			throw new Error(
