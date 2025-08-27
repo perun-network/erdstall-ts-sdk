@@ -1,11 +1,11 @@
 "use strict";
 
-import { parseHex } from "#erdstall/utils/hexbytes"
+import { parseHex } from "#erdstall/utils/hexbytes";
 
 import {
 	PreparedTransactionRequest,
 	TransactionResponse,
-	Provider
+	Provider,
 } from "ethers";
 
 import {
@@ -14,24 +14,23 @@ import {
 	TxReceipt,
 	WildcardTx,
 	TxSigner,
-	TxSender
+	TxSender,
 } from "#erdstall/ledger/backend";
 
 import { EthereumSigner, EthereumAddress } from "#erdstall/crypto/ethereum";
 import { Chain } from "#erdstall/ledger";
 
-
 export class EthTxSigner extends TxSigner {
 	#signer: EthereumSigner;
 	#provider: Provider;
 
-	override get address(): EthereumAddress { return this.#signer.address(); }
+	override get address(): EthereumAddress {
+		return this.#signer.address();
+	}
 
 	constructor(chain: Chain, signer: EthereumSigner, provider: Provider) {
-		super(
-			chain,
-			async () => BigInt(
-				await signer.voidSigner(this.#provider).getNonce("pending"))
+		super(chain, async () =>
+			BigInt(await signer.voidSigner(this.#provider).getNonce("pending")),
 		);
 
 		this.#signer = signer;
@@ -41,8 +40,8 @@ export class EthTxSigner extends TxSigner {
 	async signTransaction(
 		tx: PreparedTransactionRequest,
 		session: any,
-		chain: Chain): Promise<string>
-	{
+		chain: Chain,
+	): Promise<string> {
 		this.require(session, chain);
 
 		console.log("incNonce()");
@@ -58,21 +57,18 @@ export class EthTxSigner extends TxSigner {
 export class UnsignedEthTransaction extends UnsignedTx {
 	#raw: PreparedTransactionRequest;
 
-	override get native(): PreparedTransactionRequest
-		{ return Object.assign({}, this.#raw); }
+	override get native(): PreparedTransactionRequest {
+		return Object.assign({}, this.#raw);
+	}
 
-	constructor(
-		desc: WildcardTx,
-		raw: PreparedTransactionRequest)
-	{
+	constructor(desc: WildcardTx, raw: PreparedTransactionRequest) {
 		super(desc);
 		this.#raw = Object.assign({}, raw);
 	}
 
-	override async sign(s: TxSigner, session: any): Promise<SignedTx>
-	{
-		if(!s) throw new Error("no signer!");
-		if(!(s instanceof EthTxSigner))
+	override async sign(s: TxSigner, session: any): Promise<SignedTx> {
+		if (!s) throw new Error("no signer!");
+		if (!(s instanceof EthTxSigner))
 			throw new Error("Not an ethereum TX signer");
 
 		const tx = this.native; // clone
@@ -80,21 +76,20 @@ export class UnsignedEthTransaction extends UnsignedTx {
 		return new SignedEthTransaction(
 			this.description,
 			tx,
-			await s.signTransaction(tx, session, this.chain));
+			await s.signTransaction(tx, session, this.chain),
+		);
 	}
 }
 
 export class EthTxSender extends TxSender {
 	#provider: Provider;
 
-	constructor(chain: Chain, provider: Provider)
-	{
+	constructor(chain: Chain, provider: Provider) {
 		super(chain);
 		this.#provider = provider;
 	}
 
-	async send(tx: string): Promise<TransactionResponse>
-	{
+	async send(tx: string): Promise<TransactionResponse> {
 		console.log("provider.broadcastTransaction");
 		return await this.#provider.broadcastTransaction(tx);
 	}
@@ -107,28 +102,31 @@ export class SignedEthTransaction extends SignedTx {
 	constructor(
 		desc: WildcardTx,
 		native: PreparedTransactionRequest,
-		signed: string)
-	{
+		signed: string,
+	) {
 		super(desc);
 		this.#native = native;
 		this.#signedTx = signed;
 	}
 
-	override get sender(): EthereumAddress
-	{
+	override get sender(): EthereumAddress {
 		console.log(this.#native);
 		return EthereumAddress.fromString(this.#native.from! as string);
 	}
 
-	override get native() { return Object.assign({}, this.#native); }
-	override get nonce(): bigint { return BigInt(this.#native.nonce!); }
+	override get native() {
+		return Object.assign({}, this.#native);
+	}
+	override get nonce(): bigint {
+		return BigInt(this.#native.nonce!);
+	}
 
-	override unsign(): UnsignedEthTransaction
-		{ return new UnsignedEthTransaction(this.description, this.#native); }
+	override unsign(): UnsignedEthTransaction {
+		return new UnsignedEthTransaction(this.description, this.#native);
+	}
 
-	override async send(sender: TxSender): Promise<TxReceipt>
-	{
-		if(!(sender instanceof EthTxSender))
+	override async send(sender: TxSender): Promise<TxReceipt> {
+		if (!(sender instanceof EthTxSender))
 			throw new Error("not an ethereum TX sender");
 
 		let response = await sender.send(this.#signedTx);
@@ -139,7 +137,7 @@ export class SignedEthTransaction extends SignedTx {
 
 		return {
 			tx: this,
-			success: (async(): Promise<boolean> => {
+			success: (async (): Promise<boolean> => {
 				let r = await receipt;
 				return r!.status === 1;
 			})(),

@@ -9,12 +9,16 @@ import { CodecReader, CodecWriter } from "#erdstall/utils";
  * free locked assets. It is returned by an `EnclaveReader.getAccount` query.
  */
 export class Account {
-		constructor(
-	public nonce: bigint,
-	public values: ChainAssets
-		) {}
+	constructor(
+		public nonce: bigint,
+		public values: ChainAssets,
+	) {}
 
-	encode(w: CodecWriter): void { w.u64(this.nonce); this.values.encode(w); }
-	static decode(r: CodecReader): Account
-		{ return new Account(r.u64(), ChainAssets.decode(r)); }
+	encode(w: CodecWriter): void {
+		w.u64(this.nonce);
+		this.values.encode(w);
+	}
+	static decode(r: CodecReader): Account {
+		return new Account(r.u64(), ChainAssets.decode(r));
+	}
 }

@@ -10,7 +10,7 @@ import {
 	SubscribeBalanceProofs,
 	SubscribePhaseShifts,
 	GetAccount,
-	GetAccount_Output
+	GetAccount_Output,
 } from "#erdstall/api/calls";
 import {
 	SignedTransaction,
@@ -21,7 +21,7 @@ import {
 	SetPrivacy,
 	SetPrivacy_Output,
 	LinkAccount,
-	LinkAccount_Output
+	LinkAccount_Output,
 } from "#erdstall/api/transactions";
 import {
 	ClientConfig,
@@ -32,59 +32,70 @@ import {
 	SignedBalanceProof,
 	BalanceProof,
 	Account,
-	PhaseShift
+	PhaseShift,
 } from "#erdstall/api/responses";
 import { TypedJSON } from "#erdstall/export/typedjson";
 import { EnclaveEvent } from "./event";
 import { EnclaveProvider, EnclaveWSProvider } from "./provider";
 
-export class CallResponse<T = any>
-{
-		constructor(
-	public accepted: Promise<void>,
-	public result:   Promise<T>
-		) { }
+export class CallResponse<T = any> {
+	constructor(
+		public accepted: Promise<void>,
+		public result: Promise<T>,
+	) {}
 
-	map<U>(fn: (v: T) => Promise<U>): CallResponse<U>
-	{
+	map<U>(fn: (v: T) => Promise<U>): CallResponse<U> {
 		return new CallResponse<U>(
 			this.accepted,
-			(async(): Promise<U> => { return await fn(await this.result); })()
+			(async (): Promise<U> => {
+				return await fn(await this.result);
+			})(),
 		);
 	}
 }
 
 class CallPromise<T extends ErdstallObject = ErdstallObject> {
-		constructor(
-	public acknowledged: () => void,
-	public success: (v: T) => void,
-	public error: (e: Error) => void
-		) { }
+	constructor(
+		public acknowledged: () => void,
+		public success: (v: T) => void,
+		public error: (e: Error) => void,
+	) {}
 
-	static make<T extends ErdstallObject = ErdstallObject>():
-		{ handlers: CallPromise<T>, response: CallResponse<T> }
-	{
+	static make<T extends ErdstallObject = ErdstallObject>(): {
+		handlers: CallPromise<T>;
+		response: CallResponse<T>;
+	} {
 		let result_acc: (v: T) => void;
 		let result_rej: (e: Error) => void;
-		const result = new Promise<T>((res_acc, res_rej) =>
-			{ result_acc = res_acc; result_rej = res_rej; });
+		const result = new Promise<T>((res_acc, res_rej) => {
+			result_acc = res_acc;
+			result_rej = res_rej;
+		});
 		let ack_acc: () => void;
 		let ack_rej: (e: Error) => void;
-		const ack = new Promise<void>((acc, rej) =>
-			{ ack_acc = acc; ack_rej = rej; });
+		const ack = new Promise<void>((acc, rej) => {
+			ack_acc = acc;
+			ack_rej = rej;
+		});
 
 		return {
 			handlers: new CallPromise<T>(
 				ack_acc!,
-				(v: T) => { ack_acc(); result_acc(v); },
-				(e: Error) => { ack_rej(e); result_rej(e); }),
-			response: new CallResponse(ack, result)
+				(v: T) => {
+					ack_acc();
+					result_acc(v);
+				},
+				(e: Error) => {
+					ack_rej(e);
+					result_rej(e);
+				},
+			),
+			response: new CallResponse(ack, result),
 		};
 	}
 }
 
-export class Enclave
-{
+export class Enclave {
 	#provider: EnclaveProvider;
 	#calls = new Map<number, CallPromise<ErdstallObject>>();
 	#id: number = 0;
@@ -96,24 +107,24 @@ export class Enclave
 
 	#emitters?: EnclaveEventEmitters;
 	#sigVerifier?: SigVerifier;
-	set emitters([e,vrfy]: [EnclaveEventEmitters, SigVerifier])
-	{
-		if(this.#emitters || this.#sigVerifier)
+	set emitters([e, vrfy]: [EnclaveEventEmitters, SigVerifier]) {
+		if (this.#emitters || this.#sigVerifier)
 			throw new Error("Attempted to override event emitters");
 		this.#emitters = e;
 		this.#sigVerifier = vrfy;
 	}
 
-	static dial(operator: URL): Enclave
-		{ return new Enclave(new EnclaveWSProvider(operator)); }
+	static dial(operator: URL): Enclave {
+		return new Enclave(new EnclaveWSProvider(operator));
+	}
 
-	constructor(provider: EnclaveProvider)
-		{ this.#provider = provider; }
+	constructor(provider: EnclaveProvider) {
+		this.#provider = provider;
+	}
 
 	public isEnclaveWriter(): void {}
 
-	public connect()
-	{
+	public connect() {
 		this.#provider.onmessage = (ev) => this.onMessage(ev);
 		this.#provider.onerror = (ev) => this.onError(ev);
 		this.#provider.onopen = (ev) => this.onOpen(ev);
@@ -121,24 +132,22 @@ export class Enclave
 		this.#provider.connect();
 	}
 
-	public disconnect()
-		{ this.#provider.close(); }
+	public disconnect() {
+		this.#provider.close();
+	}
 
-	public async subscribe(who?: Address): Promise<void>
-	{
+	public async subscribe(who?: Address): Promise<void> {
 		// TODO: this is quite brittle, it is currently only really tested for single accounts. We also assume that all balance proofs we receive are for our owned account when exiting.
-		if(who) {
+		if (who) {
 			this.#individuallySubscribed.add(who);
 		} else {
 			this.#globallySubscribed = true;
 		}
 
 		await this.sendCall(new SubscribeTXs(who)).result;
-		if(who)
-			await this.sendCall(new SubscribeBalanceProofs(who)).result;
+		if (who) await this.sendCall(new SubscribeBalanceProofs(who)).result;
 
-		if(!this.#phaseShiftSubscribed)
-		{
+		if (!this.#phaseShiftSubscribed) {
 			this.#phaseShiftSubscribed = true;
 			const subPSs = new SubscribePhaseShifts();
 			await this.sendCall(subPSs).result;
@@ -153,31 +162,33 @@ export class Enclave
 		else throw new Error("attestation not yet issued");
 	}*/
 
-	public transfer(tx: SignedTransaction<Transfer>): CallResponse<void>
-	{
-		return this.sendCall<SignedDirectTxReceipt>(tx).map(async(r) =>
-			{ (await r.verify(this.#sigVerifier!))!.ok(); });
+	public transfer(tx: SignedTransaction<Transfer>): CallResponse<void> {
+		return this.sendCall<SignedDirectTxReceipt>(tx).map(async (r) => {
+			(await r.verify(this.#sigVerifier!))!.ok();
+		});
 	}
 
-	public mint(tx: SignedTransaction<Mint>): CallResponse<void>
-	{
-		return this.sendCall<SignedDirectTxReceipt>(tx).map(async(r) =>
-			{ (await r.verify(this.#sigVerifier!))!.ok(); });
+	public mint(tx: SignedTransaction<Mint>): CallResponse<void> {
+		return this.sendCall<SignedDirectTxReceipt>(tx).map(async (r) => {
+			(await r.verify(this.#sigVerifier!))!.ok();
+		});
 	}
 
-	public burn(tx: SignedTransaction<Burn>): CallResponse<void>
-	{
-		return this.sendCall<SignedDirectTxReceipt>(tx).map(async(r) =>
-			{ (await r.verify(this.#sigVerifier!))!.ok(); });
+	public burn(tx: SignedTransaction<Burn>): CallResponse<void> {
+		return this.sendCall<SignedDirectTxReceipt>(tx).map(async (r) => {
+			(await r.verify(this.#sigVerifier!))!.ok();
+		});
 	}
 
 	public exit(exitRequest: SignedTransaction<FullExit>): {
-		response: CallResponse<void>,
-		proof:    Promise<BalanceProof>
-	}
-	{
-		let response = this.sendCall<SignedDirectTxReceipt>(exitRequest).map(async(r) =>
-			{ (await r.verify(this.#sigVerifier!))!.ok(); });
+		response: CallResponse<void>;
+		proof: Promise<BalanceProof>;
+	} {
+		let response = this.sendCall<SignedDirectTxReceipt>(exitRequest).map(
+			async (r) => {
+				(await r.verify(this.#sigVerifier!))!.ok();
+			},
+		);
 		const proof = new Promise<BalanceProof>((resolve, reject) => {
 			// NOTE RACE if a proof is received before the exit request is processed. Would need more elaborate logic to harden against that. It would be better to handle tracking of balance proofs in a different manner.
 			this.#emitters!.proof.once(resolve);
@@ -187,34 +198,39 @@ export class Enclave
 		return { response, proof };
 	}
 
-	public getAccount(tx: SignedTransaction<GetAccount>): CallResponse<GetAccount_Output>
-	{
+	public getAccount(
+		tx: SignedTransaction<GetAccount>,
+	): CallResponse<GetAccount_Output> {
 		return this.sendCall<SignedDirectTxReceipt>(tx).map(async (r) =>
 			GetAccount_Output.decode(
-				(await r.verify(this.#sigVerifier!))!.ok().reader())
+				(await r.verify(this.#sigVerifier!))!.ok().reader(),
+			),
 		);
 	}
 
-	public setPrivacy(tx: SignedTransaction<SetPrivacy>): CallResponse<SetPrivacy_Output>
-	{
+	public setPrivacy(
+		tx: SignedTransaction<SetPrivacy>,
+	): CallResponse<SetPrivacy_Output> {
 		return this.sendCall<SignedDirectTxReceipt>(tx).map(async (r) =>
 			SetPrivacy_Output.decode(
-				(await r.verify(this.#sigVerifier!))!.ok().reader())
+				(await r.verify(this.#sigVerifier!))!.ok().reader(),
+			),
 		);
 	}
 
-	public linkAccount(tx: SignedTransaction<LinkAccount>): CallResponse<LinkAccount_Output>
-	{
+	public linkAccount(
+		tx: SignedTransaction<LinkAccount>,
+	): CallResponse<LinkAccount_Output> {
 		return this.sendCall<SignedDirectTxReceipt>(tx).map(async (r) =>
 			LinkAccount_Output.decode(
-				(await r.verify(this.#sigVerifier!))!.ok().reader())
+				(await r.verify(this.#sigVerifier!))!.ok().reader(),
+			),
 		);
 	}
 
 	private sendCall<T extends ErdstallObject = ErdstallObject>(
-		data: ErdstallObject
-	): CallResponse<T>
-	{
+		data: ErdstallObject,
+	): CallResponse<T> {
 		const id = this.nextID();
 
 		const { handlers, response } = CallPromise.make<T>();
@@ -240,10 +256,11 @@ export class Enclave
 		}*/
 	}
 
-	private nextID(): number { return this.#id++; }
+	private nextID(): number {
+		return this.#id++;
+	}
 
-	private async onMessage(ev: MessageEvent)
-	{
+	private async onMessage(ev: MessageEvent) {
 		let om: Result | undefined;
 		try {
 			om = TypedJSON.parse(ev.data, Result);
@@ -259,26 +276,25 @@ export class Enclave
 
 		// handle responses.
 		if (msg.id) {
-			if(!this.#calls.has(msg.id)) {
+			if (!this.#calls.has(msg.id)) {
 				console.error("received message for unknown call ID");
 				return;
 			}
 
 			const call = this.#calls.get(msg.id)!;
-			if(!msg.isPending()) // is this a "pending" message or an actual result?
+			if (!msg.isPending())
+				// is this a "pending" message or an actual result?
 				this.#calls.delete(msg.id);
 
 			if (msg.error) {
 				call.error(new Error(msg.error));
 				this.#emitters!.error.emit(msg.error);
 			} else {
-				if(msg.isPending())
-					call.acknowledged();
-				else
-					call.success(msg.data as any);
+				if (msg.isPending()) call.acknowledged();
+				else call.success(msg.data as any);
 			}
 			return;
-		} else if(msg.error) {
+		} else if (msg.error) {
 			console.error("unexpected error:", msg.error);
 			this.#emitters!.error.emit(msg.error);
 			return;
@@ -294,26 +310,26 @@ export class Enclave
 
 		console.log("received event: ", obj.objectTypeName(), obj);
 
-		switch(obj.objectType())
-		{
-		case ClientConfig:
-			this.#emitters!.config.emit(obj as ClientConfig);
-			break;
-		case SignedPublicTxReceipt:
-			this.#emitters!.receipt.emit([
-				(obj as SignedPublicTxReceipt).target,
-				(await (obj as SignedPublicTxReceipt).verify(this.#sigVerifier!))!
-			]);
-			break;
-		case SignedBalanceProof:
-			this.#emitters!.proof.emit(
-				(await (obj as SignedBalanceProof).verify(this.#sigVerifier!))!);
-			break;
-		case PhaseShift:
-			this.#emitters!.phaseshift.emit(obj as PhaseShift);
-			break;
-		default:
-			console.warn("Unhandled Object type: ", obj.objectType());
+		switch (obj.objectType()) {
+			case ClientConfig:
+				this.#emitters!.config.emit(obj as ClientConfig);
+				break;
+			case SignedPublicTxReceipt:
+				this.#emitters!.receipt.emit([
+					(obj as SignedPublicTxReceipt).target,
+					(await (obj as SignedPublicTxReceipt).verify(this.#sigVerifier!))!,
+				]);
+				break;
+			case SignedBalanceProof:
+				this.#emitters!.proof.emit(
+					(await (obj as SignedBalanceProof).verify(this.#sigVerifier!))!,
+				);
+				break;
+			case PhaseShift:
+				this.#emitters!.phaseshift.emit(obj as PhaseShift);
+				break;
+			default:
+				console.warn("Unhandled Object type: ", obj.objectType());
 		}
 	}
 
@@ -322,7 +338,7 @@ export class Enclave
 
 		this.#emitters!.error.emit(new Error("connection error"));
 
-		if(this.#opened) {
+		if (this.#opened) {
 			setTimeout(() => {
 				try {
 					this.connect();
@@ -336,17 +352,13 @@ export class Enclave
 	private onOpen(_: Event) {
 		const calls = [];
 		this.#opened = true;
-		if (this.#globallySubscribed)
-			calls.push(new SubscribeTXs());
+		if (this.#globallySubscribed) calls.push(new SubscribeTXs());
 
 		this.#individuallySubscribed.forEach((addr) =>
-			calls.push(
-				new SubscribeTXs(addr),
-				new SubscribeBalanceProofs(addr),
-			),
+			calls.push(new SubscribeTXs(addr), new SubscribeBalanceProofs(addr)),
 		);
 
-		if(this.#phaseShiftSubscribed) calls.push(new SubscribePhaseShifts());
+		if (this.#phaseShiftSubscribed) calls.push(new SubscribePhaseShifts());
 
 		this.#emitters!.open.emit();
 

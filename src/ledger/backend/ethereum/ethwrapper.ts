@@ -17,7 +17,7 @@ import {
 	Deposited,
 	Withdrawn,
 	Challenged,
-	ChallengeResponded
+	ChallengeResponded,
 } from "#erdstall/ledger";
 import { Asset, ChainAssets, Amount, Tokens } from "#erdstall/ledger/assets";
 import { AssetID } from "#erdstall/crypto";
@@ -29,32 +29,28 @@ import {
 	EthereumSignature as Signature,
 } from "#erdstall/crypto/ethereum";
 
-
 export function wrapLedgerEvent(
 	event: string,
 	chain: Chain,
 	...data: any
-): LedgerEvent|undefined {
-	switch(event) {
-	case "Frozen":
-		return wrapFrozen(chain, ...data);
-	case "Deposited":
-		return wrapDeposited(chain, ...data);
-	case "Withdrawn":
-		return wrapWithdrawn(chain, ...data);
-	case "Challenged":
-		return wrapChallenged(chain, ...data);
-	case "ChallengeResponded":
-		return wrapChallengeResponded(chain, ...data);
-	default:
-		console.error("unhandled event type", event, ...data);
+): LedgerEvent | undefined {
+	switch (event) {
+		case "Frozen":
+			return wrapFrozen(chain, ...data);
+		case "Deposited":
+			return wrapDeposited(chain, ...data);
+		case "Withdrawn":
+			return wrapWithdrawn(chain, ...data);
+		case "Challenged":
+			return wrapChallenged(chain, ...data);
+		case "ChallengeResponded":
+			return wrapChallengeResponded(chain, ...data);
+		default:
+			console.error("unhandled event type", event, ...data);
 	}
 }
 
-function wrapFrozen(
-	chain: Chain,
-	...args: any
-): Frozen {
+function wrapFrozen(chain: Chain, ...args: any): Frozen {
 	const [epoch] = args;
 	return new Frozen(chain, BigInt(epoch));
 }
@@ -65,7 +61,8 @@ function wrapDeposited(chain: Chain, ...args: any): Deposited {
 		chain,
 		BigInt(epoch),
 		EthereumAddress.fromString(account),
-		decodePackedAssets([tokenValue]));
+		decodePackedAssets([tokenValue]),
+	);
 }
 
 function wrapWithdrawn(chain: Chain, ...args: any): Withdrawn {
@@ -74,25 +71,28 @@ function wrapWithdrawn(chain: Chain, ...args: any): Withdrawn {
 		chain,
 		BigInt(epoch),
 		EthereumAddress.fromString(account),
-		decodePackedAssets(tokenValues));
+		decodePackedAssets(tokenValues),
+	);
 }
 
-function wrapChallenged(chain: Chain, ...args: any): Challenged
-{
+function wrapChallenged(chain: Chain, ...args: any): Challenged {
 	const [epoch, account] = args;
 	return new Challenged(
 		chain,
 		BigInt(epoch),
-		EthereumAddress.fromString(account));
+		EthereumAddress.fromString(account),
+	);
 }
 
-function wrapChallengeResponded(chain: Chain, ...args: any): ChallengeResponded
-{
+function wrapChallengeResponded(
+	chain: Chain,
+	...args: any
+): ChallengeResponded {
 	const [epoch, account, id, count, tokenValues, exit, sig] = args;
 	return new ChallengeResponded(
 		chain,
 		BigInt(epoch),
-		{index: Number(id), count: Number(count)},
+		{ index: Number(id), count: Number(count) },
 		EthereumAddress.fromString(account),
 		decodePackedAssets(tokenValues),
 		new Signature(ethers.getBytes(sig)),
@@ -103,7 +103,7 @@ function decodePackedAssetID(packed: Erdstall.AssetStructOutput): AssetID {
 	return AssetID.fromMetadata(
 		Number(packed.origin) as Chain,
 		Number(packed.assetType),
-		ethers.getBytes(packed.localID)
+		ethers.getBytes(packed.localID),
 	);
 }
 
@@ -116,7 +116,8 @@ function decodePackedAssets(
 		assets.addAsset(
 			id.origin(),
 			id.localID(),
-			decodePackedAsset(value, id.type()));
+			decodePackedAsset(value, id.type()),
+		);
 	}
 	return assets;
 }
@@ -125,36 +126,34 @@ export function encodePackedAssets(
 	assets: ChainAssets,
 ): Erdstall.TokenValueStruct[] {
 	const values: Erdstall.TokenValueStruct[] = [];
-	for(const [ asset, value ] of assets.ordered()) {
+	for (const [asset, value] of assets.ordered()) {
 		const id: Erdstall.AssetStruct = {
 			origin: asset.origin(),
 			assetType: asset.type(),
 			localID: asset.localID(),
 		};
-		if(value instanceof Amount)
+		if (value instanceof Amount)
 			values.push({
 				asset: id,
 				value: [value.value],
 			});
-		else if(value instanceof Tokens)
+		else if (value instanceof Tokens)
 			values.push({
 				asset: id,
 				value: value.value,
 			});
-		else
-			throw new Error(`Unhandled asset type`);
+		else throw new Error("Unhandled asset type");
 	}
 	return values;
 }
 
-
 function decodePackedAsset(data: bigint[], type: number): Asset {
 	switch (type) {
-	case 0:
-		return new Amount(data[0]);
-	case 1:
-		return new Tokens(data);
-	default:
-		throw new Error(`decode: unhandled asset type: ${type}`);
+		case 0:
+			return new Amount(data[0]);
+		case 1:
+			return new Tokens(data);
+		default:
+			throw new Error(`decode: unhandled asset type: ${type}`);
 	}
 }

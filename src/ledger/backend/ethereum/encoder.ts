@@ -2,12 +2,7 @@
 "use strict";
 
 import { EthereumAddress } from "#erdstall/crypto/ethereum";
-import {
-	Amount,
-	Asset,
-	ChainAssets,
-	Tokens,
-} from "#erdstall/ledger/assets";
+import { Amount, Asset, ChainAssets, Tokens } from "#erdstall/ledger/assets";
 import {
 	ChainProofDesc,
 	EncodedChainProof,
@@ -24,7 +19,7 @@ export class EthereumEncoder implements Encoder {
 		const exitValues = new Array<ChainAssets>();
 		const recoveryValues = new Array<ChainAssets>();
 
-		if(!(desc.address instanceof EthereumAddress))
+		if (!(desc.address instanceof EthereumAddress))
 			throw new Error("wrong address type in balance proof");
 		let addr = desc.address.toString();
 
@@ -102,14 +97,14 @@ function abiEncodeChainProofs(
 	return encoded;
 }
 
-function packChainAssets(
-	assets: ChainAssets,
-): [string, any[]] {
+function packChainAssets(assets: ChainAssets): [string, any[]] {
 	const tokensAbiType = "tuple(tuple(uint16,uint8,bytes32),uint256[])[]";
 	const packed = encodePackedAssets(assets);
-	return [tokensAbiType, packed.map(tv => [[
-		tv.asset.origin,
-		tv.asset.assetType,
-		tv.asset.localID,
-		], tv.value])];
+	return [
+		tokensAbiType,
+		packed.map((tv) => [
+			[tv.asset.origin, tv.asset.assetType, tv.asset.localID],
+			tv.value,
+		]),
+	];
 }

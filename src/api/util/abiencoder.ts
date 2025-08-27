@@ -62,13 +62,10 @@ export class ABIEncoder {
 	encodeTagged(...fields: EncoderArg[]): this {
 		this.types = this.types.concat(
 			fields.map((f): string => {
-				if ((f as ABITaggedPackable).packTagged !== undefined)
-					return "bytes";
+				if ((f as ABITaggedPackable).packTagged !== undefined) return "bytes";
 				if (f instanceof Array) return f[0];
-				else if (f instanceof String || typeof f === "string")
-					return "string";
-				else if (f instanceof Boolean || typeof f === "boolean")
-					return "bool";
+				else if (f instanceof String || typeof f === "string") return "string";
+				else if (f instanceof Boolean || typeof f === "boolean") return "bool";
 				else if ((f as ABIValue).ABIType !== undefined)
 					return (f as ABIValue).ABIType();
 				else if (f instanceof Uint8Array) return "bytes";

@@ -15,11 +15,7 @@ describe("bigints", function () {
 					(1n << BigInt(intSize - 1)) - 1n,
 					`one below intSize: ${intSize}`,
 				],
-				[
-					intSize,
-					(1n << BigInt(intSize)) - 1n,
-					`exactly intSize: ${intSize}`,
-				],
+				[intSize, (1n << BigInt(intSize)) - 1n, `exactly intSize: ${intSize}`],
 				[
 					intSize + 1,
 					// Last bigint never has the last bit set because we use
@@ -45,10 +41,9 @@ describe("bigints", function () {
 					...mkEdgecasesEntries(intSize),
 				];
 				for (const [bitsize, expectedVal, msg] of testcases) {
-					expect(
-						mkBigInt(arr.values(), bitsize, intSize),
-						msg,
-					).to.equal(expectedVal);
+					expect(mkBigInt(arr.values(), bitsize, intSize), msg).to.equal(
+						expectedVal,
+					);
 				}
 			});
 		}
@@ -65,9 +60,7 @@ describe("bigints", function () {
 				`bigint with bitWidth of ${MAX_INPUT_LEN}`,
 			).to.equal(
 				BigInt(
-					`0x${[...arr]
-						.map((v) => v.toString(16).padStart(2, "0"))
-						.join("")}`,
+					`0x${[...arr].map((v) => v.toString(16).padStart(2, "0")).join("")}`,
 				),
 			);
 		}

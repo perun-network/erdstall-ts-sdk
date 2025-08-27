@@ -9,7 +9,7 @@ import {
 	DirectTxReceipt,
 	SignedDirectTxReceipt,
 	PublicTxReceipt,
-	SignedPublicTxReceipt
+	SignedPublicTxReceipt,
 } from "#erdstall/api/responses";
 import {
 	StrictNonceCheck,
@@ -23,7 +23,7 @@ import {
 	Burn,
 	SetPrivacy,
 	LinkAccount,
-	LinkAccount_Output
+	LinkAccount_Output,
 } from "#erdstall/api/transactions";
 import { GetAccount } from "#erdstall/api/calls";
 import { Account, Chain, getChainName } from "#erdstall/ledger";
@@ -56,7 +56,8 @@ export const ErrUnitialisedClient = new Error("client unitialised");
 export abstract class ChainSession {
 	abstract withdraw(
 		epoch: bigint,
-		exitProof: ChainProofChunk[]): Promise<UnsignedTxBatch>;
+		exitProof: ChainProofChunk[],
+	): Promise<UnsignedTxBatch>;
 
 	abstract deposit(assets: ChainAssets): Promise<UnsignedTxBatch>;
 
@@ -65,9 +66,7 @@ export abstract class ChainSession {
 
 	abstract sendTx(tx: SignedTx): Promise<TxReceipt>;
 	abstract sendTxBatch(txs: SignedTxBatch): Promise<TxReceiptBatch>;
-
 }
-
 
 export type BackendSessionConstructors = {
 	ethereum?: {
@@ -75,7 +74,7 @@ export type BackendSessionConstructors = {
 		initializer: (
 			config: ChainConfig,
 			signer: EthereumSigner,
-			events: LedgerEventEmitters
+			events: LedgerEventEmitters,
 		) => ChainSession;
 	};
 	substrate?: {
@@ -83,7 +82,7 @@ export type BackendSessionConstructors = {
 		initializer: (
 			config: ChainConfig,
 			signer: SubstrateSigner,
-			events: LedgerEventEmitters
+			events: LedgerEventEmitters,
 		) => ChainSession;
 	};
 };
@@ -97,34 +96,45 @@ export class WritingApp extends App {
 	#nonce: bigint = 0n;
 	#updatingNonce?: Promise<any>;
 
-	get #enclave() { return this.#internals.enclave!; }
-	get address(): Address { return this.#internals.identity!.address; }
-	get eth_addr(): EthereumAddress | undefined
-		{ return this.#internals.identity!.eth_addr; }
-	get subst_addr(): SubstrateAddress | undefined
-		{ return this.#internals.identity!.subst_addr; }
-	get wildcard_addr(): WildcardAddress | undefined
-		{ return this.#internals.identity!.wildcard_addr; }
+	get #enclave() {
+		return this.#internals.enclave!;
+	}
+	get address(): Address {
+		return this.#internals.identity!.address;
+	}
+	get eth_addr(): EthereumAddress | undefined {
+		return this.#internals.identity!.eth_addr;
+	}
+	get subst_addr(): SubstrateAddress | undefined {
+		return this.#internals.identity!.subst_addr;
+	}
+	get wildcard_addr(): WildcardAddress | undefined {
+		return this.#internals.identity!.wildcard_addr;
+	}
 
 	constructor(
 		enclaveConn: Enclave | URL,
-		internals: L2Identity | AppInternals)
-	{
-		if(internals instanceof L2Identity)
+		internals: L2Identity | AppInternals,
+	) {
+		if (internals instanceof L2Identity)
 			internals = new AppInternals(internals);
-		if(!internals.identity!.has_auth)
+		if (!internals.identity!.has_auth)
 			throw new Error("Wildcard identity needs an authentication mechanism");
 		super(enclaveConn, internals);
 
 		this.#internals = internals;
-		this.#internals.l2.error.on(() => { this.#nonce = 0n; });
+		this.#internals.l2.error.on(() => {
+			this.#nonce = 0n;
+		});
 	}
 
 	// Returns the encoding of the signed transaction.
-	async #signTx<Tx extends Transaction>(tx: Tx): Promise<SignedTransaction<Tx>> {
+	async #signTx<Tx extends Transaction>(
+		tx: Tx,
+	): Promise<SignedTransaction<Tx>> {
 		let id = this.#internals.identity!;
 		let w = new CodecWriter();
-		tx.encodePayload(w)
+		tx.encodePayload(w);
 		let signedMsg = await id.signForEnclave<Tx>(w.get());
 		return new SignedTransaction(id.address, signedMsg);
 	}
@@ -137,9 +147,7 @@ export class WritingApp extends App {
 			throw ErrUnitialisedClient;
 		}
 		const nonce = new StrictNonceCheck(await this.#nextNonce());
-		const tx = new Transfer(
-			new TxCore(this.address, nonce, false),
-			to, assets);
+		const tx = new Transfer(new TxCore(this.address, nonce, false), to, assets);
 		return this.#enclave.transfer(await this.#signTx(tx));
 	}
 
@@ -150,9 +158,11 @@ export class WritingApp extends App {
 		const nonce = new StrictNonceCheck(await this.#nextNonce());
 		const tx = new Mint(
 			new TxCore(this.address, nonce, false),
-			token as (Uint8Array & {length: 32}), amount);
+			token as Uint8Array & { length: 32 },
+			amount,
+		);
 		let signed = await this.#signTx(tx);
-		return (this.#enclave.mint(signed));
+		return this.#enclave.mint(signed);
 	}
 
 	async burn(assets: ChainAssets): Promise<CallResponse<void>> {
@@ -161,9 +171,7 @@ export class WritingApp extends App {
 		}
 
 		const nonce = new StrictNonceCheck(await this.#nextNonce());
-		const tx = new Burn(
-			new TxCore(this.address, nonce, false),
-			assets);
+		const tx = new Burn(new TxCore(this.address, nonce, false), assets);
 		return this.#enclave.burn(await this.#signTx(tx));
 	}
 
@@ -175,13 +183,12 @@ export class WritingApp extends App {
 		let nonce = new StrictNonceCheck(await this.#nextNonce());
 		const exittx = new FullExit(
 			new TxCore(this.address, nonce, false),
-			chain ?? 0
+			chain ?? 0,
 		);
 		let { response, proof } = this.#enclave.exit(await this.#signTx(exittx));
 		await response.result;
 		return proof;
 	}
-
 
 	// Queries the next nonce and increases the counter. If the nonce has an
 	// invalid value, queries the current nonce from the enclave. This function
@@ -198,7 +205,7 @@ export class WritingApp extends App {
 		let tx = new GetAccount(
 			new TxCore(this.address, new NoNonceCheck(), true),
 			undefined,
-			undefined
+			undefined,
 		);
 		const acc = await this.#enclave.getAccount(tx.unsigned()).result;
 		if (!this.#nonce) {
@@ -209,11 +216,14 @@ export class WritingApp extends App {
 	// Fetches the current nonce from the enclave. Only overwrites the nonce if
 	// it has an invalid value, so this function can be called concurrently.
 	async updateNonce(): Promise<void> {
-		if(this.#updatingNonce) return this.#updatingNonce;
+		if (this.#updatingNonce) return this.#updatingNonce;
 		this.#updatingNonce = this.#updateNonceInternal();
-		try { await this.#updatingNonce; }
-		// make sure it always clears out properly...
-		finally { this.#updatingNonce = undefined; }
+		try {
+			await this.#updatingNonce;
+		} finally {
+			// make sure it always clears out properly...
+			this.#updatingNonce = undefined;
+		}
 	}
 
 	async subscribeSelf(): Promise<void> {
@@ -224,41 +234,38 @@ export class WritingApp extends App {
 	async linkAccount(
 		eth: EthereumSigner | undefined,
 		subst: SubstrateSigner | undefined,
-		accountID: WildcardAddress | "create account ID"
+		accountID: WildcardAddress | "create account ID",
 	): Promise<CallResponse<LinkAccount_Output>> {
 		const nonce = new StrictNonceCheck(await this.#nextNonce());
 		let tx = new LinkAccount(
 			new TxCore(this.address, nonce, false),
 			eth?.address(),
 			subst?.address(),
-			accountID);
+			accountID,
+		);
 
 		await tx.authorise_link(eth, subst);
 
-		return this.#enclave.linkAccount(await this.#signTx(tx)).map(async r => {
+		return this.#enclave.linkAccount(await this.#signTx(tx)).map(async (r) => {
 			this.#internals.identity!.wildcardId = r.accountID;
 			return r;
 		});
-
 	}
 
-
-	get hasEncryption(): boolean { return this.#internals.identity!.has_aes; }
+	get hasEncryption(): boolean {
+		return this.#internals.identity!.has_aes;
+	}
 
 	// Fetches the privacy key and remembers it. Returns whether we have a privacy key.
-	async fetchPrivacyKey(): Promise<boolean>
-	{
+	async fetchPrivacyKey(): Promise<boolean> {
 		let tx = new GetAccount(
-			new TxCore(
-				this.address,
-				new NoNonceCheck(),
-				true), // force plaintext receipt
+			new TxCore(this.address, new NoNonceCheck(), true), // force plaintext receipt
 			await DHPair.generate(),
-			undefined);
+			undefined,
+		);
 
 		let res = await this.#enclave.getAccount(await this.#signTx(tx)).result;
-		if(res.id)
-			this.#internals.identity!.wildcardId = res.id;
+		if (res.id) this.#internals.identity!.wildcardId = res.id;
 		let { sk } = await tx.decrypt_output(res);
 		this.#internals.identity!.aes = sk;
 		return sk !== undefined;
@@ -268,19 +275,20 @@ export class WritingApp extends App {
 		const nonce = new StrictNonceCheck(await this.#nextNonce());
 		let tx = new SetPrivacy(
 			new TxCore(this.address, nonce, true),
-			enabled ? await DHPair.generate() : undefined);
+			enabled ? await DHPair.generate() : undefined,
+		);
 
 		let result = this.#enclave.setPrivacy(await this.#signTx(tx)).result;
 		this.#internals.identity!.aes = await tx.decrypt_output(await result);
 	}
 
 	// Will fail if you have a private account, but did not supply the privacy key to the session. In that case, you can fetch it via fetchPrivacyKey().
-	async fetchOwnBalance(): Promise<ChainAssets>
-	{
+	async fetchOwnBalance(): Promise<ChainAssets> {
 		let tx = new GetAccount(
 			new TxCore(this.address, new NoNonceCheck(), false),
 			undefined,
-			this.#internals.identity!.has_aes ? "always" : "only_if_plaintext");
+			this.#internals.identity!.has_aes ? "always" : "only_if_plaintext",
+		);
 
 		let result = await this.#enclave.getAccount(tx.unsigned()).result;
 		let { balances } = await tx.decrypt_output(result);
@@ -288,29 +296,33 @@ export class WritingApp extends App {
 	}
 }
 
-export class Session extends WritingApp
-{
+export class Session extends WritingApp {
 	#internals: AppInternals;
 
-	get address(): Address { return this.#internals.identity!.address; }
+	get address(): Address {
+		return this.#internals.identity!.address;
+	}
 
-	get #enclave() { return this.#internals.enclave!; }
+	get #enclave() {
+		return this.#internals.enclave!;
+	}
 	// Filled dynamically when we receive configs.
 	#chains = new Map<Chain, ChainSession>();
 	#blockchainWriteCtors: BackendSessionConstructors;
 
-
 	// Event handling.
-	#l1_event_emitters = new LedgerEventEmitters;
-	#internal_l1_events: LedgerEventHandlers =
-		new LedgerEventHandlers(this.#l1_event_emitters);
-	get l1_events(): LedgerEventHandlers
-		{ return new LedgerEventHandlers(this.#l1_event_emitters); }
+	#l1_event_emitters = new LedgerEventEmitters();
+	#internal_l1_events: LedgerEventHandlers = new LedgerEventHandlers(
+		this.#l1_event_emitters,
+	);
+	get l1_events(): LedgerEventHandlers {
+		return new LedgerEventHandlers(this.#l1_event_emitters);
+	}
 
 	constructor(
 		enclaveConn: Enclave | URL,
 		identity: L2Identity,
-		backendCtors: BackendSessionConstructors
+		backendCtors: BackendSessionConstructors,
 	) {
 		const internals = new AppInternals(identity, (cfg) => this.#on_config(cfg));
 		super(enclaveConn, internals);
@@ -322,7 +334,7 @@ export class Session extends WritingApp
 	async leave(
 		chain?: number,
 		notify?: (message: string, stage: number, maxStages: number) => void,
-	): Promise< Map<number, UnsignedTxBatch> > {
+	): Promise<Map<number, UnsignedTxBatch>> {
 		let skipped = 0;
 		let atStage = 1;
 		let maxStages = 3;
@@ -343,23 +355,21 @@ export class Session extends WritingApp
 		});
 		notify?.("awaiting exit proof", atStage++, maxStages);
 		// TODO: currently, this only really works for single-account subscriptions. We should add an address field to the message.
-		const exitProof = (await this.exit(chain)) /*.accounts.get((this.address).key)!*/;
+		const exitProof =
+			await this.exit(chain); /*.accounts.get((this.address).key)!*/
 
 		notify?.("awaiting epoch sealing", atStage++, maxStages);
 		await sealed;
 		notify?.("withdrawing", atStage++, maxStages);
 
-
 		const transactions = new Map<number, UnsignedTxBatch>();
-		for(const [address, chains] of exitProof.proofs.entries())
-		{
-			for(let [chain, proofs] of chains.entries())
-			{
+		for (const [address, chains] of exitProof.proofs.entries()) {
+			for (let [chain, proofs] of chains.entries()) {
 				chain = Number(chain);
-				transactions.set(chain, await this.withdraw(
+				transactions.set(
 					chain,
-					exitProof.epoch,
-					proofs.exit));
+					await this.withdraw(chain, exitProof.epoch, proofs.exit),
+				);
 			}
 		}
 		return transactions;
@@ -373,76 +383,69 @@ export class Session extends WritingApp
 		return this.#chains.get(chain)!.withdraw(epoch, exitProof);
 	}
 
-	async deposit(
-		chain: number,
-		asset: ChainAssets,
-	): Promise<UnsignedTxBatch> {
+	async deposit(chain: number, asset: ChainAssets): Promise<UnsignedTxBatch> {
 		return this.#chains.get(chain)!.deposit(asset);
 	}
 
-	async signTx(tx: UnsignedTx): Promise<SignedTx>
-	{
+	async signTx(tx: UnsignedTx): Promise<SignedTx> {
 		const chain = this.#chains.get(tx.chain);
-		if(!chain)
-			throw new Error(`Transaction is for unsupported chain ${
-				getChainName(tx.chain)
-			}`);
+		if (!chain)
+			throw new Error(
+				`Transaction is for unsupported chain ${getChainName(tx.chain)}`,
+			);
 
 		return await chain.signTx(tx);
 	}
 
 	async signTxBatch(txs: UnsignedTxBatch): Promise<SignedTxBatch> {
 		const chain = this.#chains.get(txs.chain);
-		if(!chain)
-			throw new Error(`Transaction batch is for unsupported chain ${
-				getChainName(txs.chain)
-			}`);
+		if (!chain)
+			throw new Error(
+				`Transaction batch is for unsupported chain ${getChainName(txs.chain)}`,
+			);
 
 		return await chain.signTxBatch(txs);
 	}
 
 	async sendTx(tx: SignedTx): Promise<TxReceipt> {
 		const chain = this.#chains.get(tx.chain);
-		if(!chain)
-			throw new Error(`Transaction is for unsupported chain ${
-				getChainName(tx.chain)
-			}`);
+		if (!chain)
+			throw new Error(
+				`Transaction is for unsupported chain ${getChainName(tx.chain)}`,
+			);
 
 		return await chain.sendTx(tx);
 	}
 
 	async sendTxBatch(txs: SignedTxBatch): Promise<TxReceiptBatch> {
 		const chain = this.#chains.get(txs.chain);
-		if(!chain)
-			throw new Error(`Transaction batch is for unsupported chain ${
-				getChainName(txs.chain)
-			}`);
+		if (!chain)
+			throw new Error(
+				`Transaction batch is for unsupported chain ${getChainName(txs.chain)}`,
+			);
 
 		return await chain.sendTxBatch(txs);
 	}
 
-	#on_config(cfg: ClientConfig): void
-	{
+	#on_config(cfg: ClientConfig): void {
 		// Construct all requested session backends.
 		for (const chainCfg of cfg.chains) {
-			if(!this.#blockchainWriteCtors.hasOwnProperty(chainCfg.data.type()))
-			{
-				console.warn(`No backend configured for ${
-						chainCfg.data.type()
-					} chain <${
+			if (!this.#blockchainWriteCtors.hasOwnProperty(chainCfg.data.type())) {
+				console.warn(
+					`No backend configured for ${chainCfg.data.type()} chain <${
 						chainCfg.id
-					}>: not creating a backend client.`);
-					continue;
+					}>: not creating a backend client.`,
+				);
+				continue;
 			}
 			let s = this.#internals.identity!.l1_signer_for(chainCfg.data.type());
 
-			if(!s)
-			{
-				console.warn(`No compatible signer for ${
-						chainCfg.data.type()
-					} chain <${
+			if (!s) {
+				console.warn(
+					`No compatible signer for ${chainCfg.data.type()} chain <${
 						chainCfg.id
-					}>: not creating a backend client.`);
+					}>: not creating a backend client.`,
+				);
 				continue;
 			}
 
@@ -452,7 +455,9 @@ export class Session extends WritingApp
 				(ctor.initializer as unknown as any)(
 					chainCfg,
 					s,
-					this.#l1_event_emitters) as ChainSession);
+					this.#l1_event_emitters,
+				) as ChainSession,
+			);
 		}
-	};
+	}
 }

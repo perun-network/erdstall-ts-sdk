@@ -44,12 +44,12 @@ export class ChainAssets {
 		return obj;
 	}
 
-	clone(): ChainAssets
-		{ return ChainAssets.fromJSON(ChainAssets.toJSON(this)); }
+	clone(): ChainAssets {
+		return ChainAssets.fromJSON(ChainAssets.toJSON(this));
+	}
 
 	addAsset(chain: Chain, localID: Uint8Array, asset: Asset) {
-		if(!this.assets.has(chain))
-			this.assets.set(chain, new LocalAssets());
+		if (!this.assets.has(chain)) this.assets.set(chain, new LocalAssets());
 		if (asset instanceof Amount) {
 			this.assets.get(chain)!.fungibles.addAsset(localID, asset);
 		} else if (asset instanceof Tokens) {
@@ -69,36 +69,29 @@ export class ChainAssets {
 
 		let bigger = false;
 		let smaller = false;
-		for(let i = 0; i < minsz; i++)
-		{
+		for (let i = 0; i < minsz; i++) {
 			let sign: number | undefined = min[i][0].cmp(max[i][0]);
-			if(sign < 0) smaller = true;
-			else if(sign > 0) bigger = true;
-			else
-			{
+			if (sign < 0) smaller = true;
+			else if (sign > 0) bigger = true;
+			else {
 				let a = min[i][1];
 				let b = max[i][1];
 
-				if(a instanceof Tokens)
-					sign = (a as Tokens).cmp(b as Tokens);
-				else
-					sign = (a as Amount).cmp(b as Amount);
+				if (a instanceof Tokens) sign = (a as Tokens).cmp(b as Tokens);
+				else sign = (a as Amount).cmp(b as Amount);
 
-				if(sign === undefined)
-					return undefined;
+				if (sign === undefined) return undefined;
 
-				if(sign < 0) smaller = true;
-				else if(sign > 0) bigger = true;
+				if (sign < 0) smaller = true;
+				else if (sign > 0) bigger = true;
 			}
 
-			if(bigger && smaller)
-				return undefined;
+			if (bigger && smaller) return undefined;
 		}
 
-		if(minsz != maxsz)
-			smaller = true;
+		if (minsz != maxsz) smaller = true;
 
-		if(bigger && smaller) return undefined;
+		if (bigger && smaller) return undefined;
 
 		return (smaller ? -flip_sign : bigger ? flip_sign : 0) as any;
 	}
@@ -143,7 +136,7 @@ export class ChainAssets {
 		});
 
 		let ret = new ChainAssets();
-		for(let [id, asset] of ordered)
+		for (let [id, asset] of ordered)
 			ret.addAsset(id.origin(), id.localID(), asset);
 
 		return ret;
@@ -265,15 +258,17 @@ export class LocalAsset {
 	public id: Uint8Array;
 	constructor(id: Uint8Array) {
 		this.id = id;
-		if(this.id.length != 32)
+		if (this.id.length != 32)
 			throw new Error(`Invalid length (${this.id.length}/32)`);
 	}
 
 	get isZero() {
-		return Array.from(this.id).every(byte => byte === 0);
+		return Array.from(this.id).every((byte) => byte === 0);
 	}
 
-	get key() { return toHex(this.id, ""); }
+	get key() {
+		return toHex(this.id, "");
+	}
 	static fromKey(key: string): LocalAsset {
 		return new LocalAsset(parseHex(key));
 	}

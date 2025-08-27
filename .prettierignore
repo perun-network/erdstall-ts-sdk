@@ -1,5 +1,4 @@
-src
-src/ledger/backend/contracts
+src/ledger/backend/ethereum/contracts
 build
 dist
 .eslintrc.json
