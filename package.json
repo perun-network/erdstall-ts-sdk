@@ -86,6 +86,7 @@
 		"eslint": "^9.34.0",
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-prettier": "^5.5.4",
+		"globals": "^16.3.0",
 		"hardhat": "^2.22.1",
 		"hardhat-waffle": "^0.0.1-security",
 		"mocha": "^8.3.2",

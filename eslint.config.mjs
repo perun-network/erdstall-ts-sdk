@@ -86,4 +86,12 @@ export default defineConfig([
 			"no-sparse-arrays": 1,
 		},
 	},
+	{
+		files: ["**/*.spec.ts"],
+		languageOptions: {
+			globals: {
+				...globals.mocha,
+			},
+		},
+	},
 ]);
