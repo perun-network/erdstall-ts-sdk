@@ -89,6 +89,8 @@
 		"globals": "^16.3.0",
 		"hardhat": "^2.22.1",
 		"hardhat-waffle": "^0.0.1-security",
+		"jsdom": "^26.1.0",
+		"jsdom-global": "^3.0.2",
 		"mocha": "^8.3.2",
 		"mocha-suppress-logs": "^0.3.1",
 		"nock": "^13.1.3",
