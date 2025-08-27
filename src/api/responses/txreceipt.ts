@@ -2,16 +2,12 @@
 "use strict";
 
 import { ErdstallObject, registerErdstallType } from "#erdstall/api";
-import { Account } from "#erdstall/ledger";
 import {
 	Address,
-	Signature,
 	SignedMessage,
 	SigVerifier,
 } from "#erdstall/crypto";
 import { Transaction, TransactionOutput } from "#erdstall/api/transactions";
-import { jsonObject } from "#erdstall/export/typedjson";
-import { customJSON } from "#erdstall/api/util";
 import { CodecReader, CodecWriter } from "#erdstall/utils";
 
 const directTxReceiptTypeName = "DirectTxReceipt";
@@ -93,7 +89,7 @@ export class PublicTxReceipt {
 		// Only successful transactions become public, therefore no status field. This transaction is decoded using the "Stripped" version and some fields have dummy values.
 		public transaction: Transaction,
 		public output: TransactionOutput, // do we even need this in a public receipt?
-	) {}
+	) { }
 
 	encode(w: CodecWriter): void {
 		this.transaction.encodeStripped(w);
@@ -113,7 +109,7 @@ export class DirectTxReceipt {
 		public output: TransactionOutput,
 		public status: number,
 		public error?: string,
-	) {}
+	) { }
 
 	encode(w: CodecWriter): void {
 		w.u16(this.output.payload.length);

@@ -4,15 +4,11 @@
 import {
 	Transaction,
 	TransactionType,
-	NonceCheck,
 	_transactionDecoders,
 	TxCore,
 } from "./transaction";
-import { Address, Crypto } from "#erdstall/crypto";
 import { ChainAssets } from "#erdstall/ledger/assets";
 import { CodecReader, CodecWriter } from "#erdstall/utils";
-
-const burnTypeName = "Burn";
 
 export class Burn extends Transaction {
 	constructor(

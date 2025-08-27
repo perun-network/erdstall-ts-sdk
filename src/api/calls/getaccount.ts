@@ -6,10 +6,8 @@ import {
 	_transactionDecoders,
 	TransactionType,
 	TransactionOutput,
-	NonceCheck,
 	TxCore,
 } from "#erdstall/api/transactions";
-import { Address, SignedMessage, SigVerifier } from "#erdstall/crypto";
 import { EthereumAddress } from "#erdstall/crypto/ethereum";
 import { SubstrateAddress } from "#erdstall/crypto/substrate";
 import { ChainAssets } from "#erdstall/ledger/assets";
@@ -20,8 +18,6 @@ import {
 	DHPK,
 } from "#erdstall/crypto/wildcard";
 import { CodecReader, CodecWriter } from "#erdstall/utils";
-
-const getAccountTypeName = "GetAccount";
 
 const balance_fetch_modes = ["only_if_plaintext", "always"] as const;
 
@@ -103,7 +99,7 @@ export class GetAccount_Output {
 			| undefined,
 		// using SignedMessage for encryption here.
 		public balances: SignedMessage<ChainAssets> | undefined,
-	) {}
+	) { }
 
 	static decode(r: CodecReader): GetAccount_Output {
 		return new GetAccount_Output(

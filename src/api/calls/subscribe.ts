@@ -2,7 +2,7 @@
 "use strict";
 
 import { ErdstallObject, registerErdstallType } from "#erdstall/api";
-import { Address, Crypto } from "#erdstall/crypto";
+import { Address } from "#erdstall/crypto";
 import { CodecReader, CodecWriter } from "#erdstall/utils";
 
 const subBPsTypeName = "SubscribeBalanceProofs";

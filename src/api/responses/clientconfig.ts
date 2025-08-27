@@ -6,7 +6,6 @@ import { EthereumChainConfig } from "#erdstall/ledger/backend/ethereum/chainconf
 import { SubstrateChainConfig } from "#erdstall/ledger/backend/substrate/chainconfig";
 import { Address, Crypto } from "#erdstall/crypto";
 import { SubstrateAddress } from "#erdstall/crypto/substrate";
-import { EthereumAddress } from "#erdstall/crypto/ethereum";
 import { Chain } from "#erdstall/ledger";
 import { CodecReader, CodecWriter } from "#erdstall/utils";
 

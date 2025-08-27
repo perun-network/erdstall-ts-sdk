@@ -4,11 +4,9 @@
 import {
 	Transaction,
 	TransactionType,
-	NonceCheck,
 	_transactionDecoders,
 	TxCore,
 } from "./transaction";
-import { Address, Signature, Signer } from "#erdstall/crypto";
 import { WildcardAddress } from "#erdstall/crypto/wildcard";
 import {
 	EthereumAddress,
@@ -20,7 +18,6 @@ import {
 	SubstrateSigner,
 	SubstrateSignature,
 } from "#erdstall/crypto/substrate";
-import { Chain } from "#erdstall/ledger";
 import { CodecReader, CodecWriter } from "#erdstall/utils";
 
 export class LinkAccount extends Transaction {
@@ -110,7 +107,7 @@ export class LinkAccount extends Transaction {
 _transactionDecoders.set(TransactionType.LinkAccount, LinkAccount.decode_impl);
 
 export class LinkAccount_Output {
-	constructor(public accountID: WildcardAddress) {}
+	constructor(public accountID: WildcardAddress) { }
 
 	static decode(r: CodecReader): LinkAccount_Output {
 		return new LinkAccount_Output(WildcardAddress.decode_impl(r));

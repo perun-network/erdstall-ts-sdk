@@ -2,7 +2,6 @@
 "use strict";
 
 import {
-	TypedJSON,
 	Serializable,
 	jsonObject,
 } from "#erdstall/export/typedjson";

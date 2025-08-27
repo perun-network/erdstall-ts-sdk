@@ -4,16 +4,12 @@
 import { ErdstallObject, registerErdstallType } from "#erdstall/api";
 import {
 	Address,
-	Signature,
-	Signer,
 	SignedMessage,
 	SigVerifier,
 } from "#erdstall/crypto";
 import { customJSON } from "#erdstall/api/util";
 import { jsonObject } from "#erdstall/export/typedjson";
-import { ethers } from "ethers";
 import { CodecReader, CodecWriter } from "#erdstall/utils";
-import { parseHex } from "#erdstall/utils/hexbytes";
 
 const transactionTypeName = "Transaction";
 export const _transactionDecoders = new Map<
@@ -49,7 +45,7 @@ export abstract class NonceCheck {
 	}
 }
 export class NoNonceCheck extends NonceCheck {
-	override encode_impl(w: CodecWriter): void {}
+	override encode_impl(w: CodecWriter): void { }
 	override nonceCheckType(): NonceCheckType {
 		return NonceCheckType.None;
 	}
@@ -156,7 +152,7 @@ export class TxCore {
 		public sender: Address,
 		public nonce: NonceCheck,
 		public forceReplyPlainText: boolean,
-	) {}
+	) { }
 }
 
 /** Transactions to be sent, not the same as transactions that are part of receipts, as they do not need to contain the nonce. */
@@ -211,7 +207,7 @@ export abstract class Transaction extends TxCore {
 }
 
 export class TransactionOutput {
-	constructor(public payload: Uint8Array) {}
+	constructor(public payload: Uint8Array) { }
 
 	encode(w: CodecWriter): void {
 		TransactionOutput.encode(w, this);
