@@ -30,10 +30,15 @@ export abstract class ErdstallObject {
 	static fromJSON(js: any): ErdstallObject {
 		let desc = objectImpls.get(js.type);
 		if (!desc) throw new Error(`unknown erdstall object type "${js.type}"`);
-		if (typeof js.data !== "string")
-			throw new Error(`expected string payload in ${js.type} json`);
+		if (js.type === "ClientConfig") {
+			// Not a good implementation, but a functional one.
+			return (desc as any).fromJSON(js.data);
+		} else {
+			if (typeof js.data !== "string")
+				throw new Error(`expected string payload in ${js.type} json`);
 
-		return desc.decode(CodecReader.fromString(js.data));
+			return desc.decode(CodecReader.fromString(js.data));
+		}
 	}
 
 	static toJSON(me: ErdstallObject): any {
