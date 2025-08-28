@@ -9,8 +9,6 @@ import {
 	SubscribeTXs,
 	SubscribeBalanceProofs,
 	SubscribePhaseShifts,
-	GetAccount,
-	GetAccount_Output,
 } from "#erdstall/api/calls";
 import {
 	SignedTransaction,
@@ -22,6 +20,8 @@ import {
 	SetPrivacy_Output,
 	LinkAccount,
 	LinkAccount_Output,
+	GetAccount,
+	GetAccount_Output,
 } from "#erdstall/api/transactions";
 import {
 	ClientConfig,
@@ -42,7 +42,7 @@ export class CallResponse<T = any> {
 	constructor(
 		public accepted: Promise<void>,
 		public result: Promise<T>,
-	) {}
+	) { }
 
 	map<U>(fn: (v: T) => Promise<U>): CallResponse<U> {
 		return new CallResponse<U>(
@@ -59,7 +59,7 @@ class CallPromise<T extends ErdstallObject = ErdstallObject> {
 		public acknowledged: () => void,
 		public success: (v: T) => void,
 		public error: (e: Error) => void,
-	) {}
+	) { }
 
 	static make<T extends ErdstallObject = ErdstallObject>(): {
 		handlers: CallPromise<T>;
@@ -122,7 +122,7 @@ export class Enclave {
 		this.#provider = provider;
 	}
 
-	public isEnclaveWriter(): void {}
+	public isEnclaveWriter(): void { }
 
 	public connect() {
 		this.#provider.onmessage = (ev) => this.onMessage(ev);
@@ -342,7 +342,7 @@ export class Enclave {
 			setTimeout(() => {
 				try {
 					this.connect();
-				} catch {}
+				} catch { }
 			}, 1000);
 		}
 

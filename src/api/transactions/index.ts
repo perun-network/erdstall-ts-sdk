@@ -9,3 +9,4 @@ export * from "./burn";
 export * from "./registerwatcher";
 export * from "./setprivacy";
 export * from "./linkaccount";
+export * from "./getaccount";

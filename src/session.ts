@@ -24,8 +24,8 @@ import {
 	SetPrivacy,
 	LinkAccount,
 	LinkAccount_Output,
+	GetAccount,
 } from "#erdstall/api/transactions";
-import { GetAccount } from "#erdstall/api/calls";
 import { Account, Chain, getChainName } from "#erdstall/ledger";
 import { ChainAssets, Asset } from "#erdstall/ledger/assets";
 import { Uint256 } from "#erdstall/api/util";
@@ -432,8 +432,7 @@ export class Session extends WritingApp {
 		for (const chainCfg of cfg.chains) {
 			if (!this.#blockchainWriteCtors.hasOwnProperty(chainCfg.data.type())) {
 				console.warn(
-					`No backend configured for ${chainCfg.data.type()} chain <${
-						chainCfg.id
+					`No backend configured for ${chainCfg.data.type()} chain <${chainCfg.id
 					}>: not creating a backend client.`,
 				);
 				continue;
@@ -442,8 +441,7 @@ export class Session extends WritingApp {
 
 			if (!s) {
 				console.warn(
-					`No compatible signer for ${chainCfg.data.type()} chain <${
-						chainCfg.id
+					`No compatible signer for ${chainCfg.data.type()} chain <${chainCfg.id
 					}>: not creating a backend client.`,
 				);
 				continue;
