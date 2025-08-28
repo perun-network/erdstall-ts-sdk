@@ -62,13 +62,9 @@ export abstract class Address<_C extends Crypto = Crypto> {
 		return Address.fromJSON(JSON.parse(addr));
 	}
 
-	static fromJSON({
-		data,
-		type,
-	}: {
-		data: any;
-		type: string;
-	}): Address<Crypto> {
+	static fromJSON(obj: { [type: string]: string }): Address<Crypto> {
+		let [type] = Object.keys(obj);
+		let data = obj[type];
 		if (!addressImpls.has(type)) {
 			throw new Error(`unknown address type ${type}`);
 		}
@@ -77,9 +73,9 @@ export abstract class Address<_C extends Crypto = Crypto> {
 	}
 
 	static toJSON(me: Address<Crypto>): any {
+		let type = me.type();
 		return {
-			type: me.type(),
-			data: me.toJSON(),
+			[type]: me.toJSON()
 		};
 	}
 }

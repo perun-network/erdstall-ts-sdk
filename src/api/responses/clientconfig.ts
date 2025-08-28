@@ -16,13 +16,11 @@ export class ChainConfig {
 	constructor(
 		id: Chain,
 		type: string,
-		data: EthereumChainConfig | SubstrateChainConfig,
+		data: EthereumChainConfig | SubstrateChainConfig
 	) {
 		this.id = id;
 		if (data.type() !== type)
-			throw new Error(
-				`Chain config: type: "${type}", should be "${data.type()}".`,
-			);
+			throw new Error(`Chain config: type: "${type}", should be "${data.type()}".`);
 		this.data = data;
 	}
 
@@ -97,7 +95,7 @@ export class ClientConfig extends ErdstallObject {
 		// Workaround: defaulting settings for substrate.
 		for (const [chain, addr] of enc) {
 			if (addr instanceof SubstrateAddress) {
-				if (!chains.find((c) => c.id === chain)) {
+				if (!chains.find(c => c.id === chain)) {
 					const chainCfg = new ChainConfig(
 						chain,
 						"substrate",

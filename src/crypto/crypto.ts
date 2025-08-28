@@ -10,7 +10,7 @@
 // signatures and addresses tagged as `ethereum`.
 
 type _supportedCryptos = {
-	// Crypt used for ethereum: ECDSA.
+	// Crypto used for ethereum: ECDSA.
 	ethereum: [];
 	// Crypto used for substrate: SR25519.
 	substrate: [];
