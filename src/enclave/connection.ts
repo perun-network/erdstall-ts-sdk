@@ -264,13 +264,13 @@ export class Enclave {
 		let om: Result | undefined;
 		try {
 			om = TypedJSON.parse(ev.data, Result);
-		} catch {
-			console.info("Received unsupported message");
+		} catch (e) {
+			console.info("Received unsupported message", e);
 		}
 
 		const msg = om;
 		if (!msg) {
-			console.error("Unknown message: ", msg);
+			console.error("Unknown message: ", ev);
 			return;
 		}
 

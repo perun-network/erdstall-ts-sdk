@@ -7,7 +7,7 @@ import {
 	TransactionType,
 	TransactionOutput,
 	TxCore,
-} from "./transaction";
+} from "../transactions";
 import { EthereumAddress } from "#erdstall/crypto/ethereum";
 import { SubstrateAddress } from "#erdstall/crypto/substrate";
 import { ChainAssets } from "#erdstall/ledger/assets";
