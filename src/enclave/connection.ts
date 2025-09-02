@@ -203,6 +203,9 @@ export class Enclave {
 	): CallResponse<GetAccount_Output> {
 		return this.sendCall<SignedDirectTxReceipt>(tx).map(async (r) =>
 			GetAccount_Output.decode(
+				// Why are we using typescript and then just say "nah, don't bother about that, it's not undefined" using "!"?
+				// The resulting error message for an invalid signature is less than helpful:
+				// "TypeError: can't access property "ok" of undefined".
 				(await r.verify(this.#sigVerifier!))!.ok().reader(),
 			),
 		);

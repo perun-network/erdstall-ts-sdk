@@ -21,8 +21,7 @@ import { EthereumSignature } from "./signature";
 @jsonObject
 export class EthereumAddress
 	extends Address<"ethereum">
-	implements ABIValue, SigVerifier
-{
+	implements ABIValue, SigVerifier {
 	#value: Uint8Array;
 	constructor(value: Uint8Array) {
 		super();
@@ -115,8 +114,11 @@ export class EthereumAddress
 	async verifySig(s: SignedMessage): Promise<Uint8Array | undefined> {
 		if (!(s.signature instanceof EthereumSignature)) return undefined;
 
-		if (s.signature.verify(s.message, this)) return s.message;
-		else return undefined;
+		if (s.signature.verify(s.message, this))
+			return s.message;
+
+		console.warn("Invalid signature");
+		return undefined;
 	}
 }
 
