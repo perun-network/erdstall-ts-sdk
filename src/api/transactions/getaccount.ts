@@ -42,8 +42,9 @@ export class GetAccount extends Transaction {
 	}
 
 	override encode_impl(w: CodecWriter): void {
-		w.opt_with(this.balances, (v) => w.u8(balance_fetch_modes.indexOf(v)));
 		w.opt_with(this.aes_secret, (v) => v.encode_pk(w));
+		// TODO: Why the hell would this be an Option<bool> and be encoded in 1-2 bytes?
+		w.opt_with(this.balances, (v) => w.u8(balance_fetch_modes.indexOf(v)));
 	}
 	static decode_impl(r: CodecReader, core: TxCore): GetAccount {
 		return new GetAccount(
