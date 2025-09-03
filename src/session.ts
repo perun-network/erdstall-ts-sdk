@@ -283,7 +283,7 @@ export class WritingApp extends App {
 	}
 
 	// Will fail if you have a private account, but did not supply the privacy key to the session. In that case, you can fetch it via fetchPrivacyKey().
-	async fetchOwnBalance(): Promise<ChainAssets> {
+	async fetchOwnBalance(): Promise<ChainAssets | undefined> {
 		let tx = new GetAccount(
 			new TxCore(this.address, new NoNonceCheck(), false),
 			undefined,
@@ -292,7 +292,9 @@ export class WritingApp extends App {
 
 		let result = await this.#enclave.getAccount(tx.unsigned()).result;
 		let { balances } = await tx.decrypt_output(result);
-		return balances!;
+		// PLEASE STOP simply stating that typescript should just assume something is not undefined!
+		// The "!" operator does nothing if the value actually is undefined.
+		return balances;
 	}
 }
 
