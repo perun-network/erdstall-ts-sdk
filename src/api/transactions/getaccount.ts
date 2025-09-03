@@ -114,7 +114,7 @@ export class GetAccount_Output {
 				tempDH: DHPK.decode(r),
 				enc: SignedMessage.decode<AESGCMKey>(r),
 			})),
-			r.opt(SignedMessage.decode<ChainAssets>),
+			r.opt(() => SignedMessage.decode(r)),
 		);
 	}
 

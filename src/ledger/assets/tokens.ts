@@ -91,7 +91,7 @@ export class Tokens extends Asset {
 
 		let min_i = 0,
 			max_i = 0;
-		for (; min_i !== minsz && max_i !== maxsz; ) {
+		for (; min_i !== minsz && max_i !== maxsz;) {
 			let sign = min[min_i] - max[max_i];
 			if (sign < 0n) {
 				// we had a smaller NFT ID in min that is not in max.
@@ -124,7 +124,7 @@ export class Tokens extends Asset {
 		let this_i = 0;
 		let asset_i = 0;
 
-		for (; this_i !== this.value.length && asset_i !== asset.value.length; ) {
+		for (; this_i !== this.value.length && asset_i !== asset.value.length;) {
 			let sign = this.value[this_i] - asset.value[asset_i];
 			if (sign < 0n) {
 				// we have an NFT ID that comes before the one to subtract.
@@ -186,7 +186,7 @@ export class Tokens extends Asset {
 		let this_i = 0;
 		let asset_i = 0;
 		// interleave/zipper both NFT ID arrays.
-		for (; this_i !== this.value.length && asset_i !== asset.value.length; ) {
+		for (; this_i !== this.value.length && asset_i !== asset.value.length;) {
 			let sign = this.value[this_i] - asset.value[asset_i];
 			if (sign < 0n) {
 				ret[ret_i++] = this.value[this_i++];

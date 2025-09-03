@@ -149,7 +149,7 @@ export class CodecReader {
 		return this.#view(8).getBigUint64(0, true);
 	}
 	u256(): bigint {
-		let src = new Uint8Array(this.#bytes, this.#progress, 32);
+		let src = this.#bytes.slice(this.#progress, this.#progress + 32);
 		this.#progress += 32;
 
 		let ret = 0n;
