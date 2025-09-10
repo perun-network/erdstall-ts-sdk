@@ -38,7 +38,7 @@ export class WildcardAddress extends Address<"wildcard"> {
 	}
 	override get keyBytes(): Uint8Array {
 		let x = new Uint8Array(8);
-		new DataView(x).setBigUint64(0, this.#id, true);
+		new DataView(x.buffer).setBigUint64(0, this.#id, true);
 		return x;
 	}
 	override clone(): this {

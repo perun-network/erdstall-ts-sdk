@@ -7,7 +7,7 @@ import {
 	TransactionType,
 	TransactionOutput,
 	TxCore,
-} from "#erdstall/api/transactions";
+} from "../transactions";
 import { EthereumAddress } from "#erdstall/crypto/ethereum";
 import { SubstrateAddress } from "#erdstall/crypto/substrate";
 import { ChainAssets } from "#erdstall/ledger/assets";
@@ -26,6 +26,7 @@ export class GetAccount extends Transaction {
 	constructor(
 		core: TxCore,
 		// fetches the encrypted secret key via DH exchange. If so, the response of the transaction is in plaintext.
+		// TODO: Terrible name, this is diffie-hellman, not an aes key.
 		public aes_secret: DHPair | undefined,
 		// whether to fetch the balances, and whether to send them in plaintext. If in plaintext, or the secret key is requested, the response of the transaction is in plaintext.
 		balances: (typeof balance_fetch_modes)[number] | boolean | undefined,
@@ -42,8 +43,9 @@ export class GetAccount extends Transaction {
 	}
 
 	override encode_impl(w: CodecWriter): void {
-		w.opt_with(this.balances, (v) => w.u8(balance_fetch_modes.indexOf(v)));
 		w.opt_with(this.aes_secret, (v) => v.encode_pk(w));
+		// TODO: Why the hell would this be an Option<bool> and be encoded in 1-2 bytes?
+		w.opt_with(this.balances, (v) => w.u8(balance_fetch_modes.indexOf(v)));
 	}
 	static decode_impl(r: CodecReader, core: TxCore): GetAccount {
 		return new GetAccount(
@@ -79,9 +81,9 @@ export class GetAccount extends Transaction {
 			if (!o.balances.signature) {
 				balances = ChainAssets.decode(new CodecReader(o.balances.message));
 			} else {
-				// the only case in which the balances can be encrypted is if we wanted encryption on the balances, but also needed to fetch the secret. This must always succeed, unless we have a bug in the enclave, as the message is already integrity-protected by a plain signature, too (the TXReceipt).
-				let decoded = (await sk!.verifySig(o.balances))!;
-				balances = ChainAssets.decode(new CodecReader(decoded));
+				let decoded = await sk?.verifySig(o.balances);
+				if (decoded !== undefined)
+					balances = ChainAssets.decode(new CodecReader(decoded));
 			}
 		}
 		return { sk, balances };
@@ -112,7 +114,7 @@ export class GetAccount_Output {
 				tempDH: DHPK.decode(r),
 				enc: SignedMessage.decode<AESGCMKey>(r),
 			})),
-			r.opt(SignedMessage.decode<ChainAssets>),
+			r.opt(() => SignedMessage.decode(r)),
 		);
 	}
 

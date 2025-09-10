@@ -45,9 +45,11 @@ export class AssetID {
 		type: AssetType,
 		localID: Uint8Array,
 	): AssetID {
-		const bytes = new Uint8Array(35);
-		new DataView(bytes).setUint16(0, chain, true);
-		bytes[2] = type;
+		// There probably are better ways to do this.
+		const view = new DataView(new ArrayBuffer(35));
+		view.setUint16(0, chain, true);
+		view.setUint8(2, type);
+		const bytes = new Uint8Array(view.buffer);
 		bytes.set(localID, 3);
 		return new AssetID(bytes as Uint8Array & { length: 35 });
 	}

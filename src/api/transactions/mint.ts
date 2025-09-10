@@ -25,7 +25,7 @@ export class Mint extends Transaction {
 	}
 	override encode_impl(w: CodecWriter): void {
 		w.bytes<32>(this.token);
-		this.value.encode(w);
+		Asset.encode(w, this.value);
 	}
 	static decode_impl(r: CodecReader, core: TxCore): Mint {
 		return new Mint(core, r.bytes(32), Asset.decode(r));

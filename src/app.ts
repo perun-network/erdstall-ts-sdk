@@ -23,7 +23,7 @@ import {
 	InitVector,
 } from "#erdstall/crypto/wildcard";
 import { ClientConfig } from "#erdstall/api/responses";
-import { GetAccount, GetAccount_Output } from "#erdstall/api/calls";
+import { GetAccount, GetAccount_Output } from "#erdstall/api/transactions";
 import {
 	NoNonceCheck,
 	SignedTransaction,

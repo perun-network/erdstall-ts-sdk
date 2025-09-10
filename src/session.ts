@@ -24,8 +24,8 @@ import {
 	SetPrivacy,
 	LinkAccount,
 	LinkAccount_Output,
+	GetAccount,
 } from "#erdstall/api/transactions";
-import { GetAccount } from "#erdstall/api/calls";
 import { Account, Chain, getChainName } from "#erdstall/ledger";
 import { ChainAssets, Asset } from "#erdstall/ledger/assets";
 import { Uint256 } from "#erdstall/api/util";
@@ -283,7 +283,7 @@ export class WritingApp extends App {
 	}
 
 	// Will fail if you have a private account, but did not supply the privacy key to the session. In that case, you can fetch it via fetchPrivacyKey().
-	async fetchOwnBalance(): Promise<ChainAssets> {
+	async fetchOwnBalance(): Promise<ChainAssets | undefined> {
 		let tx = new GetAccount(
 			new TxCore(this.address, new NoNonceCheck(), false),
 			undefined,
@@ -292,7 +292,9 @@ export class WritingApp extends App {
 
 		let result = await this.#enclave.getAccount(tx.unsigned()).result;
 		let { balances } = await tx.decrypt_output(result);
-		return balances!;
+		// PLEASE STOP simply stating that typescript should just assume something is not undefined!
+		// The "!" operator does nothing if the value actually is undefined.
+		return balances;
 	}
 }
 
@@ -432,8 +434,7 @@ export class Session extends WritingApp {
 		for (const chainCfg of cfg.chains) {
 			if (!this.#blockchainWriteCtors.hasOwnProperty(chainCfg.data.type())) {
 				console.warn(
-					`No backend configured for ${chainCfg.data.type()} chain <${
-						chainCfg.id
+					`No backend configured for ${chainCfg.data.type()} chain <${chainCfg.id
 					}>: not creating a backend client.`,
 				);
 				continue;
@@ -442,8 +443,7 @@ export class Session extends WritingApp {
 
 			if (!s) {
 				console.warn(
-					`No compatible signer for ${chainCfg.data.type()} chain <${
-						chainCfg.id
+					`No compatible signer for ${chainCfg.data.type()} chain <${chainCfg.id
 					}>: not creating a backend client.`,
 				);
 				continue;

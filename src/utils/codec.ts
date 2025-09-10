@@ -13,7 +13,7 @@ export class CodecVersion {
 		public major: number,
 		public extension: number,
 		public global: number,
-	) {}
+	) { }
 
 	encode(w: CodecWriter): void {
 		w.u16(this.major);
@@ -131,7 +131,7 @@ export class CodecReader {
 	}
 
 	#view(skip: number): DataView {
-		const view = new DataView(this.#bytes, this.#progress);
+		const view = new DataView(this.#bytes.buffer, this.#progress);
 		this.#progress += skip;
 		return view;
 	}
@@ -149,7 +149,7 @@ export class CodecReader {
 		return this.#view(8).getBigUint64(0, true);
 	}
 	u256(): bigint {
-		let src = new Uint8Array(this.#bytes, this.#progress, 32);
+		let src = this.#bytes.slice(this.#progress, this.#progress + 32);
 		this.#progress += 32;
 
 		let ret = 0n;
@@ -158,7 +158,7 @@ export class CodecReader {
 		return ret;
 	}
 	bytes<N extends number = number>(n: N): Uint8Array & { length: N } {
-		let src = new Uint8Array(this.#bytes, this.#progress, n);
+		let src = this.#bytes.slice(this.#progress, this.#progress + n);
 		this.#progress += n;
 
 		let dst = new Uint8Array(n);
